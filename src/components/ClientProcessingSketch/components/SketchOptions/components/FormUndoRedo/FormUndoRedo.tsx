@@ -286,8 +286,27 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
     ]
   );
 
+  // A debounced auto-capture may still be pending when the user reaches for
+  // undo/redo — commit it first so the in-flight edit becomes a real history
+  // entry instead of being silently discarded by the patch replay (which
+  // starts from the last *committed* state).
+  const flushPendingCapture = React.useCallback(
+    () => {
+      if ( debounceTimerRef.current ) {
+        window.clearTimeout( debounceTimerRef.current );
+        debounceTimerRef.current = null;
+        capture();
+      }
+    },
+    [
+      capture
+    ]
+  );
+
   const undo = React.useCallback(
     () => {
+      flushPendingCapture();
+
       const stacks = stacksRef.current;
 
       if ( !stacks.past.length ) {
@@ -341,6 +360,7 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
       }
     },
     [
+      flushPendingCapture,
       getValues,
       reset,
       resetOptions,
@@ -352,6 +372,11 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
 
   const redo = React.useCallback(
     () => {
+      // Committing a pending edit clears the future stack (a new change
+      // invalidates redo) — the same thing its debounce timer would have
+      // done moments later.
+      flushPendingCapture();
+
       const stacks = stacksRef.current;
 
       if ( !stacks.future.length ) {
@@ -405,6 +430,7 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
       }
     },
     [
+      flushPendingCapture,
       getValues,
       reset,
       resetOptions,
@@ -418,6 +444,8 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
     (
       index: number, direction: "past" | "future"
     ) => {
+      flushPendingCapture();
+
       const stacks = stacksRef.current;
       const targetStack = direction === "past" ? stacks.past : stacks.future;
 
@@ -495,6 +523,7 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
       }
     },
     [
+      flushPendingCapture,
       getValues,
       reset,
       resetOptions,

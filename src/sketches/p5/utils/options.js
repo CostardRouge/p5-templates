@@ -15,7 +15,9 @@ import {
 } from "../shared/syncSketchOptions.js";
 
 import {
-  resolveAssetURL
+  resolveAssetURL,
+  structuredClone,
+  valuesEqual
 } from "../shared/utils.js";
 
 import {
@@ -283,25 +285,6 @@ let previousOptions = {
 let unsubscribe = null;
 
 /**
- * Compare two objects for deep equality
- */
-function isEqual(
-  a, b
-) {
-  if ( a === b ) {
-    return true;
-  }
-  if ( !a || !b ) {
-    return false;
-  }
-  if ( typeof a !== "object" || typeof b !== "object" ) {
-    return false;
-  }
-
-  return JSON.stringify( a ) === JSON.stringify( b );
-}
-
-/**
  * Resolve the effective size/animation for the current slide.
  * Per-slide overrides win; otherwise global values are used.
  *
@@ -347,7 +330,7 @@ function handleOptionsChange(
   } = getEffective( newOptions );
 
   // Check for effective size changes (slide override or global)
-  if ( effectiveSize && !isEqual(
+  if ( effectiveSize && !valuesEqual(
     effectiveSize,
     previousOptions.effectiveSize
   ) ) {
@@ -382,7 +365,7 @@ function handleOptionsChange(
   // duration change even when the framerate is untouched (or missing from
   // a partial per-slide override), so the sketchOptions update is never
   // gated behind framerate validity.
-  if ( effectiveAnimation && !isEqual(
+  if ( effectiveAnimation && !valuesEqual(
     effectiveAnimation,
     previousOptions.effectiveAnimation
   ) ) {
@@ -422,17 +405,29 @@ function handleOptionsChange(
     ...newOptions.animation
   } : null;
 
-  // Refresh assets if there were any changes or if assets changed
-  if ( hasChanges || !isEqual(
-    newOptions?.assets,
-    previousOptions.assets
-  ) || !isEqual(
-    newOptions?.slides,
-    previousOptions.slides
-  ) ) {
+  // Refresh assets if there were any changes or if assets/slides changed.
+  // The event payload is the live store, mutated in place — object identities
+  // survive value changes, so previous values must be kept as *snapshots*
+  // (clones) and compared by value; holding references would make every
+  // comparison an a === b hit and asset edits would never refresh.
+  const assetsChanged = !valuesEqual(
+    newOptions?.assets ?? null,
+    previousOptions.assets ?? null
+  );
+  const slidesChanged = !valuesEqual(
+    newOptions?.slides ?? null,
+    previousOptions.slides ?? null
+  );
+
+  if ( hasChanges || assetsChanged || slidesChanged ) {
     refreshAssets();
-    previousOptions.assets = newOptions?.assets;
-    previousOptions.slides = newOptions?.slides;
+
+    if ( assetsChanged ) {
+      previousOptions.assets = structuredClone( newOptions?.assets ?? null );
+    }
+    if ( slidesChanged ) {
+      previousOptions.slides = structuredClone( newOptions?.slides ?? null );
+    }
   }
 }
 
@@ -478,8 +473,9 @@ function initializeOptionsSubscription() {
     effectiveAnimation: initialEffectiveAnimation ? {
       ...initialEffectiveAnimation
     } : null,
-    assets: initialOptions?.assets,
-    slides: initialOptions?.slides
+    // Snapshots, not references — the store mutates these in place.
+    assets: structuredClone( initialOptions?.assets ?? null ),
+    slides: structuredClone( initialOptions?.slides ?? null )
   };
 
   // Subscribe to future changes

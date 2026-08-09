@@ -136,19 +136,8 @@ export function structuredClone( value ) {
     return globalThis.structuredClone( value );
   }
 
-  try {
-    return new Promise( (
-      resolve, reject
-    ) => {
-      const {
-        port1, port2
-      } = new MessageChannel();
-
-      port2.onmessage = ( e ) => resolve( e.data );
-      port2.onmessageerror = reject;
-      port1.postMessage( value );
-    } );
-  } catch {}
-
+  // Callers expect a synchronous clone, so the only viable fallback is the
+  // JSON round-trip (the old MessageChannel trick is async-only — it returned
+  // a pending Promise instead of a clone).
   return JSON.parse( JSON.stringify( value ) );
 }

@@ -154,6 +154,41 @@ describe(
     );
 
     it(
+      "treats NaN as equal to NaN so it is not a fresh change every call",
+      () => {
+        const seen: string[] = [];
+        const unsubscribe = subscribeSketchOptions( ( _opts ) => {
+          seen.push( "event" );
+        } );
+
+        setSketchOptions( {
+          sketch: {
+            angle: 1
+          }
+        } );
+        // Leaf write of NaN — a real change.
+        setSketchOptions( {
+          sketch: {
+            angle: NaN
+          }
+        } );
+        // NaN → NaN must be a no-op, not a fresh change on every call.
+        setSketchOptions( {
+          sketch: {
+            angle: NaN
+          }
+        } );
+
+        unsubscribe();
+
+        expect( seen ).toEqual( [
+          "event",
+          "event"
+        ] );
+      }
+    );
+
+    it(
       "replaces arrays wholesale, including when they shrink",
       () => {
         setSketchOptions( {
@@ -249,6 +284,31 @@ describe(
           ]
         ) ).toEqual( {
           name: "demo",
+          sketch: source.sketch
+        } );
+      }
+    );
+
+    it(
+      "stays correct when a dash-named sibling sorts between a prefix and its child",
+      () => {
+        // "-" < "." lexicographically, so "sketch-extra" sorts between
+        // "sketch" and "sketch.speed" and breaks the last-kept-prefix chain;
+        // the child walk must then be a harmless no-op on the wholesale value.
+        const withDash = {
+          ...source,
+          "sketch-extra": true
+        };
+
+        expect( extractOptionsSubset(
+          withDash,
+          [
+            "sketch",
+            "sketch-extra",
+            "sketch.speed"
+          ]
+        ) ).toEqual( {
+          "sketch-extra": true,
           sketch: source.sketch
         } );
       }
