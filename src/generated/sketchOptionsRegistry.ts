@@ -182,6 +182,7 @@ export const sketchFormLoaders: Record<string, SketchModuleLoader> = {
   "p5:photo-segmentation/photo-segmentation-v2-noise-reveal": () => import( "@/p5/sketches/photo-segmentation/photo-segmentation-v2-noise-reveal/options" ),
   "p5:photo-trail-effect/photo-trail-effect-v1": () => import( "@/p5/sketches/photo-trail-effect/photo-trail-effect-v1/options" ),
   "p5:photo-trail-effect/photo-trail-effect-v2-echo": () => import( "@/p5/sketches/photo-trail-effect/photo-trail-effect-v2-echo/options" ),
+  "p5:photo-trail-effect/photo-trail-effect-v3-growth": () => import( "@/p5/sketches/photo-trail-effect/photo-trail-effect-v3-growth/options" ),
   "p5:photo/dominant-colors-block-switch": () => import( "@/p5/sketches/photo/dominant-colors-block-switch/options" ),
   "p5:photo/photo-3d-cylinder": () => import( "@/p5/sketches/photo/photo-3d-cylinder/options" ),
   "p5:photo/photo-3d-sphere": () => import( "@/p5/sketches/photo/photo-3d-sphere/options" ),

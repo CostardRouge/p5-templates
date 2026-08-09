@@ -18,8 +18,7 @@ import {
   subscribeSketchOptions
 } from "@/p5/shared/syncSketchOptions.js";
 import {
-  createDraggable,
-  nearestTargetIndex
+  createDraggable
 } from "@/p5/utils/interaction/draggable.js";
 import {
   clamp,
@@ -31,13 +30,15 @@ import {
   toPx,
   mirrorPoint,
   ensureLayerGraphics,
-  getInternalCanvasPoint,
+  createCanvasClickRouter,
   createFocusPointStore,
   createSubjectBuilder,
-  drawPhotoLayer,
+  rebuildSubjectFor,
+  updatePhotoRect,
   drawBackdrop,
   drawSubjectLayer,
   drawMarkersLayer,
+  drawHandleRings,
   buildAngleSpine,
   buildSplineSpine,
   applyWave
@@ -139,83 +140,11 @@ const segmenter = createMultiMaskSegmenter();
 const focus = createFocusPointStore( segmenter );
 const subjectBuilder = createSubjectBuilder();
 
-/* ------------------------------------------------------------------ */
-/*  Clicks & subject                                                   */
-/* ------------------------------------------------------------------ */
-
-// Route a canvas click: a path handle wins (the drag layer owns it), then
-// the focus store picks / unpicks a zone.
-function handleCanvasClick( event ) {
-  const point = getInternalCanvasPoint( event );
-
-  if ( !point || draggable.dragging ) {
-    return;
-  }
-
-  if (
-    state.handleTargets.length > 0 &&
-    nearestTargetIndex(
-      state.handleTargets,
-      point.x,
-      point.y,
-      state.handleRadius
-    ) !== -1
-  ) {
-    return;
-  }
-
-  const result = focus.handleClick(
-    point,
-    state.photoRect,
-    options.sketch?.marker ?? {}
-  );
-
-  if ( result === "removed" ) {
-    state.maskDirty = true;
-  }
-}
-
-function rebuildSubject() {
-  const photo = common.getAsset( state.imagePath );
-  const seg = options.sketch?.segmentation ?? {};
-  const built = subjectBuilder.build(
-    photo,
-    segmenter,
-    seg
-  );
-
-  state.subject = built?.image ?? null;
-
-  if ( built ) {
-    state.builtWith = built.builtWith;
-  }
-}
-
-// Draw the full photo into the offscreen buffer, record where it landed and
-// invalidate the ghost layer when the layout moved.
-function updatePhotoLayer( photo ) {
-  const rect = drawPhotoLayer(
-    state.photoG,
-    photo
-  );
-
-  if ( !rect ) {
-    return;
-  }
-
-  const previous = state.photoRect;
-
-  if (
-    rect.x !== previous.x ||
-    rect.y !== previous.y ||
-    rect.w !== previous.w ||
-    rect.h !== previous.h
-  ) {
-    state.echoDirty = true;
-  }
-
-  state.photoRect = rect;
-}
+const handleCanvasClick = createCanvasClickRouter(
+  state,
+  focus,
+  draggable
+);
 
 /* ------------------------------------------------------------------ */
 /*  Path handle sync (persisted like v1's trail list)                  */
@@ -788,52 +717,15 @@ function drawHandles(
     size * 0.4
   );
 
-  // Hover / grab rings, same affordance as v1.
-  p.noFill();
-
-  hovers.forEach( ( index ) => {
-    const target = state.handleTargets[ index ];
-
-    if ( !target || grabbed.has( index ) ) {
-      return;
-    }
-
-    p.stroke(
-      255,
-      255,
-      255,
-      170
-    );
-    p.strokeWeight( 2 );
-    p.circle(
-      target.x,
-      target.y,
-      size * 1.8 + 10
-    );
-  } );
-
-  grabbed.forEach( ( index ) => {
-    const target = state.handleTargets[ index ];
-
-    if ( !target ) {
-      return;
-    }
-
-    p.stroke(
-      120,
-      200,
-      255,
-      230
-    );
-    p.strokeWeight( 3 );
-    p.circle(
-      target.x,
-      target.y,
-      size * 2.1 + 12
-    );
-  } );
-
   p.pop();
+
+  drawHandleRings(
+    p,
+    state.handleTargets,
+    hovers,
+    grabbed,
+    size
+  );
 }
 
 /* ------------------------------------------------------------------ */
@@ -987,11 +879,21 @@ sketch.draw( () => {
   if ( state.maskDirty || state.builtVersion !== segmenter.version ) {
     state.maskDirty = false;
     state.builtVersion = segmenter.version;
-    rebuildSubject();
+    rebuildSubjectFor(
+      state,
+      subjectBuilder,
+      segmenter
+    );
     state.echoDirty = true;
   }
 
-  updatePhotoLayer( photo );
+  if ( updatePhotoRect(
+    state,
+    photo
+  ) ) {
+    state.echoDirty = true;
+  }
+
   drawBackdrop(
     p,
     photo,

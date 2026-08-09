@@ -5,6 +5,8 @@ import sketch, {
 } from "@/p5/utils/sketch.js";
 import string from "@/p5/utils/string.js";
 import * as common from "@/p5/utils/common.js";
+import animation from "@/p5/utils/animation.js";
+import easing from "@/p5/utils/easing.js";
 import {
   init as mediapipeInit
 } from "@/p5/utils/mediapipe/mediapipe.js";
@@ -31,47 +33,44 @@ import {
   drawBackdrop,
   drawSubjectLayer,
   drawMarkersLayer,
-  applyWave
+  applyWave,
+  sliceSpine
 } from "../_shared.js";
 import {
   createBandTrails,
   createStripSampler,
   buildBandSpine,
   paintRibbon,
+  fadeRibbonEnd,
   collectBandHandles,
   drawBandHandles
 } from "../_ribbon.js";
 
 /* ------------------------------------------------------------------ */
-/*  photo-trail-effect-v1                                              */
+/*  photo-trail-effect-v3-growth                                       */
 /*                                                                     */
-/*  The Instagram "trail effect": ribbons of pixels sampled across a   */
-/*  band of the photo are stretched along a curve until they leave the */
-/*  canvas, and the segmented subject is drawn back on top so the      */
-/*  trails appear to pass BEHIND it. Layer stack, bottom to top:       */
+/*  v1's pixel ribbons, but drawn over time: instead of standing there */
+/*  fully formed, each ribbon is revealed along its own length as the  */
+/*  loop plays. Same layer stack (photo → trails → segmented subject   */
+/*  on top), same draggable bands and guides, same colour sampling —   */
+/*  what is new is WHERE along the ribbon the paint currently is.      */
 /*                                                                     */
-/*    1. the full photo (original / blur / dim / color backdrop),      */
-/*    2. the trails,                                                   */
-/*    3. the subject cut out with MediaPipe's interactive segmenter.   */
-/*       Click the photo to pick a subject (an animal, a person, …) —  */
-/*       every click adds a focus point with its own mask, the cut-out */
-/*       is their union, and clicking a focus marker (the circle with  */
-/*       the minus) unpicks that zone again.                           */
+/*  Three reveal modes, all driven by the loop phase so the live       */
+/*  preview and a deterministic frame capture agree exactly:           */
 /*                                                                     */
-/*  Every trail is defined by draggable, persisted handles             */
-/*  (normalized 0..1 so they survive resizes and exports):             */
+/*    - grow   : the ribbon extrudes out of the band and stays. Ends   */
+/*               the loop full and restarts empty, so it is the one    */
+/*               mode with a visible seam — `hold` parks it at full    */
+/*               length for a while first, which is usually what you   */
+/*               want for a single-shot reveal.                        */
+/*    - pulse  : grows out over the first half of the cycle, then the  */
+/*               tail catches up and swallows it over the second. No   */
+/*               seam — the ribbon is empty at both ends of the loop.  */
+/*    - comet  : a fixed-length span travels the whole ribbon and      */
+/*               leaves at the tip. No seam either.                    */
 /*                                                                     */
-/*    - band A/B: the cross-section whose pixels become the ribbon's   */
-/*      colours. Its length IS the ribbon width, so the band can take  */
-/*      just the body of a bird and leave the head and legs out.       */
-/*    - guide 1/2 (spline direction mode): control points that steer   */
-/*      the ribbon toward the canvas edge, rounded with the same       */
-/*      Chaikin corner-cutting as the splines category.                */
-/*                                                                     */
-/*  The photo stack and segmentation live in ../_shared.js, the band → */
-/*  strip → ribbon pipeline in ../_ribbon.js. What is v1's own is the  */
-/*  simplest possible use of them: paint every ribbon whole, once, and */
-/*  only re-render when something actually changed.                    */
+/*  `stagger` offsets each trail's cycle so a fan of ribbons fires in  */
+/*  sequence rather than in lockstep.                                  */
 /* ------------------------------------------------------------------ */
 
 /* ------------------------------------------------------------------ */
@@ -102,8 +101,8 @@ const state = {
     h: 0
   },
 
-  // Dirty flags: the trail layer is cached and only re-rendered when
-  // something actually changed (or the wave is animated).
+  // Dirty flags. The trail layer re-renders every frame while the reveal
+  // is running; these cover the paused case (cycles = 0).
   sampleDirty: true,
   stripsDirty: true,
   trailsDirty: true,
@@ -148,18 +147,161 @@ const handleCanvasClick = createCanvasClickRouter(
 );
 
 /* ------------------------------------------------------------------ */
+/*  The reveal window                                                  */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Where trail `index` is painted this frame, as a [tail, head] span in
+ * 0..1 along the ribbon. Returns null when nothing of it is visible.
+ *
+ * `cycles` whole reveals per animation loop keeps an exported video
+ * seamless, exactly like the wave speed does.
+ */
+function revealSpan(
+  growth, index
+) {
+  const cycles = Math.round( growth.cycles ?? 1 );
+
+  // Paused: the ribbon simply stands there whole, i.e. v1's look.
+  if ( cycles <= 0 ) {
+    return [
+      0,
+      1
+    ];
+  }
+
+  const mode = growth.mode ?? "grow";
+  const easeFn = easing[ growth.easing ] ?? easing.linear;
+  const stagger = growth.stagger ?? 0;
+  // Local cycle phase for this trail, wrapped into 0..1.
+  const u = ( ( animation.progression * cycles - stagger * index ) % 1 + 1 ) % 1;
+
+  if ( mode === "comet" ) {
+    const window = clamp(
+      growth.window ?? 0.35,
+      0.02,
+      1
+    );
+    // The span enters at the band and leaves past the tip, so the ribbon
+    // is empty at both ends of the cycle — no seam on the loop.
+    const head = easeFn( u ) * ( 1 + window );
+
+    return [
+      clamp01( head - window ),
+      clamp01( head )
+    ];
+  }
+
+  if ( mode === "pulse" ) {
+    // Grow over the first half, then let the tail swallow it.
+    return u < 0.5
+      ? [
+        0,
+        easeFn( u * 2 )
+      ]
+      : [
+        easeFn( ( u - 0.5 ) * 2 ),
+        1
+      ];
+  }
+
+  // "grow": extrude out of the band, then hold at full length for the
+  // tail of the cycle.
+  const hold = clamp01( growth.hold ?? 0 );
+  const span = Math.max(
+    1e-3,
+    1 - hold
+  );
+
+  return [
+    0,
+    easeFn( Math.min(
+      1,
+      u / span
+    ) )
+  ];
+}
+
+/* ------------------------------------------------------------------ */
 /*  Trail layer                                                        */
 /* ------------------------------------------------------------------ */
 
-// Re-render the cached trail layer when something changed (or every frame
-// while the wave is animated).
+// Paint one ribbon's visible span into the scratch buffer, softening
+// whichever ends are not sitting against the band or the tip.
+function paintSpan(
+  scratch, spine, strip, A, B, bandLength, ribbon, growth, span
+) {
+  const [
+    from,
+    to
+  ] = span;
+  const visible = sliceSpine(
+    spine,
+    from,
+    to
+  );
+
+  if ( visible.length < 2 ) {
+    return;
+  }
+
+  paintRibbon(
+    scratch,
+    visible,
+    strip,
+    A,
+    B,
+    bandLength,
+    ribbon,
+    [
+      from,
+      to
+    ]
+  );
+
+  const headFade = growth.headFade ?? 0;
+  const tailFade = growth.tailFade ?? 0;
+  // A fade is a fraction of the ribbon, so rescale it to the span actually
+  // drawn — otherwise a short span would be faded away entirely.
+  const drawn = Math.max(
+    to - from,
+    1e-4
+  );
+
+  // The tip only needs softening while it is still travelling; once the
+  // ribbon reaches its end the hard edge IS the end of the ribbon.
+  if ( headFade > 0 && to < 0.999 ) {
+    fadeRibbonEnd(
+      scratch,
+      visible,
+      "end",
+      headFade / drawn
+    );
+  }
+
+  // Likewise the tail: at the band it is the ribbon's root, not a cut.
+  if ( tailFade > 0 && from > 0.001 ) {
+    fadeRibbonEnd(
+      scratch,
+      visible,
+      "start",
+      tailFade / drawn
+    );
+  }
+}
+
+// Re-render the cached trail layer. While the reveal (or the wave) is
+// running this happens every frame; paused, only when something changed.
 function renderTrails(
   p, o, photo
 ) {
   const ribbon = o.ribbon ?? {};
   const wave = o.wave ?? {};
   const direction = o.direction ?? {};
-  const animated = ( wave.speed ?? 0 ) > 0 && ( wave.amplitude ?? 0 ) > 0;
+  const growth = o.growth ?? {};
+  const animated =
+    Math.round( growth.cycles ?? 1 ) > 0 ||
+    ( ( wave.speed ?? 0 ) > 0 && ( wave.amplitude ?? 0 ) > 0 );
 
   if ( !state.trailsDirty && !animated ) {
     return;
@@ -203,6 +345,15 @@ function renderTrails(
       return;
     }
 
+    const span = revealSpan(
+      growth,
+      index
+    );
+
+    if ( !span || span[ 1 ] - span[ 0 ] <= 1e-4 ) {
+      return;
+    }
+
     const A = toPx(
       trail.band.a,
       p
@@ -242,7 +393,7 @@ function renderTrails(
       ) );
     }
 
-    spines.forEach( ( spine ) => paintRibbon(
+    spines.forEach( ( spine ) => paintSpan(
       scratch,
       applyWave(
         spine,
@@ -254,7 +405,9 @@ function renderTrails(
       A,
       B,
       bandLength,
-      ribbon
+      ribbon,
+      growth,
+      span
     ) );
 
     // Each trail composites once with its opacity so the overlapping slices
@@ -364,7 +517,7 @@ sketch.setup( () => {
     ]
   } ).catch( ( error ) => {
     console.error(
-      "[photo-trail-effect] mediapipe init failed",
+      "[photo-trail-effect-v3-growth] mediapipe init failed",
       error
     );
   } );
@@ -383,7 +536,7 @@ sketch.draw( () => {
   if ( !photo?.img?.width ) {
     p.frameRate( 1 );
     string.write(
-      "photo-trail-effect:\n\nadd a photo :)",
+      "photo-trail-effect-v3:\n\nadd a photo :)",
       0,
       0,
       {

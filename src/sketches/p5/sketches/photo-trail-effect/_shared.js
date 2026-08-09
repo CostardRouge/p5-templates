@@ -15,6 +15,10 @@ import {
 import {
   setSketchOptions
 } from "@/p5/shared/syncSketchOptions.js";
+import * as common from "@/p5/utils/common.js";
+import {
+  nearestTargetIndex
+} from "@/p5/utils/interaction/draggable.js";
 
 /* ------------------------------------------------------------------ */
 /*  Shared plumbing for the `photo-trail-effect` category.             */
@@ -358,6 +362,46 @@ export function createFocusPointStore( segmenter ) {
   return store;
 }
 
+/**
+ * The canvas click handler every variant registers: a drag handle wins (the
+ * drag layer owns it), otherwise the focus store picks / unpicks a zone.
+ * `state` supplies `handleTargets`, `handleRadius` and `photoRect`, and is
+ * marked `maskDirty` when a zone was unpicked.
+ */
+export function createCanvasClickRouter(
+  state, focus, draggable
+) {
+  return function handleCanvasClick( event ) {
+    const point = getInternalCanvasPoint( event );
+
+    if ( !point || draggable.dragging ) {
+      return;
+    }
+
+    if (
+      state.handleTargets.length > 0 &&
+      nearestTargetIndex(
+        state.handleTargets,
+        point.x,
+        point.y,
+        state.handleRadius
+      ) !== -1
+    ) {
+      return;
+    }
+
+    const result = focus.handleClick(
+      point,
+      state.photoRect,
+      options.sketch?.marker ?? {}
+    );
+
+    if ( result === "removed" ) {
+      state.maskDirty = true;
+    }
+  };
+}
+
 /* ------------------------------------------------------------------ */
 /*  Subject builder (union mask → feathered cut-out)                   */
 /* ------------------------------------------------------------------ */
@@ -563,6 +607,53 @@ export function drawPhotoLayer(
   return rect;
 }
 
+// Rebuild `state.subject` from the current photo, masks and edge settings.
+// Every variant caches the cut-out the same way, keyed on the segmenter's
+// mask-set version plus the edge options it was built with.
+export function rebuildSubjectFor(
+  state, subjectBuilder, segmenter
+) {
+  const photo = common.getAsset( state.imagePath );
+  const built = subjectBuilder.build(
+    photo,
+    segmenter,
+    options.sketch?.segmentation ?? {}
+  );
+
+  state.subject = built?.image ?? null;
+
+  if ( built ) {
+    state.builtWith = built.builtWith;
+  }
+}
+
+// Draw the photo into `state.photoG` and record where it landed on the
+// canvas. Returns true when the layout moved — the caller invalidates
+// whatever it derived from the photo rect.
+export function updatePhotoRect(
+  state, photo
+) {
+  const rect = drawPhotoLayer(
+    state.photoG,
+    photo
+  );
+
+  if ( !rect ) {
+    return false;
+  }
+
+  const previous = state.photoRect;
+  const moved =
+    rect.x !== previous.x ||
+    rect.y !== previous.y ||
+    rect.w !== previous.w ||
+    rect.h !== previous.h;
+
+  state.photoRect = rect;
+
+  return moved;
+}
+
 // The backdrop behind the trails: nothing (transparent), the photo layer
 // as-is (original), a solid color, or a full-bleed blurred / dimmed copy.
 export function drawBackdrop(
@@ -718,6 +809,60 @@ export function drawMarkersLayer(
   );
 }
 
+// Hover / grab rings around the drag handles, the same affordance the
+// splines category uses. Drawn on top of whatever handle art the variant
+// draws itself.
+export function drawHandleRings(
+  p, targets, hovers, grabbed, size
+) {
+  p.push();
+  p.noFill();
+
+  hovers.forEach( ( index ) => {
+    const target = targets[ index ];
+
+    if ( !target || grabbed.has( index ) ) {
+      return;
+    }
+
+    p.stroke(
+      255,
+      255,
+      255,
+      170
+    );
+    p.strokeWeight( 2 );
+    p.circle(
+      target.x,
+      target.y,
+      size * 1.8 + 10
+    );
+  } );
+
+  grabbed.forEach( ( index ) => {
+    const target = targets[ index ];
+
+    if ( !target ) {
+      return;
+    }
+
+    p.stroke(
+      120,
+      200,
+      255,
+      230
+    );
+    p.strokeWeight( 3 );
+    p.circle(
+      target.x,
+      target.y,
+      size * 2.1 + 12
+    );
+  } );
+
+  p.pop();
+}
+
 /* ------------------------------------------------------------------ */
 /*  Spine geometry                                                     */
 /* ------------------------------------------------------------------ */
@@ -812,6 +957,64 @@ export function resamplePolyline(
       ...last
     } );
   }
+
+  return out;
+}
+
+// Cut an even polyline down to the [from, to] fraction of its point count,
+// interpolating both ends exactly instead of snapping to the nearest
+// sample. The exact ends matter for the growth variant: quantizing the tip
+// to the sampling step would make a growing ribbon visibly stair-step.
+export function sliceSpine(
+  spine, from, to
+) {
+  if ( spine.length < 2 ) {
+    return spine;
+  }
+
+  const total = spine.length - 1;
+  const lo = clamp01( Math.min(
+    from,
+    to
+  ) ) * total;
+  const hi = clamp01( Math.max(
+    from,
+    to
+  ) ) * total;
+
+  if ( hi - lo < 1e-6 ) {
+    return [];
+  }
+
+  const lerpAt = ( position ) => {
+    const index = clamp(
+      Math.floor( position ),
+      0,
+      total - 1
+    );
+    const t = position - index;
+    const a = spine[ index ];
+    const b = spine[ index + 1 ];
+
+    return {
+      x: a.x + ( b.x - a.x ) * t,
+      y: a.y + ( b.y - a.y ) * t
+    };
+  };
+
+  const out = [
+    lerpAt( lo )
+  ];
+
+  // Strictly interior samples only — an integer end would otherwise repeat
+  // the interpolated point we just pushed.
+  for ( let i = Math.floor( lo ) + 1; i <= Math.ceil( hi ) - 1; i++ ) {
+    out.push( {
+      ...spine[ i ]
+    } );
+  }
+
+  out.push( lerpAt( hi ) );
 
   return out;
 }
