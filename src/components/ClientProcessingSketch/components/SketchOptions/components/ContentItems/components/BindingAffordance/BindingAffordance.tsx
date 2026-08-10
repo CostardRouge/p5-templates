@@ -92,8 +92,13 @@ function fieldDomain( config: FieldConfig ) {
 /**
  * The per-field modulation control. A small pastille sits beside a bindable
  * field (slider / number / vector2d). Bound, it is a live VU meter glowing with
- * the channel's activity; clicking it opens a popover to pick the source,
+ * the source's activity; clicking it opens a popover to pick the source,
  * range, curve and smoothing — or to remove the binding.
+ *
+ * A first click starts the parameter oscillating (see makeDefaultBinding):
+ * generators need no device, no permission and no interaction block, so
+ * modulating a parameter is a zero-consequence action until the user
+ * deliberately switches the source to a live input.
  *
  * Bindings are stored as data at the sketch scope's paired `interactive`
  * namespace (`interactive.bindings` / `slides.N.interactive.bindings` — see
@@ -234,6 +239,14 @@ export default function BindingAffordance( {
   // flipped. The seed never touches sketch parameters, and is pruned again by
   // pruneInteractionIfUnused once no binding needs it.
   const enableSourceInputs = async( source: string ) => {
+    const paths = interactionEnablePaths( source );
+
+    // Generators (and unknown ids) have no source to enable — and must not
+    // seed an interaction block they'd never read.
+    if ( paths.length === 0 ) {
+      return;
+    }
+
     let interactionScope = scope;
 
     if ( getValues( `${ scope }.interaction` ) === undefined ) {
@@ -254,7 +267,7 @@ export default function BindingAffordance( {
       }
     }
 
-    for ( const path of interactionEnablePaths( source ) ) {
+    for ( const path of paths ) {
       setValue(
         `${ interactionScope }.interaction.${ path }`,
         true,
@@ -265,24 +278,23 @@ export default function BindingAffordance( {
     }
   };
 
-  // Append a new layer (binding) for this parameter and select it. The default
-  // source is the baseline input (mouse) — an interactive binding as soon as
-  // it exists, so it seeds/enables the interaction block like any explicit
-  // source pick.
+  // Append a new layer (binding) for this parameter and select it. A continuous
+  // target starts on the oscillator (see makeDefaultBinding) — a generator, so
+  // nothing is enabled and no interaction block is seeded; a vector2d target
+  // starts on an input source, which is enabled like any explicit source pick.
   const addLayer = () => {
-    const first = sourceOptions[ 0 ];
+    const binding = makeDefaultBinding(
+      target,
+      kind,
+      config
+    );
 
     writeBindings( [
       ...list,
-      makeDefaultBinding(
-        target,
-        kind,
-        first,
-        config
-      )
+      binding
     ] );
     setSelLayer( layers.length );
-    void enableSourceInputs( first.source );
+    void enableSourceInputs( binding.source );
   };
 
   // Remove the selected layer, then select a remaining one.
@@ -522,7 +534,7 @@ export default function BindingAffordance( {
   return (
     <Popover className="relative shrink-0">
       <PopoverButton
-        title={ bound ? "Edit modulation" : "Bind to an interactive input" }
+        title={ bound ? "Edit modulation" : "Modulate this parameter" }
         onClick={ () => {
           // First click on an unbound field creates the first layer AND opens
           // the popover (no preventDefault) so it can be configured immediately.
