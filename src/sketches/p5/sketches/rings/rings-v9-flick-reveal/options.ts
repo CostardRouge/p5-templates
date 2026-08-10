@@ -50,7 +50,7 @@ export const formValues = {
   morph: {
     // Fraction of each beat the finished text stays legible before the troupe
     // starts converting it into the next one.
-    hold: 0.3
+    hold: 0.45
   },
 
   grab: {
@@ -58,12 +58,12 @@ export const formValues = {
     radius: 49,
     // Camera pinch: the finger tips must be closer than this (px) to count as
     // "pressed". Released at 1.6× this (hysteresis). Shared by both gestures.
-    pinch: 70,
+    pinch: 100,
     // EMA lag on the pinch midpoint to calm jittery hand landmarks (0 = none,
     // higher = smoother but laggier). Mouse / touch stay unsmoothed.
-    cameraSmoothing: 0.4,
+    cameraSmoothing: 0.45,
     // Depth gesture gain (negative inverts push/pull).
-    depthGain: 1
+    depthGain: 0.5
   },
 
   // Mouse + touch + camera hands can still sculpt mid-show. Touch MUST stay
@@ -120,20 +120,20 @@ export const formValues = {
       // Drawn size, normalized: × the artwork's natural resolution (the
       // shipped images are 256 px, so 0.18 ≈ 46 px on screen).
       scale: 0.4,
-      count: 8,
+      count: 6,
       seed: 7,
-      easing: "easeInOutCubic",
+      easing: "linear",
       timing: {
-        stagger: 0.2,
+        stagger: 0.15,
         travel: 0.45,
         hover: 0.15,
         pull: 0.45,
-        release: 0.2,
+        release: 0.95,
         fade: 0.35
       },
       flick: {
         pullMode: "edge",
-        pull: 36,
+        pull: 8,
         flightTime: 0.9,
         easing: "easeOutElastic"
       },
