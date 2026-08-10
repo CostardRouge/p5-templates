@@ -179,6 +179,24 @@ export const interactionFormValues = {
   }
 };
 
+// A clone of `interactionFormValues` with the top-level and orbit `enabled`
+// flags forced off — the shape every panel control expects, but with nothing
+// live: no interaction handler boot, no orbit virtual pointer. Seeding a
+// sketch's `interaction` block with the raw defaults (enabled: true,
+// orbit.enabled: true) would make it look and behave interactive before any
+// binding actually needs it. Shared by the server-side seed (getSketchOptions
+// .getSketchMeta, for sketches that ship default bindings) and the client
+// seed (BindingAffordance, the first time a binding picks a live input
+// source) so both start from the identical inert shape.
+export function inertInteractionFormValues() {
+  const values = structuredClone( interactionFormValues );
+
+  values.enabled = false;
+  values.orbit.enabled = false;
+
+  return values;
+}
+
 // ── Form configuration fragment ────────────────────────────────────────────
 // Use as:  formConfiguration = { interaction: interactionFormConfiguration, ... }
 

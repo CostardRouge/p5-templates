@@ -26,6 +26,14 @@ import {
 import {
   interactionBindingsEnabled
 } from "@/lib/interactionBindings";
+// bindings.js is already a small, pure module statically imported by the
+// engine runtime for every sketch (see options.js) — importing it here too is
+// no added weight. defaults.js (the ~1000-line panel/values data) is dynamic
+// -imported lazily inside enableSourceInputs below, so an editor session that
+// never binds a live input source never pulls it into the client bundle.
+import {
+  needsInteractionBlock
+} from "@/p5/utils/interaction/bindings.js";
 import {
   type Binding,
   type BindingKind,
@@ -44,6 +52,7 @@ import {
   DEFAULT_RANDOM,
   encodeSource,
   getSketchScope,
+  interactiveScopeFor,
   interactionEnablePaths,
   makeDefaultBinding,
   SEQUENCE_MODE_OPTIONS,
@@ -83,11 +92,18 @@ function fieldDomain( config: FieldConfig ) {
 /**
  * The per-field modulation control. A small pastille sits beside a bindable
  * field (slider / number / vector2d). Bound, it is a live VU meter glowing with
- * the channel's activity; clicking it opens a popover to pick the source,
+ * the source's activity; clicking it opens a popover to pick the source,
  * range, curve and smoothing — or to remove the binding.
  *
- * Bindings are stored as data at `<scope>.bindings` (an array on the sketch
- * settings), resolved at read time by the options proxy. The mapping-range and
+ * A first click starts the parameter oscillating (see makeDefaultBinding):
+ * generators need no device, no permission and no interaction block, so
+ * modulating a parameter is a zero-consequence action until the user
+ * deliberately switches the source to a live input.
+ *
+ * Bindings are stored as data at the sketch scope's paired `interactive`
+ * namespace (`interactive.bindings` / `slides.N.interactive.bindings` — see
+ * interactiveScopeFor), resolved at read time by the options proxy so binding
+ * data never pollutes the sketch's own parameters. The mapping-range and
  * smoothing controls are real `ControlledSliderInput`s and the enable/invert
  * toggles are the shared `ToggleSwitch`, both bound to the binding's path in
  * the form so they behave exactly like every other control in the panel.
@@ -98,12 +114,15 @@ export default function BindingAffordance( {
   config
 }: Props ) {
   const {
-    setValue, register
+    setValue, register, getValues
   } = useFormContext();
 
   const scope = getSketchScope( fieldPath );
   const target = toSketchRelativePath( fieldPath );
-  const bindingsPath = scope ? `${ scope }.bindings` : "";
+  // Binding data lives in the `interactive` namespace paired with the field's
+  // sketch scope — never inside the sketch parameters themselves.
+  const interactiveScope = scope ? interactiveScopeFor( scope ) : "";
+  const bindingsPath = interactiveScope ? `${ interactiveScope }.bindings` : "";
 
   const bindings = useWatch( {
     name: bindingsPath || "__no_bindings__"
@@ -162,6 +181,30 @@ export default function BindingAffordance( {
   // control.
   const bindingPath = `${ bindingsPath }.${ index }`;
 
+  // Strip the plugin-managed `interaction` block once no binding needs it any
+  // more — the inverse of enableSourceInputs' on-demand seed below. Checked
+  // after every bindings-array write (add / remove / reset) and every source-
+  // category switch, so a sketch never carries the block, or shows its
+  // settings panel (gated the same way in GenericObjectForm), once its last
+  // interactive binding is gone. Only the `interactive` namespace is pruned —
+  // a sketch-DECLARED block at `${scope}.interaction` is a real sketch
+  // parameter (hand-tracking, audio, …) and is never touched.
+  const pruneInteractionIfUnused = ( nextList: Binding[] ) => {
+    if ( needsInteractionBlock( nextList ) ) {
+      return;
+    }
+
+    if ( getValues( `${ interactiveScope }.interaction` ) !== undefined ) {
+      setValue(
+        `${ interactiveScope }.interaction`,
+        undefined,
+        {
+          shouldDirty: true
+        }
+      );
+    }
+  };
+
   const writeBindings = ( next: Binding[] ) => {
     setValue(
       bindingsPath,
@@ -170,6 +213,7 @@ export default function BindingAffordance( {
         shouldDirty: true
       }
     );
+    pruneInteractionIfUnused( next );
   };
 
   const setField = (
@@ -186,13 +230,46 @@ export default function BindingAffordance( {
 
   // Picking an interaction input source should make it actually produce a
   // channel — flip the matching `interaction.*` enable flags on so the camera /
-  // mic / sensor for that source boots immediately. `sketch.interaction` exists
-  // on every sketch (seeded in getSketchMeta), so these writes land and the
-  // Interaction panel's own toggles reflect them.
-  const enableSourceInputs = ( source: string ) => {
-    for ( const path of interactionEnablePaths( source ) ) {
+  // mic / sensor for that source boots immediately. The flags land wherever
+  // the interaction block actually lives: a sketch-DECLARED block at the
+  // sketch scope (hand-tracking, audio, … — their own panel and sketch code
+  // read it, and the engine gives it precedence) is written in place;
+  // otherwise the plugin-managed block in the `interactive` namespace is
+  // seeded from an inert clone of the shared defaults on first use, then
+  // flipped. The seed never touches sketch parameters, and is pruned again by
+  // pruneInteractionIfUnused once no binding needs it.
+  const enableSourceInputs = async( source: string ) => {
+    const paths = interactionEnablePaths( source );
+
+    // Generators (and unknown ids) have no source to enable — and must not
+    // seed an interaction block they'd never read.
+    if ( paths.length === 0 ) {
+      return;
+    }
+
+    let interactionScope = scope;
+
+    if ( getValues( `${ scope }.interaction` ) === undefined ) {
+      interactionScope = interactiveScope;
+
+      if ( getValues( `${ interactiveScope }.interaction` ) === undefined ) {
+        const {
+          inertInteractionFormValues
+        } = await import( "@/p5/utils/interaction/defaults.js" );
+
+        setValue(
+          `${ interactiveScope }.interaction`,
+          inertInteractionFormValues(),
+          {
+            shouldDirty: true
+          }
+        );
+      }
+    }
+
+    for ( const path of paths ) {
       setValue(
-        `${ scope }.interaction.${ path }`,
+        `${ interactionScope }.interaction.${ path }`,
         true,
         {
           shouldDirty: true
@@ -201,18 +278,23 @@ export default function BindingAffordance( {
     }
   };
 
-  // Append a new layer (binding) for this parameter and select it.
+  // Append a new layer (binding) for this parameter and select it. A continuous
+  // target starts on the oscillator (see makeDefaultBinding) — a generator, so
+  // nothing is enabled and no interaction block is seeded; a vector2d target
+  // starts on an input source, which is enabled like any explicit source pick.
   const addLayer = () => {
+    const binding = makeDefaultBinding(
+      target,
+      kind,
+      config
+    );
+
     writeBindings( [
       ...list,
-      makeDefaultBinding(
-        target,
-        kind,
-        sourceOptions[ 0 ],
-        config
-      )
+      binding
     ] );
     setSelLayer( layers.length );
+    void enableSourceInputs( binding.source );
   };
 
   // Remove the selected layer, then select a remaining one.
@@ -382,7 +464,20 @@ export default function BindingAffordance( {
         "project",
         first.project ?? null
       );
-      enableSourceInputs( first.source );
+      void enableSourceInputs( first.source );
+    }
+
+    // Switching THIS binding away from an input source may have removed the
+    // scope's last reason to carry the interaction block — check with the
+    // projected next source (the write above hasn't round-tripped through
+    // form state yet within this same tick).
+    if ( next !== "input" ) {
+      pruneInteractionIfUnused( list.map( (
+        b, i
+      ) => ( i === index ? {
+        ...b,
+        source: next
+      } : b ) ) );
     }
   };
 
@@ -439,7 +534,7 @@ export default function BindingAffordance( {
   return (
     <Popover className="relative shrink-0">
       <PopoverButton
-        title={ bound ? "Edit modulation" : "Bind to an interactive input" }
+        title={ bound ? "Edit modulation" : "Modulate this parameter" }
         onClick={ () => {
           // First click on an unbound field creates the first layer AND opens
           // the popover (no preventDefault) so it can be configured immediately.
@@ -590,7 +685,7 @@ export default function BindingAffordance( {
                         "project",
                         project ?? null
                       );
-                      enableSourceInputs( source );
+                      void enableSourceInputs( source );
                     } }
                     aria-label="Source"
                     className="absolute inset-0 h-full w-full cursor-pointer opacity-0"

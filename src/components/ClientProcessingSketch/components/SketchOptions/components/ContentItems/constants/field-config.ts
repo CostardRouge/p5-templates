@@ -26,6 +26,15 @@ interface BaseConfig {
    * falls back to a sensible zero value.
    */
   default?: unknown;
+  /**
+   * Marks a field injected by the platform rather than declared by the
+   * sketch's own options.ts. Today only the interaction-bindings plugin's
+   * shared Interaction panel sets it: the form renders a managed interaction
+   * field against the top-level `interactive` namespace (and only while a
+   * binding needs it), where a sketch-declared one edits the sketch scope
+   * unconditionally.
+   */
+  managed?: boolean;
 }
 
 // Step 2: Define the config shape for each component type

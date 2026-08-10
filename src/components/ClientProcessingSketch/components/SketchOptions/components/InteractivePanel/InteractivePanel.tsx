@@ -20,9 +20,13 @@ import {
 import ControlledSliderInput
   from "../ContentItems/components/ControlledSliderInput/ControlledSliderInput";
 import {
+  needsInteractionBlock
+} from "@/p5/utils/interaction/bindings.js";
+import {
   type Binding,
   bindingSourceLabel,
-  humanizeTarget
+  humanizeTarget,
+  interactiveScopeFor
 } from "../ContentItems/components/BindingAffordance/bindingUtils";
 
 type Props = {
@@ -47,13 +51,17 @@ export default function InteractivePanel( {
   basePath
 }: Props ) {
   const {
-    setValue
+    setValue, getValues
   } = useFormContext();
   const [
     expanded,
     setExpanded
   ] = useState( false );
-  const bindingsPath = `${ basePath }.bindings`;
+  // Binding data lives in the `interactive` namespace paired with the scope's
+  // sketch settings ("sketch" → "interactive", "slides.N.sketch" →
+  // "slides.N.interactive") — never inside the sketch parameters.
+  const interactiveScope = interactiveScopeFor( basePath );
+  const bindingsPath = `${ interactiveScope }.bindings`;
   const bindings = useWatch( {
     name: bindingsPath
   } ) as Binding[] | undefined;
@@ -123,15 +131,34 @@ export default function InteractivePanel( {
   };
 
   const removeAt = ( index: number ) => {
+    const next = list.filter( (
+      _, j
+    ) => j !== index );
+
     setValue(
       bindingsPath,
-      list.filter( (
-        _, j
-      ) => j !== index ),
+      next,
       {
         shouldDirty: true
       }
     );
+
+    // Mirrors BindingAffordance.pruneInteractionIfUnused: the mixer can also
+    // remove the scope's last binding that needed the interaction block. Only
+    // the plugin-managed block in the `interactive` namespace is pruned — a
+    // sketch-declared `sketch.interaction` is a real parameter and stays.
+    if (
+      !needsInteractionBlock( next ) &&
+      getValues( `${ interactiveScope }.interaction` ) !== undefined
+    ) {
+      setValue(
+        `${ interactiveScope }.interaction`,
+        undefined,
+        {
+          shouldDirty: true
+        }
+      );
+    }
   };
 
   const clearSolos = () => {

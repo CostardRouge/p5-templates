@@ -517,6 +517,26 @@ export function registerEvents() {
 // dispose-on-reset only loads the (lazy) module when there's something to free.
 let _interactionInited = false;
 
+// The handler-managed source groups, each gated by its own `enabled` flag
+// (`vision` covers all camera trackers). Mirrors the per-source guards the
+// collectors in interaction/index.js check, like interactionEnablePaths in
+// the BindingAffordance does on the form side.
+const INTERACTION_SOURCE_GROUPS = [
+  "mouse",
+  "touch",
+  "vision",
+  "orbit",
+  "perlinNoise",
+  "gyroscope",
+  "midi",
+  "audio",
+  "joypad"
+];
+
+function hasEnabledInteractionSource( interaction ) {
+  return INTERACTION_SOURCE_GROUPS.some( ( source ) => interaction[ source ]?.enabled === true );
+}
+
 // Engine-managed interaction init: when a sketch's options carry an enabled
 // `interaction` block, boot the handler once at setup so its sources (webcam,
 // audio, gyro, touch, …) are available as binding channels with no per-sketch
@@ -524,11 +544,27 @@ let _interactionInited = false;
 // of the core module-eval chain. `initInteraction` is idempotent (re-arms
 // listeners), so it's safe alongside sketches that still call it themselves;
 // fire-and-forget so vision warm-up doesn't block setup.
+//
+// A block with NO enabled source (e.g. the inert one seeded on every sketch
+// when the bindings plugin is on) must not boot: there is nothing to sample,
+// and the baseline mouse binding works without the handler (channels.js keeps
+// its own listener). Sources enabled later at runtime lazy-init from their
+// collectors instead.
 function initInteractionForOptions() {
   try {
-    const interaction = liveSketchBase( getSketchOptions() )?.interaction;
+    const live = getSketchOptions();
+    const {
+      interaction
+    } = effectiveInteractive(
+      live,
+      liveSketchBase( live )
+    );
 
-    if ( interaction && interaction.enabled !== false ) {
+    if (
+      interaction &&
+      interaction.enabled !== false &&
+      hasEnabledInteractionSource( interaction )
+    ) {
       _interactionInited = true;
       import( "./interaction/index.js" )
         .then( ( mod ) => mod.initInteraction( interaction ) )
@@ -554,7 +590,7 @@ export function disposeInteractionOnReset() {
     .catch( () => {} );
 }
 
-// The per-slide-merged sketch settings object the bindings live on.
+// The per-slide-merged sketch settings object binding targets resolve against.
 function liveSketchBase( live ) {
   if ( typeof window !== "undefined" && window.getSketchSettings ) {
     try {
@@ -565,6 +601,42 @@ function liveSketchBase( live ) {
   }
 
   return live.sketch ?? {};
+}
+
+// The active slide (when the slides module is loaded), for resolving the
+// per-slide `interactive` override without re-deriving slide state here.
+function liveCurrentSlide() {
+  if ( typeof window !== "undefined" && window.getCurrentSlide ) {
+    try {
+      return window.getCurrentSlide()?.slide ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  return null;
+}
+
+// The effective interaction-bindings state for the current frame. Bindings and
+// the plugin-managed interaction block live in the top-level `interactive`
+// namespace (root, overridden key-by-key by the active slide's own), NOT
+// inside the sketch parameters. Two deliberate fallbacks:
+//   - bindings: a legacy `bindings` array still sitting on the merged sketch
+//     (pre-migration capture snapshots load without passing through
+//     initOptions) keeps working;
+//   - interaction: a block on the merged sketch WINS — that's a sketch-declared
+//     parameter (hand-tracking, audio, … read it from their own code), and the
+//     binding UI writes source-enable flags into it when it exists.
+function effectiveInteractive(
+  live, base
+) {
+  const root = live?.interactive;
+  const slide = liveCurrentSlide()?.interactive;
+
+  return {
+    bindings: slide?.bindings ?? root?.bindings ?? base?.bindings,
+    interaction: base?.interaction ?? slide?.interaction ?? root?.interaction
+  };
 }
 
 // The generator context: the loop-normalized progression (deterministic during
@@ -594,14 +666,24 @@ function publishChannelsFrame() {
   }
 
   try {
-    const base = liveSketchBase( getSketchOptions() );
-    const channels = sampleChannels( base?.interaction );
+    const live = getSketchOptions();
+    const base = liveSketchBase( live );
+    const {
+      bindings, interaction
+    } = effectiveInteractive(
+      live,
+      base
+    );
+    const channels = sampleChannels( interaction );
 
     publishChannels( channels );
 
-    if ( base && Array.isArray( base.bindings ) && base.bindings.length > 0 ) {
+    if ( Array.isArray( bindings ) && bindings.length > 0 ) {
       publishBindingSignals( computeBindingSignals(
-        base,
+        {
+          ...base,
+          bindings
+        },
         channels,
         bindingContext()
       ) );
@@ -646,26 +728,44 @@ export function syncEffectivePrevious(
 /* ------------------------------------------------------------------ */
 
 // Resolve the per-slide-merged sketch object, then layer interactive bindings
-// over it. `resolveBindings` returns the same object untouched when the sketch
-// declares no bindings, so non-interactive sketches pay nothing.
+// over it. Bindings come from the top-level `interactive` namespace (see
+// effectiveInteractive); with none active the base object is returned
+// untouched, so non-interactive sketches pay nothing — no per-access
+// allocation on this hot path (the proxy runs it on every `.sketch` read).
 function resolveSketch( live ) {
   const base = liveSketchBase( live );
 
-  if (
-    !BINDINGS_ENABLED ||
-    !base ||
-    !Array.isArray( base.bindings ) ||
-    base.bindings.length === 0
-  ) {
+  if ( !BINDINGS_ENABLED || !base ) {
+    return base;
+  }
+
+  const {
+    bindings, interaction
+  } = effectiveInteractive(
+    live,
+    base
+  );
+
+  if ( !Array.isArray( bindings ) || bindings.length === 0 ) {
     return base;
   }
 
   try {
     const context = bindingContext();
 
+    // The shim also grafts the effective interaction onto the resolved clone,
+    // so sketch code reading `options.sketch.interaction` sees the block the
+    // engine actually sampled, wherever it is stored. (resolveBindings
+    // memoizes the clone per frame, so this stays off the per-access path.)
     return resolveBindings(
-      base,
-      sampleChannels( base.interaction ),
+      {
+        ...base,
+        bindings,
+        ...( interaction !== undefined && {
+          interaction
+        } )
+      },
+      sampleChannels( interaction ),
       context.frame,
       context
     );

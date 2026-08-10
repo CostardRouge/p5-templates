@@ -283,15 +283,22 @@ export default function SketchPage() {
   // When the sketch consumes touch input (interaction.touch source), hand the
   // touchscreen over to it: the viewport must not pan/zoom — nor pause the
   // loop — on finger gestures. The options store is the only bridge needed;
-  // the sketch itself stays unaware of the UI. Mirrors the runtime merge in
-  // slides.getSketchSettings(): a slide-level `sketch` shallowly overrides
-  // the global one, so its `interaction` block wins when present.
+  // the sketch itself stays unaware of the UI. Mirrors the engine's
+  // effectiveInteractive precedence: a sketch-declared `interaction` block
+  // (slide sketch over global, like slides.getSketchSettings()) wins; the
+  // binding plugin's `interactive.interaction` namespace (slide over root)
+  // fills in when the sketch declares none.
   const disableTouchGestures = useMemo(
     () => {
-      const slideSketch = activeSlideIndex !== undefined
-        ? options?.slides?.[ activeSlideIndex ]?.sketch
+      const slide = activeSlideIndex !== undefined
+        ? options?.slides?.[ activeSlideIndex ]
         : undefined;
-      const interaction = ( slideSketch?.interaction ?? options?.sketch?.interaction ) as
+      const interaction = (
+        slide?.sketch?.interaction ??
+        options?.sketch?.interaction ??
+        slide?.interactive?.interaction ??
+        options?.interactive?.interaction
+      ) as
         | { enabled?: boolean;
           touch?: { enabled?: boolean } }
         | undefined;

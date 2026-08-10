@@ -1494,6 +1494,9 @@ export const SlideSchema = z.object( {
   content: z.array( ContentItemSchema ).default( [] ),
   assets: Assets,
   sketch: z.any().optional(),
+  // Per-slide interaction-bindings namespace (`{ bindings, interaction }`),
+  // overriding the root `interactive` key-by-key — see migrateInteractiveOptions.
+  interactive: z.any().optional(),
   transition: SlideTransitionSchema.optional()
 } );
 
@@ -1519,7 +1522,12 @@ export const OptionsSchema = z.object( {
   // the key to be present unless it says so. Spelled out to match SlideSchema
   // above and keep `OptionsSchema.parse( {} )` working — per-sketch params are
   // supplied by each sketch's own options.ts, not by this root schema.
-  sketch: z.any().optional()
+  sketch: z.any().optional(),
+  // The interaction-bindings plugin's namespace (`{ bindings, interaction }`),
+  // kept OUTSIDE `sketch` so binding data never pollutes the sketch's own
+  // parameters (exports, save-defaults, randomize, sketch code). Untyped like
+  // `sketch` — its shape belongs to the plugin, not this root schema.
+  interactive: z.any().optional()
 } );
 
 export type ContentItem = z.infer<typeof ContentItemSchema>;
