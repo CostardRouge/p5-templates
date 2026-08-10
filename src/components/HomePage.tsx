@@ -5,14 +5,7 @@ import {
   useEffect, useMemo, useRef, useState
 } from "react";
 import {
-  ArrowUpRight,
-  Layers,
-  Radio,
-  Search,
-  Server,
-  Shuffle,
-  SlidersHorizontal,
-  X
+  ArrowUpRight, Layers, Radio, Search, Server, Shuffle, SlidersHorizontal, X
 } from "lucide-react";
 import Github from "@/components/ui/GithubIcon";
 import AnimatedPreview from "@/components/AnimatedPreview";
@@ -379,7 +372,7 @@ export default function HomePage( {
 
           <h1 className="font-black text-4xl sm:text-6xl lg:text-7xl tracking-[-0.04em] leading-[0.95] [text-wrap:balance]">
             a studio for{ " " }
-            <span className="italic font-extralight">social</span>{ " " }
+            <span className="italic font-extralight">creative-coding</span>{ " " }
             visuals<span className="text-fuchsia-500">.</span>
           </h1>
 
