@@ -26,7 +26,7 @@ events.register(
   () => {
     const p = getP5();
 
-    interactive.image = p.loadImage( "/assets/images/handpointing.png" );
+    interactive.image = p.loadImage( "/assets/images/cursors/handpointing.png" );
   }
 );
 
