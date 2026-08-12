@@ -342,7 +342,7 @@ export function useFrameExporter( {
 
         triggerDownload(
           zip,
-          `${ safeName }-frames-${ suffix }.zip`
+          `${ safeName }-${ width }x${ height }-frames-${ suffix }.zip`
         );
 
         finish();
