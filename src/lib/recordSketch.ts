@@ -310,9 +310,12 @@ async function recordSingleSketch(
   // ─── Capture frames and encode video ──────────────────────────────────────
   const totalFrames = calculateTotalFrames( options.animation );
   const framerate = resolveAnimation( options.animation ).framerate;
+  const {
+    size
+  } = getEffectiveSlideSettings( options );
   const outputVideoPath = path.join(
     temporaryDirectoryPath,
-    `${ path.basename( sketch ) }-${ jobId }.mp4`
+    `${ path.basename( sketch ) }-${ size.width }x${ size.height }-${ jobId }.mp4`
   );
   const thumbnailPath = path.join(
     temporaryDirectoryPath,
@@ -472,16 +475,18 @@ async function recordMultipleSlides(
     // over the global) the same way the engines do, so a partial override
     // (e.g. framerate-only) keeps the global duration instead of dropping it —
     // and the frame count matches what the in-page clock loops over.
-    const slideAnimation = getEffectiveSlideSettings(
+    const {
+      size: slideSize, animation: slideAnimation
+    } = getEffectiveSlideSettings(
       options,
       slideIndex
-    ).animation;
+    );
     const totalFrames = calculateTotalFrames( slideAnimation );
     const framerate = resolveAnimation( slideAnimation ).framerate;
 
     const slideVideoPath = path.join(
       temporaryDirectoryPath,
-      `${ path.basename( sketch ) }_${ slideIndex }.mp4`
+      `${ path.basename( sketch ) }-${ slideSize.width }x${ slideSize.height }_${ slideIndex }.mp4`
     );
     const slideThumbnailPath = path.join(
       temporaryDirectoryPath,

@@ -454,7 +454,10 @@ export function useBrowserRecorder( {
           }
 
           const safeName = sketchNameRef.current || "sketch";
-          const fileName = `${ safeName }.${ result.fileExtension }`;
+          const {
+            width, height
+          } = host.getCaptureSource();
+          const fileName = `${ safeName }-${ width }x${ height }.${ result.fileExtension }`;
 
           triggerDownload(
             result.blob,
