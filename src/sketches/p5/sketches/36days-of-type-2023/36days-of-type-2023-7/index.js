@@ -110,6 +110,47 @@ const getBackgroundColor = () =>
     225
   ];
 
+// Where the interactive "cursor" is this frame, in canvas pixels: the mouse,
+// or a scripted lissajous sweep. Null in the non-interactive wave modes.
+function updateInteractivePosition( p ) {
+  const waveConfig = options.sketch?.animation?.wave ?? {
+    mode: "linear"
+  };
+
+  if ( waveConfig.mode !== "interactive" ) {
+    sketchState.interactive.position = null;
+    return;
+  }
+
+  if ( waveConfig.useMouse ) {
+    sketchState.interactive.position = p.createVector(
+      p.mouseX,
+      p.mouseY
+    );
+    return;
+  }
+
+  const sinMult = waveConfig.sinMultiplier ?? 3;
+  const cosMult = waveConfig.cosMultiplier ?? 1;
+
+  sketchState.interactive.position = p.createVector(
+    p.map(
+      Math.sin( animation.angle * sinMult ),
+      -1,
+      1,
+      0,
+      p.width
+    ),
+    p.map(
+      Math.cos( animation.angle * cosMult ),
+      -1,
+      1,
+      0,
+      p.height
+    )
+  );
+}
+
 sketch.draw( async() => {
   const p = getP5();
 
@@ -191,6 +232,11 @@ sketch.draw( async() => {
       options.sketch?.mask?.distance
     )
   );
+
+  // Resolved before the boxes are drawn so the field they react to and the
+  // cursor drawn on top belong to the same frame (they used to be one frame
+  // apart, which showed as lag during capture).
+  updateInteractivePosition( p );
 
   alphaPoints.forEach( (
     {
@@ -292,16 +338,20 @@ sketch.draw( async() => {
     if ( waveConfig.mode === "interactive" ) {
       // Interactive mode: distance from cursor/animated point
       if ( sketchState.interactive.position ) {
+        // screenPosition returns WEBGL-centered coordinates while the
+        // interactive position is in canvas pixels, so bring the projected
+        // point into pixel space before measuring — otherwise the field's hot
+        // spot sits half a canvas away from the cursor drawn on top.
         const screenPos = sketchState.shape.graphics.screenPosition(
           0,
           0,
           0
         );
-        const distance = sketchState.shape.graphics.dist(
+        const distance = p.dist(
           sketchState.interactive.position.x,
           sketchState.interactive.position.y,
-          screenPos.x,
-          screenPos.y
+          screenPos.x + p.width / 2,
+          screenPos.y + p.height / 2
         );
         const sensitivity = waveConfig.sensitivity ?? 0.3;
 
@@ -489,39 +539,13 @@ sketch.draw( async() => {
   );
   sketchState.shape.graphics.clear();
 
-  // Update interactive position if in interactive mode
+  // The cursor overlay: drawn on the 2D canvas, after the 3D buffer has been
+  // flattened onto it, so it never joins the scene's depth buffer.
   const waveConfig = options.sketch?.animation?.wave ?? {
     mode: "linear"
   };
 
-  if ( waveConfig.mode === "interactive" ) {
-    if ( waveConfig.useMouse ) {
-      sketchState.interactive.position = p.createVector(
-        p.mouseX,
-        p.mouseY
-      );
-    } else {
-      const sinMult = waveConfig.sinMultiplier ?? 3;
-      const cosMult = waveConfig.cosMultiplier ?? 1;
-
-      sketchState.interactive.position = p.createVector(
-        p.map(
-          Math.sin( animation.angle * sinMult ),
-          -1,
-          1,
-          0,
-          p.width
-        ),
-        p.map(
-          Math.cos( animation.angle * cosMult ),
-          -1,
-          1,
-          0,
-          p.height
-        )
-      );
-    }
-
+  if ( waveConfig.mode === "interactive" && sketchState.interactive.position ) {
     // Draw crosshair
     p.stroke(
       128,
