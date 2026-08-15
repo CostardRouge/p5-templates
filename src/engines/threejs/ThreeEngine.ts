@@ -62,6 +62,11 @@ export class ThreeEngine implements SketchEngine {
   }>();
 
   private _isReady = false;
+  // Set by destroy(). init() re-checks it after every await — see the note in
+  // P5Engine: a strict-mode double-mount would otherwise resume a destroyed
+  // engine's pending init alongside the replacement's and start the shared
+  // runtime twice (two stacked canvases).
+  private destroyed = false;
   private container: HTMLElement | null = null;
   private runtime: ThreeRuntime | null = null;
   private listeners = new Map<string, Set<( payload: any ) => void>>();
@@ -100,6 +105,10 @@ export class ThreeEngine implements SketchEngine {
       setSketchOptions
     } = await import( "@/lib/syncSketchOptions" );
 
+    if ( this.destroyed ) {
+      return;
+    }
+
     setSketchOptions(
       options,
       "react"
@@ -113,6 +122,10 @@ export class ThreeEngine implements SketchEngine {
     const {
       default: sketch
     } = await import( "@/threejs/utils/sketch.js" );
+
+    if ( this.destroyed ) {
+      return;
+    }
 
     this.runtime = sketch as ThreeRuntime;
 
@@ -135,7 +148,7 @@ export class ThreeEngine implements SketchEngine {
     } );
 
     // destroy() may have run while awaiting the dynamic imports.
-    if ( !this.runtime || !sketchPath ) {
+    if ( this.destroyed || !this.runtime || !sketchPath ) {
       return;
     }
 
@@ -162,7 +175,7 @@ export class ThreeEngine implements SketchEngine {
 
     await this.runtime.start( container );
 
-    if ( !this.runtime ) {
+    if ( this.destroyed || !this.runtime ) {
       return;
     }
 
@@ -208,6 +221,9 @@ export class ThreeEngine implements SketchEngine {
   }
 
   destroy(): void {
+    // Cancel any still-pending init (see the field's note).
+    this.destroyed = true;
+
     this.stopPerformanceLoop();
     unregisterServerCaptureController();
     unregisterAnimationBridge();

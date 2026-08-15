@@ -64,6 +64,14 @@ export class P5Engine implements SketchEngine {
   }>();
 
   private _isReady = false;
+  // Set by destroy(). init() re-checks it after every await: React strict
+  // mode (dev) mounts, destroys and re-mounts the renderer synchronously, so
+  // a destroyed engine's still-pending init would otherwise resume alongside
+  // the replacement's and start a SECOND p5 instance on the shared runtime —
+  // two stacked canvases, doubled event handlers, capture reading the dead
+  // one. The old `sketchRuntime` null-check could not catch this: init
+  // re-assigns sketchRuntime itself right after the destroy ran.
+  private destroyed = false;
   private container: HTMLElement | null = null;
   private sketchRuntime: P5SketchRuntime | null = null;
   private listeners = new Map<string, Set<( payload: any ) => void>>();
@@ -103,6 +111,10 @@ export class P5Engine implements SketchEngine {
       setSketchOptions
     } = await import( "@/lib/syncSketchOptions" );
 
+    if ( this.destroyed ) {
+      return;
+    }
+
     setSketchOptions(
       options,
       "react"
@@ -119,6 +131,10 @@ export class P5Engine implements SketchEngine {
     const {
       default: sketch
     } = await import( "@/p5/utils/sketch.js" );
+
+    if ( this.destroyed ) {
+      return;
+    }
 
     this.sketchRuntime = sketch as P5SketchRuntime;
 
@@ -149,7 +165,7 @@ export class P5Engine implements SketchEngine {
     // destroy() may have run while we were awaiting the dynamic imports
     // (e.g. React tearing down the tree on a parent error). Bail out
     // before touching sketchRuntime — otherwise `runtime._setupFn` throws.
-    if ( !this.sketchRuntime || !sketchPath ) {
+    if ( this.destroyed || !this.sketchRuntime || !sketchPath ) {
       return;
     }
 
@@ -181,7 +197,7 @@ export class P5Engine implements SketchEngine {
 
     await this.sketchRuntime.start( container );
 
-    if ( !this.sketchRuntime ) {
+    if ( this.destroyed || !this.sketchRuntime ) {
       return;
     }
 
@@ -207,6 +223,10 @@ export class P5Engine implements SketchEngine {
         }
       );
     } );
+
+    if ( this.destroyed ) {
+      return;
+    }
 
     this._isReady = true;
 
@@ -236,6 +256,10 @@ export class P5Engine implements SketchEngine {
   }
 
   destroy(): void {
+    // Cancel any still-pending init (see the field's note) before tearing
+    // the runtime down.
+    this.destroyed = true;
+
     this.stopPerformanceLoop();
     unregisterServerCaptureController();
 
