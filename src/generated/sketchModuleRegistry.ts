@@ -228,6 +228,7 @@ export const sketchModuleLoaders: Record<string, SketchModuleLoader> = {
   "p5:ribbons/ribbons-v8-globule": () => import( "@/p5/sketches/ribbons/ribbons-v8-globule/index.js" ),
   "p5:ribbons/ribbons-v9-atom": () => import( "@/p5/sketches/ribbons/ribbons-v9-atom/index.js" ),
   "p5:rings/rings-v1-flythrough": () => import( "@/p5/sketches/rings/rings-v1-flythrough/index.js" ),
+  "p5:rings/rings-v10-magnetic-flyby": () => import( "@/p5/sketches/rings/rings-v10-magnetic-flyby/index.js" ),
   "p5:rings/rings-v2-letters": () => import( "@/p5/sketches/rings/rings-v2-letters/index.js" ),
   "p5:rings/rings-v3-letter-orbit": () => import( "@/p5/sketches/rings/rings-v3-letter-orbit/index.js" ),
   "p5:rings/rings-v4-letter-morph": () => import( "@/p5/sketches/rings/rings-v4-letter-morph/index.js" ),
