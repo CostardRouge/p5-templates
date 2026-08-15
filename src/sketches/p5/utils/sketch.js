@@ -127,6 +127,22 @@ const sketch = {
 
     const p5 = await loadP5Class();
 
+    // This module is a singleton, so it can only ever run ONE p5 instance. A
+    // previous run may still be live if its engine was torn down mid-init
+    // (e.g. a React strict-mode double-mount racing destroy against a pending
+    // start): letting a second instance boot would stack a second canvas in
+    // the container, double every registered event handler (the draw clock
+    // would advance twice per frame) and leave capture reading the dead
+    // surface. Replace the leftover instead — remove() tears its canvas and
+    // loop down — and clear the event registry its run registered into.
+    const previous = getP5();
+
+    if ( previous ) {
+      previous.remove();
+      setP5( null );
+      events.registeredEvents = {};
+    }
+
     setContainer( container );
 
     const sketchOptions = sketch.sketchOptions ?? {
