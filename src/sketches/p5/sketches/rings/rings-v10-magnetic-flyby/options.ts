@@ -32,16 +32,16 @@ export const formValues = {
     simplify: 0,
     // Points sampled along the text's outlines (split proportionally to
     // contour perimeter, ≥ 3 per ring) — these are the attractable points.
-    handles: 56,
+    handles: 78,
     // Baseline-to-baseline distance between the lines of a multi-line text,
     // in font-size units (vertical reels layouts).
     lineSpacing: 1.15
   },
 
   material: {
-    size: 1.55,
-    thickness: 0.03,
-    fusion: 0.064
+    size: 1.95,
+    thickness: 0.035,
+    fusion: 0.123
   },
 
   // The formation's flight plan. `cycles`, the spin and the Lissajous
@@ -51,13 +51,13 @@ export const formValues = {
     mode: "circle",
     cycles: 2,
     phase: 0,
-    stagger: 0,
+    stagger: 0.15,
     easing: "easeInOutCubic",
     circle: {
-      radiusMin: 0.05,
+      radiusMin: 0.1,
       radiusMax: 0.95,
       rotation: 0,
-      spinTurns: 0
+      spinTurns: 1
     },
     lissajous: {
       freqX: 3,
@@ -94,7 +94,7 @@ export const formValues = {
   // chase (and, once released, return home). At the top of the speed slider
   // the chase is instantaneous — a pure field, perfectly loop-safe.
   attraction: {
-    strength: 70,
+    strength: 190,
     range: 170,
     falloff: "smoothstep",
     speed: 9,
@@ -157,7 +157,7 @@ export const formValues = {
   },
 
   camera: {
-    fov: 30,
+    fov: 49,
     distance: 11.8,
     // Auto-fit keeps any text (word or stacked block) in frame; switch it
     // off to drive the distance manually.
