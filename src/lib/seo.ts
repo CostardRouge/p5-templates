@@ -93,6 +93,21 @@ export function buildSketchKeywords(
   ];
 }
 
+// ─── Share / embed page utilities ─────────────────────────────────────────────
+
+/** Page title for a shared sketch link: "Photo Balloons — Shared Sketch". */
+export function buildShareTitle( sketchTitle: string ): string {
+  return `${ sketchTitle } — Shared Sketch`;
+}
+
+/** Meta description for a shared sketch link (the /embed view). */
+export function buildShareDescription(
+  sketchTitle: string,
+  engineLabel: string
+): string {
+  return `${ sketchTitle } — a creative-coding sketch shared from ${ SITE_NAME }. Watch it render live in your browser, powered by ${ engineLabel }.`;
+}
+
 // ─── JSON-LD generators ───────────────────────────────────────────────────────
 
 /** WebApplication schema for the root layout. */
