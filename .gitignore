@@ -20,9 +20,16 @@
 # production
 /build
 
+# editor / IDE state — machine-specific, never part of a commit
+.idea/
+.vscode/
+
 # misc
 .DS_Store
 *.pem
+*.key
+*.p12
+*.keystore
 
 # debug
 npm-debug.log*
@@ -30,8 +37,12 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# env files — never commit a real one. The template is the exception:
+# setup.sh copies .env.example to .env on a fresh clone, so it has to be
+# committable (see the open item in MEMORY.md — the file itself is missing).
+.env
+.env.*
+!.env.example
 
 # vercel
 .vercel
