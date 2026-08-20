@@ -1,0 +1,40 @@
+# Sketches
+
+Read before adding, renaming, editing or deleting a sketch, and before touching the generated catalogue or the sketch routes.
+
+## Where sketches live, and the name that no longer exists
+
+2026-08-20 — Sketches are under `src/sketches/<engine>/` — `p5`, `gsap`, `threejs`, `html` — with p5 sketches at `src/sketches/p5/sketches/<category>/<sketch>/`. Nesting creates categories. Commit 4946ea6 ("Standardize on sketch") moved everything out of `src/templates/` and renamed the routes; `docs/`, older commit messages and even a previous version of `CLAUDE.md` still say `src/templates/` or `src/p5-sketches`, and neither path exists. **How to apply**: trust `tsconfig.json`'s `paths` and `jest.config.js`'s `moduleNameMapper`, which agree — `@/p5/*` → `src/sketches/p5/*`, likewise `@/gsap/*`, `@/threejs/*`, `@/html/*`. If a doc points you at `src/templates/`, the doc is stale.
+
+## Old URLs are kept alive by 308 redirects
+
+2026-08-20 — The same rename moved the gallery and editor from `/templates` to `/sketches`. `next.config.ts` keeps permanent (308) redirects for `/templates` and `/templates/:path*`, because shared links, bookmarks, indexed URLs *and stored recording jobs* still carry the old path — Playwright follows the redirect during backend capture. **How to apply**: do not remove those redirects as dead weight; removing them breaks historical jobs, not just old bookmarks.
+
+## A sketch directory has a fixed shape
+
+2026-08-20 — Each sketch dir holds an entry file (`index.js`, or `.ts`/`.jsx`/`.tsx` — the drift test accepts all four) and an `options.ts` exporting `formValues` (the defaults, a plain nested object) and `formConfiguration` (per-field UI config: `component`, `label`, ranges). Those two exports are what generates the parameter form — there is no separate form code to write. Two marker files control visibility: `.hidden-home` hides a sketch from the home showcase, `.hidden-template` from the `/sketches` gallery (`scripts/watch-sketches.mjs`). **How to apply**: copy the shape from a neighbouring sketch in the same category. Nested groups in `formValues` map to `component: "nested-object"` entries in `formConfiguration`.
+
+## The current p5 sketch API is callback registration
+
+2026-08-20 — p5 sketches import the shared runtime and register lifecycle callbacks; they do not define a bare `function sketch( p, options, assets )`. That older signature survives in `docs/SKETCH_CREATION_GUIDE.md` and is the single most common way to write a sketch that does not run.
+
+```js
+import options from "@/p5/utils/options.js";
+import sketch, { getP5 } from "@/p5/utils/sketch.js";
+
+sketch.setup( () => { /* one-time setup */ } );
+sketch.draw( ( time, center ) => {
+  const p = getP5();          // the live p5 instance
+  const o = options.sketch;   // this sketch's params, from options.ts
+} );
+```
+
+**How to apply**: `time` is the duration-scaled loop clock (see `docs/memory/architecture.md` on deterministic capture), never raw seconds. Reach for the existing helpers in `@/p5/utils/` — animation, easing, colors, grid, shapes, mappers, audio, webcam, interaction, slides, title — instead of reinventing them; it is a large toolkit and most sketches are mostly composition.
+
+## Versions are added, not edited
+
+2026-08-20 — Variants live side by side rather than replacing each other: `churros-v1-circle` through `churros-v11-perspective`, `rings-v9-flick-reveal` then `rings-v10-magnetic-flyby`. Old versions stay renderable, which matters because stored presets and jobs reference them by name. **How to apply**: a substantial change to an existing sketch's behaviour is a new `-vN` directory, not an edit in place. Edit in place only for fixes — a broken asset path, a bug — where the previous behaviour was not something anyone would want back.
+
+## The catalogue is generated, hook-synced and drift-tested
+
+2026-08-20 — `scripts/watch-sketches.mjs` scans `src/sketches/` and writes three files: `src/sketches/metadata.json` (the catalogue the gallery and editor read), `src/generated/sketchModuleRegistry.ts` (literal `import()` thunks, so each sketch code-splits) and `src/generated/sketchOptionsRegistry.ts`. Three mechanisms keep them honest: `.husky/pre-commit` regenerates and stages them whenever a file under `src/sketches/` or `public/assets/images/templates/` is in the commit; `src/sketches/__tests__/sketches.test.ts` fails if the committed metadata differs from what the generator would produce today, or if a sketch is missing its entry file, options, thumbnail or preview; and `.gitattributes` resolves their merge conflicts automatically (see `docs/memory/tooling.md`). **How to apply**: never hand-edit the three files. Regenerate with `npm run sketch:meta:write`, or run `npm run watch` during development. Registry thunks must stay literal `import()` calls — a computed specifier would defeat the code splitting the generator exists to produce.
