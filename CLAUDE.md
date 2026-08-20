@@ -1,219 +1,93 @@
-# CLAUDE.md
+# Instructions for LLM agents (Claude Code, Codex, Cursor, etc.)
 
-Guidance for AI assistants (and humans) working in this repository.
+Agents read this file at the start of every session. These rules override the agent's default behaviour and apply for the whole session, not only the first turn.
 
-## What this project is
+## Context
 
-**Sketchbook** (`sketchbook`) is a Next.js 16 app for building,
-parameterizing, and exporting visuals from creative-coding sketches.
-Users pick a template, tweak its parameters through an auto-generated form, preview
-it live, and export it as an image or video — either recorded in-browser or rendered
-headlessly on the backend with Playwright + FFmpeg.
+- **Sketchbook** — a Next.js 16 (App Router, Turbopack) / React 19 / TypeScript-strict app for building, parameterizing and exporting visuals from creative-coding sketches. Rendering is engine-agnostic: p5.js, GSAP and Three.js sketches all drive the same `SketchEngine` contract (`src/engines/types.ts`). Prisma 7 + PostgreSQL for persistence, BullMQ + Redis for the recording queue, MinIO/S3 for artefacts, Playwright + FFmpeg for headless capture. Package manager: **npm** — the lockfile is `package-lock.json` (it is the only lockfile; keep it that way).
+- Deploys as a Docker image: a push to `main` builds and publishes `ghcr.io/costardrouge/p5-templates`, and a Watchtower HTTP-API call re-pulls it on the maintainer's NAS (`deploy/README.md`, `.github/workflows/docker-build.yml`).
+- Commands: `npm run dev` (dev server) · `npm run watch` (dev server + sketch-metadata watcher) · `npm run build` · `npm test` · `npm run lint` / `lint:fix` · `npm run typecheck` · **`npm run check`** = lint + typecheck + test. CI runs lint, typecheck, test and build as four parallel jobs on Node 24.
+- Several agent sessions may run **in parallel** on this repo. Git history must stay readable: **one commit = one task**.
+- **Local sessions: never `git push`** — the developer tests locally and pushes himself. **Cloud / web sessions (ephemeral container): push the working branch and open a pull request**, it is the only way the code gets out. Never push to `main` either way.
 
-The rendering layer is **engine-agnostic**: p5.js is the primary engine, with a GSAP
-(DOM/React) engine alongside it, both driven through a common `SketchEngine` interface.
+## Rule 1 — Automatic commit at the end of every task (MANDATORY)
 
-## Tech stack
+As soon as a task requested by the user is finished (feature, fix, refactor, content…), the agent MUST create a commit before handing back. No need to ask permission: it is the expected behaviour.
 
-- **Next.js 16** (App Router, Turbopack) · **React 19** · **TypeScript** (strict) · **Tailwind CSS 3**
-- **p5.js 1.x** and **GSAP** rendering engines
-- **Prisma 7 + PostgreSQL** for persistence (client generated to `src/generated/prisma`)
-- **BullMQ + Redis (ioredis)** for the background recording queue
-- **MinIO / S3** (`@aws-sdk/client-s3`) for video/image/thumbnail storage
-- **Playwright** (headless Chromium) + **FFmpeg** for server-side recording
-- **React Hook Form + Zod 4** for form state and validation
-- **Jest** (`ts-jest`, jsdom) + **fast-check** for tests
+### Exact procedure
 
-### Two TypeScript compilers, on purpose
+1. **Check the state**: `git status --porcelain` and `git diff --stat`.
+2. **Select only the task's files**:
+   - Stage file by file with `git add <path>` (never `git add -A`, `git add .` or `git commit -a`).
+   - A modified file unrelated to the task (parallel session, tooling noise) stays **unstaged**. Do not touch it, stash it or reset it.
+   - If one file holds changes from this task AND another, prefer `git add -p <file>` to stage only the relevant hunks. If inextricable, stage the whole file and say so in the commit body ("also contains …").
+   - Never stage: `.env` and any secret file, `.idea/`, `.vscode/`, `.next/` (including `.next/cache/eslint`), `/tmp/p5-templates-build`, `node_modules/`, `.DS_Store`, `src/generated/prisma/` — unless the task is explicitly about them. If one of these turns out to be *tracked*, say so: it must be untracked and gitignored, not carefully avoided at every commit.
+   - Exception, and it is not optional: the **pre-commit hook regenerates and stages** `src/sketches/metadata.json`, `src/generated/sketchModuleRegistry.ts` and `src/generated/sketchOptionsRegistry.ts` whenever a sketch or template asset is part of the commit. Those three belong in your commit — do not unstage them.
+   - Check with `git diff --cached --stat` before committing.
+3. **Commit with a readable message** (format below). Always use a HEREDOC to keep title + body:
 
-TypeScript 7 is the native (Go) port and its npm package no longer exports the
-classic JS compiler API, which ts-jest and typescript-eslint both still need
-(they exclude it by peer range). So the tree carries both:
+   ```bash
+   git commit -m "$(cat <<'EOF'
+   Imperative title, ≤ 72 characters, no trailing period
 
-| Package | Version | Used by |
-|---|---|---|
-| `typescript` | 6.x (JS-based, full API) | ts-jest, typescript-eslint, `next build` |
-| `typescript7` (alias of `typescript@7`) | 7.x (native) | `npm run typecheck` |
+   Why this change, what it does concretely, non-obvious decisions.
+   One line per idea. Mention the files/areas touched if useful.
 
-`npm run typecheck` is the authority on type errors — it covers everything in
-`tsconfig.json` (tests included) in ~8s, where TS 6 takes ~33s. Both agree on
-this codebase. Don't "simplify" this by moving `typescript` to 7: lint and test
-break immediately.
+   Co-Authored-By: Claude <noreply@anthropic.com>
+   EOF
+   )"
+   ```
 
-Note `tsconfig.json` sets `types: ["node", "jest"]` explicitly — TS 6+ stopped
-auto-including every `node_modules/@types` package.
+4. Do not push (local sessions). End the reply with a recap: short hash + commit title + the list of files that were modified but deliberately left uncommitted, if any, so the user knows where every change comes from.
+5. If a git hook changes or refuses something: read the output, fix, recommit. Never `--no-verify`.
 
-## Getting started
+### Commit message format
 
-```bash
-./setup.sh                              # .env, docker services, npm install, migrations
-docker-compose up -d redis minio postgres   # infra only (native dev, recommended)
-npm run dev                             # Next dev server (Turbopack) at :3000
-```
+- Title: English imperative, clear sentence, ≤ 72 chars, no `feat:`-style prefix, no trailing period. Real examples from this repo: `Add sketch-specific SEO metadata to shared /embed links`, `Fix engine double-mount race exposed by Next 16.3 dev mode`, `Include export dimensions in downloaded filenames`. A handful of older commits use `fix(scope):` prefixes; prose imperative is the dominant style and the one to follow.
+- Blank line, then a body, mandatory whenever the title is not enough: the why, the how in 2–6 lines, the trade-offs, what remains to do. The body is what lets someone find, weeks later, which feature produced this diff.
+- A commit never mixes two tasks. If a session handles several distinct tasks, make several successive commits.
+- No empty commit, no "WIP" commit, no commit for an unfinished task. If the task is interrupted, leave the work uncommitted and say so.
 
-Full-Docker dev: `make app-dev`. Production: `make app-prod`. Run `make help` for all targets.
+### When is a task "finished"?
 
-Services: App `:3000` · MinIO console `:9001` · Postgres `:5432` · Redis `:6379`.
+- The requested code is written and verified: `npm run check` green, plus `npm run build` for anything touching a sketch or a route (the build compiles every sketch route and is what catches broken imports). For rendering changes, a visual check — the `verify` skill in `.claude/skills/verify/` drives the running app headlessly and captures canvas pixels.
+- A plain question, an exploration or an explanation produces no commit (nothing to commit).
 
-## Commands
+## Rule 2 — Project memory in `MEMORY.md` + `docs/memory/` (MANDATORY)
 
-| Command | Purpose |
-|---|---|
-| `npm run dev` | Dev server (Turbopack) |
-| `npm run watch` | Dev server **plus** the sketch-metadata watcher (`scripts/dev-watch.mjs`) |
-| `npm run build` | Production build (also compiles every sketch route — catches broken imports) |
-| `npm run lint` / `npm run lint:fix` | ESLint (cached). `format` is an alias for `lint:fix` |
-| `npm test` / `npm run test:watch` | Jest |
-| `npm run typecheck` / `npm run typecheck:watch` | TypeScript 7 (native) `tsc --noEmit` |
-| `npm run check` | **`lint` + `typecheck` + `test`** — run this before considering work done |
-| `npm run sketch:meta` | Watch sketches → regenerate `metadata.json` + registries |
-| `npm run sketch:meta:write` | One-shot regenerate of sketch metadata/registries |
-| `npx prisma migrate dev` | Create & apply a migration · `npx prisma studio` to browse |
+The repo carries its own long-term memory, read locally and in the cloud alike:
 
-CI (`.github/workflows/ci.yml`) runs four parallel jobs on Node 24: **lint**, **typecheck**,
-**test**, **build**. Docs/markdown-only changes are path-ignored. Match CI locally with
-`npm run check` + `npm run build`.
+- `MEMORY.md` at the root — the index, imported below and therefore loaded every session: how to maintain the memory, how the maintainer works, direction and decisions at a glance, open items, and a table of topic files.
+- `docs/memory/<topic>.md` — one file per area, loaded on demand. Not imported here on purpose: the split keeps the per-session prompt small.
 
-## Repository layout
+Obligations:
 
-```
-src/
-├── app/               # Next.js App Router: pages, layouts, API routes, server actions
-│   ├── api/           #   route handlers (recordings, assets, s3, previews, thumbnails, dev, health)
-│   ├── actions/       #   server actions (e.g. notifications)
-│   ├── templates/     #   template gallery + /templates/[engine]/[...sketch] editor pages
-│   └── recordings/    #   recording dashboard page
-├── engines/           # Engine abstraction (the core rendering contract)
-│   ├── types.ts       #   SketchEngine + EngineRegistration interfaces — READ THIS FIRST
-│   ├── registry.ts    #   getEngine/listEngines; index.ts registers p5 + gsap engines
-│   ├── p5/            #   P5Engine implementation
-│   ├── gsap/          #   GsapEngine implementation
-│   └── recording/     #   engine-agnostic capture pipeline (recorders, encoders, strategies)
-├── templates/         # The sketches themselves (NOT src/p5-sketches — README is stale here)
-│   ├── p5/sketches/   #   p5 templates, grouped in category dirs, often versioned (…-v1, -v2)
-│   ├── p5/utils/      #   large shared p5 toolkit (animation, colors, grid, audio, webcam, …)
-│   ├── p5/shared/     #   cross-sketch helpers
-│   ├── gsap/          #   gsap sketches + utils
-│   └── metadata.json  #   AUTO-GENERATED sketch catalogue (do not hand-edit)
-├── generated/         # AUTO-GENERATED — prisma client + sketch{Module,Options}Registry.ts
-├── components/        # React UI (editor, forms, recording dashboard, ui/ primitives)
-├── services/          # Recording queue/worker/notification services (BullMQ side)
-├── lib/               # Core business logic (bridges, job store, recording, previews, seo)
-├── hooks/             # React hooks
-├── utils/             # Framework-agnostic helpers (capture, ffmpeg, zip, sketch listing)
-├── config/, constants/, types/   # Config, constants, shared TS types (sketch/recording)
-prisma/                # schema.prisma + migrations
-scripts/               # build/dev scripts (watch-sketches, dev-watch, vapid keys, …)
-docs/                  # Extensive design/feature docs (see caveats below)
-public/assets/         # Fonts, images, libraries, generated thumbnails/previews
-```
+- Read `MEMORY.md`, then the topic file(s) for the area you are about to touch, before acting — to understand previous choices and not re-propose what was rejected. The table at the bottom of `MEMORY.md` maps areas to files.
+- Every task writes to memory by default. At the end of each task (feature, fix, refactor, content, and any exploration that learned something), ask: "what should a future agent know that is neither in the code nor in `git log`?" — decisions and their reasons, rejected options, traps and remedies, working preferences. Write it in the matching topic file (update the existing entry first; delete what became false; add a short dated decision → why → how to apply entry otherwise), and update the index if a cross-cutting decision, an open item or a new topic file is involved. If, exceptionally, there is nothing worth keeping, say so explicitly in the final message ("no memory update: …") — silence is not an option.
+- The memory update is part of the task: it is staged in the same commit (rule 1).
+- Memory is written in English, dense and factual; no session narration, no duplication of what the code, `git log` or this file already say; each fact stated once, cross-referenced by file name elsewhere.
+- The project command `/memorize` (`.claude/commands/memorize.md`) does this consolidation on demand over a whole conversation.
 
-### Path aliases (`tsconfig.json`)
+@MEMORY.md
 
-- `@/*` → `src/*`
-- `@/p5/*` → `src/templates/p5/*`
-- `@/gsap/*` → `src/templates/gsap/*`
-- `@/public/*` → `public/*`
+## Verification — trust the disk, not the context
 
-## How sketches work
+- A tool answering "success" is not proof. Before saying a change is done, prove it through the repo: `git status --porcelain`, `git diff`, `grep` for the expected value, `git show HEAD:<file>` compared to the file on disk.
+- What you hold in context (an earlier `Read`, an old `ls`, a summarised conversation) can be stale: it has produced sessions where `Edit` reported success while nothing changed on disk, and where an agent described a tree that had not existed for weeks. Signature: `git status` clean right after an announced change. Re-read from disk before concluding.
+- Never state an absence ("this feature is missing", "that file does not exist") without a `git`/`grep` check made in the current turn.
 
-Each sketch lives in its own directory under `src/templates/p5/sketches/` (nesting
-creates categories, e.g. `churros/churros-v1-circle/`). A sketch dir contains:
+## Other rules
 
-- **`index.js`** — the sketch entry, using the module-based engine API (below).
-- **`options.ts`** — exports `formValues` (defaults) and `formConfiguration`
-  (per-field UI config: `component`, `label`, ranges, etc.) that drive the auto-generated form.
+- Never rewrite history (`rebase -i`, `commit --amend`, `reset --hard`, `push --force`, `filter-repo`) without an explicit request.
+- Do not modify `.git/config`, the hooks or branch settings.
+- **Sketches live in `src/sketches/<engine>/`** — `p5`, `gsap`, `threejs`, `html`. Not `src/templates/`, not `src/p5-sketches`: both names appear in older docs and in this file's own history, and neither has existed since the "Standardize on sketch" rename (4946ea6). Path aliases: `@/*` → `src/*`, `@/p5/*` → `src/sketches/p5/*`, same shape for `@/gsap/*`, `@/threejs/*`, `@/html/*`, `@/public/*` → `public/*`. Prefer them over deep relative imports. See `docs/memory/sketches.md` before adding or editing a sketch.
+- **Never hand-edit generated files**: `src/sketches/metadata.json`, `src/generated/sketchModuleRegistry.ts`, `src/generated/sketchOptionsRegistry.ts` (regenerate with `npm run sketch:meta:write`) and `src/generated/prisma` (from `npx prisma generate`). `src/sketches/__tests__/sketches.test.ts` fails the build on drift.
+- **Two TypeScript compilers are installed on purpose**: `typescript` 6.x (JS API, needed by ts-jest, typescript-eslint and `next build`) and `typescript7` (native, what `npm run typecheck` runs). Moving `typescript` to 7 breaks lint and test immediately — see `docs/memory/tooling.md`.
+- **Style is machine-enforced** — `@stylistic` via ESLint, with spacing inside `( … )`, `[ … ]`, `{ … }`, double quotes, semicolons, one item per line in multi-item literals and calls. Do not hand-format: run `npm run lint:fix` and match the surrounding code.
+- **`docs/` is historical** — dozens of point-in-time write-ups, many describing code that has since changed (the `function sketch( p, options, assets )` signature in `SKETCH_CREATION_GUIDE.md` is the classic trap). Verify against current source before relying on any snippet there. `docs/memory/` is the exception: it is maintained.
+- Schema changes go through `prisma/schema.prisma` + `npx prisma migrate dev`; never edit generated migration SQL afterwards.
 
-### Current p5 sketch API
+## Related files
 
-Sketches import the shared `sketch` module and register lifecycle callbacks — they do
-**not** define a bare `function sketch(p, options, assets)` (that older pattern in
-`docs/SKETCH_CREATION_GUIDE.md` is outdated). The real shape:
-
-```js
-import options from "@/p5/utils/options.js";
-import sketch, { getP5 } from "@/p5/utils/sketch.js";
-
-sketch.setup( () => { /* one-time setup */ } );
-
-sketch.draw( ( time, center ) => {
-  const p = getP5();               // the live p5 instance
-  const o = options.sketch;        // this sketch's custom params (from options.ts)
-
-  p.clear();
-  p.background( ...( o.backgroundColor ?? [ 0 ] ) );
-  // …draw using p, o, and the rich helpers in @/p5/utils/*
-} );
-```
-
-The `time` argument is a **duration-scaled loop clock** (not raw elapsed seconds), so
-animations stay in sync between live preview and deterministic frame capture. Reach for
-the shared utilities in `@/p5/utils/` (animation, easing, colors, grid, shapes, mappers,
-audio, webcam, interaction, slides, title, …) instead of reinventing them.
-
-### Sketch metadata & registries are generated — never hand-edit
-
-`scripts/watch-sketches.mjs` scans `src/templates/` and (re)generates three files:
-
-- `src/templates/metadata.json` — catalogue used by the gallery/editor
-- `src/generated/sketchModuleRegistry.ts` — literal `import()` thunks (per-sketch code splitting)
-- `src/generated/sketchOptionsRegistry.ts` — options loaders
-
-Regenerate with `npm run sketch:meta:write` (or run `npm run watch` during dev). A
-**pre-commit hook** auto-syncs these whenever a `src/templates/**` or template-asset file
-is staged, and `src/templates/__tests__/sketches.test.ts` guards against drift — so if you
-add/rename/remove a sketch, let the generator update these files rather than editing by hand.
-
-Visibility markers: touch `.hidden-home` / `.hidden-template` inside a sketch dir to hide it.
-
-## Recording pipeline (high level)
-
-1. `POST /api/recordings/enqueue` validates options, persists a `Job` (Prisma), and enqueues on BullMQ.
-2. A BullMQ worker (`src/services/RecordingWorkerService.ts`) picks it up and runs `lib/runRecording.ts`.
-3. For backend recording, Playwright loads the sketch route in headless Chromium, captures
-   frames deterministically, and FFmpeg encodes them to MP4; outputs upload to S3/MinIO.
-4. Multi-slide sketches render one video per slide (arrays of `videoUrls` / `thumbnails`).
-5. The dashboard streams progress; `Template` → `TemplateSnapshot` (immutable options) → `Job`
-   is the persistence chain (see `prisma/schema.prisma`).
-
-In-browser recording uses the same engine `SketchEngine` capture methods
-(`beginDeterministicCapture`, `seekAndDraw`, `captureFrame`) via `src/engines/recording/`.
-
-## Feature flags
-
-Optional features are gated by env vars mapped to `NEXT_PUBLIC_*` build flags in
-`next.config.ts` (all default **off**; `NEXT_PUBLIC_*` are baked in at build time):
-
-| Var | Enables |
-|---|---|
-| `INTERACTION_BINDINGS` | Bind sketch params to live inputs (webcam, mic, orbit, noise, gyroscope) |
-| `PREVIEW_ON_HOVER` | Animated template previews on hover |
-| `LIVE_THUMBNAIL` | Live thumbnail mirroring the main canvas |
-| `NOTIFICATIONS` | Web-push notifications (`npm run setup:notifications` for VAPID keys) |
-| `BACKEND_RECORDING` | Server-side Playwright/FFmpeg recording |
-
-## Code style & conventions
-
-Style is enforced by ESLint (`@stylistic` plugin) + `lint-staged` on commit. Key rules —
-match the surrounding code, and let `npm run lint:fix` handle formatting:
-
-- **Double quotes**, **semicolons required**, **2-space indent**, **no trailing comma**.
-- Spacing inside `( … )`, `[ … ]`, `{ … }`, and JSX `{ … }` is **required** (`p.push( )` style).
-- Multi-item arrays/objects and multi-arg calls/imports go **one item per line**.
-- Blank line required after a group of `const`/`let`/`var` declarations.
-- TypeScript is `strict` with `strictNullChecks`. Prefer the `@/…` path aliases over deep relative imports.
-- `.js`/`.jsx` are allowed (sketches, some utils); app/lib/component code is `.ts`/`.tsx`.
-
-## Working agreements
-
-- **Branch**: develop on the assigned feature branch; never push to `main` without explicit permission.
-- **Before finishing**: run `npm run check` (lint + typecheck + test). For sketch or route
-  changes, also `npm run build`, since the build compiles every sketch route.
-- **Generated files** (`src/generated/*`, `src/templates/metadata.json`) come from the
-  sketch generator or Prisma — regenerate, don't hand-edit.
-- **Migrations**: change `prisma/schema.prisma`, then `npx prisma migrate dev` — don't edit generated migration SQL after the fact.
-- **`docs/` is historical**: it holds many point-in-time design/feature/fix write-ups.
-  `ARCHITECTURE.md` is a good conceptual overview, but treat specific code snippets there
-  (and the old `function sketch()` signature in `SKETCH_CREATION_GUIDE.md`) as potentially
-  stale — verify against current source before relying on them.
-```
+- `AGENTS.md`: points to this file for tools that do not read `CLAUDE.md`.
+- `MEMORY.md` + `docs/memory/`: project long-term memory (rule 2).
