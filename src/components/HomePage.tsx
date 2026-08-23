@@ -9,7 +9,6 @@ import {
 } from "lucide-react";
 import Github from "@/components/ui/GithubIcon";
 import AnimatedPreview from "@/components/AnimatedPreview";
-import HardLink from "@/components/HardLink";
 import {
   MenuBarSlot
 } from "@/components/MenuBarPortal";
@@ -185,7 +184,7 @@ function SketchCard( {
   eager?: boolean;
 } ) {
   return (
-    <HardLink
+    <Link
       href={ sketch.href }
       className="group relative block w-full bg-background rounded-xl sm:rounded-2xl overflow-hidden border border-border hover:border-foreground/20 transition duration-300 hover:shadow-lg hover:shadow-active/10 hover:-translate-y-0.5"
     >
@@ -226,7 +225,7 @@ function SketchCard( {
           { sketch.name }
         </p>
       </div>
-    </HardLink>
+    </Link>
   );
 }
 
