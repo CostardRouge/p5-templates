@@ -14,6 +14,14 @@ ARG INTERACTION_BINDINGS=false
 ARG NEXT_PUBLIC_GITHUB_REPO_URL=
 ARG NEXT_PUBLIC_SITE_URL=
 ARG NEXT_PUBLIC_VAPID_PUBLIC_KEY=
+# Umami analytics. Unlike the vars above these are NOT empty-defaulted: an
+# empty website id is the documented kill switch, so an empty default would
+# silently ship every image with analytics off. The id mirrors the default in
+# src/lib/analytics/umami.ts — keep the two in sync, or pass --build-arg to
+# override (an explicitly empty id disables tracking).
+ARG NEXT_PUBLIC_UMAMI_SRC=https://insight.steeve.website/insight
+ARG NEXT_PUBLIC_UMAMI_WEBSITE_ID=3c44d1c6-1c3e-4ef7-aeb8-646012e9b963
+ARG NEXT_PUBLIC_UMAMI_DOMAINS=p5.steeve.website
 
 ENV BACKEND_RECORDING=${BACKEND_RECORDING}
 ENV NOTIFICATIONS=${NOTIFICATIONS}
@@ -22,6 +30,9 @@ ENV INTERACTION_BINDINGS=${INTERACTION_BINDINGS}
 ENV NEXT_PUBLIC_GITHUB_REPO_URL=${NEXT_PUBLIC_GITHUB_REPO_URL}
 ENV NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
 ENV NEXT_PUBLIC_VAPID_PUBLIC_KEY=${NEXT_PUBLIC_VAPID_PUBLIC_KEY}
+ENV NEXT_PUBLIC_UMAMI_SRC=${NEXT_PUBLIC_UMAMI_SRC}
+ENV NEXT_PUBLIC_UMAMI_WEBSITE_ID=${NEXT_PUBLIC_UMAMI_WEBSITE_ID}
+ENV NEXT_PUBLIC_UMAMI_DOMAINS=${NEXT_PUBLIC_UMAMI_DOMAINS}
 
 # Copy dependency files first for better layer caching.
 COPY package.json package-lock.json ./

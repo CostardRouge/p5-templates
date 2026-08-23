@@ -45,6 +45,7 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 - `@stylistic` via ESLint is the formatter; Prettier is explicitly disabled in `opencode.json` → `tooling.md`.
 - CI gates on four parallel jobs; the build job exists to compile every sketch route → `testing-and-ci.md`.
 - Deployment is event-driven: GHCR image plus a Watchtower HTTP API call on a NAS, replacing registry polling → `deployment.md`.
+- Analytics is self-hosted Umami with auto-track off and a hand-rolled pageview queue; an empty website id disables it → `architecture.md`, `docs/analytics.md`.
 
 ## Open items (dated; remove when done)
 
@@ -52,6 +53,7 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 - 2026-08-20 — `.vscode/settings.json` was untracked as accidental IDE state (it arrived inside a sketch commit, 1ccd877). Its content was genuinely useful: eslint format-on-save matching the repo's `@stylistic` rules. If that is wanted as shared project config, re-add it deliberately with a `!.vscode/settings.json` negation — the file is still on disk.
 - 2026-08-20 — `.husky/pre-push` is entirely commented out, so nothing runs `npm run build` before a push; `.github/workflows/lint-fix.yml` records the reason as "a known issue with NEXT_BUILD_DIR resolution". Either fix the resolution and re-enable it, or delete the file. Left alone: hooks are the maintainer's call.
 - 2026-08-20 — `fast-check` is a devDependency that nothing imports. Either start using it for the maths helpers or drop it.
+- 2026-08-23 — **`HardLink` blanks the referrer on internal navigations.** `src/components/HardLink.tsx` is a plain `<a rel="noopener noreferrer">` used by the sketch gallery and the recordings pages to force a full reload. `noreferrer` means a sketch opened from `/sketches` is recorded by Umami with an empty referrer instead of `/sketches` (counts and URLs are fine; only internal referral attribution is lost — measured, see `docs/analytics.md`). Dropping `noreferrer` while keeping `noopener` would fix it, but the component is shared, so it is the maintainer's call, not an analytics change.
 - 2026-08-20 — No secret has ever been tracked in this repo (`git log --diff-filter=A -- '.env*'` is empty), so nothing needs rotating.
 
 ## Topic files — read before touching the area
@@ -65,3 +67,4 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 | `docs/memory/testing-and-ci.md` | Tests, Jest config, CI workflows, what gates a merge |
 | `docs/memory/deployment.md` | Docker, GHCR, Watchtower, the NAS, `docker-compose.yml` |
 | `docs/memory/local-development.md` | Running the app locally, infra services, `setup.sh`, dev-server config |
+| `docs/analytics.md` | Umami config, why auto-track is off, the pageview queue, how to verify tracking (maintained, unlike the rest of `docs/`) |

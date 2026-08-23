@@ -8,9 +8,9 @@ import {
 import {
   Suspense
 } from "react";
-import GoogleAnalytics from "@/components/GoogleAnalytics";
-import GoogleAnalyticsTracker from "@/components/GoogleAnalyticsTracker";
 import MenuBarGate from "@/components/MenuBarGate";
+import UmamiAnalytics from "@/components/UmamiAnalytics";
+import UmamiTracker from "@/components/UmamiTracker";
 import {
   MenuBarSlotProvider
 } from "@/components/MenuBarPortal";
@@ -34,8 +34,29 @@ import {
 import {
   getDevPreviewStatus
 } from "@/utils/getDevPreviewStatus";
+import {
+  isAnalyticsEnabled, UMAMI_SRC
+} from "@/lib/analytics/umami";
 
 const baseUrl = getBaseUrl();
+
+/**
+ * Origin of the tracker, for the connection hints below. Derived rather than
+ * hardcoded so overriding NEXT_PUBLIC_UMAMI_SRC cannot leave the page
+ * preconnecting to the wrong host. A malformed override yields no hint instead
+ * of failing the build.
+ */
+const umamiOrigin = ( () => {
+  if ( !isAnalyticsEnabled ) {
+    return null;
+  }
+
+  try {
+    return new URL( UMAMI_SRC ).origin;
+  } catch {
+    return null;
+  }
+} )();
 
 export const metadata: Metadata = {
   metadataBase: new URL( baseUrl ),
@@ -133,12 +154,16 @@ export default function RootLayout( {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
-        <link
-          rel="preconnect"
-          href="https://www.googletagmanager.com"
-          crossOrigin="anonymous"
-        />
+        { umamiOrigin && (
+          <>
+            <link rel="dns-prefetch" href={ umamiOrigin } />
+            <link
+              rel="preconnect"
+              href={ umamiOrigin }
+              crossOrigin="anonymous"
+            />
+          </>
+        ) }
         <script
           type="application/ld+json"
           suppressHydrationWarning
@@ -148,9 +173,9 @@ export default function RootLayout( {
         />
       </head>
       <body>
-        <GoogleAnalytics />
+        <UmamiAnalytics />
         <Suspense>
-          <GoogleAnalyticsTracker />
+          <UmamiTracker />
         </Suspense>
         <ThemeProvider
           attribute="class"
