@@ -16,7 +16,7 @@ import type {
   SketchItem
 } from "@/app/sketches/getSketchesData";
 
-import Link from "@/components/HardLink";
+import Link from "next/link";
 import AnimatedPreview from "@/components/AnimatedPreview";
 import AnimationsToggle from "@/components/AnimationsToggle";
 import Toast from "@/components/Toast";

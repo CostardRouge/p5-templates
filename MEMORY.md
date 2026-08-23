@@ -40,6 +40,7 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 - Sketches live in `src/sketches/<engine>/`; `src/templates/` has not existed since 4946ea6, and `/templates` URLs survive as 308 redirects → `sketches.md`.
 - The sketch catalogue and import registries are generated, hook-synced, drift-tested and merge-driver-resolved — never hand-edited → `sketches.md`, `tooling.md`.
 - Sketch variants are added as new `-vN` directories rather than edited in place → `sketches.md`.
+- All internal navigation is client-side `next/link`; the hard-reload `HardLink` workaround is gone and must not come back → `sketches.md`.
 - In-browser and backend recording share one capture contract; only the recorder strategy and encoder differ → `recording.md`.
 - Two TypeScript compilers coexist on purpose — `typescript` 6 for ts-jest/typescript-eslint/`next build`, `typescript7` for `npm run typecheck` → `tooling.md`.
 - `@stylistic` via ESLint is the formatter; Prettier is explicitly disabled in `opencode.json` → `tooling.md`.
@@ -53,7 +54,6 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 - 2026-08-20 — `.vscode/settings.json` was untracked as accidental IDE state (it arrived inside a sketch commit, 1ccd877). Its content was genuinely useful: eslint format-on-save matching the repo's `@stylistic` rules. If that is wanted as shared project config, re-add it deliberately with a `!.vscode/settings.json` negation — the file is still on disk.
 - 2026-08-20 — `.husky/pre-push` is entirely commented out, so nothing runs `npm run build` before a push; `.github/workflows/lint-fix.yml` records the reason as "a known issue with NEXT_BUILD_DIR resolution". Either fix the resolution and re-enable it, or delete the file. Left alone: hooks are the maintainer's call.
 - 2026-08-20 — `fast-check` is a devDependency that nothing imports. Either start using it for the maths helpers or drop it.
-- 2026-08-23 — **`HardLink` blanks the referrer on internal navigations.** `src/components/HardLink.tsx` is a plain `<a rel="noopener noreferrer">` used by the sketch gallery and the recordings pages to force a full reload. `noreferrer` means a sketch opened from `/sketches` is recorded by Umami with an empty referrer instead of `/sketches` (counts and URLs are fine; only internal referral attribution is lost — measured, see `docs/analytics.md`). Dropping `noreferrer` while keeping `noopener` would fix it, but the component is shared, so it is the maintainer's call, not an analytics change.
 - 2026-08-20 — No secret has ever been tracked in this repo (`git log --diff-filter=A -- '.env*'` is empty), so nothing needs rotating.
 
 ## Topic files — read before touching the area

@@ -73,18 +73,20 @@ every cold load — the single most important one.
 `<Script onLoad>` handler drains the queue. A `setTimeout` would only move the
 race, not remove it.
 
-## Known gap: referrers are lost through `HardLink`
+## Internal referrers, and the `HardLink` that used to break them
 
-Gallery cards navigate via `@/components/HardLink`, a plain
-`<a rel="noopener noreferrer">` that forces a full reload on purpose. `noreferrer`
-means the browser sends no `Referer` and `document.referrer` is empty, so a
-sketch opened from the gallery is recorded with a **blank referrer** rather than
-`/sketches`. Verified, not theorised — see scenario B of the test below.
+Gallery cards and the recordings pages used to navigate through a `HardLink`
+component — a plain `<a rel="noopener noreferrer">` that forced a full reload.
+`noreferrer` meant the browser sent no `Referer`, so a sketch opened from the
+gallery was recorded with a **blank referrer** instead of `/sketches`.
 
-Pageview counts and URLs are unaffected; only internal referral attribution is.
-Dropping `noreferrer` (keeping `noopener`) on that component would fix it, but
-`HardLink` is shared by the recordings pages too, so that is a deliberate
-decision to make separately — not an analytics change.
+`HardLink` existed to work around p5 sketches not tearing down cleanly (a
+returning visit could end up with two live sketches). That teardown was fixed
+independently, so the component was removed and every call site now uses
+`next/link`. Internal referrers chain correctly through the gallery as a result.
+
+If a sketch page ever again leaves a canvas behind, fix the teardown — do not
+reintroduce a hard-reload link. See `docs/memory/sketches.md`.
 
 ## Opt-out
 
@@ -129,8 +131,10 @@ Then: cold load → internal link → back → forward. Expect
 - the document **never reloaded** — set a marker on `window` after the first
   load and check it survives.
 
-Add a second scenario for a gallery card click to keep the `HardLink` gap above
-honest.
+Add a second scenario that clicks through the gallery into a sketch and back
+again: it is the path most likely to regress, since it is the one that used to
+force a full reload. Assert the referrer chain **and** that each sketch page ends
+with exactly one `<canvas>` in the DOM.
 
 ### Online, once deployed
 

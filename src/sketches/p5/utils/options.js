@@ -111,6 +111,19 @@ function collectImagePathsDeep(
 }
 
 async function _refreshAssets() {
+  // The 80ms debounce above outlives the sketch: leaving a sketch page fires
+  // `sketch.destroy()` (which does `setP5( null )`) while a refresh is still
+  // pending, and `getP5().loadImage()` below then throws on null. Bail out
+  // instead — there is no sketch left to load assets into. Returning before
+  // touching the cache matters: a half-filled `imagesMap` would memoise
+  // `img: null` entries that the `if ( !obj )` check never retries.
+  //
+  // This only trips when no sketch is alive. `refreshAssets` is registered on
+  // `engine-window-preload`, which always runs after the instance exists.
+  if ( !getP5() ) {
+    return;
+  }
+
   const opts = getSketchOptions();
   const globalImages = opts.assets?.images ?? [];
   // Also pick up images stored directly in sketch form fields (e.g. images-stack
