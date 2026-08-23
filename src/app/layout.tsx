@@ -8,8 +8,6 @@ import {
 import {
   Suspense
 } from "react";
-import GoogleAnalytics from "@/components/GoogleAnalytics";
-import GoogleAnalyticsTracker from "@/components/GoogleAnalyticsTracker";
 import MenuBarGate from "@/components/MenuBarGate";
 import {
   MenuBarSlotProvider
@@ -133,12 +131,6 @@ export default function RootLayout( {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
-        <link
-          rel="preconnect"
-          href="https://www.googletagmanager.com"
-          crossOrigin="anonymous"
-        />
         <script
           type="application/ld+json"
           suppressHydrationWarning
@@ -148,10 +140,6 @@ export default function RootLayout( {
         />
       </head>
       <body>
-        <GoogleAnalytics />
-        <Suspense>
-          <GoogleAnalyticsTracker />
-        </Suspense>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
