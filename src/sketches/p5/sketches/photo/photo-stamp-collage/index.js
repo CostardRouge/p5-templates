@@ -1,0 +1,650 @@
+import options from "@/p5/utils/options.js";
+import {
+  setSketchOptions
+} from "@/p5/shared/syncSketchOptions.js";
+
+import sketch, {
+  getP5
+} from "@/p5/utils/sketch.js";
+import events from "@/p5/utils/events.js";
+import graphics from "@/p5/utils/graphics.js";
+import animation from "@/p5/utils/animation.js";
+import imageUtils from "@/p5/utils/imageUtils.js";
+
+// Paper speckles are decorative, but they must be identical on every frame and
+// in headless capture: they are painted once into a buffer from a fixed seed
+// and blitted, never re-randomised per frame.
+const GRAIN_SEED = 20250824;
+// speck count at full amount, for the 1080×1350 baseline canvas
+const GRAIN_DENSITY = 2600;
+
+const CENTER_FOCUS = {
+  x: 0.5,
+  y: 0.5
+};
+
+const sketchState = {
+  grainLayer: null,
+  grainKey: null,
+  // what the last drawn frame put on screen, so a click maps against the
+  // pixels the user actually aimed at (zoom included) rather than the defaults
+  lastFrame: null
+};
+
+function clamp(
+  value, min, max
+) {
+  if ( min > max ) {
+    return ( min + max ) / 2;
+  }
+
+  return Math.min(
+    Math.max(
+      value,
+      min
+    ),
+    max
+  );
+}
+
+function toCssColor( color ) {
+  const [
+    r = 255,
+    g = 255,
+    b = 255,
+    a = 255
+  ] = color ?? [];
+
+  return `rgba(${ r }, ${ g }, ${ b }, ${ a / 255 })`;
+}
+
+// Source rect of `img` that covers a `frameWidth` × `frameHeight` destination
+// at `zoom`, centred on the normalised source point `focus` and kept inside the
+// image — the crop happens at the source, so nothing bleeds outside the rect.
+function coverSourceRect(
+  img, frameWidth, frameHeight, zoom, focus
+) {
+  const coverScale = Math.max(
+    frameWidth / img.width,
+    frameHeight / img.height
+  ) * zoom;
+  const width = frameWidth / coverScale;
+  const height = frameHeight / coverScale;
+
+  return {
+    x: clamp(
+      focus.x * img.width - width / 2,
+      0,
+      img.width - width
+    ),
+    y: clamp(
+      focus.y * img.height - height / 2,
+      0,
+      img.height - height
+    ),
+    width,
+    height
+  };
+}
+
+function drawImageCover( {
+  img,
+  x,
+  y,
+  width,
+  height,
+  zoom = 1,
+  focus = CENTER_FOCUS
+} ) {
+  const p = getP5();
+  const source = coverSourceRect(
+    img,
+    width,
+    height,
+    zoom,
+    focus
+  );
+
+  p.image(
+    img,
+    x,
+    y,
+    width,
+    height,
+    source.x,
+    source.y,
+    source.width,
+    source.height
+  );
+}
+
+// Postage-stamp silhouette: walk the rectangle clockwise and bite a half-circle
+// out of the paper at every tooth centre. Built on the raw Canvas2D path so the
+// same shape can be filled (with its drop shadow) and reused as a clip for the
+// photo — a p5 shape could do neither.
+function tracePerforatedPath(
+  ctx, rect, toothRadius, pitch
+) {
+  const left = rect.x;
+  const top = rect.y;
+  const right = rect.x + rect.width;
+  const bottom = rect.y + rect.height;
+
+  // Real stamps keep a square of flat paper at each corner. Without that inset
+  // the first notch of two adjacent edges overlap, the corner is eaten away and
+  // what is left of it renders as a hairline spike.
+  const corner = Math.min(
+    toothRadius * 1.6,
+    rect.width / 4,
+    rect.height / 4
+  );
+  const columnSpan = rect.width - 2 * corner;
+  const rowSpan = rect.height - 2 * corner;
+  const columns = Math.max(
+    1,
+    Math.round( columnSpan / pitch )
+  );
+  const rows = Math.max(
+    1,
+    Math.round( rowSpan / pitch )
+  );
+  const columnStep = columnSpan / columns;
+  const rowStep = rowSpan / rows;
+  // two notches must not swallow the flat paper between them
+  const radius = Math.min(
+    toothRadius,
+    columnStep * 0.45,
+    rowStep * 0.45
+  );
+
+  ctx.beginPath();
+  ctx.moveTo(
+    left,
+    top
+  );
+
+  // Every arc runs anticlockwise (decreasing angle) so its bulge points into
+  // the paper: that is what makes the notch a bite rather than a bump.
+  for ( let i = 0; i < columns; i++ ) {
+    const x = left + corner + ( i + 0.5 ) * columnStep;
+
+    ctx.lineTo(
+      x - radius,
+      top
+    );
+    ctx.arc(
+      x,
+      top,
+      radius,
+      Math.PI,
+      0,
+      true
+    );
+  }
+
+  ctx.lineTo(
+    right,
+    top
+  );
+
+  for ( let i = 0; i < rows; i++ ) {
+    const y = top + corner + ( i + 0.5 ) * rowStep;
+
+    ctx.lineTo(
+      right,
+      y - radius
+    );
+    ctx.arc(
+      right,
+      y,
+      radius,
+      -Math.PI / 2,
+      Math.PI / 2,
+      true
+    );
+  }
+
+  ctx.lineTo(
+    right,
+    bottom
+  );
+
+  for ( let i = columns - 1; i >= 0; i-- ) {
+    const x = left + corner + ( i + 0.5 ) * columnStep;
+
+    ctx.lineTo(
+      x + radius,
+      bottom
+    );
+    ctx.arc(
+      x,
+      bottom,
+      radius,
+      0,
+      Math.PI,
+      true
+    );
+  }
+
+  ctx.lineTo(
+    left,
+    bottom
+  );
+
+  for ( let i = rows - 1; i >= 0; i-- ) {
+    const y = top + corner + ( i + 0.5 ) * rowStep;
+
+    ctx.lineTo(
+      left,
+      y + radius
+    );
+    ctx.arc(
+      left,
+      y,
+      radius,
+      Math.PI / 2,
+      -Math.PI / 2,
+      true
+    );
+  }
+
+  ctx.closePath();
+}
+
+function paintGrain(
+  layer, amount
+) {
+  const p = getP5();
+
+  layer.clear();
+
+  if ( amount <= 0 ) {
+    return;
+  }
+
+  const count = Math.round( GRAIN_DENSITY * amount * ( layer.width * layer.height ) / ( 1080 * 1350 ) );
+
+  p.randomSeed( GRAIN_SEED );
+
+  layer.push();
+  layer.noStroke();
+
+  for ( let i = 0; i < count; i++ ) {
+    const size = p.random(
+      0.8,
+      2.6
+    );
+
+    layer.fill(
+      64,
+      44,
+      32,
+      p.random(
+        20,
+        90
+      )
+    );
+    layer.rect(
+      p.random( layer.width ),
+      p.random( layer.height ),
+      size,
+      size
+    );
+  }
+
+  layer.pop();
+}
+
+function drawGrain( amount ) {
+  const p = getP5();
+  const layer = sketchState.grainLayer;
+
+  if ( !layer || amount <= 0 ) {
+    return;
+  }
+
+  const key = `${ layer.width }x${ layer.height }:${ amount }`;
+
+  if ( sketchState.grainKey !== key ) {
+    paintGrain(
+      layer,
+      amount
+    );
+    sketchState.grainKey = key;
+  }
+
+  p.image(
+    layer,
+    0,
+    0,
+    p.width,
+    p.height
+  );
+}
+
+// The big photo: full width, a fraction of the height, flush against one edge.
+function getPhotoRect() {
+  const p = getP5();
+  const layout = options.sketch.layout ?? {};
+  const height = p.height * ( layout.height ?? 0.52 );
+  const align = layout.align ?? "bottom";
+
+  let y = p.height - height;
+
+  if ( align === "top" ) {
+    y = 0;
+  } else if ( align === "center" ) {
+    y = ( p.height - height ) / 2;
+  }
+
+  return {
+    x: 0,
+    y,
+    width: p.width,
+    height
+  };
+}
+
+// The stamp, centred on its position and kept fully inside the canvas.
+function getStampRect() {
+  const p = getP5();
+  const stamp = options.sketch.stamp ?? {};
+  const width = ( stamp.size ?? 0.3 ) * p.width;
+  const height = width / Math.max(
+    0.2,
+    stamp.aspect ?? 1.2
+  );
+  const position = stamp.position ?? {
+    x: 0.5,
+    y: 0.27
+  };
+
+  return {
+    centerX: clamp(
+      position.x * p.width,
+      width / 2,
+      p.width - width / 2
+    ),
+    centerY: clamp(
+      position.y * p.height,
+      height / 2,
+      p.height - height / 2
+    ),
+    width,
+    height
+  };
+}
+
+function drawStamp( {
+  img,
+  rect,
+  zoom,
+  focus
+} ) {
+  const p = getP5();
+  const o = options.sketch.stamp ?? {};
+  const ctx = p.drawingContext;
+  const body = {
+    x: -rect.width / 2,
+    y: -rect.height / 2,
+    width: rect.width,
+    height: rect.height
+  };
+  const pitch = Math.max(
+    4,
+    ( o.perforationSize ?? 0.13 ) * Math.min(
+      rect.width,
+      rect.height
+    )
+  );
+  // half a pitch of radius would swallow the flat paper between two notches
+  const toothRadius = pitch * Math.min(
+    0.45,
+    o.perforationDepth ?? 0.4
+  );
+  const margin = ( o.border ?? 0 ) * rect.width;
+  const shadow = o.shadow ?? 0;
+
+  p.push();
+  p.translate(
+    rect.centerX,
+    rect.centerY
+  );
+  p.rotate( p.radians( o.rotation ?? 0 ) );
+
+  // Paper first, so the drop shadow follows the perforated silhouette instead
+  // of a plain rectangle.
+  ctx.save();
+
+  if ( shadow > 0 ) {
+    ctx.shadowColor = `rgba(0, 0, 0, ${ 0.45 * shadow })`;
+    ctx.shadowBlur = rect.width * 0.09 * shadow;
+    ctx.shadowOffsetY = rect.width * 0.025 * shadow;
+  }
+
+  tracePerforatedPath(
+    ctx,
+    body,
+    toothRadius,
+    pitch
+  );
+  ctx.fillStyle = toCssColor( o.color );
+  ctx.fill();
+  ctx.restore();
+
+  // Photo, clipped to the paper — or to the inner rect when a paper margin is
+  // asked for, which gives the classic white-framed stamp.
+  ctx.save();
+
+  if ( margin > 0 ) {
+    ctx.beginPath();
+    ctx.rect(
+      body.x + margin,
+      body.y + margin,
+      body.width - 2 * margin,
+      body.height - 2 * margin
+    );
+  } else {
+    tracePerforatedPath(
+      ctx,
+      body,
+      toothRadius,
+      pitch
+    );
+  }
+
+  ctx.clip();
+
+  drawImageCover( {
+    img,
+    x: body.x + margin,
+    y: body.y + margin,
+    width: body.width - 2 * margin,
+    height: body.height - 2 * margin,
+    zoom,
+    focus
+  } );
+
+  ctx.restore();
+  p.pop();
+}
+
+function getInternalCanvasPoint( event ) {
+  const p = getP5();
+  const canvasElement = sketch.engine?.getCanvasElement?.();
+
+  if ( !canvasElement ) {
+    return null;
+  }
+
+  // getBoundingClientRect accounts for the editor's CSS scaling/transforms
+  const rect = canvasElement.getBoundingClientRect();
+
+  const clientX = event.touches?.[ 0 ]?.clientX ?? event.changedTouches?.[ 0 ]?.clientX ?? event.clientX;
+  const clientY = event.touches?.[ 0 ]?.clientY ?? event.changedTouches?.[ 0 ]?.clientY ?? event.clientY;
+
+  if ( typeof clientX !== "number" || typeof clientY !== "number" ) {
+    return null;
+  }
+
+  return {
+    x: ( clientX - rect.left ) / rect.width * p.width,
+    y: ( clientY - rect.top ) / rect.height * p.height
+  };
+}
+
+// Click the big photo to aim the stamp at that detail, click the paper to move
+// the stamp there. Both write back into the form, so the result is a saved
+// option and not a transient state the recorder would miss.
+function handleCanvasClick( event ) {
+  const p = getP5();
+
+  // the instance is module-level state and is nulled on teardown
+  if ( !p ) {
+    return;
+  }
+
+  const point = getInternalCanvasPoint( event );
+
+  if ( !point || point.x < 0 || point.x > p.width || point.y < 0 || point.y > p.height ) {
+    return;
+  }
+
+  const frame = sketchState.lastFrame;
+  const photoRect = frame?.photoRect ?? getPhotoRect();
+  const insidePhoto = point.x >= photoRect.x
+    && point.x <= photoRect.x + photoRect.width
+    && point.y >= photoRect.y
+    && point.y <= photoRect.y + photoRect.height;
+
+  if ( !insidePhoto ) {
+    setSketchOptions(
+      {
+        sketch: {
+          stamp: {
+            position: {
+              x: point.x / p.width,
+              y: point.y / p.height
+            }
+          }
+        }
+      },
+      "p5"
+    );
+
+    return;
+  }
+
+  if ( !frame?.photoImage ) {
+    return;
+  }
+
+  // Walk the click back through the photo's own cover mapping, so the stamp
+  // magnifies exactly the region that was clicked.
+  const source = coverSourceRect(
+    frame.photoImage,
+    photoRect.width,
+    photoRect.height,
+    frame.photoZoom,
+    CENTER_FOCUS
+  );
+
+  setSketchOptions(
+    {
+      sketch: {
+        stamp: {
+          focus: {
+            x: ( source.x + ( point.x - photoRect.x ) / photoRect.width * source.width ) / frame.photoImage.width,
+            y: ( source.y + ( point.y - photoRect.y ) / photoRect.height * source.height ) / frame.photoImage.height
+          }
+        }
+      }
+    },
+    "p5"
+  );
+}
+
+sketch.setup( () => {
+  const p = getP5();
+
+  sketchState.grainKey = null;
+  sketchState.lastFrame = null;
+  sketchState.grainLayer = graphics.createAutoResizableGraphics(
+    p.width,
+    p.height,
+    "p2d",
+    () => {
+      sketchState.grainKey = null;
+    }
+  );
+
+  p.background( ...options.sketch.backgroundColor );
+
+  events.register(
+    "engine-canvas-mouse-clicked",
+    handleCanvasClick
+  );
+} );
+
+sketch.draw( () => {
+  const p = getP5();
+  const o = options.sketch;
+
+  p.clear();
+  p.background( ...o.backgroundColor );
+
+  drawGrain( o.paper?.grain ?? 0 );
+
+  const images = imageUtils.getImages();
+
+  if ( images.length < 1 ) {
+    return;
+  }
+
+  // One beat per image, or per non-overlapping pair when the stamp shows its
+  // own photo (1-2, 3-4, …); a single beat displays statically.
+  const paired = ( o.stamp?.source ?? "same" ) === "pair";
+  const beatCount = Math.max(
+    1,
+    paired ? Math.floor( images.length / 2 ) : images.length
+  );
+  const beatPosition = animation.progression * beatCount;
+  const beatIndex = Math.min(
+    beatCount - 1,
+    Math.floor( beatPosition )
+  );
+  const beatProgression = beatPosition - Math.floor( beatPosition );
+
+  const photoImage = images[ paired ? beatIndex * 2 : beatIndex ]?.img;
+  const stampImage = paired ? images[ beatIndex * 2 + 1 ]?.img : photoImage;
+
+  if ( !photoImage || !stampImage ) {
+    return;
+  }
+
+  const photoRect = getPhotoRect();
+  const photoZoom = ( o.layout?.zoom ?? 1 )
+    * ( 1 + ( o.layout?.zoomAmplitude ?? 0 ) * beatProgression );
+
+  drawImageCover( {
+    img: photoImage,
+    ...photoRect,
+    zoom: photoZoom
+  } );
+
+  const stampZoom = ( o.stamp?.zoom ?? 1 )
+    * ( 1 + ( o.stamp?.zoomAmplitude ?? 0 ) * beatProgression );
+
+  drawStamp( {
+    img: stampImage,
+    rect: getStampRect(),
+    zoom: stampZoom,
+    focus: o.stamp?.focus ?? CENTER_FOCUS
+  } );
+
+  sketchState.lastFrame = {
+    photoRect,
+    photoImage,
+    photoZoom
+  };
+} );
