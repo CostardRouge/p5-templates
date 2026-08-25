@@ -87,30 +87,15 @@ function coverSourceRect(
   };
 }
 
-function drawImageCover( {
-  img,
-  x,
-  y,
-  width,
-  height,
-  zoom = 1,
-  focus = CENTER_FOCUS
-} ) {
-  const p = getP5();
-  const source = coverSourceRect(
+function drawImageRegion(
+  img, rect, source
+) {
+  getP5().image(
     img,
-    width,
-    height,
-    zoom,
-    focus
-  );
-
-  p.image(
-    img,
-    x,
-    y,
-    width,
-    height,
+    rect.x,
+    rect.y,
+    rect.width,
+    rect.height,
     source.x,
     source.y,
     source.width,
@@ -375,11 +360,109 @@ function getStampRect() {
   };
 }
 
+// Notch geometry for a stamp-shaped rect of any size, so the hole punched in
+// the photo is a scaled copy of the stamp holding the piece.
+function getPerforation( rect ) {
+  const o = options.sketch.stamp ?? {};
+  const pitch = Math.max(
+    4,
+    ( o.perforationSize ?? 0.13 ) * Math.min(
+      rect.width,
+      rect.height
+    )
+  );
+
+  return {
+    pitch,
+    // half a pitch of radius would swallow the flat paper between two notches
+    toothRadius: pitch * Math.min(
+      0.45,
+      o.perforationDepth ?? 0.4
+    )
+  };
+}
+
+// The piece the stamp lifted, back in the big photo's canvas space. The crop
+// travels as a fraction of its image rather than as pixels, so a stamp and a
+// photo of different resolutions still line up, and the hole takes the stamp's
+// own aspect: that makes it the exact region in "same" mode, and a
+// stamp-shaped window onto the same part of the frame in "pair" mode.
+function getCutoutRect( {
+  photoImage,
+  photoRect,
+  photoSource,
+  stampImage,
+  stampSource,
+  stampAspect
+} ) {
+  const scale = photoRect.width / photoSource.width;
+  const width = stampSource.width / stampImage.width * photoImage.width * scale;
+  const height = width / stampAspect;
+  const centerX = photoRect.x
+    + ( ( stampSource.x + stampSource.width / 2 ) / stampImage.width * photoImage.width - photoSource.x ) * scale;
+  const centerY = photoRect.y
+    + ( ( stampSource.y + stampSource.height / 2 ) / stampImage.height * photoImage.height - photoSource.y ) * scale;
+
+  return {
+    x: centerX - width / 2,
+    y: centerY - height / 2,
+    width,
+    height
+  };
+}
+
+// Punch the stamp silhouette out of the photo and put back what was underneath
+// it — the paper and its grain — so the piece reads as lifted out, not painted
+// over. Clipped to the photo: the hole belongs to the photo, not to the paper.
+function drawCutout(
+  rect, photoRect
+) {
+  const p = getP5();
+  const ctx = p.drawingContext;
+  const {
+    pitch,
+    toothRadius
+  } = getPerforation( rect );
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(
+    photoRect.x,
+    photoRect.y,
+    photoRect.width,
+    photoRect.height
+  );
+  ctx.clip();
+
+  tracePerforatedPath(
+    ctx,
+    rect,
+    toothRadius,
+    pitch
+  );
+  ctx.clip();
+
+  p.push();
+  p.noStroke();
+  p.fill( ...options.sketch.backgroundColor );
+  p.rect(
+    photoRect.x,
+    photoRect.y,
+    photoRect.width,
+    photoRect.height
+  );
+  p.pop();
+
+  drawGrain( options.sketch.paper?.grain ?? 0 );
+
+  ctx.restore();
+}
+
 function drawStamp( {
   img,
   rect,
-  zoom,
-  focus
+  margin,
+  source
 } ) {
   const p = getP5();
   const o = options.sketch.stamp ?? {};
@@ -390,19 +473,10 @@ function drawStamp( {
     width: rect.width,
     height: rect.height
   };
-  const pitch = Math.max(
-    4,
-    ( o.perforationSize ?? 0.13 ) * Math.min(
-      rect.width,
-      rect.height
-    )
-  );
-  // half a pitch of radius would swallow the flat paper between two notches
-  const toothRadius = pitch * Math.min(
-    0.45,
-    o.perforationDepth ?? 0.4
-  );
-  const margin = ( o.border ?? 0 ) * rect.width;
+  const {
+    pitch,
+    toothRadius
+  } = getPerforation( rect );
   const shadow = o.shadow ?? 0;
 
   p.push();
@@ -455,15 +529,16 @@ function drawStamp( {
 
   ctx.clip();
 
-  drawImageCover( {
+  drawImageRegion(
     img,
-    x: body.x + margin,
-    y: body.y + margin,
-    width: body.width - 2 * margin,
-    height: body.height - 2 * margin,
-    zoom,
-    focus
-  } );
+    {
+      x: body.x + margin,
+      y: body.y + margin,
+      width: body.width - 2 * margin,
+      height: body.height - 2 * margin
+    },
+    source
+  );
 
   ctx.restore();
   p.pop();
@@ -625,21 +700,52 @@ sketch.draw( () => {
   const photoRect = getPhotoRect();
   const photoZoom = ( o.layout?.zoom ?? 1 )
     * ( 1 + ( o.layout?.zoomAmplitude ?? 0 ) * beatProgression );
+  const photoSource = coverSourceRect(
+    photoImage,
+    photoRect.width,
+    photoRect.height,
+    photoZoom,
+    CENTER_FOCUS
+  );
 
-  drawImageCover( {
-    img: photoImage,
-    ...photoRect,
-    zoom: photoZoom
-  } );
+  drawImageRegion(
+    photoImage,
+    photoRect,
+    photoSource
+  );
 
   const stampZoom = ( o.stamp?.zoom ?? 1 )
     * ( 1 + ( o.stamp?.zoomAmplitude ?? 0 ) * beatProgression );
+  const stampRect = getStampRect();
+  const stampMargin = ( o.stamp?.border ?? 0 ) * stampRect.width;
+  // resolved once and shared: the hole must be the very piece the stamp holds
+  const stampSource = coverSourceRect(
+    stampImage,
+    stampRect.width - 2 * stampMargin,
+    stampRect.height - 2 * stampMargin,
+    stampZoom,
+    o.stamp?.focus ?? CENTER_FOCUS
+  );
+
+  if ( o.stamp?.cutout ) {
+    drawCutout(
+      getCutoutRect( {
+        photoImage,
+        photoRect,
+        photoSource,
+        stampImage,
+        stampSource,
+        stampAspect: ( stampRect.width - 2 * stampMargin ) / ( stampRect.height - 2 * stampMargin )
+      } ),
+      photoRect
+    );
+  }
 
   drawStamp( {
     img: stampImage,
-    rect: getStampRect(),
-    zoom: stampZoom,
-    focus: o.stamp?.focus ?? CENTER_FOCUS
+    rect: stampRect,
+    margin: stampMargin,
+    source: stampSource
   } );
 
   sketchState.lastFrame = {

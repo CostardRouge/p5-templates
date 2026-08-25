@@ -14,6 +14,7 @@ export const formValues = {
 
   stamp: {
     source: "same",
+    cutout: true,
     size: 0.3,
     aspect: 1.2,
     position: {
@@ -121,6 +122,10 @@ export const formConfiguration: Record<string, any> = {
             value: "pair"
           }
         ]
+      },
+      cutout: {
+        label: "Cut the zone out of the photo",
+        component: "checkbox"
       },
       size: {
         label: "Size",
