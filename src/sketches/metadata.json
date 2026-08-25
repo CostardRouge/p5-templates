@@ -3766,5 +3766,17 @@
     "hiddenFromGallery": false,
     "mtime": "2026-08-14T13:44:00.678Z",
     "ctime": "2026-08-14T13:39:38.290Z"
+  },
+  {
+    "name": "photo-stamp-collage",
+    "engine": "p5",
+    "category": "photo",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "mtime": "2026-08-24T23:30:46.893Z",
+    "ctime": "2026-08-24T23:30:32.505Z"
   }
 ]

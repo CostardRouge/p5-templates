@@ -197,6 +197,7 @@ export const sketchFormLoaders: Record<string, SketchModuleLoader> = {
   "p5:photo/photo-in-circle": () => import( "@/p5/sketches/photo/photo-in-circle/options" ),
   "p5:photo/photo-stack": () => import( "@/p5/sketches/photo/photo-stack/options" ),
   "p5:photo/photo-stack-top-bottom": () => import( "@/p5/sketches/photo/photo-stack-top-bottom/options" ),
+  "p5:photo/photo-stamp-collage": () => import( "@/p5/sketches/photo/photo-stamp-collage/options" ),
   "p5:photo/photo-swap-collage": () => import( "@/p5/sketches/photo/photo-swap-collage/options" ),
   "p5:photo/photo-switch": () => import( "@/p5/sketches/photo/photo-switch/options" ),
   "p5:photo/photo-switch-blurry-background": () => import( "@/p5/sketches/photo/photo-switch-blurry-background/options" ),
