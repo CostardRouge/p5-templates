@@ -16,7 +16,9 @@ Read before setting up the app, changing `setup.sh`, or debugging "it does not s
 
 ## The dev server is deliberately reachable from other devices
 
-2026-08-20 — `next.config.ts` sets `allowedDevOrigins` to `"*"` plus several LAN addresses, and `crossOrigin: "anonymous"`. That is so sketches can be opened on a phone or tablet on the same network — orientation, touch and gyroscope interactions cannot be tested any other way. **How to apply**: this is intentional dev-only configuration, not a leaked debug setting. Leave it. If a LAN address changes, add it rather than removing the list.
+2026-08-20, revised 2026-08-24 — `next.config.ts` sets `allowedDevOrigins` to a host list plus `crossOrigin: "anonymous"`. That is so sketches can be opened on a phone or tablet on the same network — orientation, touch and gyroscope interactions cannot be tested any other way. **How to apply**: this is intentional dev-only configuration, not a leaked debug setting. Leave it. If a LAN address changes, add it rather than removing the list.
+
+**Trap: `"*"` in that list is not a wildcard.** Next matches entries as hostnames, so the `"*"` sitting at the top of the array allows nothing at all, and any host not spelled out gets **403 on every `/_next/**` chunk** while the HTML itself returns 200. The page renders blank, the console shows a wall of 403s, and the only statement of the cause is one `⚠ Blocked cross-origin request to Next.js dev resource` line in the *server* log. It bit a headless browser driving `127.0.0.1:3010` — same host and port as the document it had just loaded, which is why "it must be same-origin" is a dead end. `localhost` and `127.0.0.1` are now listed explicitly. **How to apply**: 403s on `/_next` chunks in dev = read the dev-server log and add the host; never conclude it is a proxy, CORS or a sandboxed iframe.
 
 ## Feature-flagged work needs a rebuild, not a restart
 

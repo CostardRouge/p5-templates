@@ -41,6 +41,7 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 - The sketch catalogue and import registries are generated, hook-synced, drift-tested and merge-driver-resolved — never hand-edited → `sketches.md`, `tooling.md`.
 - Sketch variants are added as new `-vN` directories rather than edited in place → `sketches.md`.
 - All internal navigation is client-side `next/link`; the hard-reload `HardLink` workaround is gone and must not come back → `sketches.md`.
+- `/embed` is a **published contract**: steevepommier.com/motion frames 44 sketches by URL, so a sketch rename breaks a live page on another domain → `sketches.md`.
 - In-browser and backend recording share one capture contract; only the recorder strategy and encoder differ → `recording.md`.
 - Two TypeScript compilers coexist on purpose — `typescript` 6 for ts-jest/typescript-eslint/`next build`, `typescript7` for `npm run typecheck` → `tooling.md`.
 - `@stylistic` via ESLint is the formatter; Prettier is explicitly disabled in `opencode.json` → `tooling.md`.
