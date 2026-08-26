@@ -463,6 +463,19 @@ function getDefaultValueForConfig( config: FieldConfig ): any {
     case "select": {
       return config.options[ 0 ]?.value ?? "";
     }
+    // The pad edits an { x, y } pair in place: without a shaped default a new
+    // row starts as "" and the pad has nothing to bind to. Centre of the range
+    // is the neutral choice — the middle of the pad, whatever its bounds.
+    case "vector2d": {
+      const min = config.min ?? ( config.allowNegative === false ? 0 : -1 );
+      const max = config.max ?? 1;
+      const center = ( min + max ) / 2;
+
+      return {
+        x: center,
+        y: center
+      };
+    }
     case "nested-object": {
       const obj: Record<string, any> = {};
 
