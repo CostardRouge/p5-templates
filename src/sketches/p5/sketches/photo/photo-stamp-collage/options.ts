@@ -21,6 +21,8 @@ export const formValues = {
       x: 0.5,
       y: 0.27
     },
+    perImage: false,
+    positions: [],
     focus: {
       x: 0.5,
       y: 0.5
@@ -149,6 +151,23 @@ export const formConfiguration: Record<string, any> = {
         max: 1,
         step: 0.01,
         yDown: true
+      },
+      perImage: {
+        label: "One position per photo",
+        component: "checkbox"
+      },
+      positions: {
+        component: "item-list",
+        label: "Per-photo positions",
+        itemConfig: {
+          component: "vector2d",
+          label: "Position",
+          allowNegative: false,
+          min: 0,
+          max: 1,
+          step: 0.01,
+          yDown: true
+        }
       },
       focus: {
         component: "vector2d",

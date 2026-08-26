@@ -330,8 +330,34 @@ function getPhotoRect() {
   };
 }
 
+const DEFAULT_POSITION = {
+  x: 0.5,
+  y: 0.27
+};
+
+function isPosition( value ) {
+  return Boolean( value ) && typeof value.x === "number" && typeof value.y === "number";
+}
+
+// Where the stamp sits for a given beat. With `perImage` off there is a single
+// position for the whole sketch; with it on, the beat's own entry wins and the
+// shared position is the fallback for a beat that has none yet — so turning the
+// switch on changes nothing until a beat is actually moved.
+function getStampPosition( beatIndex ) {
+  const stamp = options.sketch.stamp ?? {};
+  const shared = isPosition( stamp.position ) ? stamp.position : DEFAULT_POSITION;
+
+  if ( !stamp.perImage ) {
+    return shared;
+  }
+
+  const entry = Array.isArray( stamp.positions ) ? stamp.positions[ beatIndex ] : null;
+
+  return isPosition( entry ) ? entry : shared;
+}
+
 // The stamp, centred on its position and kept fully inside the canvas.
-function getStampRect() {
+function getStampRect( position ) {
   const p = getP5();
   const stamp = options.sketch.stamp ?? {};
   const width = ( stamp.size ?? 0.3 ) * p.width;
@@ -339,10 +365,6 @@ function getStampRect() {
     0.2,
     stamp.aspect ?? 1.2
   );
-  const position = stamp.position ?? {
-    x: 0.5,
-    y: 0.27
-  };
 
   return {
     centerX: clamp(
@@ -568,6 +590,32 @@ function getInternalCanvasPoint( event ) {
   };
 }
 
+// The per-beat position list with `beatIndex` moved to `position`. The list is
+// grown to one entry per beat and every hole is filled with what that beat was
+// already showing, so writing one entry never silently moves the others, and
+// the form always offers as many rows as there are beats.
+function withBeatPosition(
+  beatIndex, beatCount, position
+) {
+  const existing = Array.isArray( options.sketch.stamp?.positions )
+    ? options.sketch.stamp.positions
+    : [];
+  const length = Math.max(
+    beatCount,
+    existing.length,
+    beatIndex + 1
+  );
+
+  return Array.from(
+    {
+      length
+    },
+    (
+      _, index
+    ) => ( index === beatIndex ? position : getStampPosition( index ) )
+  );
+}
+
 // Click the big photo to aim the stamp at that detail, click the paper to move
 // the stamp there. Both write back into the form, so the result is a saved
 // option and not a transient state the recorder would miss.
@@ -593,15 +641,25 @@ function handleCanvasClick( event ) {
     && point.y <= photoRect.y + photoRect.height;
 
   if ( !insidePhoto ) {
+    const position = {
+      x: point.x / p.width,
+      y: point.y / p.height
+    };
+
     setSketchOptions(
       {
         sketch: {
-          stamp: {
-            position: {
-              x: point.x / p.width,
-              y: point.y / p.height
+          stamp: options.sketch.stamp?.perImage
+            ? {
+              positions: withBeatPosition(
+                frame?.beatIndex ?? 0,
+                frame?.beatCount ?? 1,
+                position
+              )
             }
-          }
+            : {
+              position
+            }
         }
       },
       "p5"
@@ -716,7 +774,7 @@ sketch.draw( () => {
 
   const stampZoom = ( o.stamp?.zoom ?? 1 )
     * ( 1 + ( o.stamp?.zoomAmplitude ?? 0 ) * beatProgression );
-  const stampRect = getStampRect();
+  const stampRect = getStampRect( getStampPosition( beatIndex ) );
   const stampMargin = ( o.stamp?.border ?? 0 ) * stampRect.width;
   // resolved once and shared: the hole must be the very piece the stamp holds
   const stampSource = coverSourceRect(
@@ -751,6 +809,9 @@ sketch.draw( () => {
   sketchState.lastFrame = {
     photoRect,
     photoImage,
-    photoZoom
+    photoZoom,
+    // a click on the paper must land on the beat that was on screen
+    beatIndex,
+    beatCount
   };
 } );
