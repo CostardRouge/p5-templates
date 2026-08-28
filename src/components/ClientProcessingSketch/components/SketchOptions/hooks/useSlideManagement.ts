@@ -233,16 +233,33 @@ export function useSlideManagement( {
           duration: number }
         | undefined;
 
+      // A new slide inherits what is on screen right now: the active slide's
+      // settings when one is selected, the global block otherwise. It used to
+      // seed every slide after the first from `sketchFormValues` — the
+      // sketch's factory defaults — so adding a second slide silently threw
+      // away everything the user had just tuned.
+      const activeSketch =
+        effectiveActiveIndex !== undefined
+          ? getValues( `slides.${ effectiveActiveIndex }.sketch` )
+          : undefined;
+      const inheritedSketch =
+        activeSketch ?? currentGlobalSketch ?? sketchFormValues;
+
       // The next free letter, skipping numbered copies so they never inflate
       // the count (A, A-1, B, B-1, B-2 → "C", not "F").
       const existingNames = ( getValues( "slides" ) ?? [] )
         .map( ( slide ) => slide?.name )
         .filter( ( name ): name is string => typeof name === "string" && name.length > 0 );
+      // deepClone everything handed to the new slide: SlideSchema's
+      // `sketch: z.any()` passes references through, so without the clone the
+      // first slide's sketch aliases the root object and edits bleed across.
       const newSlide = makeDefaultSlide( {
         name: nextSlideLetter( existingNames ),
-        sketch: nextIndex === 0 ? currentGlobalSketch : sketchFormValues,
-        size: currentGlobalSize,
+        sketch: inheritedSketch ? deepClone( inheritedSketch ) : inheritedSketch,
+        size: currentGlobalSize ? deepClone( currentGlobalSize ) : currentGlobalSize,
         animation: currentGlobalAnimation
+          ? deepClone( currentGlobalAnimation )
+          : currentGlobalAnimation
       } );
 
       appendSlide( newSlide );
@@ -255,6 +272,7 @@ export function useSlideManagement( {
     [
       isAdding,
       slideFields.length,
+      effectiveActiveIndex,
       getValues,
       appendSlide,
       sketchFormValues,
@@ -327,32 +345,106 @@ export function useSlideManagement( {
 
       const lengthBefore = slideFields.length;
 
-      // If deleting the last slide, preserve its settings
+      // Deleting the LAST slide demotes it back into the root blocks, so the
+      // 0 ↔ 1 slide round-trip is lossless. It used to carry only sketch /
+      // size / animation over — the slide's content, assets and interactive
+      // bindings vanished silently with it.
       if ( lengthBefore === 1 ) {
-        const lastSlideSettings = getValues( `slides.${ indexToDelete }.sketch` );
+        const lastSlide = getValues( `slides.${ indexToDelete }` );
 
-        if ( lastSlideSettings ) {
+        if ( lastSlide?.sketch ) {
           setValue(
             "sketch",
-            deepClone( lastSlideSettings )
+            deepClone( lastSlide.sketch )
           );
         }
 
-        const lastSlideSize = getValues( `slides.${ indexToDelete }.size` );
-
-        if ( lastSlideSize ) {
+        if ( lastSlide?.size ) {
           setValue(
             "size",
-            deepClone( lastSlideSize )
+            deepClone( lastSlide.size )
           );
         }
 
-        const lastSlideAnimation = getValues( `slides.${ indexToDelete }.animation` );
-
-        if ( lastSlideAnimation ) {
+        if ( lastSlide?.animation ) {
           setValue(
             "animation",
-            deepClone( lastSlideAnimation )
+            deepClone( lastSlide.animation )
+          );
+        }
+
+        // Content: append after the root's own items. Both layers were drawn
+        // together while the slide existed, so the union is exactly what was
+        // on screen. Item `source` fields carry full scoped asset paths
+        // (`slide-0/images/…`) which resolveAssetURL resolves regardless of
+        // which list references them — nothing needs rewriting.
+        const slideContent = lastSlide?.content;
+
+        if ( Array.isArray( slideContent ) && slideContent.length > 0 ) {
+          const rootContent = getValues( "content" ) ?? [];
+
+          setValue(
+            "content",
+            [
+              ...deepClone( rootContent ),
+              ...deepClone( slideContent )
+            ]
+          );
+        }
+
+        // Assets: union the per-type inventories so the pickers keep listing
+        // the slide's uploads.
+        const slideAssets = lastSlide?.assets;
+
+        if ( slideAssets ) {
+          const rootAssets = getValues( "assets" ) ?? {};
+          const mergeList = (
+            a?: string[], b?: string[]
+          ) => [
+            ...new Set( [
+              ...( a ?? [] ),
+              ...( b ?? [] )
+            ] )
+          ];
+
+          setValue(
+            "assets",
+            {
+              images: mergeList(
+                rootAssets.images,
+                slideAssets.images
+              ),
+              videos: mergeList(
+                rootAssets.videos,
+                slideAssets.videos
+              ),
+              audios: mergeList(
+                rootAssets.audios,
+                slideAssets.audios
+              )
+            }
+          );
+        }
+
+        // Interactive bindings: the slide namespace overrode the root one
+        // key-by-key at runtime (see migrateInteractiveOptions) — keep that
+        // outcome by merging with the slide's keys winning.
+        const slideInteractive = lastSlide?.interactive as
+          | Record<string, unknown>
+          | undefined;
+
+        if ( slideInteractive ) {
+          const rootInteractive = ( getValues( "interactive" ) ?? {} ) as Record<
+            string,
+            unknown
+          >;
+
+          setValue(
+            "interactive",
+            deepClone( {
+              ...rootInteractive,
+              ...slideInteractive
+            } )
           );
         }
       }
