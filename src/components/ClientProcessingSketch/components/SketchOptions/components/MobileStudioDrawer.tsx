@@ -12,6 +12,10 @@ import CollapsibleItem from "@/components/CollapsibleItem";
 import useSketch from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
 import GenericObjectForm
   from "./RootSettings/components/GenericObjectForm/GenericObjectForm";
+import RootSettings from "./RootSettings/RootSettings";
+import SlideFilmstrip, {
+  type SlideFilmstripProps
+} from "./SlideFilmstrip";
 import SketchAssetsProvider from "./SketchAssetsProvider/SketchAssetsProvider";
 import RecordingLockBanner from "./RecordingLockBanner";
 import ImportSuccessBanner from "./ImportSuccessBanner";
@@ -33,7 +37,7 @@ import type {
   SketchOption
 } from "@/types/sketch.types";
 
-type Tab = "sketch" | "settings" | "export";
+type Tab = "sketch" | "content" | "export";
 
 type CaptureProps = Omit<
   React.ComponentPropsWithoutRef<typeof CaptureActions>,
@@ -47,8 +51,13 @@ type MobileStudioDrawerProps = {
   /** Stable id of the active slide; remounts the form on identity changes. */
   activeSlideId?: string;
   jobId?: string;
-  /** Settings tab: the options panel sections. */
+  /** Content tab: the content rail sections. */
   body: Omit<OptionsPanelBodyProps, "scrollable">;
+  /** Slide strip pinned above the tab content, visible on every tab. */
+  filmstrip: Omit<SlideFilmstripProps, "thumbnailHeight" | "className">;
+  /** Expand state of the "canvas & animation" section (shared with desktop). */
+  rootSettingsExpanded?: boolean;
+  onRootSettingsToggle?: ( expanded: boolean ) => void;
   /** Export tab: capture actions (recording support already filtered by caller). */
   capture: CaptureProps;
   captureActionsRef: React.Ref<CaptureActionsRef>;
@@ -74,6 +83,9 @@ export default function MobileStudioDrawer( {
   activeSlideId,
   jobId,
   body,
+  filmstrip,
+  rootSettingsExpanded,
+  onRootSettingsToggle,
   capture,
   captureActionsRef,
   recordingSupported,
@@ -100,7 +112,7 @@ export default function MobileStudioDrawer( {
   const [
     activeTab,
     setActiveTab
-  ] = useState<Tab>( sketchConfig ? "sketch" : "settings" );
+  ] = useState<Tab>( "sketch" );
 
   // Publish the drawer's rendered height so the sketch viewport can shrink
   // to the area above it (and fit-to-viewport targets the visible half).
@@ -169,17 +181,17 @@ export default function MobileStudioDrawer( {
     ]
   );
 
+  // "Sketch" always exists now: it hosts canvas & animation even when the
+  // sketch exposes no parameters of its own.
   const tabs: Array<{ id: Tab;
     label: string }> = [
-    ...( sketchConfig ? [
-      {
-        id: "sketch" as const,
-        label: "Sketch"
-      }
-    ] : [] ),
     {
-      id: "settings",
-      label: "Settings"
+      id: "sketch",
+      label: "Sketch"
+    },
+    {
+      id: "content",
+      label: "Content"
     },
     {
       id: "export",
@@ -287,40 +299,54 @@ export default function MobileStudioDrawer( {
           </div>
         )}
 
+        {/* Slide strip: navigation, not a setting — visible on every tab so
+            switching slides never requires switching tabs. */}
+        <div className="mb-2 -mx-1">
+          <SlideFilmstrip { ...filmstrip } thumbnailHeight={ 48 } />
+        </div>
+
         {/* Tabs stay mounted (hidden) so form fields, capture state and the
             autosave handle survive switching. */}
-        {sketchConfig && (
-          <div className={ clsx( activeTab !== "sketch" && "hidden" ) }>
-            <div className="mb-2 flex items-center justify-between gap-2">
-              <span className="truncate text-xs text-label">
-                {sketchFormValues &&
-                  `${ Object.keys( sketchFormValues ).length } options`}
-                {activeSlideIndex !== undefined &&
-                  ` (slide ${ activeSlideIndex + 1 })`}
-              </span>
-              <div className="flex shrink-0 items-center gap-0.5">
-                <SketchSettingsActions
-                  config={ sketchConfig }
-                  basePath={ effectiveBasePath }
-                />
+        <div className={ clsx( activeTab !== "sketch" && "hidden" ) }>
+          <RootSettings
+            activeSlideIndex={ activeSlideIndex }
+            expanded={ rootSettingsExpanded }
+            onToggle={ onRootSettingsToggle }
+          />
+
+          {sketchConfig && (
+            <>
+              <div className="my-2 flex items-center justify-between gap-2">
+                <span className="truncate text-xs text-label">
+                  {sketchFormValues &&
+                    `${ Object.keys( sketchFormValues ).length } options`}
+                  {activeSlideIndex !== undefined &&
+                    ` (slide ${ activeSlideIndex + 1 })`}
+                </span>
+                <div className="flex shrink-0 items-center gap-0.5">
+                  <SketchSettingsActions
+                    config={ sketchConfig }
+                    basePath={ effectiveBasePath }
+                  />
+                </div>
               </div>
-            </div>
 
-            <SketchAssetsProvider
-              scope="global"
-              assetsName="assets"
-              jobId={ jobId }
-            >
-              <GenericObjectForm
-                key={ activeSlideId ?? effectiveBasePath }
-                basePath={ effectiveBasePath }
-                config={ sketchConfig }
-              />
-            </SketchAssetsProvider>
-          </div>
-        )}
+              <SketchAssetsProvider
+                scope="global"
+                assetsName="assets"
+                jobId={ jobId }
+              >
+                <GenericObjectForm
+                  key={ activeSlideId ?? effectiveBasePath }
+                  basePath={ effectiveBasePath }
+                  config={ sketchConfig }
+                />
+              </SketchAssetsProvider>
+            </>
+          )}
+        </div>
 
-        <div className={ clsx( activeTab !== "settings" && "hidden" ) }>
+        <div className={ clsx( activeTab !== "content" && "hidden" ) }>
           <OptionsPanelBody { ...body } scrollable={ false } />
         </div>
 

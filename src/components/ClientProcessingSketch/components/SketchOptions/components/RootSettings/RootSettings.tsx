@@ -1,12 +1,12 @@
 "use client";
 
 import React from "react";
+import {
+  ChevronDown, Frame
+} from "lucide-react";
 import rootFormConfig from "./constants/root-field-config";
 
 import GenericObjectForm from "./components/GenericObjectForm/GenericObjectForm";
-import {
-  ListCollapse
-} from "lucide-react";
 import CollapsibleItem from "@/components/CollapsibleItem";
 
 type RootSettingsProps = {
@@ -15,6 +15,14 @@ type RootSettingsProps = {
   onToggle?: ( expanded: boolean ) => void;
 };
 
+/**
+ * "Canvas & animation" section of the inspector: canvas size, duration and
+ * framerate. Sits above the sketch's own parameters so one panel carries every
+ * knob for what is on screen. Edits the root blocks (`format` / `animation`),
+ * or the active slide's overrides (`slides.N.*`) when a slide is selected —
+ * the same contextual targeting as the sketch form below it, so the two never
+ * disagree about which object is being edited.
+ */
 export default function RootSettings( {
   activeSlideIndex,
   expanded,
@@ -22,36 +30,32 @@ export default function RootSettings( {
 }: RootSettingsProps ) {
   const isSlideContext = activeSlideIndex !== undefined;
   const basePath = isSlideContext ? `slides.${ activeSlideIndex }` : "";
-  const label = isSlideContext
-    ? `slide ${ activeSlideIndex + 1 } settings`
-    : "general settings";
 
   return (
     <CollapsibleItem
       key={ basePath }
-      expanded={ expanded ?? isSlideContext }
+      expanded={ expanded ?? true }
       onToggle={ onToggle }
-      className={ `p-1 border rounded-lg text-foreground bg-background overflow-y-auto ${
-        isSlideContext
-          ? "border-blue-400/60 ring-1 ring-blue-400/30"
-          : "border-theme"
-      }` }
-      header={ ( expanded ) => (
+      className="border-b border-theme"
+      header={ ( isExpanded ) => (
         <button
-          className="flex w-full items-center gap-1.5 text-left text-foreground text-xs min-h-[2.5rem] md:min-h-[1.75rem]"
-          aria-label={ expanded ? "Collapse controls" : "Expand controls" }
+          className="flex w-full items-center gap-1.5 px-3 py-2 text-left text-xs text-foreground hover:bg-hover transition-colors"
+          aria-label={ isExpanded ? "Collapse canvas settings" : "Expand canvas settings" }
         >
-          <ListCollapse
-            className="shrink-0 text-foreground h-4 w-4 md:h-3 md:w-3"
+          <Frame className="h-3.5 w-3.5 shrink-0" />
+          <span className="truncate">canvas &amp; animation</span>
+          <ChevronDown
+            className="ml-auto h-3.5 w-3.5 shrink-0 text-label transition-transform"
             style={ {
-              rotate: expanded ? "180deg" : "0deg"
+              transform: isExpanded ? "rotate(0deg)" : "rotate(-90deg)"
             } }
           />
-          <span className="truncate">{label}</span>
         </button>
       ) }
     >
-      <GenericObjectForm basePath={ basePath } config={ rootFormConfig } />
+      <div className="px-3 pb-3">
+        <GenericObjectForm basePath={ basePath } config={ rootFormConfig } />
+      </div>
     </CollapsibleItem>
   );
 }
