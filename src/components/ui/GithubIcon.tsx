@@ -8,6 +8,12 @@ import type {
  * lucide icon so it drops into the same call sites — note lucide strokes its
  * icons while a brand mark is a filled path, hence `fill="currentColor"` and
  * no stroke attributes.
+ *
+ * The path's own bounding box is `y: [0.5, 23.91]` (x is already centered at
+ * `[0, 24]`), so a `0 0 24 24` viewBox leaves it sitting closer to the bottom
+ * edge — visibly off-centre next to symmetric lucide icons in the same
+ * button row. The viewBox is cropped to that bounding box instead of the
+ * path being renumbered, so it renders flush (and centered) top and bottom.
  */
 export default function GithubIcon( {
   size = 24, ...props
@@ -17,7 +23,7 @@ export default function GithubIcon( {
       xmlns="http://www.w3.org/2000/svg"
       width={ size }
       height={ size }
-      viewBox="0 0 24 24"
+      viewBox="0 0.5 24 23.41"
       fill="currentColor"
       aria-hidden="true"
       { ...props }
