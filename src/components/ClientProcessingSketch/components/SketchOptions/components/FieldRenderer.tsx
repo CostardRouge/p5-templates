@@ -465,7 +465,7 @@ export default function FieldRenderer( {
                   "cursor-pointer select-none flex items-center justify-between w-full gap-2 min-h-[2.5rem] md:min-h-0",
                   isBand
                     ? clsx(
-                      "py-2 md:py-1.5 hover:bg-hover transition-colors",
+                      "py-2 md:py-1.5",
                       leafPaddingClassName
                     )
                     : "py-1.5 md:py-1 text-label"

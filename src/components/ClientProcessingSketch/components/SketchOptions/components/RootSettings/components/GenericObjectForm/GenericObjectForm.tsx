@@ -1,3 +1,4 @@
+import clsx from "clsx";
 import dynamic from "next/dynamic";
 import {
   useWatch
@@ -81,7 +82,7 @@ export default function GenericObjectForm( {
   const keys = Object.keys( config );
 
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col">
       {keys.map( (
         fieldName, index
       ) => {
@@ -117,11 +118,18 @@ export default function GenericObjectForm( {
           />
         );
 
-        // A band is full-bleed; a leaf carries the panel's padding.
+        // A band is full-bleed and sits flush against its own hairline; a
+        // leaf carries the panel's padding and its own vertical rhythm. The
+        // spacing cannot come from a container `gap`: that would also push the
+        // bands apart, leaving each separator floating in dead space instead
+        // of reading as the top edge of the group it introduces.
         return (
           <div
             key={ fieldName }
-            className={ isBand ? undefined : leafPaddingClassName }
+            className={ isBand ? undefined : clsx(
+              leafPaddingClassName,
+              "py-1"
+            ) }
           >
             {field}
           </div>
