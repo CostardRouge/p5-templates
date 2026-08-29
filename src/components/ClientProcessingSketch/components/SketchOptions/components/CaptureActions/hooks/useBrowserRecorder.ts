@@ -24,22 +24,22 @@ import {
 } from "@/lib/previewConfig";
 
 /**
- * `download` – the default browser recording: capture, then hand the file
- *              to the user via a download.
- * `preview`  – dev-only. Capture a preview clip and POST it back to the dev
- *              server, which re-encodes it into the sketch's committed
- *              `preview.webm` variants instead of downloading anything. Two
- *              flavours, chosen by the recording `mode`:
- *                • realtime   – after a 3-2-1 countdown, a fixed-length
- *                  wall-clock capture. Lets interactive sketches (webcam /
- *                  mic / hand tracking) get a real preview the headless
- *                  generator can't produce.
- *                • async-loop – a deterministic frame-by-frame capture of the
- *                  sketch's loop. No countdown (nothing to prepare) and no
- *                  frame drops — the front-end equivalent of the headless
- *                  generator, handy when it isn't available.
+ * Dev-only preview capture: record a clip and POST it back to the dev server,
+ * which re-encodes it into the sketch's committed `preview.webm` variants
+ * instead of downloading anything. Two flavours, chosen by the recording
+ * `mode`:
+ *   • realtime   – after a 3-2-1 countdown, a fixed-length wall-clock capture.
+ *     Lets interactive sketches (webcam / mic / hand tracking) get a real
+ *     preview the headless generator can't produce.
+ *   • async-loop – a deterministic frame-by-frame capture of the sketch's
+ *     loop. No countdown (nothing to prepare) and no frame drops — the
+ *     front-end equivalent of the headless generator, handy when it isn't
+ *     available.
+ *
+ * Downloadable exports do NOT come through here: they are variants driven by
+ * `src/lib/export/runExportBatch.ts`, which also owns the size / framerate
+ * overrides this hook has no concept of.
  */
-export type RecordingIntent = "download" | "preview";
 
 /**
  * UI phase of a dev "Record preview" run. `countdown` only applies to the
@@ -64,34 +64,10 @@ export type UseBrowserRecorderReturn = {
   countdown: number;
   /** Briefly true after a preview was written to the source tree. */
   previewSaved: boolean;
-  start: (
-    format: RecordingFormat,
-    mode: RecordingMode,
-    intent?: RecordingIntent
-  ) => Promise<void>;
+  start: ( mode: RecordingMode ) => Promise<void>;
   stop: () => Promise<void>;
   cancel: () => void;
 };
-
-function triggerDownload(
-  blob: Blob, filename: string
-) {
-  const url = URL.createObjectURL( blob );
-  const a = document.createElement( "a" );
-
-  a.style.display = "none";
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild( a );
-  a.click();
-  setTimeout(
-    () => {
-      a.remove();
-      URL.revokeObjectURL( url );
-    },
-    100
-  );
-}
 
 /**
  * POST a recorded preview clip back to the dev server, which re-encodes it
@@ -133,11 +109,10 @@ async function savePreviewBlob(
 }
 
 /**
- * Orchestrates a single browser-side recording: builds an engine host,
- * creates the right strategy, wires progress events into React state, and
- * either triggers a download (`download` intent) or — dev-only, after a
- * lead-in countdown — saves the clip back to the source tree as the
- * sketch's preview (`preview` intent).
+ * Orchestrates one dev preview capture: builds an engine host, creates the
+ * right strategy, wires progress events into React state, and — after a
+ * lead-in countdown for the realtime flavour — saves the clip back to the
+ * source tree as the sketch's preview.
  *
  * Re-entering `start()` while a recording (or its countdown) is active is a
  * no-op — clicks on the start button while a capture is in flight must not
@@ -346,11 +321,7 @@ export function useBrowserRecorder( {
   );
 
   const start = useCallback(
-    async(
-      format: RecordingFormat,
-      mode: RecordingMode,
-      intent: RecordingIntent = "download"
-    ) => {
+    async( mode: RecordingMode ) => {
       if ( recorderRef.current || previewActiveRef.current ) {
         return;
       }
@@ -369,44 +340,39 @@ export function useBrowserRecorder( {
         savedTimerRef.current = null;
       }
 
-      const isPreview = intent === "preview";
       // Realtime previews lead in with a 3-2-1 countdown so the author can get
       // an interaction (webcam / mic / hand tracking) ready. Async-loop
       // previews are deterministic — nothing to prepare — so they skip the
       // countdown and step straight into a frame-by-frame capture.
-      const isRealtimePreview = isPreview && mode === "realtime";
+      const isRealtimePreview = mode === "realtime";
 
-      // Preview runs lock controls *before* a recorder exists so the author
-      // can (realtime) get an interaction ready and still cancel cleanly.
-      // The download path keeps the original ordering (lock only once the
-      // recorder is built) so a failed `createRecorder` can't leave the
-      // controls stuck — there's nothing to clean up there yet.
-      if ( isPreview ) {
-        previewActiveRef.current = true;
-        // Snapshot the engine + intended playback state before anything
-        // takes over. The strategies always end with `host.resume()`, so
-        // without this snapshot a sketch that was paused before recording
-        // would come back playing with a stale Pause icon.
-        engineAtStartRef.current = engine;
-        loopingAtStartRef.current = loopingRef.current;
-        dispatch( {
-          type: "SET_BROWSER_RECORDING",
-          payload: true
-        } );
+      // Lock the controls *before* a recorder exists so the author can
+      // (realtime) get an interaction ready and still cancel cleanly.
+      previewActiveRef.current = true;
 
-        if ( isRealtimePreview ) {
-          setPreviewPhase( "countdown" );
+      // Snapshot the engine + intended playback state before anything takes
+      // over. The strategies always end with `host.resume()`, so without this
+      // snapshot a sketch that was paused before recording would come back
+      // playing with a stale Pause icon.
+      engineAtStartRef.current = engine;
+      loopingAtStartRef.current = loopingRef.current;
+      dispatch( {
+        type: "SET_BROWSER_RECORDING",
+        payload: true
+      } );
 
-          try {
-            await runCountdown( PREVIEW_COUNTDOWN_SECS );
-          } catch {
-            // Cancelled during the countdown — `cancel()` already cleaned up.
-            return;
-          }
+      if ( isRealtimePreview ) {
+        setPreviewPhase( "countdown" );
 
-          if ( !previewActiveRef.current ) {
-            return;
-          }
+        try {
+          await runCountdown( PREVIEW_COUNTDOWN_SECS );
+        } catch {
+          // Cancelled during the countdown — `cancel()` already cleaned up.
+          return;
+        }
+
+        if ( !previewActiveRef.current ) {
+          return;
         }
       }
 
@@ -421,15 +387,12 @@ export function useBrowserRecorder( {
       try {
         recorder = createRecorder( {
           host,
-          format,
+          format: "webm",
           mode
         } );
       } catch( e ) {
         setError( e instanceof Error ? e : new Error( String( e ) ) );
-
-        if ( isPreview ) {
-          cleanup();
-        }
+        cleanup();
 
         return;
       }
@@ -447,23 +410,7 @@ export function useBrowserRecorder( {
             return;
           }
 
-          if ( isPreview ) {
-            void handlePreviewStop( result.blob );
-
-            return;
-          }
-
-          const safeName = sketchNameRef.current || "sketch";
-          const {
-            width, height
-          } = host.getCaptureSource();
-          const fileName = `${ safeName }-${ width }x${ height }.${ result.fileExtension }`;
-
-          triggerDownload(
-            result.blob,
-            fileName
-          );
-          cleanup();
+          void handlePreviewStop( result.blob );
         }
       );
       recorder.on(
@@ -492,10 +439,7 @@ export function useBrowserRecorder( {
       engineAtStartRef.current = engine;
       loopingAtStartRef.current = loopingRef.current;
       setIsRecording( true );
-
-      if ( isPreview ) {
-        setPreviewPhase( "recording" );
-      }
+      setPreviewPhase( "recording" );
 
       dispatch( {
         type: "SET_BROWSER_RECORDING",

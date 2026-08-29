@@ -21,7 +21,7 @@ import type {
 import type {
   SketchOptionInput, SlideOptionInput
 } from "@/types/sketch.types";
-import BrowserRecordingButton from "./components/BrowserRecordingButton";
+import DevPreviewButton from "./components/DevPreviewButton";
 import CompletedActions from "./components/CompletedActions";
 import DraftActions from "./components/DraftActions";
 import FailedActions from "./components/FailedActions";
@@ -30,9 +30,6 @@ import RecordingActions from "./components/RecordingActions";
 import {
   useBrowserRecorder
 } from "./hooks/useBrowserRecorder";
-import {
-  useFrameExporter
-} from "./hooks/useFrameExporter";
 import useSketch from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
 import type {
   RecorderCapabilities
@@ -40,6 +37,8 @@ import type {
 import type {
   RecordingLifecycle
 } from "../../hooks/useRecordingLifecycle";
+
+const IS_DEV = process.env.NODE_ENV === "development";
 
 export type CaptureActionsRef = {
   saveAsDraft: () => Promise<void>;
@@ -107,12 +106,6 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
     : null;
 
   const browserRecorder = useBrowserRecorder( {
-    engine,
-    options: options as never,
-    activeSlideIndex,
-    sketchName: name
-  } );
-  const frameExporter = useFrameExporter( {
     engine,
     options: options as never,
     activeSlideIndex,
@@ -728,26 +721,19 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
         ) }
       >
         <div className="flex flex-col gap-1 h-auto w-full">
-          {/* Browser Recording - Only on Compatible Devices */}
-          {!isRecording && browserRecordingSupported && recorderCapabilities && (
-            <BrowserRecordingButton
+          {/* Dev-only preview capture. Downloadable exports live in the export
+              panel; this one writes back into the source tree. */}
+          {IS_DEV && !isRecording && browserRecordingSupported && recorderCapabilities && (
+            <DevPreviewButton
               capabilities={ recorderCapabilities }
-              isRecording={ browserRecorder.isRecording }
               progress={ browserRecorder.progress }
               error={ browserRecorder.error }
               previewPhase={ browserRecorder.previewPhase }
               countdown={ browserRecorder.countdown }
               previewSaved={ browserRecorder.previewSaved }
-              onStart={ browserRecorder.start }
+              onStart={ ( mode ) => browserRecorder.start( mode ) }
               onStop={ browserRecorder.stop }
               onCancel={ browserRecorder.cancel }
-              frameExport={ {
-                isExporting: frameExporter.isExporting,
-                progress: frameExporter.progress,
-                error: frameExporter.error,
-                onExport: frameExporter.exportFrames,
-                onCancel: frameExporter.cancel
-              } }
             />
           )}
 

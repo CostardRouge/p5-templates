@@ -20,6 +20,19 @@ One inspector, a content rail, a filmstrip, export in the top bar. Decided with 
 
 2026-08-29 — The highlighted thumbnail is the only place the selection is named. Panels never repeat it: the inspector header is just "Controls", the content rail's section is "content" (vs "shared content"), and `SlideEditor` renders no caption of its own. Before this, one screen carried the name four times — `Controls · slide 2`, a `SLIDE 2 CONTENT` section, a raw `root.slides[1].content` line inside it (0-based, 30px under a 1-based header), and the thumbnail — which on mobile made two *tabs* claim the same object while the Sketch tab, editing `slides.N.*`, carried no marker at all. **The one exception is deliberate**: `SketchBreadcrumb` keeps ` · slide N` over the canvas, because it names what is *rendered*, not what is edited. **How to apply**: if a panel needs to say which slide it edits, the answer is that the filmstrip must be visible, not that the panel should print the name.
 
+## The export dialog is a variant list, not a format picker
+
+2026-08-29 — `CaptureDialog` is a ~640px two-column dialog: the variant list on the left, the selected variant's editor on the right, one ink-filled `Export all` in the footer (a bordered red `Stop` while running — red stays reserved for capture-in-progress). Rules that are load-bearing rather than cosmetic:
+
+- **The list *is* the run queue.** Each row carries its own state — fill bar, `slide 2 of 7`, `✓ Done` with the file size, or the failure reason. There is no separate running screen and no modal state swap: with several variants in flight a single global bar cannot say which variant is where, which is the whole reason the feature exists.
+- **`[+]` opens a preset menu** (Reel · post · square · 16:9 · current canvas · still · duplicate), never a blank row. A first-time list is seeded with one "current canvas" variant, so "open Export, press the button" reproduces what the old single-shot recorder did.
+- **Kind swaps the editor's controls**, it does not add a panel — a still has no framerate and a video has no frame count, so offering both invites setting a value that is then ignored.
+- **The framerate select stops at the sketch's native rate.** Capture resamples the sketch's own loop, so a higher rate only duplicates frames; those entries are absent rather than offered with a warning.
+- **Mixed slide sizes surface inside `Deliver as`**, only when combining, as a smallest/biggest/root choice — never a blocking dialog. An explicit variant resolution makes the question moot (see `recording.md`).
+- **Mobile** keeps Export appearing exactly once: the drawer's Export tab mounts the same `ExportPanel` with `stacked`, list above and editor below.
+
+Variants live in a module singleton persisted to `localStorage` per sketch (`src/lib/export/variantStore.ts`), deliberately **not** in the options form: they are a rendering queue, not part of the document, and putting them in `OptionsSchema` would push them into every persisted job, every `/embed` link and the options import/export JSON, and fire the form's 400ms undo/redo auto-capture on every tweak.
+
 ## "Document" is not a scope in the UI
 
 2026-08-28 — With at least one slide, the selected slide is always what is edited; without slides, the root blocks are. This matches what the code already did (`effectiveActiveIndex` falls back to 0; `resolveEffectiveSketch` spreads `slide.sketch` over root `sketch`, so the root is never *read* once a slide covers it) and the maintainer's history: slides were added after the fact, root `sketch` is the defaults holder, and slides are expected to grow into a preset system (a slide ≈ a named variant). Consequences, all deliberate:

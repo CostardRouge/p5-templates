@@ -6,7 +6,7 @@ import React, {
 import dynamic from "next/dynamic";
 import clsx from "clsx";
 import {
-  X
+  Download, X
 } from "lucide-react";
 
 import type {
@@ -21,6 +21,7 @@ import type {
 // + gif.js encoders, the action buttons, VideoPreviewModal) only compiles when
 // this dialog mounts.
 const CaptureActions = dynamic( () => import( "./CaptureActions" ) );
+const ExportPanel = dynamic( () => import( "./ExportPanel/ExportPanel" ) );
 
 type CaptureProps = Omit<
   React.ComponentPropsWithoutRef<typeof CaptureActions>,
@@ -34,6 +35,8 @@ type CaptureDialogProps = {
   capture: CaptureProps;
   captureActionsRef: React.Ref<CaptureActionsRef>;
   recordingSupported: boolean;
+  /** Whether the browser can run the in-page export pipeline at all. */
+  browserExportSupported: boolean;
   jobStatus?: string;
   onImportOptions: ( options: SketchOption ) => void;
   /** Present as a bottom sheet instead of a centred dialog — the mobile shape,
@@ -42,8 +45,8 @@ type CaptureDialogProps = {
 };
 
 /**
- * Recording and export, in one modal: the format/encoder pickers, the capture
- * actions and the job state, plus options import/export.
+ * Export, in one modal: the variant list and its editor, the backend job
+ * state, and options import/export.
  *
  * It is the single home for that stack — opened by the transport bar's record
  * dot (and, in the docked layout, by the top bar's Export button), never
@@ -60,6 +63,7 @@ export default function CaptureDialog( {
   capture,
   captureActionsRef,
   recordingSupported,
+  browserExportSupported,
   jobStatus,
   onImportOptions,
   bottomSheet = false
@@ -114,7 +118,7 @@ export default function CaptureDialog( {
       <div
         role="dialog"
         aria-modal={ open }
-        aria-label="Recording and export"
+        aria-label="Export"
         className={ clsx(
           "relative flex flex-col overflow-hidden border border-theme glass shadow-lg",
           bottomSheet
@@ -125,8 +129,10 @@ export default function CaptureDialog( {
               "w-full max-h-[85svh] rounded-2xl rounded-b-none border-b-0 transition-transform duration-200 ease-out motion-reduce:transition-none pb-[max(0.75rem,env(safe-area-inset-bottom))]",
               open ? "translate-y-0" : "translate-y-full"
             )
+            // The export table needs room the old 320px card never did, so the
+            // centred shape is a wide dialog rather than a narrow one.
             : clsx(
-              "w-80 max-h-full rounded-2xl transition-opacity",
+              "w-full max-w-3xl max-h-full rounded-2xl transition-opacity",
               open ? "opacity-100" : "opacity-0"
             )
         ) }
@@ -138,8 +144,9 @@ export default function CaptureDialog( {
         )}
 
         <div className="flex items-center gap-2 border-b border-theme px-3 py-2">
-          <span className="flex h-2.5 w-2.5 shrink-0 rounded-full bg-red-500" />
-          <span className="text-xs font-medium text-foreground">Record</span>
+          <Download className="h-3.5 w-3.5 shrink-0 text-foreground" />
+          <span className="text-xs font-medium text-foreground">Export</span>
+          <span className="truncate text-xs text-label">{capture.name}</span>
 
           <button
             type="button"
@@ -151,21 +158,34 @@ export default function CaptureDialog( {
           </button>
         </div>
 
-        <div className="flex flex-col gap-2 overflow-y-auto p-2">
-          {recordingSupported ? (
+        {/* The variant list + editor. Mounted only while the dialog is open:
+            unlike CaptureActions it holds no autosave handle, and its own
+            state lives in the export variant store, so it survives unmounting. */}
+        {open && browserExportSupported && (
+          <ExportPanel
+            name={ capture.name }
+            options={ capture.options as SketchOption }
+            activeSlideIndex={ activeSlideIndex }
+          />
+        )}
+
+        {!browserExportSupported && (
+          <p className="px-3 py-6 text-center text-xs text-label">
+            Exporting is not supported in this browser.
+          </p>
+        )}
+
+        <div className="flex flex-col gap-2 border-t border-theme p-2">
+          {recordingSupported && (
             <CaptureActions
               forwardedRef={ captureActionsRef }
               activeSlideIndex={ activeSlideIndex }
               docked
               { ...capture }
             />
-          ) : (
-            <p className="py-2 text-center text-xs text-label">
-              Recording is not supported in this browser.
-            </p>
           )}
 
-          <div className="flex border-t border-theme pt-2">
+          <div className="flex">
             <OptionsImportExport
               options={ capture.options }
               name={ capture.name }
