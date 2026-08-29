@@ -197,7 +197,9 @@ export default function SlideFilmstrip( {
           // items-start, not items-center: a slide is a thumbnail plus a name
           // line under it, so centring the items would push the add button —
           // which has no name line — half a line down out of alignment.
-          "flex h-full w-full items-start gap-2 overflow-x-auto overflow-y-hidden px-3 py-1.5",
+          // touch-pan-x: a vertical drag started on a thumbnail must fall
+          // through to the drawer's own scroll instead of being eaten here.
+          "flex h-full w-full items-start gap-2 overflow-x-auto overflow-y-hidden touch-pan-x px-3 py-1.5",
           className
         ) }
       >

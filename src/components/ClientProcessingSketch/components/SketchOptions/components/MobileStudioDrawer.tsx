@@ -254,9 +254,14 @@ export default function MobileStudioDrawer( {
           </div>
         ) }
       >
-        <div className="px-3 pt-1 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        {/* No horizontal padding: the tab bodies are stacks of full-bleed
+            PanelSection bands and must reach the drawer's edges, exactly like
+            the docked rails. Anything that is not a section pads itself — and
+            never with a negative margin, which is measured to miss (see
+            docs/memory/studio-ui.md). */}
+        <div className="pt-1 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           {lifecycle.isLocked && (
-            <div className="mb-2">
+            <div className="mb-2 px-3">
               <RecordingLockBanner
                 state={ lifecycle.state }
                 onClone={ onBannerClone }
@@ -266,7 +271,7 @@ export default function MobileStudioDrawer( {
           )}
 
           {importBanner && (
-            <div className="mb-2">
+            <div className="mb-2 px-3">
               <ImportSuccessBanner
                 message={ importBanner }
                 onDismiss={ onImportBannerDismiss }
@@ -276,7 +281,7 @@ export default function MobileStudioDrawer( {
 
           {/* Slide strip: navigation, not a setting — visible on every tab so
               switching slides never requires switching tabs. */}
-          <div className="mb-2 -mx-1">
+          <div className="mb-2">
             <SlideFilmstrip { ...filmstrip } thumbnailHeight={ 48 } />
           </div>
 
@@ -287,7 +292,6 @@ export default function MobileStudioDrawer( {
               activeSlideIndex={ activeSlideIndex }
               expanded={ rootSettingsExpanded }
               onToggle={ onRootSettingsToggle }
-              paddingClassName="px-0"
             />
 
             {sketchConfig && (
@@ -299,7 +303,6 @@ export default function MobileStudioDrawer( {
                 }
                 expanded={ sketchSectionExpanded }
                 onToggle={ onSketchSectionToggle }
-                paddingClassName="px-0"
                 bodyPaddingClassName="px-0 pt-0.5"
                 actions={
                   <SketchSettingsActions

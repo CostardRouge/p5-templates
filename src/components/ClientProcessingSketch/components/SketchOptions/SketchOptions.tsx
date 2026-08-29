@@ -324,12 +324,25 @@ export default function SketchOptions( {
       ? slideFields[ activeSlideIndex ]?.id
       : undefined;
 
-  // Collapsible section states
+  // ≥ md: separate floating panels (inspector left, content rail right).
+  // Below: a single bottom drawer with Sketch / Content tabs, under the
+  // transport bar. The form context above is shared either way — only the
+  // layout changes. Declared here because the initial collapsible states
+  // depend on it; `useMediaQuery`'s client snapshot reads matchMedia directly,
+  // so the very first client render already knows the real viewport.
+  const isDesktop = useMediaQuery( "(min-width: 768px)" );
+
+  // Collapsible section states. The drawer scrolls inside `max-h-[50svh]`, so
+  // opening it with canvas & animation *and* the sketch's options unfolded put
+  // the option count several screens down; on mobile the first section starts
+  // closed. Desktop rails are full height and keep the defaults.
   const {
     states: collapsibleStates,
     toggleSection,
     setSection
-  } = useCollapsibleStates();
+  } = useCollapsibleStates( isDesktop ? undefined : {
+    rootSettings: false
+  } );
 
   // Debounce thumbnail capture: refresh the active slide's thumbnail 1 second
   // after the user stops changing form values (e.g., releasing a slider).
@@ -494,11 +507,6 @@ export default function SketchOptions( {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   );
-
-  // ≥ md: separate floating panels (general settings right, sketch settings left).
-  // Below: a single bottom drawer with Sketch / Settings / Export tabs.
-  // The form context above is shared either way — only the layout changes.
-  const isDesktop = useMediaQuery( "(min-width: 768px)" );
 
   // The docked workspace layout (edge-to-edge rails) vs the floating layout
   // (rounded islands in the bottom corners). Desktop-only; a global toggle.
