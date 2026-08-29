@@ -3,7 +3,6 @@
 import React, {
   useCallback, useMemo, useRef, useState, useSyncExternalStore
 } from "react";
-import clsx from "clsx";
 import {
   Plus
 } from "lucide-react";
@@ -45,8 +44,6 @@ type ExportPanelProps = {
   name: string;
   options: SketchOption;
   activeSlideIndex: number | undefined;
-  /** Stacked single column for the mobile drawer. */
-  stacked?: boolean;
 };
 
 const FALLBACK_FORMATS: RecordingFormat[] = [
@@ -98,8 +95,7 @@ const SIZE_PRESETS: ExportSize[] = [
 export default function ExportPanel( {
   name,
   options,
-  activeSlideIndex,
-  stacked = false
+  activeSlideIndex
 }: ExportPanelProps ) {
   const [
     {
@@ -362,24 +358,15 @@ export default function ExportPanel( {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div
-        className={ clsx(
-          "flex min-h-0 flex-1",
-          stacked ? "flex-col" : "flex-row divide-x divide-theme"
-        ) }
-      >
-        <div className={ clsx(
-          "flex min-h-0 flex-col",
-          stacked ? "max-h-64" : "w-1/2"
-        ) }
-        >
+      {/* Two columns only where there is room for them. Below `md` the dialog
+          is roughly a phone wide, so a split would leave each side too narrow
+          to read: the list stacks above the editor instead, capped so the
+          editor stays reachable without scrolling the whole dialog. */}
+      <div className="flex min-h-0 flex-1 flex-col md:flex-row md:divide-x md:divide-theme">
+        <div className="flex max-h-48 min-h-0 flex-col md:max-h-none md:w-1/2">
           {list}
         </div>
-        <div className={ clsx(
-          "flex min-h-0 flex-col",
-          stacked ? "flex-1 border-t border-theme" : "w-1/2"
-        ) }
-        >
+        <div className="flex min-h-0 flex-1 flex-col border-t border-theme md:flex-none md:w-1/2 md:border-t-0">
           {editor}
         </div>
       </div>

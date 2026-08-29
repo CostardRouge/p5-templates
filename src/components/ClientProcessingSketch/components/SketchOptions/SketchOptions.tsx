@@ -844,8 +844,6 @@ export default function SketchOptions( {
               captureActionsRef={ captureActionsRef }
               recordingSupported={ recordingSupported }
               browserExportSupported={ browserRecordingSupported }
-              jobStatus={ lifecycle.currentStatus }
-              onImportOptions={ handleImportOptions }
               bottomSheet={ !isDesktop }
             />
           </ContentSelectionProvider>

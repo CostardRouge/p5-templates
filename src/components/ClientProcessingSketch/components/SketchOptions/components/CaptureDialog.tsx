@@ -12,7 +12,6 @@ import {
 import type {
   SketchOption
 } from "@/types/sketch.types";
-import OptionsImportExport from "./CaptureActions/components/OptionsImportExport";
 import type {
   CaptureActionsRef
 } from "./CaptureActions";
@@ -37,20 +36,20 @@ type CaptureDialogProps = {
   recordingSupported: boolean;
   /** Whether the browser can run the in-page export pipeline at all. */
   browserExportSupported: boolean;
-  jobStatus?: string;
-  onImportOptions: ( options: SketchOption ) => void;
   /** Present as a bottom sheet instead of a centred dialog — the mobile shape,
-   *  where a centred 320px card would float in the middle of a phone. */
+   *  where a centred dialog would float in the middle of a phone. */
   bottomSheet?: boolean;
 };
 
 /**
- * Export, in one modal: the variant list and its editor, the backend job
- * state, and options import/export.
+ * Export, in one modal: the variant list and its editor, plus the backend job
+ * state.
  *
- * It is the single home for that stack — opened by the transport bar's record
- * dot (and, in the docked layout, by the top bar's Export button), never
- * duplicated per layout.
+ * It is the single home for that stack on EVERY layout — opened by the
+ * transport bar's record dot and, in the docked layout, the top bar's Export
+ * button. A centred dialog on desktop, a bottom sheet on mobile, where the
+ * drawer has no Export tab: a surface over the sketch keeps a running export
+ * visible once the drawer is dismissed.
  *
  * The content stays MOUNTED while closed (visibility only, not conditional
  * rendering): `captureActionsRef` is the autosave handle the form calls into,
@@ -64,8 +63,6 @@ export default function CaptureDialog( {
   captureActionsRef,
   recordingSupported,
   browserExportSupported,
-  jobStatus,
-  onImportOptions,
   bottomSheet = false
 }: CaptureDialogProps ) {
   useEffect(
@@ -175,27 +172,19 @@ export default function CaptureDialog( {
           </p>
         )}
 
-        <div className="flex flex-col gap-2 border-t border-theme p-2">
-          {recordingSupported && (
+        {/* Backend job actions + the dev preview capture. Options
+            import/export deliberately does NOT live here: it is a document
+            concern, and it stays in the content rail's own section. */}
+        {recordingSupported && (
+          <div className="border-t border-theme p-2">
             <CaptureActions
               forwardedRef={ captureActionsRef }
               activeSlideIndex={ activeSlideIndex }
               docked
               { ...capture }
             />
-          )}
-
-          <div className="flex">
-            <OptionsImportExport
-              options={ capture.options }
-              name={ capture.name }
-              persistedJobId={ capture.persistedJob?.id }
-              jobStatus={ jobStatus }
-              onImportInMemory={ ( importedOptions ) =>
-                onImportOptions( importedOptions as SketchOption ) }
-            />
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
