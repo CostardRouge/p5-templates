@@ -38,15 +38,12 @@ export default function SlideEditor( {
     return null;
   }
 
-  const slideContentLength = slide?.content?.length ?? 0;
-
+  // No caption and no card of its own: this renders inside a PanelSection
+  // band that already names and counts the content, and a raw `root.slides[N]`
+  // path — 0-based, under a 1-based header — was a third name for the slide
+  // the filmstrip already identifies.
   return (
-    <div className="text-foreground text-left bg-background rounded-xl">
-      <span className="p-1 text-xs text-foreground">
-        root.slides[{activeIndex}].content{" "}
-        {slideContentLength ? `(${ slideContentLength })` : null}
-      </span>
-
+    <div className="text-foreground text-left">
       <SlideTransitionSettings activeIndex={ activeIndex } />
 
       <SketchAssetsProvider

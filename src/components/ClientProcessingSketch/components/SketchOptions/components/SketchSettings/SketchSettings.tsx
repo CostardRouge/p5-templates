@@ -192,17 +192,15 @@ export default function SketchSettings( {
     activeSlideIndex
   );
 
-  // The panel header names the surface and its scope; the option count moved
-  // down to title the sketch's own block, where it actually applies.
+  // The panel header names the surface, nothing else. It used to append
+  // "slide N", but the selected slide is named once — by the filmstrip's
+  // highlighted thumbnail — and repeating it here made two panels claim the
+  // same object. The option count likewise moved down to title the sketch's
+  // own block, where it actually applies.
   const headerLabel = (
     <>
       <SlidersHorizontal className="h-3.5 w-3.5 shrink-0" />
       <span className="truncate font-medium">Controls</span>
-      {activeSlideIndex !== undefined && (
-        <span className="truncate text-label">
-          slide {activeSlideIndex + 1}
-        </span>
-      )}
     </>
   );
 
