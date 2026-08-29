@@ -9,7 +9,7 @@ import sketch, {
 import events from "@/p5/utils/events.js";
 import graphics from "@/p5/utils/graphics.js";
 import animation from "@/p5/utils/animation.js";
-import imageUtils from "@/p5/utils/imageUtils.js";
+import * as common from "@/p5/utils/common.js";
 
 // Paper speckles are decorative, but they must be identical on every frame and
 // in headless capture: they are painted once into a buffer from a fixed seed
@@ -22,6 +22,50 @@ const CENTER_FOCUS = {
   x: 0.5,
   y: 0.5
 };
+
+const DEFAULT_POSITION = {
+  x: 0.5,
+  y: 0.27
+};
+
+function isPoint( value ) {
+  return Boolean( value ) && typeof value.x === "number" && typeof value.y === "number";
+}
+
+// The photo list. Each entry carries its own stamp placement, so the values a
+// click stores travel with the photo when the list is reordered.
+function getItems() {
+  return Array.isArray( options.sketch.items ) ? options.sketch.items : [];
+}
+
+// Rewrite one entry of the list. The whole array goes back through the option
+// sync (it replaces arrays wholesale rather than merging them element by
+// element), so the other entries are passed through untouched.
+function setItemValue(
+  index, key, value
+) {
+  const items = getItems();
+
+  if ( !items[ index ] ) {
+    return;
+  }
+
+  setSketchOptions(
+    {
+      sketch: {
+        items: items.map( (
+          item, itemIndex
+        ) => ( itemIndex === index
+          ? {
+            ...item,
+            [ key ]: value
+          }
+          : item ) )
+      }
+    },
+    "p5"
+  );
+}
 
 const sketchState = {
   grainLayer: null,
@@ -330,32 +374,6 @@ function getPhotoRect() {
   };
 }
 
-const DEFAULT_POSITION = {
-  x: 0.5,
-  y: 0.27
-};
-
-function isPosition( value ) {
-  return Boolean( value ) && typeof value.x === "number" && typeof value.y === "number";
-}
-
-// Where the stamp sits for a given beat. With `perImage` off there is a single
-// position for the whole sketch; with it on, the beat's own entry wins and the
-// shared position is the fallback for a beat that has none yet — so turning the
-// switch on changes nothing until a beat is actually moved.
-function getStampPosition( beatIndex ) {
-  const stamp = options.sketch.stamp ?? {};
-  const shared = isPosition( stamp.position ) ? stamp.position : DEFAULT_POSITION;
-
-  if ( !stamp.perImage ) {
-    return shared;
-  }
-
-  const entry = Array.isArray( stamp.positions ) ? stamp.positions[ beatIndex ] : null;
-
-  return isPosition( entry ) ? entry : shared;
-}
-
 // The stamp, centred on its position and kept fully inside the canvas.
 function getStampRect( position ) {
   const p = getP5();
@@ -590,35 +608,10 @@ function getInternalCanvasPoint( event ) {
   };
 }
 
-// The per-beat position list with `beatIndex` moved to `position`. The list is
-// grown to one entry per beat and every hole is filled with what that beat was
-// already showing, so writing one entry never silently moves the others, and
-// the form always offers as many rows as there are beats.
-function withBeatPosition(
-  beatIndex, beatCount, position
-) {
-  const existing = Array.isArray( options.sketch.stamp?.positions )
-    ? options.sketch.stamp.positions
-    : [];
-  const length = Math.max(
-    beatCount,
-    existing.length,
-    beatIndex + 1
-  );
-
-  return Array.from(
-    {
-      length
-    },
-    (
-      _, index
-    ) => ( index === beatIndex ? position : getStampPosition( index ) )
-  );
-}
-
 // Click the big photo to aim the stamp at that detail, click the paper to move
-// the stamp there. Both write back into the form, so the result is a saved
-// option and not a transient state the recorder would miss.
+// the stamp there. Both write back into the photo that is on screen, so every
+// photo keeps its own framing and the result is a saved option, not a transient
+// state the recorder would miss.
 function handleCanvasClick( event ) {
   const p = getP5();
 
@@ -641,28 +634,15 @@ function handleCanvasClick( event ) {
     && point.y <= photoRect.y + photoRect.height;
 
   if ( !insidePhoto ) {
-    const position = {
-      x: point.x / p.width,
-      y: point.y / p.height
-    };
-
-    setSketchOptions(
+    // the stamp is placed on the paper of the beat on screen, and the beat is
+    // named by its big photo
+    setItemValue(
+      frame?.photoIndex ?? 0,
+      "position",
       {
-        sketch: {
-          stamp: options.sketch.stamp?.perImage
-            ? {
-              positions: withBeatPosition(
-                frame?.beatIndex ?? 0,
-                frame?.beatCount ?? 1,
-                position
-              )
-            }
-            : {
-              position
-            }
-        }
-      },
-      "p5"
+        x: point.x / p.width,
+        y: point.y / p.height
+      }
     );
 
     return;
@@ -682,18 +662,16 @@ function handleCanvasClick( event ) {
     CENTER_FOCUS
   );
 
-  setSketchOptions(
+  // the focus is a point *inside* the stamped image, so it is stored on the
+  // photo the stamp crops — the same entry in "same" mode, the pair's second
+  // photo when the stamp shows its own image
+  setItemValue(
+    frame?.stampIndex ?? 0,
+    "focus",
     {
-      sketch: {
-        stamp: {
-          focus: {
-            x: ( source.x + ( point.x - photoRect.x ) / photoRect.width * source.width ) / frame.photoImage.width,
-            y: ( source.y + ( point.y - photoRect.y ) / photoRect.height * source.height ) / frame.photoImage.height
-          }
-        }
-      }
-    },
-    "p5"
+      x: ( source.x + ( point.x - photoRect.x ) / photoRect.width * source.width ) / frame.photoImage.width,
+      y: ( source.y + ( point.y - photoRect.y ) / photoRect.height * source.height ) / frame.photoImage.height
+    }
   );
 }
 
@@ -728,18 +706,18 @@ sketch.draw( () => {
 
   drawGrain( o.paper?.grain ?? 0 );
 
-  const images = imageUtils.getImages();
+  const items = getItems();
 
-  if ( images.length < 1 ) {
+  if ( items.length < 1 ) {
     return;
   }
 
-  // One beat per image, or per non-overlapping pair when the stamp shows its
+  // One beat per photo, or per non-overlapping pair when the stamp shows its
   // own photo (1-2, 3-4, …); a single beat displays statically.
   const paired = ( o.stamp?.source ?? "same" ) === "pair";
   const beatCount = Math.max(
     1,
-    paired ? Math.floor( images.length / 2 ) : images.length
+    paired ? Math.floor( items.length / 2 ) : items.length
   );
   const beatPosition = animation.progression * beatCount;
   const beatIndex = Math.min(
@@ -748,10 +726,17 @@ sketch.draw( () => {
   );
   const beatProgression = beatPosition - Math.floor( beatPosition );
 
-  const photoImage = images[ paired ? beatIndex * 2 : beatIndex ]?.img;
-  const stampImage = paired ? images[ beatIndex * 2 + 1 ]?.img : photoImage;
+  // Which entries of the list this beat shows: its big photo, and the photo the
+  // stamp crops — the same one unless the pair mode gives the stamp its own.
+  const photoIndex = paired ? beatIndex * 2 : beatIndex;
+  const stampIndex = paired ? beatIndex * 2 + 1 : photoIndex;
+  const photoItem = items[ photoIndex ];
+  const stampItem = items[ stampIndex ];
+  const photoImage = common.getAsset( photoItem?.photo )?.img;
+  const stampImage = common.getAsset( stampItem?.photo )?.img;
 
   if ( !photoImage || !stampImage ) {
+    // an asset still loading, or a row with no photo picked yet
     return;
   }
 
@@ -774,7 +759,9 @@ sketch.draw( () => {
 
   const stampZoom = ( o.stamp?.zoom ?? 1 )
     * ( 1 + ( o.stamp?.zoomAmplitude ?? 0 ) * beatProgression );
-  const stampRect = getStampRect( getStampPosition( beatIndex ) );
+  const stampRect = getStampRect( isPoint( photoItem.position )
+    ? photoItem.position
+    : DEFAULT_POSITION );
   const stampMargin = ( o.stamp?.border ?? 0 ) * stampRect.width;
   // resolved once and shared: the hole must be the very piece the stamp holds
   const stampSource = coverSourceRect(
@@ -782,7 +769,7 @@ sketch.draw( () => {
     stampRect.width - 2 * stampMargin,
     stampRect.height - 2 * stampMargin,
     stampZoom,
-    o.stamp?.focus ?? CENTER_FOCUS
+    isPoint( stampItem.focus ) ? stampItem.focus : CENTER_FOCUS
   );
 
   if ( o.stamp?.cutout ) {
@@ -810,8 +797,9 @@ sketch.draw( () => {
     photoRect,
     photoImage,
     photoZoom,
-    // a click on the paper must land on the beat that was on screen
-    beatIndex,
-    beatCount
+    // a click must write onto the photos that were on screen, not onto
+    // whichever ones the defaults imply
+    photoIndex,
+    stampIndex
   };
 } );
