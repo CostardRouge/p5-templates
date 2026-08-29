@@ -1,9 +1,20 @@
 import getTestImagePaths from "@/utils/getTestImagePaths";
 
+// One entry per photo: the image and where its swap zone sits. Photos are shown
+// in pairs, and the pair's zone is the one carried by its first photo — that is
+// the entry a click on the canvas writes to.
+const items = ( await getTestImagePaths() ).map( ( photo ) => ( {
+  photo,
+  position: {
+    x: 1,
+    y: 0.5
+  }
+} ) );
+
 // Default values only
 export const formValues = {
   // Assets
-  images: await getTestImagePaths(),
+  items,
 
   layout: {
     direction: "horizontal"
@@ -18,10 +29,6 @@ export const formValues = {
     content: "crop",
     width: 0.34,
     height: 0.35,
-    position: {
-      x: 1,
-      y: 0.5
-    },
     horizontalMirror: true,
     verticalMirror: true
   },
@@ -37,9 +44,30 @@ export const formValues = {
 // UI configuration only
 export const formConfiguration: Record<string, any> = {
   // Assets
-  images: {
-    component: "images-stack",
-    label: "Images"
+  items: {
+    component: "item-list",
+    label: "Photos",
+    minItems: 2,
+    itemConfig: {
+      component: "nested-object",
+      label: "Photo",
+      initialExpanded: true,
+      fields: {
+        photo: {
+          component: "image",
+          label: "Photo"
+        },
+        position: {
+          component: "vector2d",
+          label: "Swap zone (click the canvas)",
+          allowNegative: false,
+          min: 0,
+          max: 1,
+          step: 0.01,
+          yDown: true
+        }
+      }
+    }
   },
 
   layout: {
@@ -115,15 +143,6 @@ export const formConfiguration: Record<string, any> = {
         min: 0.05,
         max: 0.95,
         step: 0.01
-      },
-      position: {
-        component: "vector2d",
-        label: "Position (click the canvas)",
-        allowNegative: false,
-        min: 0,
-        max: 1,
-        step: 0.01,
-        yDown: true
       },
       horizontalMirror: {
         label: "Horizontal mirror",

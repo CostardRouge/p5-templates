@@ -1,9 +1,24 @@
 import getTestImagePaths from "@/utils/getTestImagePaths";
 
+// One entry per photo: the image, where its stamp sits on the paper, and which
+// detail of it the stamp magnifies. Clicking the canvas writes both onto the
+// photo that is on screen, so each photo keeps its own framing.
+const items = ( await getTestImagePaths() ).map( ( photo ) => ( {
+  photo,
+  position: {
+    x: 0.5,
+    y: 0.27
+  },
+  focus: {
+    x: 0.5,
+    y: 0.5
+  }
+} ) );
+
 // Default values only
 export const formValues = {
   // Assets
-  images: await getTestImagePaths(),
+  items,
 
   layout: {
     height: 0.52,
@@ -17,16 +32,6 @@ export const formValues = {
     cutout: true,
     size: 0.3,
     aspect: 1.2,
-    position: {
-      x: 0.5,
-      y: 0.27
-    },
-    perImage: false,
-    positions: [],
-    focus: {
-      x: 0.5,
-      y: 0.5
-    },
     zoom: 2.6,
     zoomAmplitude: 0,
     rotation: 0,
@@ -56,9 +61,39 @@ export const formValues = {
 // UI configuration only
 export const formConfiguration: Record<string, any> = {
   // Assets
-  images: {
-    component: "images-stack",
-    label: "Images"
+  items: {
+    component: "item-list",
+    label: "Photos",
+    minItems: 1,
+    itemConfig: {
+      component: "nested-object",
+      label: "Photo",
+      initialExpanded: true,
+      fields: {
+        photo: {
+          component: "image",
+          label: "Photo"
+        },
+        position: {
+          component: "vector2d",
+          label: "Stamp position (click the paper)",
+          allowNegative: false,
+          min: 0,
+          max: 1,
+          step: 0.01,
+          yDown: true
+        },
+        focus: {
+          component: "vector2d",
+          label: "Stamp focus (click the photo)",
+          allowNegative: false,
+          min: 0,
+          max: 1,
+          step: 0.01,
+          yDown: true
+        }
+      }
+    }
   },
 
   layout: {
@@ -142,41 +177,6 @@ export const formConfiguration: Record<string, any> = {
         min: 0.5,
         max: 2,
         step: 0.05
-      },
-      position: {
-        component: "vector2d",
-        label: "Position (click the paper)",
-        allowNegative: false,
-        min: 0,
-        max: 1,
-        step: 0.01,
-        yDown: true
-      },
-      perImage: {
-        label: "One position per photo",
-        component: "checkbox"
-      },
-      positions: {
-        component: "item-list",
-        label: "Per-photo positions",
-        itemConfig: {
-          component: "vector2d",
-          label: "Position",
-          allowNegative: false,
-          min: 0,
-          max: 1,
-          step: 0.01,
-          yDown: true
-        }
-      },
-      focus: {
-        component: "vector2d",
-        label: "Focus (click the photo)",
-        allowNegative: false,
-        min: 0,
-        max: 1,
-        step: 0.01,
-        yDown: true
       },
       zoom: {
         label: "Zoom",
