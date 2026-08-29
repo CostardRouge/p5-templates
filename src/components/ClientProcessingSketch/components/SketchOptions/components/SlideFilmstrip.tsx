@@ -194,7 +194,10 @@ export default function SlideFilmstrip( {
     >
       <div
         className={ clsx(
-          "flex h-full w-full items-center gap-2 overflow-x-auto overflow-y-hidden px-3 py-1.5",
+          // items-start, not items-center: a slide is a thumbnail plus a name
+          // line under it, so centring the items would push the add button —
+          // which has no name line — half a line down out of alignment.
+          "flex h-full w-full items-start gap-2 overflow-x-auto overflow-y-hidden px-3 py-1.5",
           className
         ) }
       >

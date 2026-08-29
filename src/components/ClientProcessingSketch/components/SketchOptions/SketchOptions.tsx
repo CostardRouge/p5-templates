@@ -512,11 +512,11 @@ export default function SketchOptions( {
   // The bottom stack, from the viewport edge up: filmstrip, transport bar,
   // Interactive mixer. Each offset is derived from the one below it so adding
   // or removing a layer never leaves two of them overlapping.
+  // Docked stacks the transport above the filmstrip band; floating puts the
+  // deck in the right column instead, so nothing sits under the transport bar.
   const filmstripHeight = dockedDesktop
     ? `var(${ STUDIO_FILMSTRIP_HEIGHT_VAR }, 0px)`
-    : hasSlides
-      ? "6rem"
-      : "3.5rem";
+    : "0px";
   const transportBottom = `calc(${ filmstripHeight } + 0.75rem)`;
   const mixerBottom = `calc(${ transportBottom } + 3.25rem)`;
 
@@ -641,6 +641,15 @@ export default function SketchOptions( {
                     { ...bodyProps }
                   />
 
+                  {/* Floating: the deck is a panel of the right column, under
+                      the content card and the same width — it belongs with the
+                      document's other objects rather than floating over the
+                      canvas. Docked keeps it as a band between the rails. */}
+                  {!dockedDesktop && (
+                    <div className="glass border border-theme rounded-2xl shadow-lg overflow-hidden">
+                      <SlideFilmstrip { ...filmstripProps } thumbnailHeight={ 52 } />
+                    </div>
+                  )}
                 </div>
 
                 {/* Inspector (left): canvas & animation + the sketch's own
@@ -667,7 +676,7 @@ export default function SketchOptions( {
                     between the rails, above the viewport's bottom edge (the
                     height comes from the shared CSS variable). Floating: an
                     island bottom-center. */}
-                {dockedDesktop ? (
+                {dockedDesktop && (
                   <div
                     className="absolute bottom-0 left-80 right-72 z-40 glass border-t border-theme"
                     style={ {
@@ -675,10 +684,6 @@ export default function SketchOptions( {
                     } }
                   >
                     <SlideFilmstrip { ...filmstripProps } thumbnailHeight={ 72 } />
-                  </div>
-                ) : (
-                  <div className="absolute bottom-4 left-1/2 z-40 max-w-[calc(100%-42rem)] -translate-x-1/2 glass border border-theme rounded-2xl shadow-lg">
-                    <SlideFilmstrip { ...filmstripProps } thumbnailHeight={ 56 } />
                   </div>
                 )}
 

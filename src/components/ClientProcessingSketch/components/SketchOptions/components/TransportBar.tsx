@@ -1,12 +1,17 @@
 "use client";
 
-import React from "react";
+import React, {
+  useState
+} from "react";
 import clsx from "clsx";
 import {
-  Pause, Play
+  Camera, Check, Pause, Play
 } from "lucide-react";
 
 import AnimationProgressionBar from "@/components/AnimationProgressionBar";
+import {
+  downloadCanvasPng
+} from "@/lib/canvasSnapshot";
 import useSketch from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
 
 type TransportBarProps = {
@@ -40,10 +45,34 @@ export default function TransportBar( {
 }: TransportBarProps ) {
   const [
     {
-      engine, looping, browserRecording
+      engine, name, looping, browserRecording
     },
     dispatch
   ] = useSketch();
+
+  // Brief tick after a snapshot: the download itself is invisible in most
+  // browsers, so without it the button gives no sign it fired.
+  const [
+    snapped,
+    setSnapped
+  ] = useState( false );
+
+  const handleSnapshot = async() => {
+    const saved = await downloadCanvasPng(
+      engine,
+      name
+    );
+
+    if ( !saved ) {
+      return;
+    }
+
+    setSnapped( true );
+    setTimeout(
+      () => setSnapped( false ),
+      1200
+    );
+  };
 
   const togglePlayback = () => {
     if ( looping ) {
@@ -94,6 +123,22 @@ export default function TransportBar( {
         onSeekStart={ onSeekStart }
         onSeekEnd={ onSeekEnd }
       />
+
+      {/* Snapshot: the current frame as a PNG, beside the record dot — one
+          still, one moving image, the two ways out of the sketch. */}
+      <button
+        type="button"
+        onClick={ handleSnapshot }
+        title="Save the current frame as a PNG"
+        aria-label="Save the current frame as an image"
+        className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-hover"
+      >
+        {snapped ? (
+          <Check className="h-4 w-4 text-green-500" />
+        ) : (
+          <Camera className="h-4 w-4" />
+        )}
+      </button>
 
       {/* The one recording affordance on desktop, wearing the only red in the
           interface — the same meaning it already carries on mobile. */}
