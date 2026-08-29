@@ -1,11 +1,4 @@
 /**
- * Window event dispatched (e.g. by the engine controls record shortcut) to
- * open the mobile studio drawer on its Export tab. Lives in its own module so
- * importers don't pull the whole drawer subtree into their bundle.
- */
-export const OPEN_EXPORT_DRAWER_EVENT = "studio:open-export-drawer";
-
-/**
  * Window event dispatched by the on-canvas content-item drag (contentDrag.js)
  * when an item is pressed/grabbed, so the options panel can reveal that item's
  * form section — open its zone (global content / the right slide), open the

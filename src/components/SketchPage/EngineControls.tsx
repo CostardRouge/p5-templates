@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  Camera, Circle, Loader2, Pause, Play
+  Camera, Loader2, Pause, Play
 } from "lucide-react";
 import Github from "@/components/ui/GithubIcon";
 import Link from "next/link";
@@ -17,9 +17,6 @@ import {
 } from "@/lib/canvasSnapshot";
 import useSketch from "../ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
 import SketchShareDialog from "./SketchShareDialog";
-import {
-  OPEN_EXPORT_DRAWER_EVENT
-} from "../ClientProcessingSketch/components/SketchOptions/constants/drawer-events";
 
 type ThumbnailSaveState = "idle" | "saving" | "done" | "error";
 
@@ -214,7 +211,7 @@ export function EngineControls( {
         disabled={ thumbnailSaveState === "saving" }
         onClick={ handleCaptureClick }
         onDoubleClick={ handleSaveCanvasAsThumbnail }
-        className="inline-flex h-full px-3 hover:bg-hover transition-colors border-r border-border md:border-r-0 group items-center justify-center"
+        className="inline-flex h-full px-3 hover:bg-hover transition-colors group items-center justify-center"
       >
         {thumbnailSaveState === "saving" ? (
           <Loader2 className="h-4 w-4 text-yellow-400/70 animate-spin" />
@@ -233,17 +230,6 @@ export function EngineControls( {
             ) }
           />
         )}
-      </button>
-
-      {/* Mobile shortcut: opens the studio drawer on its Export tab. */}
-      <button
-        title="Record / export"
-        aria-label="Open recording and export options"
-        onClick={ () =>
-          window.dispatchEvent( new CustomEvent( OPEN_EXPORT_DRAWER_EVENT ) ) }
-        className="h-full px-3 hover:bg-hover transition-colors group inline-flex items-center justify-center md:hidden"
-      >
-        <Circle className="h-4 w-4 fill-red-500/80 text-red-500/80 transition-colors group-hover:fill-red-500 group-hover:text-red-500" />
       </button>
     </>
   );

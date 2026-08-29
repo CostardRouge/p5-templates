@@ -773,11 +773,16 @@ export default function SketchOptions( {
                   "sketchSection",
                   expanded
                 ) }
-                capture={ captureProps }
-                captureActionsRef={ captureActionsRef }
-                recordingSupported={ recordingSupported }
-                jobStatus={ lifecycle.currentStatus }
-                onImportOptions={ handleImportOptions }
+                transport={
+                  <TransportBar
+                    className="w-full"
+                    onOpenCapture={ () => setCaptureOpen( true ) }
+                    recording={ browserRecording || lifecycle.isRecording }
+                    onSeekStart={ onSeekStart }
+                    onSeekEnd={ onSeekEnd }
+                  />
+                }
+                lifecycle={ lifecycle }
                 bannerCloning={ bannerCloning }
                 onBannerClone={ handleBannerClone }
                 importBanner={ importBanner }
@@ -791,24 +796,28 @@ export default function SketchOptions( {
               plugin is on and the scope has bindings. Lifted above the slide
               filmstrip, which now owns the bottom-center. */}
             {isDesktop && (
-              <CaptureDialog
-                open={ captureOpen }
-                onClose={ () => setCaptureOpen( false ) }
-                activeSlideIndex={ activeSlideIndex }
-                capture={ captureProps }
-                captureActionsRef={ captureActionsRef }
-                recordingSupported={ recordingSupported }
-                jobStatus={ lifecycle.currentStatus }
-                onImportOptions={ handleImportOptions }
-              />
-            )}
-
-            {isDesktop && (
               <InteractivePanel
                 basePath={ sketchBasePath }
                 bottomOffset={ mixerBottom }
               />
             )}
+
+            {/* Recording and export, for all three layouts: a centred dialog on
+                desktop, a bottom sheet on mobile — where it replaces the Export
+                drawer tab. Rendered last so its z-[70] surface really is on top,
+                and unconditionally so `captureActionsRef` (the autosave handle)
+                exists whatever the viewport. */}
+            <CaptureDialog
+              open={ captureOpen }
+              onClose={ () => setCaptureOpen( false ) }
+              activeSlideIndex={ activeSlideIndex }
+              capture={ captureProps }
+              captureActionsRef={ captureActionsRef }
+              recordingSupported={ recordingSupported }
+              jobStatus={ lifecycle.currentStatus }
+              onImportOptions={ handleImportOptions }
+              bottomSheet={ !isDesktop }
+            />
           </ContentSelectionProvider>
         </CollapsibleProvider>
       </FormUndoRedo>

@@ -51,13 +51,6 @@ import {
 const SketchOptions = dynamic( () =>
   import( "@/components/ClientProcessingSketch/components/SketchOptions/SketchOptions" ) );
 
-// AnimationProgressionBar is a self-contained scrubber subtree (RAF polling,
-// pointer/scrub handlers, animationBridge/syncSketchOptions wiring) that only
-// renders once `sketchLoaded && !capturing`. Load it as a separate chunk so it
-// stays out of the sketch page's initial compile.
-const AnimationProgressionBar = dynamic( () =>
-  import( "@/components/AnimationProgressionBar" ) );
-
 export default function SketchPage() {
   const [
     {
@@ -424,30 +417,6 @@ export default function SketchPage() {
           )}
 
           <EngineSketchRenderer />
-
-          {/* On desktop the scrubber lives in the floating transport bar (play
-              / scrub / record) rendered by SketchOptions; only the narrow
-              layout keeps it welded under the canvas, where there is no room
-              for another floating pill. */}
-          {sketchLoaded && !capturing && !bareFullscreen && !isDesktop && (
-            <div
-              className="mt-2 mb-4 truncate"
-              data-no-drag="true"
-              style={
-                {
-                  "--scale-factor": "var(--viewport-scale, 1)",
-                  transform: "scale(calc(1 / var(--scale-factor)))",
-                  transformOrigin: "top left",
-                  width: "calc(100% * var(--scale-factor))"
-                } as React.CSSProperties
-              }
-            >
-              <AnimationProgressionBar
-                onSeekStart={ handleSeekStart }
-                onSeekEnd={ handleSeekEnd }
-              />
-            </div>
-          )}
         </ScalableViewport>
 
         {/* HUD fullscreen in the docked layout hides the top bar (and with it
