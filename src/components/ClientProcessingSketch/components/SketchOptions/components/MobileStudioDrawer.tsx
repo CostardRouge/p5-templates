@@ -331,7 +331,7 @@ export default function MobileStudioDrawer( {
               expanded={ sketchSectionExpanded }
               onToggle={ onSketchSectionToggle }
               paddingClassName="px-0"
-              bodyPaddingClassName="px-0"
+              bodyPaddingClassName="px-0 pt-0.5"
               actions={
                 <SketchSettingsActions
                   config={ sketchConfig }

@@ -223,7 +223,7 @@ export default function SketchSettings( {
           label={ optionCount !== undefined ? `${ optionCount } options` : "options" }
           expanded={ sketchSectionExpanded }
           onToggle={ onSketchSectionToggle }
-          bodyPaddingClassName="px-0"
+          bodyPaddingClassName="px-0 pt-0.5"
           last
         >
           <GenericObjectForm

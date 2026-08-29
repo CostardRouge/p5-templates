@@ -39,7 +39,7 @@ export default function RootSettings( {
       expanded={ expanded ?? true }
       onToggle={ onToggle }
       paddingClassName={ paddingClassName }
-      bodyPaddingClassName="px-0"
+      bodyPaddingClassName="px-0 pt-0.5"
     >
       <GenericObjectForm
         basePath={ basePath }

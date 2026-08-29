@@ -22,9 +22,11 @@ type PanelSectionProps = {
   last?: boolean;
   /** Horizontal padding of the header (matches the host panel). */
   paddingClassName?: string;
-  /** Horizontal padding of the body. Defaults to the header's; pass "px-0"
-   *  when the content pads its own leaves so nested bands can run full-bleed
-   *  (see GenericObjectForm). */
+  /** Padding of the body, BOTH axes. Defaults to `pb-3 pt-0.5` plus the
+   *  header's horizontal padding. Content that ends in a full-bleed band must
+   *  override it (a trailing `pb` would show as dead space between the band
+   *  and the section's own hairline) and take charge of its own spacing — see
+   *  GenericObjectForm. */
   bodyPaddingClassName?: string;
   children: React.ReactNode;
 };
@@ -93,10 +95,11 @@ export default function PanelSection( {
         </div>
       ) }
     >
-      <div className={ clsx(
-        "pb-3 pt-0.5",
-        bodyPaddingClassName ?? paddingClassName
-      ) }
+      <div
+        className={ bodyPaddingClassName ?? clsx(
+          "pb-3 pt-0.5",
+          paddingClassName
+        ) }
       >
         {children}
       </div>

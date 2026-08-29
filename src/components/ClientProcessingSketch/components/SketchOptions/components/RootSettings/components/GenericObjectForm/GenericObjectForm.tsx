@@ -81,8 +81,19 @@ export default function GenericObjectForm( {
 }: GenericObjectFormProps ) {
   const keys = Object.keys( config );
 
+  // A trailing band ends on its own edge and must sit flush against the
+  // section's hairline; a trailing leaf needs a little room under it. The
+  // form owns this because the section cannot know how its content ends.
+  const endsWithBand =
+    depth === 0 &&
+    config[ keys[ keys.length - 1 ] ]?.component === "nested-object";
+
   return (
-    <div className="flex flex-col">
+    <div className={ clsx(
+      "flex flex-col",
+      !endsWithBand && "pb-2"
+    ) }
+    >
       {keys.map( (
         fieldName, index
       ) => {
