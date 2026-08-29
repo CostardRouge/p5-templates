@@ -608,27 +608,40 @@ export default function SketchOptions( {
                 <div
                   className={ clsx(
                     "absolute",
+                    // Docked: no padding of its own — the sections inside are
+                    // full-bleed bands and must reach the rail's edges, exactly
+                    // as they do in the inspector. Anything that is not a
+                    // section (the banners below) pads itself.
                     dockedDesktop
-                      ? "right-0 top-12 bottom-0 z-40 flex w-72 flex-col gap-1 p-2 glass border-l border-theme overflow-y-auto"
+                      ? "right-0 top-12 bottom-0 z-40 flex w-72 flex-col glass border-l border-theme overflow-y-auto"
                       : "right-4 bottom-4 w-64 space-y-2"
                   ) }
                   style={ dockedDesktop ? undefined : {
                     maxWidth: "calc(50% - 0.75rem)"
                   } }
                 >
-                  {lifecycle.isLocked && (
-                    <RecordingLockBanner
-                      state={ lifecycle.state }
-                      onClone={ handleBannerClone }
-                      cloning={ bannerCloning }
-                    />
-                  )}
+                  {( lifecycle.isLocked || importBanner ) && (
+                    <div
+                      className={ clsx(
+                        "flex flex-col gap-1",
+                        dockedDesktop && "p-2"
+                      ) }
+                    >
+                      {lifecycle.isLocked && (
+                        <RecordingLockBanner
+                          state={ lifecycle.state }
+                          onClone={ handleBannerClone }
+                          cloning={ bannerCloning }
+                        />
+                      )}
 
-                  {importBanner && (
-                    <ImportSuccessBanner
-                      message={ importBanner }
-                      onDismiss={ () => setImportBanner( null ) }
-                    />
+                      {importBanner && (
+                        <ImportSuccessBanner
+                          message={ importBanner }
+                          onDismiss={ () => setImportBanner( null ) }
+                        />
+                      )}
+                    </div>
                   )}
 
                   <OptionsPanel
