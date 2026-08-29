@@ -44,7 +44,8 @@ import {
 import DockedTopBar from "@/components/SketchPage/DockedTopBar";
 import getSketchThumbnailURL from "@/utils/getSketchThumbnailURL";
 import {
-  STUDIO_DRAWER_HEIGHT_VAR
+  STUDIO_DRAWER_HEIGHT_VAR,
+  STUDIO_FILMSTRIP_HEIGHT_VAR
 } from "@/components/ClientProcessingSketch/components/SketchOptions/constants/drawer-events";
 
 const SketchOptions = dynamic( () =>
@@ -61,23 +62,24 @@ export default function SketchPage() {
   const [
     {
       name, capturing, options, persistedJob, engineId, category, sketchLoaded, activeSlideIndex,
-      engine, looping, browserRecording, sketchFormConfiguration
+      engine, looping, browserRecording
     },
     dispatch
   ] = useSketch();
 
   // Docked workspace layout (desktop only): a squared, edge-to-edge chrome —
-  // a top bar plus left/right rails — frames the viewport, which fits the
-  // space between them. The rails' widths (w-80 / w-72) and the top bar's
-  // height (h-12) are mirrored as insets below. The left rail only appears
-  // when the sketch actually has a settings panel.
+  // a top bar plus left/right rails and a bottom filmstrip band — frames the
+  // viewport, which fits the space between them. The rails' widths (w-80 /
+  // w-72) and the top bar's height (h-12) are mirrored as insets below; the
+  // filmstrip's height travels through its CSS variable. The left rail always
+  // exists now: it hosts canvas & animation even when the sketch exposes no
+  // parameters of its own.
   const {
     docked
   } = usePanelDock();
   const isDesktop = useMediaQuery( "(min-width: 768px)" );
-  const hasSketchSettingsPanel = Boolean( sketchFormConfiguration && Object.keys( sketchFormConfiguration ).length > 0 );
   const dockedDesktop = docked && isDesktop && sketchLoaded && !capturing;
-  const reserveLeft = dockedDesktop && hasSketchSettingsPanel;
+  const reserveLeft = dockedDesktop;
   const reserveRight = dockedDesktop;
 
   // Fullscreen mode (desktop only, official Fullscreen API). The viewport
@@ -110,11 +112,16 @@ export default function SketchPage() {
     ]
   );
 
-  // Portal target for the viewport's zoom controls when docked (they render
-  // flat inside the top bar instead of floating top-right).
+  // Portal targets inside the docked top bar: the viewport's zoom controls,
+  // and the options form's bar actions (undo/redo + Export — filled by
+  // SketchOptions, which owns the form context they need).
   const [
     zoomSlot,
     setZoomSlot
+  ] = useState<HTMLDivElement | null>( null );
+  const [
+    actionsSlot,
+    setActionsSlot
   ] = useState<HTMLDivElement | null>( null );
 
   const [
@@ -370,7 +377,7 @@ export default function SketchPage() {
         ) }
         style={ isFullscreen ? undefined : {
           height: dockedDesktop
-            ? `calc(100% - 3rem - var(${ STUDIO_DRAWER_HEIGHT_VAR }, 0px))`
+            ? `calc(100% - 3rem - var(${ STUDIO_FILMSTRIP_HEIGHT_VAR }, 0px) - var(${ STUDIO_DRAWER_HEIGHT_VAR }, 0px))`
             : `calc(100% - var(${ STUDIO_DRAWER_HEIGHT_VAR }, 0px))`
         } }
         hidden={ !sketchLoaded }
@@ -418,7 +425,11 @@ export default function SketchPage() {
 
           <EngineSketchRenderer />
 
-          {sketchLoaded && !capturing && !bareFullscreen && (
+          {/* On desktop the scrubber lives in the floating transport bar (play
+              / scrub / record) rendered by SketchOptions; only the narrow
+              layout keeps it welded under the canvas, where there is no room
+              for another floating pill. */}
+          {sketchLoaded && !capturing && !bareFullscreen && !isDesktop && (
             <div
               className="mt-2 mb-4 truncate"
               data-no-drag="true"
@@ -464,7 +475,10 @@ export default function SketchPage() {
               flat and edge-to-edge. Floating: the engine controls are their
               own island (menu and zoom float in the corners). */}
           {dockedDesktop ? (
-            <DockedTopBar zoomSlotRef={ setZoomSlot } />
+            <DockedTopBar
+              zoomSlotRef={ setZoomSlot }
+              actionsSlotRef={ setActionsSlot }
+            />
           ) : (
             <EngineControls />
           )}
@@ -475,6 +489,9 @@ export default function SketchPage() {
             persistedJob={ persistedJob }
             onOptionsChange={ handleOptionsChange }
             onActiveSlideChange={ handleActiveSlideChange }
+            onSeekStart={ handleSeekStart }
+            onSeekEnd={ handleSeekEnd }
+            topBarActionsContainer={ dockedDesktop ? actionsSlot : null }
           />
         </>
       ) }

@@ -48,6 +48,7 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 - CI gates on four parallel jobs; the build job exists to compile every sketch route → `testing-and-ci.md`.
 - Deployment is event-driven: GHCR image plus a Watchtower HTTP API call on a NAS, replacing registry polling → `deployment.md`.
 - Analytics is self-hosted Umami with auto-track off and a hand-rolled pageview queue; an empty website id disables it → `architecture.md`, `docs/analytics.md`.
+- The sketch page is one inspector (canvas+animation above the sketch form), a content rail, a bottom filmstrip and Export in the docked top bar; "document" is not a UI scope and the filmstrip is not a timeline → `studio-ui.md`.
 
 ## Open items (dated; remove when done)
 
@@ -68,4 +69,5 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 | `docs/memory/testing-and-ci.md` | Tests, Jest config, CI workflows, what gates a merge |
 | `docs/memory/deployment.md` | Docker, GHCR, Watchtower, the NAS, `docker-compose.yml` |
 | `docs/memory/local-development.md` | Running the app locally, infra services, `setup.sh`, dev-server config |
+| `docs/memory/studio-ui.md` | The sketch page's panels and layouts (inspector, content rail, filmstrip, export, mobile drawer) |
 | `docs/analytics.md` | Umami config, why auto-track is off, the pageview queue, how to verify tracking (maintained, unlike the rest of `docs/`) |

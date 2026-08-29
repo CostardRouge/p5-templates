@@ -4,13 +4,12 @@ import React, {
   useMemo
 } from "react";
 import {
-  ChevronDown, SlidersHorizontal
+  SlidersHorizontal
 } from "lucide-react";
-import clsx from "clsx";
 
-import CollapsibleItem from "@/components/CollapsibleItem";
 import RandomizeSettingsButton from "@/components/RandomizeSettingsButton";
 import ResetSettingsButton from "@/components/ResetSettingsButton";
+import ApplyToAllSlidesButton from "@/components/ApplyToAllSlidesButton";
 import SaveDefaultsButton from "./SaveDefaultsButton";
 import GenerateThumbnailButton from "./GenerateThumbnailButton";
 import GeneratePreviewButton from "./GeneratePreviewButton";
@@ -20,6 +19,10 @@ import {
 } from "@/lib/uiSound";
 import GenericObjectForm
   from "@/components/ClientProcessingSketch/components/SketchOptions/components/RootSettings/components/GenericObjectForm/GenericObjectForm";
+import RootSettings
+  from "@/components/ClientProcessingSketch/components/SketchOptions/components/RootSettings/RootSettings";
+import PanelSection
+  from "@/components/ClientProcessingSketch/components/SketchOptions/components/PanelSection";
 import useSketch from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
 import type {
   FieldConfig
@@ -33,15 +36,20 @@ type SketchSettingsProps = {
   activeSlideIndex?: number;
   /** Stable id of the active slide; remounts the form on identity changes. */
   activeSlideId?: string;
-  expanded?: boolean;
-  onToggle?: ( expanded: boolean ) => void;
   /** Render as the flat, full-height docked left rail instead of a floating
    *  card. */
   docked?: boolean;
+  /** Expand state of the "canvas & animation" section, lifted so the mobile
+   *  drawer and the desktop panel share it. */
+  rootSettingsExpanded?: boolean;
+  onRootSettingsToggle?: ( expanded: boolean ) => void;
+  /** Expand state of the sketch's own "N options" section. */
+  sketchSectionExpanded?: boolean;
+  onSketchSectionToggle?: ( expanded: boolean ) => void;
 };
 
 const HEADER_ACTION_CLASS =
-  "p-2 md:p-1 text-foreground hover:bg-hover rounded-lg transition-colors";
+  "p-2 md:p-1.5 text-foreground hover:bg-hover rounded-lg transition-colors";
 
 /**
  * Resolves the sketch's form configuration (with schemas injected) and the
@@ -93,7 +101,12 @@ export function useSketchSettings(
   };
 }
 
-/** Reset / randomize / dev action buttons shared by panel and drawer. */
+/**
+ * Action bar of the inspector: edit actions (reset / randomize / apply to all
+ * slides), the dev production actions (save defaults / thumbnail / preview),
+ * and the ui-sound toggle pushed to the far edge. Shared by the desktop
+ * panel's sticky footer and the mobile drawer.
+ */
 export function SketchSettingsActions( {
   config,
   basePath
@@ -101,12 +114,10 @@ export function SketchSettingsActions( {
   config: Record<string, FieldConfig>;
   basePath: string;
 } ) {
+  const isDev = process.env.NODE_ENV === "development";
+
   return (
     <>
-      {/* Outside the capture wrapper below so tweaking sound settings doesn't
-          itself fire action clicks. */}
-      <UiSoundSettingsButton className={ HEADER_ACTION_CLASS } />
-
       {/* display:contents keeps the row layout untouched while catching every
           action click for the audible confirmation (see @/lib/uiSound). */}
       <span
@@ -126,29 +137,47 @@ export function SketchSettingsActions( {
           className={ HEADER_ACTION_CLASS }
         />
 
+        <ApplyToAllSlidesButton
+          basePath={ basePath }
+          className={ HEADER_ACTION_CLASS }
+        />
+
+        {isDev && <span className="mx-1 h-4 w-px shrink-0 bg-border" />}
+
         <SaveDefaultsButton />
 
         <GenerateThumbnailButton />
 
         <GeneratePreviewButton />
       </span>
+
+      {/* Outside the capture wrapper so tweaking sound settings doesn't
+          itself fire action clicks. */}
+      <span className="ml-auto">
+        <UiSoundSettingsButton className={ HEADER_ACTION_CLASS } />
+      </span>
     </>
   );
 }
 
 /**
- * Desktop sketch-settings panel. Floating: a collapsible card bottom-left.
- * Docked: a flat, full-height left rail (always open — the rail supplies the
- * surface, so no card chrome or collapse-to-pill). The mobile drawer hosts the
- * same form through {@link useSketchSettings}.
+ * The inspector: one panel for everything that parameterises what is on
+ * screen. "Canvas & animation" (size, duration, framerate) on top, the
+ * sketch's own parameters below, and the action bar pinned to the bottom.
+ * Floating: a card bottom-left; docked: a flat, full-height left rail. Neither
+ * collapses as a whole — only the sections inside do, so the group titles are
+ * always on screen. The mobile drawer hosts the same pieces through
+ * {@link useSketchSettings}.
  */
 export default function SketchSettings( {
   basePath,
   activeSlideIndex,
   activeSlideId,
-  expanded,
-  onToggle,
-  docked
+  docked,
+  rootSettingsExpanded,
+  onRootSettingsToggle,
+  sketchSectionExpanded,
+  onSketchSectionToggle
 }: SketchSettingsProps ) {
   const [
     {
@@ -163,72 +192,109 @@ export default function SketchSettings( {
     activeSlideIndex
   );
 
-  if ( !config ) {
-    return null;
+  // The panel header names the surface and its scope; the option count moved
+  // down to title the sketch's own block, where it actually applies.
+  const headerLabel = (
+    <>
+      <SlidersHorizontal className="h-3.5 w-3.5 shrink-0" />
+      <span className="truncate font-medium">Controls</span>
+      {activeSlideIndex !== undefined && (
+        <span className="truncate text-label">
+          slide {activeSlideIndex + 1}
+        </span>
+      )}
+    </>
+  );
+
+  const optionCount = sketchFormValues
+    ? Object.keys( sketchFormValues ).length
+    : undefined;
+
+  const body = (
+    <>
+      <RootSettings
+        activeSlideIndex={ activeSlideIndex }
+        expanded={ rootSettingsExpanded }
+        onToggle={ onRootSettingsToggle }
+      />
+
+      {config && (
+        <PanelSection
+          label={ optionCount !== undefined ? `${ optionCount } options` : "options" }
+          expanded={ sketchSectionExpanded }
+          onToggle={ onSketchSectionToggle }
+          bodyPaddingClassName="px-0 pt-0.5"
+          last
+        >
+          <GenericObjectForm
+            key={ activeSlideId ?? effectiveBasePath }
+            basePath={ effectiveBasePath }
+            config={ config }
+          />
+        </PanelSection>
+      )}
+    </>
+  );
+
+  // Action bar pinned to the foot of the panel. A full-strength top rule and
+  // slightly larger targets are what make it read as a bar instead of stray
+  // icons on the form's surface.
+  const actionBar = config && (
+    <div
+      className="flex items-center gap-0.5 px-2 py-1"
+      onClick={ ( e ) => e.stopPropagation() }
+    >
+      <SketchSettingsActions
+        config={ config }
+        basePath={ effectiveBasePath }
+      />
+    </div>
+  );
+
+  // Docked rail: a plain flex column — fixed header, scrolling middle, fixed
+  // footer — instead of CollapsibleItem (the rail never collapses, and the
+  // collapse animation wrapper would keep the footer from pinning to the
+  // rail's bottom edge when the form is short).
+  if ( docked ) {
+    return (
+      <div className="absolute z-40 left-0 top-12 bottom-0 w-80 flex flex-col glass border-r border-theme shadow-lg">
+        <div className="flex items-center gap-1.5 px-3 py-2 text-xs text-foreground border-b border-theme">
+          {headerLabel}
+        </div>
+
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          {body}
+        </div>
+
+        {actionBar && (
+          <div className="glass border-t border-theme">
+            {actionBar}
+          </div>
+        )}
+      </div>
+    );
   }
 
-  // In the docked rail the panel is always open and never collapses to a pill.
-  const effectiveExpanded = docked ? true : expanded;
-
+  // Floating card. The panel itself no longer collapses: its sections do, so
+  // the group titles stay on screen and a fully collapsed panel is already a
+  // compact stack of headers. That also removes the width/radius swap
+  // (w-80 <-> w-fit, rounded-2xl <-> rounded-full) that made the card morph
+  // into a pill mid-animation — neither is interpolatable.
   return (
-    <CollapsibleItem
-      expanded={ effectiveExpanded }
-      onToggle={ docked ? undefined : onToggle }
-      swipeToCollapse={ !docked }
-      className={ clsx(
-        "absolute flex flex-col glass shadow-lg overflow-y-auto border-theme",
-        docked
-          ? "z-40 left-0 top-12 bottom-0 w-80 border-r"
-          : effectiveExpanded
-            ? "z-50 left-4 bottom-4 w-80 max-h-[calc(80svh-5rem)] rounded-2xl border"
-            : "z-50 left-4 bottom-4 w-fit rounded-full border"
-      ) }
-      headerContainerClassName={ clsx( ( effectiveExpanded || docked ) && "glass sticky top-0 z-10" ) }
-      header={ ( isExpanded ) => (
-        <div className="flex w-full items-center justify-between gap-2 px-3 py-2">
-          <button
-            type="button"
-            className="flex items-center gap-1.5 text-xs text-foreground"
-            aria-label={ isExpanded ? "Collapse controls" : "Expand controls" }
-          >
-            <SlidersHorizontal className="h-3.5 w-3.5" />
-            <span>
-              {sketchFormValues && `${ Object.keys( sketchFormValues ).length }`}{" "}
-              options
-              {activeSlideIndex !== undefined &&
-                ` (slide ${ activeSlideIndex + 1 })`}
-            </span>
-            {!docked && (
-              <ChevronDown
-                className="h-3.5 w-3.5 transition-transform"
-                style={ {
-                  transform: isExpanded ? "rotate(0deg)" : "rotate(180deg)"
-                } }
-              />
-            )}
-          </button>
-
-          {isExpanded && (
-            <div
-              className="flex items-center gap-0.5"
-              onClick={ ( e ) => e.stopPropagation() }
-            >
-              <SketchSettingsActions
-                config={ config }
-                basePath={ effectiveBasePath }
-              />
-            </div>
-          )}
-        </div>
-      ) }
-    >
-      <div className="px-3 pt-1 pb-4">
-        <GenericObjectForm
-          key={ activeSlideId ?? effectiveBasePath }
-          basePath={ effectiveBasePath }
-          config={ config }
-        />
+    <div className="absolute z-50 left-4 bottom-4 w-80 max-h-[calc(80svh-5rem)] flex flex-col glass shadow-lg rounded-2xl border border-theme overflow-hidden">
+      <div className="flex items-center gap-1.5 px-3 py-2 text-xs text-foreground border-b border-theme">
+        {headerLabel}
       </div>
-    </CollapsibleItem>
+
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        {body}
+      </div>
+
+      {actionBar && (
+        <div className="glass border-t border-theme">
+          {actionBar}
+        </div>
+      )}
+    </div>
   );
 }

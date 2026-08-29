@@ -12,6 +12,9 @@ import clsx from "clsx";
 import {
   resolveSketchPath
 } from "@/engines/metadata";
+import {
+  captureFreshPng, downloadCanvasPng
+} from "@/lib/canvasSnapshot";
 import useSketch from "../ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
 import SketchShareDialog from "./SketchShareDialog";
 import {
@@ -54,43 +57,10 @@ export function EngineControls( {
   const isDev = process.env.NODE_ENV === "development";
   const singleClickTimerRef = useRef<ReturnType<typeof setTimeout> | null>( null );
 
-  /**
-   * Grab the current frame as a PNG data-URL. Uses the engine's capture source
-   * so DOM engines (GSAP/HTML) re-rasterise the live DOM on demand — the mirror
-   * canvas returned by `getCanvas()` is only refreshed on redraw, so reading it
-   * straight during playback yields a stale (or blank/transparent) frame.
-   */
-  const captureFreshPng = async(): Promise<string | null> => {
-    if ( !engine ) {
-      return null;
-    }
-
-    try {
-      const frame = await engine.getCaptureSource().readFrame();
-
-      if ( frame instanceof HTMLCanvasElement ) {
-        return frame.toDataURL( "image/png" );
-      }
-    } catch {
-      // Fall through to the live canvas below.
-    }
-
-    const canvas = engine.getCanvas();
-
-    return canvas ? canvas.toDataURL( "image/png" ) : null;
-  };
-
-  const downloadCanvasAsPng = async() => {
-    const dataUrl = await captureFreshPng();
-
-    if ( dataUrl ) {
-      const link = document.createElement( "a" );
-
-      link.download = `${ name }.png`;
-      link.href = dataUrl;
-      link.click();
-    }
-  };
+  const downloadCanvasAsPng = () => downloadCanvasPng(
+    engine,
+    name
+  );
 
   const handleCaptureClick = () => {
     if ( thumbnailSaveState === "saving" ) {
@@ -131,7 +101,7 @@ export function EngineControls( {
     setThumbnailErrorMessage( null );
 
     try {
-      const dataUrl = await captureFreshPng();
+      const dataUrl = await captureFreshPng( engine );
 
       if ( !dataUrl ) {
         throw new Error( "No canvas found" );

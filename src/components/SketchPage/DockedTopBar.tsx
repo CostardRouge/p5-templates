@@ -20,10 +20,14 @@ import {
  * bar height edge-to-edge.
  */
 export default function DockedTopBar( {
-  zoomSlotRef
+  zoomSlotRef,
+  actionsSlotRef
 }: {
   /** Portal target for the ScalableViewport's zoom controls. */
   zoomSlotRef: ( el: HTMLDivElement | null ) => void;
+  /** Portal target for the options form's bar actions (undo/redo + export).
+   *  Filled by SketchOptions, which owns the form context they need. */
+  actionsSlotRef?: ( el: HTMLDivElement | null ) => void;
 } ) {
   return (
     <div className="absolute top-0 left-0 right-0 h-12 z-50 flex items-stretch glass border-b border-theme">
@@ -41,6 +45,11 @@ export default function DockedTopBar( {
 
       <div
         ref={ zoomSlotRef }
+        className="flex items-stretch"
+      />
+
+      <div
+        ref={ actionsSlotRef }
         className="flex items-stretch"
       />
     </div>

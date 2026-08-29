@@ -6,7 +6,8 @@ export type CollapsibleSection =
   | "rootSettings"
   | "globalContent"
   | "slides"
-  | "sketchSettings";
+  | "sketchSettings"
+  | "sketchSection";
 
 export type CollapsibleStates = Record<CollapsibleSection, boolean>;
 
@@ -14,11 +15,18 @@ type NestedCollapsibleKey = string;
 
 type AllCollapsibleStates = Record<CollapsibleSection | NestedCollapsibleKey, boolean>;
 
+// rootSettings = the inspector's "canvas & animation" section; slides = the
+// content rail's "slide N content" section — both open by default since the
+// layout rework gave each its own home. globalContent (shared content) stays
+// collapsed so the heavy content editor is not compiled on every page open.
 const DEFAULT_STATES: CollapsibleStates = {
-  rootSettings: false,
+  rootSettings: true,
   globalContent: false,
-  slides: false,
-  sketchSettings: true
+  slides: true,
+  // The panel itself (floating card / mobile drawer) and the sketch's own
+  // "N options" band inside it.
+  sketchSettings: true,
+  sketchSection: true
 };
 
 type CollapsibleContextValue = {

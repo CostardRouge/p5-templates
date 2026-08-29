@@ -23,3 +23,12 @@ export const CONTENT_ITEM_SELECT_EVENT = "studio:content-item-select";
  * drawer.
  */
 export const STUDIO_DRAWER_HEIGHT_VAR = "--studio-drawer-height";
+
+/**
+ * Root-level CSS variable holding the height of the docked slide filmstrip
+ * band (0 outside the docked desktop layout). Published by SketchOptions;
+ * the sketch viewport subtracts it from its own height, the filmstrip band
+ * and the Interactive mixer's bottom offset read it back — one source of
+ * truth for the band's size in all three places.
+ */
+export const STUDIO_FILMSTRIP_HEIGHT_VAR = "--studio-filmstrip-height";

@@ -1,3 +1,4 @@
+import clsx from "clsx";
 import dynamic from "next/dynamic";
 import {
   useWatch
@@ -24,6 +25,14 @@ const FieldRenderer = dynamic( () => import( "@/components/ClientProcessingSketc
 type GenericObjectFormProps = {
   basePath?: string;
   config: Record<string, FieldConfig>;
+  /** Nesting level handed to each field: 0 renders top-level groups as banded
+   *  sub-sections (see FieldRenderer's nested-object case). */
+  depth?: number;
+  /** Horizontal padding applied to LEAF fields only. Groups stay unpadded so
+   *  their header band spans the panel edge to edge — the padding lives on the
+   *  leaves precisely so the bands don't have to claw it back with negative
+   *  margins, which never lined up with the panel's real content box. */
+  leafPaddingClassName?: string;
 };
 
 // The plugin-INJECTED Interaction panel (config.managed — see getSketchMeta).
@@ -66,13 +75,28 @@ function ManagedInteractionField( {
 
 export default function GenericObjectForm( {
   basePath = "",
-  config
+  config,
+  depth = 0,
+  leafPaddingClassName = "px-3"
 }: GenericObjectFormProps ) {
   const keys = Object.keys( config );
 
+  // A trailing band ends on its own edge and must sit flush against the
+  // section's hairline; a trailing leaf needs a little room under it. The
+  // form owns this because the section cannot know how its content ends.
+  const endsWithBand =
+    depth === 0 &&
+    config[ keys[ keys.length - 1 ] ]?.component === "nested-object";
+
   return (
-    <div className="flex flex-col gap-2">
-      {keys.map( ( fieldName ) => {
+    <div className={ clsx(
+      "flex flex-col",
+      !endsWithBand && "pb-2"
+    ) }
+    >
+      {keys.map( (
+        fieldName, index
+      ) => {
         const fieldConfig = config[ fieldName ];
 
         if ( !fieldConfig ) {
@@ -91,13 +115,44 @@ export default function GenericObjectForm( {
           );
         }
 
+        const isBand =
+          depth === 0 && fieldConfig.component === "nested-object";
+        const previousIsBand =
+          depth === 0 &&
+          index > 0 &&
+          config[ keys[ index - 1 ] ]?.component === "nested-object";
+
+        // A rule marks every boundary a band takes part in: above a band, and
+        // above the field that follows one. Two plain fields in a row are just
+        // a list and need none. It lives on the OUTER, unpadded wrapper so it
+        // spans the panel even when the field inside carries padding.
+        const showRule = index > 0 && ( isBand || previousIsBand );
+
+        // A band is full-bleed and sits flush against that hairline; a leaf
+        // carries the panel's padding and its own vertical rhythm. The spacing
+        // cannot come from a container `gap`: that would also push the bands
+        // apart, leaving every separator floating in dead space instead of
+        // reading as the top edge of the group it introduces.
         return (
-          <FieldRenderer
+          <div
             key={ fieldName }
-            fieldBasePath={ basePath }
-            fieldName={ fieldName }
-            config={ fieldConfig }
-          />
+            className={ clsx( showRule && "border-t border-theme" ) }
+          >
+            <div
+              className={ isBand ? undefined : clsx(
+                leafPaddingClassName,
+                "py-1"
+              ) }
+            >
+              <FieldRenderer
+                fieldBasePath={ basePath }
+                fieldName={ fieldName }
+                config={ fieldConfig }
+                depth={ depth }
+                leafPaddingClassName={ leafPaddingClassName }
+              />
+            </div>
+          </div>
         );
       } )}
     </div>

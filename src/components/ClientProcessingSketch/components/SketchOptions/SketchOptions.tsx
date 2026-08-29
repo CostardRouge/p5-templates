@@ -1,9 +1,15 @@
 import dynamic from "next/dynamic";
 import clsx from "clsx";
+import {
+  Download
+} from "lucide-react";
 import type React from "react";
 import {
   useEffect, useRef, useState
 } from "react";
+import {
+  createPortal
+} from "react-dom";
 import {
   FormProvider, useFieldArray, useWatch
 } from "react-hook-form";
@@ -30,6 +36,9 @@ import {
 import RecordingLockBanner from "./components/RecordingLockBanner";
 import ImportSuccessBanner from "./components/ImportSuccessBanner";
 import SketchSettings from "./components/SketchSettings/SketchSettings";
+import CaptureDialog from "./components/CaptureDialog";
+import TransportBar from "./components/TransportBar";
+import UndoRedo from "./components/UndoRedo";
 import InteractivePanel from "./components/InteractivePanel/InteractivePanel";
 import SketchAssetsProvider from "./components/SketchAssetsProvider/SketchAssetsProvider";
 import useMediaQuery from "@/hooks/useMediaQuery";
@@ -58,23 +67,27 @@ import {
   subscribeSketchOptions
 } from "@/lib/syncSketchOptions";
 import {
+  STUDIO_FILMSTRIP_HEIGHT_VAR
+} from "./constants/drawer-events";
+import {
   readAndClearPendingImport
 } from "@/lib/pendingImportOptions";
 
-// CaptureActions drags the whole recording subtree into the sketch page's
-// initial compile: useBrowserRecorder -> @/engines/recording -> createRecorder
-// pulls in the mediabunny + gif.js encoders, plus the action buttons and
-// VideoPreviewModal. It only renders behind `recordingSupported &&`, so load it
-// as a separate chunk. next/dynamic does not forward refs, so the imperative
-// handle (auto-save / clone-as-draft) is wired through a `forwardedRef` prop.
-const CaptureActions = dynamic( () => import( "./components/CaptureActions" ) );
-
+// The recording subtree (useBrowserRecorder -> @/engines/recording, the
+// mediabunny + gif.js encoders, VideoPreviewModal) is reached through
+// CaptureDialog / MobileStudioDrawer, both code-split below, so it never lands
+// in the sketch page's initial compile. Only the ref type is imported here.
+//
 // MobileStudioDrawer is a full mobile-only duplicate of the panel/settings/
 // capture UI (its own CaptureActions, GenericObjectForm, asset providers). It
 // renders only on the mobile media-query branch, so desktop should never
 // compile it — and the desktop panels are never compiled for mobile. Code-split
 // it so each layout's initial compile only covers what it actually shows.
 const MobileStudioDrawer = dynamic( () => import( "./components/MobileStudioDrawer" ) );
+
+// The filmstrip drags dnd-kit in; slideless sketches still pay nothing until
+// the strip actually renders thumbnails.
+const SlideFilmstrip = dynamic( () => import( "./components/SlideFilmstrip" ) );
 
 type SketchOptionsProps = {
   name: string;
@@ -86,6 +99,14 @@ type SketchOptionsProps = {
   ) => void;
   onActiveSlideChange?: ( index: number | undefined ) => void;
   enableThumbnails?: boolean;
+  /** Scrub lifecycle, forwarded to the transport bar so the viewport's
+   *  performance label can still report "seeking" now that the scrubber lives
+   *  outside the viewport. */
+  onSeekStart?: () => void;
+  onSeekEnd?: () => void;
+  /** Docked top bar cell (owned by SketchPage) that undo/redo and the Export
+   *  menu portal into — they need this form context, the bar doesn't have it. */
+  topBarActionsContainer?: HTMLElement | null;
 };
 
 export default function SketchOptions( {
@@ -94,7 +115,10 @@ export default function SketchOptions( {
   onOptionsChange,
   onActiveSlideChange,
   options: initialOptions,
-  enableThumbnails = true // Enable by default now
+  enableThumbnails = true, // Enable by default now
+  onSeekStart,
+  onSeekEnd,
+  topBarActionsContainer
 }: SketchOptionsProps ) {
   const browserRecordingSupported = useBrowserRecordingSupported();
   const captureActionsRef = useRef<CaptureActionsRef>( null );
@@ -128,6 +152,14 @@ export default function SketchOptions( {
     importBanner,
     setImportBanner
   ] = useState<string | null>( null );
+
+  // The capture dialog: opened by the transport bar's record dot and, in the
+  // docked layout, by the top bar's Export button. One dialog, one mounted
+  // CaptureActions — the two are triggers, not copies.
+  const [
+    captureOpen,
+    setCaptureOpen
+  ] = useState( false );
 
   const handleBannerClone = async() => {
     if ( !captureActionsRef.current ) {
@@ -475,21 +507,59 @@ export default function SketchOptions( {
   } = usePanelDock();
   const dockedDesktop = isDesktop && docked;
 
+  const hasSlides = slideFields.length > 0;
+
+  // The bottom stack, from the viewport edge up: filmstrip, transport bar,
+  // Interactive mixer. Each offset is derived from the one below it so adding
+  // or removing a layer never leaves two of them overlapping.
+  // Docked stacks the transport above the filmstrip band; floating puts the
+  // deck in the right column instead, so nothing sits under the transport bar.
+  const filmstripHeight = dockedDesktop
+    ? `var(${ STUDIO_FILMSTRIP_HEIGHT_VAR }, 0px)`
+    : "0px";
+  const transportBottom = `calc(${ filmstripHeight } + 0.75rem)`;
+  const mixerBottom = `calc(${ transportBottom } + 3.25rem)`;
+
+  // Publish the docked filmstrip band's height so the viewport (SketchPage)
+  // can subtract it, the band can size itself and the Interactive mixer can
+  // clear it — one value, read through the CSS variable. 7rem fits a slide
+  // thumbnail row; 3rem the empty-state invite; 0 outside the docked layout.
+  useEffect(
+    () => {
+      document.documentElement.style.setProperty(
+        STUDIO_FILMSTRIP_HEIGHT_VAR,
+        dockedDesktop ? ( hasSlides ? "7rem" : "3rem" ) : "0px"
+      );
+
+      return () => {
+        document.documentElement.style.removeProperty( STUDIO_FILMSTRIP_HEIGHT_VAR );
+      };
+    },
+    [
+      dockedDesktop,
+      hasSlides
+    ]
+  );
+
   const bodyProps = {
     activeSlideIndex,
     slideFields,
-    thumbnails,
-    slides,
-    isAdding,
-    onAddSlide: handleAddSlide,
-    onSelectSlide: handleSlideSelect,
-    onReorderSlides: handleReorderSlides,
-    onDuplicateSlide: handleDuplicateSlide,
-    onDeleteSlide: handleDeleteSlide,
-    onRenameSlide: handleRenameSlide,
-    enableThumbnails,
     collapsibleStates,
     onCollapsibleToggle: toggleSection
+  };
+
+  const filmstripProps = {
+    slideFields,
+    slides,
+    thumbnails: enableThumbnails ? thumbnails : {},
+    activeIndex: activeSlideIndex,
+    isAdding,
+    onAdd: handleAddSlide,
+    onSelect: handleSlideSelect,
+    onReorder: handleReorderSlides,
+    onDuplicate: handleDuplicateSlide,
+    onDelete: handleDeleteSlide,
+    onRename: handleRenameSlide
   };
 
   const captureProps = {
@@ -530,34 +600,48 @@ export default function SketchOptions( {
             />
             {isDesktop ? (
               <>
+                {/* Content rail (right): the elements that enrich the sketch.
+                    Docked: a flat, full-height rail flush to the right edge.
+                    Floating: a card anchored in the bottom-right corner, which
+                    also keeps the capture card below it (docked moves capture
+                    into the top bar's Export menu). */}
                 <div
                   className={ clsx(
                     "absolute",
-                    // Docked: a flat, full-height rail flush to the right edge —
-                    // one glass surface framing the viewport, the panels inside
-                    // rendered flat and the rail scrolling as one. Floating: a
-                    // card anchored in the bottom-right corner.
+                    // Docked: no padding of its own — the sections inside are
+                    // full-bleed bands and must reach the rail's edges, exactly
+                    // as they do in the inspector. Anything that is not a
+                    // section (the banners below) pads itself.
                     dockedDesktop
-                      ? "right-0 top-12 bottom-0 z-40 flex w-72 flex-col gap-1 p-2 glass border-l border-theme overflow-y-auto"
+                      ? "right-0 top-12 bottom-0 z-40 flex w-72 flex-col glass border-l border-theme overflow-y-auto"
                       : "right-4 bottom-4 w-64 space-y-2"
                   ) }
                   style={ dockedDesktop ? undefined : {
                     maxWidth: "calc(50% - 0.75rem)"
                   } }
                 >
-                  {lifecycle.isLocked && (
-                    <RecordingLockBanner
-                      state={ lifecycle.state }
-                      onClone={ handleBannerClone }
-                      cloning={ bannerCloning }
-                    />
-                  )}
+                  {( lifecycle.isLocked || importBanner ) && (
+                    <div
+                      className={ clsx(
+                        "flex flex-col gap-1",
+                        dockedDesktop && "p-2"
+                      ) }
+                    >
+                      {lifecycle.isLocked && (
+                        <RecordingLockBanner
+                          state={ lifecycle.state }
+                          onClone={ handleBannerClone }
+                          cloning={ bannerCloning }
+                        />
+                      )}
 
-                  {importBanner && (
-                    <ImportSuccessBanner
-                      message={ importBanner }
-                      onDismiss={ () => setImportBanner( null ) }
-                    />
+                      {importBanner && (
+                        <ImportSuccessBanner
+                          message={ importBanner }
+                          onDismiss={ () => setImportBanner( null ) }
+                        />
+                      )}
+                    </div>
                   )}
 
                   <OptionsPanel
@@ -570,28 +654,102 @@ export default function SketchOptions( {
                     { ...bodyProps }
                   />
 
-                  {recordingSupported && (
-                    <CaptureActions
-                      forwardedRef={ captureActionsRef }
-                      activeSlideIndex={ activeSlideIndex }
-                      docked={ dockedDesktop }
-                      { ...captureProps }
-                    />
+                  {/* Floating: the deck is a panel of the right column, under
+                      the content card and the same width — it belongs with the
+                      document's other objects rather than floating over the
+                      canvas. Docked keeps it as a band between the rails. */}
+                  {!dockedDesktop && (
+                    <div className="glass border border-theme rounded-2xl shadow-lg overflow-hidden">
+                      <SlideFilmstrip { ...filmstripProps } thumbnailHeight={ 52 } />
+                    </div>
                   )}
                 </div>
 
+                {/* Inspector (left): canvas & animation + the sketch's own
+                    parameters, one panel. */}
                 <SketchAssetsProvider scope="global" assetsName="assets" jobId={ jobId }>
                   <SketchSettings
                     activeSlideIndex={ activeSlideIndex }
                     activeSlideId={ activeSlideId }
-                    expanded={ collapsibleStates.sketchSettings }
-                    onToggle={ ( expanded ) => setSection(
-                      "sketchSettings",
+                    docked={ dockedDesktop }
+                    rootSettingsExpanded={ collapsibleStates.rootSettings }
+                    onRootSettingsToggle={ ( expanded ) => setSection(
+                      "rootSettings",
                       expanded
                     ) }
-                    docked={ dockedDesktop }
+                    sketchSectionExpanded={ collapsibleStates.sketchSection }
+                    onSketchSectionToggle={ ( expanded ) => setSection(
+                      "sketchSection",
+                      expanded
+                    ) }
                   />
                 </SketchAssetsProvider>
+
+                {/* Slide filmstrip: the deck in the page body. Docked: a band
+                    between the rails, above the viewport's bottom edge (the
+                    height comes from the shared CSS variable). Floating: an
+                    island bottom-center. */}
+                {dockedDesktop && (
+                  <div
+                    className="absolute bottom-0 left-80 right-72 z-40 glass border-t border-theme"
+                    style={ {
+                      height: `var(${ STUDIO_FILMSTRIP_HEIGHT_VAR }, 0px)`
+                    } }
+                  >
+                    <SlideFilmstrip { ...filmstripProps } thumbnailHeight={ 72 } />
+                  </div>
+                )}
+
+                {/* Transport: play / scrub / record, floating just above the
+                    filmstrip. It replaces the scrubber that used to be welded
+                    under the canvas and the capture card that floated in the
+                    corner. */}
+                <div
+                  className={ clsx(
+                    "absolute z-40 flex justify-center px-4",
+                    dockedDesktop ? "left-80 right-72" : "left-1/2 w-[26rem] max-w-[calc(100%-2rem)] -translate-x-1/2"
+                  ) }
+                  style={ {
+                    bottom: transportBottom
+                  } }
+                >
+                  <TransportBar
+                    className="w-full max-w-md"
+                    onOpenCapture={ () => setCaptureOpen( true ) }
+                    recording={ browserRecording || lifecycle.isRecording }
+                    onSeekStart={ onSeekStart }
+                    onSeekEnd={ onSeekEnd }
+                  />
+                </div>
+
+                {/* Docked top bar actions — rendered through a portal because
+                    the bar belongs to SketchPage while undo/redo and the
+                    Export button need this form context. Export opens the very
+                    same dialog as the record dot: two triggers, one surface. */}
+                {dockedDesktop &&
+                  topBarActionsContainer &&
+                  createPortal(
+                    <div className="flex h-full items-stretch">
+                      <div className="flex items-center px-2">
+                        <UndoRedo />
+                      </div>
+
+                      <div className="w-px bg-border" />
+
+                      <div className="flex items-center px-2">
+                        <button
+                          type="button"
+                          onClick={ () => setCaptureOpen( true ) }
+                          title="Recording, export and options import/export"
+                          className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-foreground px-3 text-xs font-medium text-background transition-opacity hover:opacity-85"
+                        >
+                          <Download className="h-3.5 w-3.5" />
+                          Export
+                        </button>
+                      </div>
+                    </div>,
+                    topBarActionsContainer
+                  )}
               </>
             ) : (
               <MobileStudioDrawer
@@ -604,6 +762,17 @@ export default function SketchOptions( {
                 activeSlideId={ activeSlideId }
                 jobId={ jobId }
                 body={ bodyProps }
+                filmstrip={ filmstripProps }
+                rootSettingsExpanded={ collapsibleStates.rootSettings }
+                onRootSettingsToggle={ ( expanded ) => setSection(
+                  "rootSettings",
+                  expanded
+                ) }
+                sketchSectionExpanded={ collapsibleStates.sketchSection }
+                onSketchSectionToggle={ ( expanded ) => setSection(
+                  "sketchSection",
+                  expanded
+                ) }
                 capture={ captureProps }
                 captureActionsRef={ captureActionsRef }
                 recordingSupported={ recordingSupported }
@@ -619,8 +788,27 @@ export default function SketchOptions( {
             {/* The central Interactive mixer — one overview of every binding, with
               per-layer solo / mute / weight. Floats bottom-center (desktop only,
               where it doesn't collide with the mobile drawer); hidden unless the
-              plugin is on and the scope has bindings. */}
-            {isDesktop && <InteractivePanel basePath={ sketchBasePath } />}
+              plugin is on and the scope has bindings. Lifted above the slide
+              filmstrip, which now owns the bottom-center. */}
+            {isDesktop && (
+              <CaptureDialog
+                open={ captureOpen }
+                onClose={ () => setCaptureOpen( false ) }
+                activeSlideIndex={ activeSlideIndex }
+                capture={ captureProps }
+                captureActionsRef={ captureActionsRef }
+                recordingSupported={ recordingSupported }
+                jobStatus={ lifecycle.currentStatus }
+                onImportOptions={ handleImportOptions }
+              />
+            )}
+
+            {isDesktop && (
+              <InteractivePanel
+                basePath={ sketchBasePath }
+                bottomOffset={ mixerBottom }
+              />
+            )}
           </ContentSelectionProvider>
         </CollapsibleProvider>
       </FormUndoRedo>
