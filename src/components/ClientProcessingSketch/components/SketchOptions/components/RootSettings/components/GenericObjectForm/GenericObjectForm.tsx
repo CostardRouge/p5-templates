@@ -117,32 +117,41 @@ export default function GenericObjectForm( {
 
         const isBand =
           depth === 0 && fieldConfig.component === "nested-object";
+        const previousIsBand =
+          depth === 0 &&
+          index > 0 &&
+          config[ keys[ index - 1 ] ]?.component === "nested-object";
 
-        const field = (
-          <FieldRenderer
-            fieldBasePath={ basePath }
-            fieldName={ fieldName }
-            config={ fieldConfig }
-            depth={ depth }
-            leafPaddingClassName={ leafPaddingClassName }
-            showTopRule={ isBand && index > 0 }
-          />
-        );
+        // A rule marks every boundary a band takes part in: above a band, and
+        // above the field that follows one. Two plain fields in a row are just
+        // a list and need none. It lives on the OUTER, unpadded wrapper so it
+        // spans the panel even when the field inside carries padding.
+        const showRule = index > 0 && ( isBand || previousIsBand );
 
-        // A band is full-bleed and sits flush against its own hairline; a
-        // leaf carries the panel's padding and its own vertical rhythm. The
-        // spacing cannot come from a container `gap`: that would also push the
-        // bands apart, leaving each separator floating in dead space instead
-        // of reading as the top edge of the group it introduces.
+        // A band is full-bleed and sits flush against that hairline; a leaf
+        // carries the panel's padding and its own vertical rhythm. The spacing
+        // cannot come from a container `gap`: that would also push the bands
+        // apart, leaving every separator floating in dead space instead of
+        // reading as the top edge of the group it introduces.
         return (
           <div
             key={ fieldName }
-            className={ isBand ? undefined : clsx(
-              leafPaddingClassName,
-              "py-1"
-            ) }
+            className={ clsx( showRule && "border-t border-theme" ) }
           >
-            {field}
+            <div
+              className={ isBand ? undefined : clsx(
+                leafPaddingClassName,
+                "py-1"
+              ) }
+            >
+              <FieldRenderer
+                fieldBasePath={ basePath }
+                fieldName={ fieldName }
+                config={ fieldConfig }
+                depth={ depth }
+                leafPaddingClassName={ leafPaddingClassName }
+              />
+            </div>
           </div>
         );
       } )}

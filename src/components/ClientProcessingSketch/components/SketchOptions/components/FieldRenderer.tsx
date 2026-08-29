@@ -85,11 +85,6 @@ type FieldRendererProps = {
   /** Horizontal padding a band applies to its own header and leaf children,
    *  so the band itself can stay full-bleed. */
   leafPaddingClassName?: string;
-  /** Draw the band's top hairline. Decided by the parent form (which knows the
-   *  field's position); a `first:` variant cannot work here because every
-   *  FieldRenderer output sits alone inside its own wrapper element, making
-   *  each one a first child. */
-  showTopRule?: boolean;
 };
 
 export default function FieldRenderer( {
@@ -98,8 +93,7 @@ export default function FieldRenderer( {
   config,
   hideLabel = false,
   depth = 0,
-  leafPaddingClassName = "px-3",
-  showTopRule = false
+  leafPaddingClassName = "px-3"
 }: FieldRendererProps ) {
   const {
     register,
@@ -458,7 +452,6 @@ export default function FieldRenderer( {
               collapsibleKey,
               isExpanded
             ) }
-            className={ clsx( isBand && showTopRule && "border-t border-theme" ) }
             header={ ( expanded ) => (
               <div
                 className={ clsx(
