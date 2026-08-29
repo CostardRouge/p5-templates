@@ -20,8 +20,12 @@ type PanelSectionProps = {
   onToggle?: ( expanded: boolean ) => void;
   /** Drop the separator — for the last section of a panel. */
   last?: boolean;
-  /** Horizontal padding of the header and body (matches the host panel). */
+  /** Horizontal padding of the header (matches the host panel). */
   paddingClassName?: string;
+  /** Horizontal padding of the body. Defaults to the header's; pass "px-0"
+   *  when the content pads its own leaves so nested bands can run full-bleed
+   *  (see GenericObjectForm). */
+  bodyPaddingClassName?: string;
   children: React.ReactNode;
 };
 
@@ -44,6 +48,7 @@ export default function PanelSection( {
   onToggle,
   last = false,
   paddingClassName = "px-3",
+  bodyPaddingClassName,
   children
 }: PanelSectionProps ) {
   return (
@@ -90,7 +95,7 @@ export default function PanelSection( {
     >
       <div className={ clsx(
         "pb-3 pt-0.5",
-        paddingClassName
+        bodyPaddingClassName ?? paddingClassName
       ) }
       >
         {children}

@@ -39,8 +39,13 @@ export default function RootSettings( {
       expanded={ expanded ?? true }
       onToggle={ onToggle }
       paddingClassName={ paddingClassName }
+      bodyPaddingClassName="px-0"
     >
-      <GenericObjectForm basePath={ basePath } config={ rootFormConfig } />
+      <GenericObjectForm
+        basePath={ basePath }
+        config={ rootFormConfig }
+        leafPaddingClassName={ paddingClassName ?? "px-3" }
+      />
     </PanelSection>
   );
 }

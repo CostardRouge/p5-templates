@@ -27,6 +27,11 @@ type GenericObjectFormProps = {
   /** Nesting level handed to each field: 0 renders top-level groups as banded
    *  sub-sections (see FieldRenderer's nested-object case). */
   depth?: number;
+  /** Horizontal padding applied to LEAF fields only. Groups stay unpadded so
+   *  their header band spans the panel edge to edge — the padding lives on the
+   *  leaves precisely so the bands don't have to claw it back with negative
+   *  margins, which never lined up with the panel's real content box. */
+  leafPaddingClassName?: string;
 };
 
 // The plugin-INJECTED Interaction panel (config.managed — see getSketchMeta).
@@ -70,13 +75,16 @@ function ManagedInteractionField( {
 export default function GenericObjectForm( {
   basePath = "",
   config,
-  depth = 0
+  depth = 0,
+  leafPaddingClassName = "px-3"
 }: GenericObjectFormProps ) {
   const keys = Object.keys( config );
 
   return (
     <div className="flex flex-col gap-1.5">
-      {keys.map( ( fieldName ) => {
+      {keys.map( (
+        fieldName, index
+      ) => {
         const fieldConfig = config[ fieldName ];
 
         if ( !fieldConfig ) {
@@ -95,14 +103,28 @@ export default function GenericObjectForm( {
           );
         }
 
-        return (
+        const isBand =
+          depth === 0 && fieldConfig.component === "nested-object";
+
+        const field = (
           <FieldRenderer
-            key={ fieldName }
             fieldBasePath={ basePath }
             fieldName={ fieldName }
             config={ fieldConfig }
             depth={ depth }
+            leafPaddingClassName={ leafPaddingClassName }
+            showTopRule={ isBand && index > 0 }
           />
+        );
+
+        // A band is full-bleed; a leaf carries the panel's padding.
+        return (
+          <div
+            key={ fieldName }
+            className={ isBand ? undefined : leafPaddingClassName }
+          >
+            {field}
+          </div>
         );
       } )}
     </div>

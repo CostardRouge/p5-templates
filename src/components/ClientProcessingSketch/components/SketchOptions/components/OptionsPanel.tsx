@@ -3,9 +3,6 @@ import dynamic from "next/dynamic";
 import {
   UseFormReturn, useFormContext, useWatch
 } from "react-hook-form";
-import {
-  ArrowDownFromLine
-} from "lucide-react";
 import clsx from "clsx";
 import {
   SketchOption, SketchOptionInput
@@ -13,7 +10,6 @@ import {
 import {
   JobModel
 } from "@/types/recording.types";
-import CollapsibleItem from "@/components/CollapsibleItem";
 import PanelSection from "./PanelSection";
 import SketchAssetsProvider from "./SketchAssetsProvider/SketchAssetsProvider";
 
@@ -30,7 +26,6 @@ const SlideEditor = dynamic( () => import( "./SlideEditor" ) );
 import ContentArrayProvider from "./ContentArrayProvider/ContentArrayProvider";
 import OptionsImportExport from "./CaptureActions/components/OptionsImportExport";
 import UndoRedo from "./UndoRedo";
-import initOptions from "@/utils/initOptions";
 import type {
   CollapsibleSection, CollapsibleStates
 } from "@/components/ClientProcessingSketch/components/SketchOptions/hooks/useCollapsibleStates";
@@ -164,53 +159,26 @@ export default function OptionsPanel( {
     return <OptionsPanelBody scrollable={ false } { ...bodyProps } />;
   }
 
+  // Floating card: the card itself no longer collapses — its sections do, so
+  // the section titles stay visible and a fully collapsed card is already
+  // small. (It also removes a second whole-panel toggle competing with the
+  // per-section ones.)
   return (
-    <CollapsibleItem
-      swipeToCollapse
-      className="flex flex-col w-full glass border border-theme rounded-2xl shadow-lg overflow-hidden"
-      contentClassName="flex flex-col min-h-0"
-      header={ (
-        expanded, title
-      ) => (
-        <div className="flex gap-1 px-2 py-1.5 border-b border-theme">
-          <UndoRedo />
+    <div className="flex flex-col w-full glass border border-theme rounded-2xl shadow-lg overflow-hidden">
+      <div className="flex gap-1 px-2 py-1.5 border-b border-theme">
+        <UndoRedo />
 
-          <OptionsImportExport
-            options={ options }
-            name={ name }
-            persistedJobId={ persistedJob?.id }
-            jobStatus={ jobStatus }
-            onImportInMemory={ ( importedOptions ) => {
-              const processedOptions = initOptions( importedOptions as SketchOption );
+        <OptionsImportExport
+          options={ options }
+          name={ name }
+          persistedJobId={ persistedJob?.id }
+          jobStatus={ jobStatus }
+          onImportInMemory={ ( importedOptions ) =>
+            onImportOptions( importedOptions as SketchOption ) }
+        />
+      </div>
 
-              console.log(
-                "Importing options:",
-                {
-                  imported: importedOptions,
-                  processed: processedOptions,
-                  slidesCount: processedOptions.slides?.length
-                }
-              );
-              onImportOptions( importedOptions as SketchOption );
-            } }
-          />
-
-          <button
-            title={ title }
-            className="text-foreground text-sm w-full flex items-center justify-end"
-            aria-label={ expanded ? "Collapse controls" : "Expand controls" }
-          >
-            <ArrowDownFromLine
-              className="inline text-foreground h-3 w-3 ml-1"
-              style={ {
-                rotate: expanded ? "0deg" : "180deg"
-              } }
-            />
-          </button>
-        </div>
-      ) }
-    >
       <OptionsPanelBody { ...bodyProps } />
-    </CollapsibleItem>
+    </div>
   );
 }

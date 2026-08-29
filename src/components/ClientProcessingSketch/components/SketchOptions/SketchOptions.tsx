@@ -630,11 +630,6 @@ export default function SketchOptions( {
                   <SketchSettings
                     activeSlideIndex={ activeSlideIndex }
                     activeSlideId={ activeSlideId }
-                    expanded={ collapsibleStates.sketchSettings }
-                    onToggle={ ( expanded ) => setSection(
-                      "sketchSettings",
-                      expanded
-                    ) }
                     docked={ dockedDesktop }
                     rootSettingsExpanded={ collapsibleStates.rootSettings }
                     onRootSettingsToggle={ ( expanded ) => setSection(

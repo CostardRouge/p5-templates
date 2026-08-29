@@ -82,6 +82,14 @@ type FieldRendererProps = {
    *  fall back to an indent guide so depth stays readable without stacking
    *  boxes inside boxes. */
   depth?: number;
+  /** Horizontal padding a band applies to its own header and leaf children,
+   *  so the band itself can stay full-bleed. */
+  leafPaddingClassName?: string;
+  /** Draw the band's top hairline. Decided by the parent form (which knows the
+   *  field's position); a `first:` variant cannot work here because every
+   *  FieldRenderer output sits alone inside its own wrapper element, making
+   *  each one a first child. */
+  showTopRule?: boolean;
 };
 
 export default function FieldRenderer( {
@@ -89,7 +97,9 @@ export default function FieldRenderer( {
   fieldName,
   config,
   hideLabel = false,
-  depth = 0
+  depth = 0,
+  leafPaddingClassName = "px-3",
+  showTopRule = false
 }: FieldRendererProps ) {
   const {
     register,
@@ -448,13 +458,16 @@ export default function FieldRenderer( {
               collapsibleKey,
               isExpanded
             ) }
-            className={ clsx( isBand && "border-t border-theme first:border-t-0" ) }
+            className={ clsx( isBand && showTopRule && "border-t border-theme" ) }
             header={ ( expanded ) => (
               <div
                 className={ clsx(
                   "cursor-pointer select-none flex items-center justify-between w-full gap-2 min-h-[2.5rem] md:min-h-0",
                   isBand
-                    ? "py-2 md:py-1.5 -mx-3 px-3 hover:bg-hover transition-colors"
+                    ? clsx(
+                      "py-2 md:py-1.5 hover:bg-hover transition-colors",
+                      leafPaddingClassName
+                    )
                     : "py-1.5 md:py-1 text-label"
                 ) }
                 title="Click to expand/collapse"
@@ -484,7 +497,10 @@ export default function FieldRenderer( {
               className={ clsx(
                 "flex flex-col gap-1.5",
                 isBand
-                  ? "pb-2"
+                  ? clsx(
+                    "pb-2 pt-0.5",
+                    leafPaddingClassName
+                  )
                   : "ml-1.5 border-l border-theme pl-2.5 pb-1"
               ) }
             >
