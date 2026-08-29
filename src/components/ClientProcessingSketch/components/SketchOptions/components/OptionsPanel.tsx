@@ -4,7 +4,7 @@ import {
   UseFormReturn, useFormContext, useWatch
 } from "react-hook-form";
 import {
-  ArrowDownFromLine, ListCollapse
+  ArrowDownFromLine
 } from "lucide-react";
 import clsx from "clsx";
 import {
@@ -14,6 +14,7 @@ import {
   JobModel
 } from "@/types/recording.types";
 import CollapsibleItem from "@/components/CollapsibleItem";
+import PanelSection from "./PanelSection";
 import SketchAssetsProvider from "./SketchAssetsProvider/SketchAssetsProvider";
 
 // The content sections start collapsed or absent (see useCollapsibleStates
@@ -53,34 +54,6 @@ type OptionsPanelProps = OptionsPanelBodyProps & {
    *  the rail scroll instead of the body. */
   docked?: boolean;
 };
-
-function SectionHeader( {
-  expanded,
-  label
-}: {
-  expanded: boolean;
-  label: React.ReactNode;
-} ) {
-  return (
-    <button
-      className={ clsx(
-        "flex w-full items-center gap-1.5 text-left text-foreground text-xs min-h-[2.5rem] md:min-h-[1.75rem]",
-        {
-          "mb-1": expanded
-        }
-      ) }
-      aria-label={ expanded ? "Collapse" : "Expand" }
-    >
-      <ListCollapse
-        className="shrink-0 text-foreground h-4 w-4 md:h-3 md:w-3"
-        style={ {
-          rotate: expanded ? "180deg" : "0deg"
-        } }
-      />
-      <span className="truncate">{label}</span>
-    </button>
-  );
-}
 
 /**
  * The content rail: the elements that enrich the sketch — text, images, QR
@@ -127,8 +100,8 @@ export function OptionsPanelBody( {
   return (
     <div
       className={ clsx(
-        "flex flex-col gap-1 min-h-0",
-        scrollable && "overflow-y-auto overflow-x-hidden pr-0.5"
+        "flex flex-col min-h-0",
+        scrollable && "overflow-y-auto overflow-x-hidden"
       ) }
       style={ scrollable ? {
         maxHeight: "calc(80svh - 3rem)"
@@ -136,45 +109,24 @@ export function OptionsPanelBody( {
     >
       {/* The active slide's own content (and its transition settings). */}
       {hasActiveSlide && (
-        <CollapsibleItem
+        <PanelSection
+          label={ `slide ${ activeSlideIndex + 1 } content` }
+          meta={ activeSlideContentLength ? String( activeSlideContentLength ) : undefined }
           expanded={ collapsibleStates.slides }
-          onToggle={ ( expanded ) => onCollapsibleToggle( "slides" ) }
-          className="p-1 border border-theme rounded-lg bg-background overflow-y-auto"
-          header={ ( expanded ) => (
-            <SectionHeader
-              expanded={ expanded }
-              label={
-                <>
-                  slide {activeSlideIndex + 1} content{" "}
-                  {activeSlideContentLength
-                    ? `(${ activeSlideContentLength })`
-                    : null}
-                </>
-              }
-            />
-          ) }
+          onToggle={ () => onCollapsibleToggle( "slides" ) }
         >
           <SlideEditor key={ editorKey } activeIndex={ activeSlideIndex } />
-        </CollapsibleItem>
+        </PanelSection>
       )}
 
       {/* The root content: applies to every slide. Without slides it is
           simply the sketch's content. */}
-      <CollapsibleItem
+      <PanelSection
+        label={ hasActiveSlide ? "shared content" : "content" }
+        meta={ rootContentLength ? String( rootContentLength ) : undefined }
         expanded={ collapsibleStates.globalContent }
-        onToggle={ ( expanded ) => onCollapsibleToggle( "globalContent" ) }
-        className="p-1 border border-theme rounded-lg text-foreground bg-background overflow-y-auto"
-        header={ ( expanded ) => (
-          <SectionHeader
-            expanded={ expanded }
-            label={
-              <>
-                {hasActiveSlide ? "shared content" : "content"}{" "}
-                {rootContentLength ? `(${ rootContentLength })` : null}
-              </>
-            }
-          />
-        ) }
+        onToggle={ () => onCollapsibleToggle( "globalContent" ) }
+        last
       >
         <SketchAssetsProvider
           scope="global"
@@ -185,7 +137,7 @@ export function OptionsPanelBody( {
             <ContentItems baseFieldName="content" />
           </ContentArrayProvider>
         </SketchAssetsProvider>
-      </CollapsibleItem>
+      </PanelSection>
     </div>
   );
 }
@@ -215,12 +167,12 @@ export default function OptionsPanel( {
   return (
     <CollapsibleItem
       swipeToCollapse
-      className="flex flex-col gap-1 w-full glass p-2 border border-theme rounded-2xl shadow-lg"
-      contentClassName="flex flex-col gap-1 min-h-0"
+      className="flex flex-col w-full glass border border-theme rounded-2xl shadow-lg overflow-hidden"
+      contentClassName="flex flex-col min-h-0"
       header={ (
         expanded, title
       ) => (
-        <div className="flex gap-1">
+        <div className="flex gap-1 px-2 py-1.5 border-b border-theme">
           <UndoRedo />
 
           <OptionsImportExport

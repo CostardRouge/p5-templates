@@ -25,6 +25,18 @@ One inspector, a content rail, a filmstrip, export in the top bar. Decided with 
 
 2026-08-28 — Slides are a collection of variants, not a temporal sequence; a slide is on its way to being a preset. The filmstrip therefore stays a separate band from the `AnimationProgressionBar` scrubber. Rejected: merging them into one bar where each slide is a timeline segment — it would impose sequence semantics the model doesn't have.
 
+## Panel sections: bands, not boxes
+
+2026-08-28 — Every settings group is a `PanelSection`: a full-bleed header (uppercase, letter-spaced eyebrow + optional meta/actions + chevron) closed by a hairline running edge to edge. Sections read as a stack of bands, which keeps a long inspector scannable without boxing each group in its own card. The rule does the structural work — do not re-add per-section borders, rounded cards or background tints.
+
+Depth is expressed by *treatment*, not by nesting boxes (`FieldRenderer`'s `nested-object` takes a `depth` prop, threaded from `GenericObjectForm`): depth 0 — a group directly under a section — renders as a sub-band with its own top hairline and a full-bleed, hover-highlighted header; deeper groups get a left indent guide and no rule. The previous style put every group in a `border rounded-xl` box with `ml-2`, which stacked borders inside borders as soon as a sketch nested two levels.
+
+Order inside the inspector: **canvas & animation first, then the sketch's own parameters titled "N options"**. The count used to sit in the panel header, where it described only part of what the panel held; it now titles the block it actually counts, and the header names the surface instead ("Controls" + the active slide).
+
+## Collapse animations: never animate width or radius
+
+2026-08-28 — The floating inspector and the Interactive mixer used to swap `w-80` ↔ `w-fit` and `rounded-2xl` ↔ `rounded-full` between states. Neither is animatable (auto width has no interpolation), so the panel snapped into a pill while its height was still interpolating through `CollapsibleItem`'s `grid-template-rows` transition — a visible morph. Both now keep a **constant width and radius**; only the body height animates. **How to apply**: a collapsible floating panel picks one width and one radius for both states. Verified by sampling the box through a collapse — 320px / 16px constant, height 532 → 34. Sampling *intermediate* heights headlessly is not possible here: SwiftShader renders a sketch page at ~2fps, so a 200ms transition completes between two animation frames and every poll lands on an endpoint.
+
 ## Visual language (from the validated mockup)
 
 2026-08-28 — Monochrome stays the rule: the Export button is an ink-filled pill precisely because nothing else is filled; red is reserved for recording-in-progress (the mobile record shortcut already uses it). The sketch name appears once — the breadcrumb above the canvas — never in the top bar. The full zoom cluster (−, %, +, 100%, fit/fullscreen) survives in the docked bar; do not collapse it to a single fit control.

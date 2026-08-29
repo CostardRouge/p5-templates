@@ -24,6 +24,9 @@ const FieldRenderer = dynamic( () => import( "@/components/ClientProcessingSketc
 type GenericObjectFormProps = {
   basePath?: string;
   config: Record<string, FieldConfig>;
+  /** Nesting level handed to each field: 0 renders top-level groups as banded
+   *  sub-sections (see FieldRenderer's nested-object case). */
+  depth?: number;
 };
 
 // The plugin-INJECTED Interaction panel (config.managed — see getSketchMeta).
@@ -66,12 +69,13 @@ function ManagedInteractionField( {
 
 export default function GenericObjectForm( {
   basePath = "",
-  config
+  config,
+  depth = 0
 }: GenericObjectFormProps ) {
   const keys = Object.keys( config );
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-1.5">
       {keys.map( ( fieldName ) => {
         const fieldConfig = config[ fieldName ];
 
@@ -97,6 +101,7 @@ export default function GenericObjectForm( {
             fieldBasePath={ basePath }
             fieldName={ fieldName }
             config={ fieldConfig }
+            depth={ depth }
           />
         );
       } )}

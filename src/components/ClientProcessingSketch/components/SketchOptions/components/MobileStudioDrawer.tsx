@@ -13,6 +13,7 @@ import useSketch from "@/components/ClientProcessingSketch/components/SketchProv
 import GenericObjectForm
   from "./RootSettings/components/GenericObjectForm/GenericObjectForm";
 import RootSettings from "./RootSettings/RootSettings";
+import PanelSection from "./PanelSection";
 import SlideFilmstrip, {
   type SlideFilmstripProps
 } from "./SlideFilmstrip";
@@ -58,6 +59,9 @@ type MobileStudioDrawerProps = {
   /** Expand state of the "canvas & animation" section (shared with desktop). */
   rootSettingsExpanded?: boolean;
   onRootSettingsToggle?: ( expanded: boolean ) => void;
+  /** Expand state of the sketch's own "N options" section. */
+  sketchSectionExpanded?: boolean;
+  onSketchSectionToggle?: ( expanded: boolean ) => void;
   /** Export tab: capture actions (recording support already filtered by caller). */
   capture: CaptureProps;
   captureActionsRef: React.Ref<CaptureActionsRef>;
@@ -86,6 +90,8 @@ export default function MobileStudioDrawer( {
   filmstrip,
   rootSettingsExpanded,
   onRootSettingsToggle,
+  sketchSectionExpanded,
+  onSketchSectionToggle,
   capture,
   captureActionsRef,
   recordingSupported,
@@ -312,25 +318,27 @@ export default function MobileStudioDrawer( {
             activeSlideIndex={ activeSlideIndex }
             expanded={ rootSettingsExpanded }
             onToggle={ onRootSettingsToggle }
+            paddingClassName="px-0"
           />
 
           {sketchConfig && (
-            <>
-              <div className="my-2 flex items-center justify-between gap-2">
-                <span className="truncate text-xs text-label">
-                  {sketchFormValues &&
-                    `${ Object.keys( sketchFormValues ).length } options`}
-                  {activeSlideIndex !== undefined &&
-                    ` (slide ${ activeSlideIndex + 1 })`}
-                </span>
-                <div className="flex shrink-0 items-center gap-0.5">
-                  <SketchSettingsActions
-                    config={ sketchConfig }
-                    basePath={ effectiveBasePath }
-                  />
-                </div>
-              </div>
-
+            <PanelSection
+              label={
+                sketchFormValues
+                  ? `${ Object.keys( sketchFormValues ).length } options`
+                  : "options"
+              }
+              expanded={ sketchSectionExpanded }
+              onToggle={ onSketchSectionToggle }
+              paddingClassName="px-0"
+              actions={
+                <SketchSettingsActions
+                  config={ sketchConfig }
+                  basePath={ effectiveBasePath }
+                />
+              }
+              last
+            >
               <SketchAssetsProvider
                 scope="global"
                 assetsName="assets"
@@ -342,7 +350,7 @@ export default function MobileStudioDrawer( {
                   config={ sketchConfig }
                 />
               </SketchAssetsProvider>
-            </>
+            </PanelSection>
           )}
         </div>
 

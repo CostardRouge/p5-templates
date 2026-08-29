@@ -181,11 +181,12 @@ export default function InteractivePanel( {
   return (
     <div
       className={ clsx(
-        "absolute left-1/2 z-50 flex -translate-x-1/2 flex-col glass border border-theme shadow-lg overflow-hidden",
-        !bottomOffset && "bottom-4",
-        expanded
-          ? "w-80 max-w-[calc(100vw-1rem)] rounded-2xl"
-          : "rounded-full"
+        // Constant width and radius across expanded/collapsed: switching
+        // w-80 <-> w-fit and rounded-2xl <-> rounded-full is not animatable
+        // and snapped the panel into a pill while its height was still
+        // interpolating. Only the height animates now.
+        "absolute left-1/2 z-50 flex w-80 max-w-[calc(100vw-1rem)] -translate-x-1/2 flex-col glass border border-theme shadow-lg overflow-hidden rounded-2xl",
+        !bottomOffset && "bottom-4"
       ) }
       style={ bottomOffset ? {
         bottom: bottomOffset

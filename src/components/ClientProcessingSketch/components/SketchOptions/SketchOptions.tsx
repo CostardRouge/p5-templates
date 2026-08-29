@@ -641,6 +641,11 @@ export default function SketchOptions( {
                       "rootSettings",
                       expanded
                     ) }
+                    sketchSectionExpanded={ collapsibleStates.sketchSection }
+                    onSketchSectionToggle={ ( expanded ) => setSection(
+                      "sketchSection",
+                      expanded
+                    ) }
                   />
                 </SketchAssetsProvider>
 
@@ -704,6 +709,11 @@ export default function SketchOptions( {
                 rootSettingsExpanded={ collapsibleStates.rootSettings }
                 onRootSettingsToggle={ ( expanded ) => setSection(
                   "rootSettings",
+                  expanded
+                ) }
+                sketchSectionExpanded={ collapsibleStates.sketchSection }
+                onSketchSectionToggle={ ( expanded ) => setSection(
+                  "sketchSection",
                   expanded
                 ) }
                 capture={ captureProps }

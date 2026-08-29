@@ -23,6 +23,8 @@ import GenericObjectForm
   from "@/components/ClientProcessingSketch/components/SketchOptions/components/RootSettings/components/GenericObjectForm/GenericObjectForm";
 import RootSettings
   from "@/components/ClientProcessingSketch/components/SketchOptions/components/RootSettings/RootSettings";
+import PanelSection
+  from "@/components/ClientProcessingSketch/components/SketchOptions/components/PanelSection";
 import useSketch from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
 import type {
   FieldConfig
@@ -45,6 +47,9 @@ type SketchSettingsProps = {
    *  drawer and the desktop panel share it. */
   rootSettingsExpanded?: boolean;
   onRootSettingsToggle?: ( expanded: boolean ) => void;
+  /** Expand state of the sketch's own "N options" section. */
+  sketchSectionExpanded?: boolean;
+  onSketchSectionToggle?: ( expanded: boolean ) => void;
 };
 
 const HEADER_ACTION_CLASS =
@@ -175,7 +180,9 @@ export default function SketchSettings( {
   onToggle,
   docked,
   rootSettingsExpanded,
-  onRootSettingsToggle
+  onRootSettingsToggle,
+  sketchSectionExpanded,
+  onSketchSectionToggle
 }: SketchSettingsProps ) {
   const [
     {
@@ -190,17 +197,23 @@ export default function SketchSettings( {
     activeSlideIndex
   );
 
+  // The panel header names the surface and its scope; the option count moved
+  // down to title the sketch's own block, where it actually applies.
   const headerLabel = (
     <>
-      <SlidersHorizontal className="h-3.5 w-3.5" />
-      <span>
-        {config && sketchFormValues
-          ? `${ Object.keys( sketchFormValues ).length } options`
-          : "settings"}
-        {activeSlideIndex !== undefined && ` (slide ${ activeSlideIndex + 1 })`}
-      </span>
+      <SlidersHorizontal className="h-3.5 w-3.5 shrink-0" />
+      <span className="truncate font-medium">Controls</span>
+      {activeSlideIndex !== undefined && (
+        <span className="truncate text-label">
+          slide {activeSlideIndex + 1}
+        </span>
+      )}
     </>
   );
+
+  const optionCount = sketchFormValues
+    ? Object.keys( sketchFormValues ).length
+    : undefined;
 
   const body = (
     <>
@@ -211,13 +224,18 @@ export default function SketchSettings( {
       />
 
       {config && (
-        <div className="px-3 pt-1 pb-4">
+        <PanelSection
+          label={ optionCount !== undefined ? `${ optionCount } options` : "options" }
+          expanded={ sketchSectionExpanded }
+          onToggle={ onSketchSectionToggle }
+          last
+        >
           <GenericObjectForm
             key={ activeSlideId ?? effectiveBasePath }
             basePath={ effectiveBasePath }
             config={ config }
           />
-        </div>
+        </PanelSection>
       )}
     </>
   );
@@ -261,33 +279,34 @@ export default function SketchSettings( {
     );
   }
 
+  // Floating card. Width and radius are CONSTANT across expanded/collapsed:
+  // they used to switch w-80 <-> w-fit and rounded-2xl <-> rounded-full, which
+  // are not animatable (auto width) and so snapped to a pill while the height
+  // was still interpolating — the panel visibly morphed mid-animation. Only
+  // the body's height animates now, and the card keeps its shape throughout.
   return (
     <CollapsibleItem
       expanded={ expanded }
       onToggle={ onToggle }
       swipeToCollapse
-      className={ clsx(
-        "absolute flex flex-col glass shadow-lg overflow-y-auto border-theme",
-        expanded
-          ? "z-50 left-4 bottom-4 w-80 max-h-[calc(80svh-5rem)] rounded-2xl border"
-          : "z-50 left-4 bottom-4 w-fit rounded-full border"
-      ) }
-      headerContainerClassName={ clsx( expanded && "glass sticky top-0 z-10" ) }
+      className="absolute z-50 left-4 bottom-4 w-80 max-h-[calc(80svh-5rem)] flex flex-col glass shadow-lg overflow-y-auto rounded-2xl border border-theme"
+      headerContainerClassName="glass sticky top-0 z-10"
       header={ ( isExpanded ) => (
         <div className="flex w-full items-center justify-between gap-2 px-3 py-2">
           <button
             type="button"
-            className="flex items-center gap-1.5 text-xs text-foreground"
+            className="flex min-w-0 items-center gap-1.5 text-xs text-foreground"
             aria-label={ isExpanded ? "Collapse controls" : "Expand controls" }
           >
             {headerLabel}
-            <ChevronDown
-              className="h-3.5 w-3.5 transition-transform"
-              style={ {
-                transform: isExpanded ? "rotate(0deg)" : "rotate(180deg)"
-              } }
-            />
           </button>
+
+          <ChevronDown
+            className="h-3.5 w-3.5 shrink-0 text-label transition-transform"
+            style={ {
+              transform: isExpanded ? "rotate(0deg)" : "rotate(180deg)"
+            } }
+          />
         </div>
       ) }
     >

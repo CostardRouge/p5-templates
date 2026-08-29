@@ -6,7 +6,8 @@ export type CollapsibleSection =
   | "rootSettings"
   | "globalContent"
   | "slides"
-  | "sketchSettings";
+  | "sketchSettings"
+  | "sketchSection";
 
 export type CollapsibleStates = Record<CollapsibleSection, boolean>;
 
@@ -22,7 +23,10 @@ const DEFAULT_STATES: CollapsibleStates = {
   rootSettings: true,
   globalContent: false,
   slides: true,
-  sketchSettings: true
+  // The panel itself (floating card / mobile drawer) and the sketch's own
+  // "N options" band inside it.
+  sketchSettings: true,
+  sketchSection: true
 };
 
 type CollapsibleContextValue = {
