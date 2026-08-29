@@ -1,5 +1,8 @@
 import dynamic from "next/dynamic";
 import clsx from "clsx";
+import {
+  Download
+} from "lucide-react";
 import type React from "react";
 import {
   useEffect, useRef, useState
@@ -33,7 +36,8 @@ import {
 import RecordingLockBanner from "./components/RecordingLockBanner";
 import ImportSuccessBanner from "./components/ImportSuccessBanner";
 import SketchSettings from "./components/SketchSettings/SketchSettings";
-import ExportMenu from "./components/ExportMenu";
+import CaptureDialog from "./components/CaptureDialog";
+import TransportBar from "./components/TransportBar";
 import UndoRedo from "./components/UndoRedo";
 import InteractivePanel from "./components/InteractivePanel/InteractivePanel";
 import SketchAssetsProvider from "./components/SketchAssetsProvider/SketchAssetsProvider";
@@ -69,14 +73,11 @@ import {
   readAndClearPendingImport
 } from "@/lib/pendingImportOptions";
 
-// CaptureActions drags the whole recording subtree into the sketch page's
-// initial compile: useBrowserRecorder -> @/engines/recording -> createRecorder
-// pulls in the mediabunny + gif.js encoders, plus the action buttons and
-// VideoPreviewModal. It only renders behind `recordingSupported &&`, so load it
-// as a separate chunk. next/dynamic does not forward refs, so the imperative
-// handle (auto-save / clone-as-draft) is wired through a `forwardedRef` prop.
-const CaptureActions = dynamic( () => import( "./components/CaptureActions" ) );
-
+// The recording subtree (useBrowserRecorder -> @/engines/recording, the
+// mediabunny + gif.js encoders, VideoPreviewModal) is reached through
+// CaptureDialog / MobileStudioDrawer, both code-split below, so it never lands
+// in the sketch page's initial compile. Only the ref type is imported here.
+//
 // MobileStudioDrawer is a full mobile-only duplicate of the panel/settings/
 // capture UI (its own CaptureActions, GenericObjectForm, asset providers). It
 // renders only on the mobile media-query branch, so desktop should never
@@ -98,6 +99,11 @@ type SketchOptionsProps = {
   ) => void;
   onActiveSlideChange?: ( index: number | undefined ) => void;
   enableThumbnails?: boolean;
+  /** Scrub lifecycle, forwarded to the transport bar so the viewport's
+   *  performance label can still report "seeking" now that the scrubber lives
+   *  outside the viewport. */
+  onSeekStart?: () => void;
+  onSeekEnd?: () => void;
   /** Docked top bar cell (owned by SketchPage) that undo/redo and the Export
    *  menu portal into — they need this form context, the bar doesn't have it. */
   topBarActionsContainer?: HTMLElement | null;
@@ -110,6 +116,8 @@ export default function SketchOptions( {
   onActiveSlideChange,
   options: initialOptions,
   enableThumbnails = true, // Enable by default now
+  onSeekStart,
+  onSeekEnd,
   topBarActionsContainer
 }: SketchOptionsProps ) {
   const browserRecordingSupported = useBrowserRecordingSupported();
@@ -144,6 +152,14 @@ export default function SketchOptions( {
     importBanner,
     setImportBanner
   ] = useState<string | null>( null );
+
+  // The capture dialog: opened by the transport bar's record dot and, in the
+  // docked layout, by the top bar's Export button. One dialog, one mounted
+  // CaptureActions — the two are triggers, not copies.
+  const [
+    captureOpen,
+    setCaptureOpen
+  ] = useState( false );
 
   const handleBannerClone = async() => {
     if ( !captureActionsRef.current ) {
@@ -493,6 +509,17 @@ export default function SketchOptions( {
 
   const hasSlides = slideFields.length > 0;
 
+  // The bottom stack, from the viewport edge up: filmstrip, transport bar,
+  // Interactive mixer. Each offset is derived from the one below it so adding
+  // or removing a layer never leaves two of them overlapping.
+  const filmstripHeight = dockedDesktop
+    ? `var(${ STUDIO_FILMSTRIP_HEIGHT_VAR }, 0px)`
+    : hasSlides
+      ? "6rem"
+      : "3.5rem";
+  const transportBottom = `calc(${ filmstripHeight } + 0.75rem)`;
+  const mixerBottom = `calc(${ transportBottom } + 3.25rem)`;
+
   // Publish the docked filmstrip band's height so the viewport (SketchPage)
   // can subtract it, the band can size itself and the Interactive mixer can
   // clear it — one value, read through the CSS variable. 7rem fits a slide
@@ -614,14 +641,6 @@ export default function SketchOptions( {
                     { ...bodyProps }
                   />
 
-                  {!dockedDesktop && recordingSupported && (
-                    <CaptureActions
-                      forwardedRef={ captureActionsRef }
-                      activeSlideIndex={ activeSlideIndex }
-                      docked={ false }
-                      { ...captureProps }
-                    />
-                  )}
                 </div>
 
                 {/* Inspector (left): canvas & animation + the sketch's own
@@ -663,9 +682,32 @@ export default function SketchOptions( {
                   </div>
                 )}
 
+                {/* Transport: play / scrub / record, floating just above the
+                    filmstrip. It replaces the scrubber that used to be welded
+                    under the canvas and the capture card that floated in the
+                    corner. */}
+                <div
+                  className={ clsx(
+                    "absolute z-40 flex justify-center px-4",
+                    dockedDesktop ? "left-80 right-72" : "left-1/2 w-[26rem] max-w-[calc(100%-2rem)] -translate-x-1/2"
+                  ) }
+                  style={ {
+                    bottom: transportBottom
+                  } }
+                >
+                  <TransportBar
+                    className="w-full max-w-md"
+                    onOpenCapture={ () => setCaptureOpen( true ) }
+                    recording={ browserRecording || lifecycle.isRecording }
+                    onSeekStart={ onSeekStart }
+                    onSeekEnd={ onSeekEnd }
+                  />
+                </div>
+
                 {/* Docked top bar actions — rendered through a portal because
                     the bar belongs to SketchPage while undo/redo and the
-                    Export menu need this form context. */}
+                    Export button need this form context. Export opens the very
+                    same dialog as the record dot: two triggers, one surface. */}
                 {dockedDesktop &&
                   topBarActionsContainer &&
                   createPortal(
@@ -676,15 +718,17 @@ export default function SketchOptions( {
 
                       <div className="w-px bg-border" />
 
-                      <ExportMenu
-                        activeSlideIndex={ activeSlideIndex }
-                        capture={ captureProps }
-                        captureActionsRef={ captureActionsRef }
-                        recordingSupported={ recordingSupported }
-                        jobStatus={ lifecycle.currentStatus }
-                        onImportOptions={ handleImportOptions }
-                        forceOpen={ browserRecording || lifecycle.isRecording }
-                      />
+                      <div className="flex items-center px-2">
+                        <button
+                          type="button"
+                          onClick={ () => setCaptureOpen( true ) }
+                          title="Recording, export and options import/export"
+                          className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-foreground px-3 text-xs font-medium text-background transition-opacity hover:opacity-85"
+                        >
+                          <Download className="h-3.5 w-3.5" />
+                          Export
+                        </button>
+                      </div>
                     </div>,
                     topBarActionsContainer
                   )}
@@ -729,15 +773,22 @@ export default function SketchOptions( {
               plugin is on and the scope has bindings. Lifted above the slide
               filmstrip, which now owns the bottom-center. */}
             {isDesktop && (
+              <CaptureDialog
+                open={ captureOpen }
+                onClose={ () => setCaptureOpen( false ) }
+                activeSlideIndex={ activeSlideIndex }
+                capture={ captureProps }
+                captureActionsRef={ captureActionsRef }
+                recordingSupported={ recordingSupported }
+                jobStatus={ lifecycle.currentStatus }
+                onImportOptions={ handleImportOptions }
+              />
+            )}
+
+            {isDesktop && (
               <InteractivePanel
                 basePath={ sketchBasePath }
-                bottomOffset={
-                  dockedDesktop
-                    ? `calc(var(${ STUDIO_FILMSTRIP_HEIGHT_VAR }, 0px) + 1rem)`
-                    : hasSlides
-                      ? "7.5rem"
-                      : "4.25rem"
-                }
+                bottomOffset={ mixerBottom }
               />
             )}
           </ContentSelectionProvider>

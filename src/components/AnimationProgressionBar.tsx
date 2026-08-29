@@ -24,6 +24,13 @@ interface AnimationProgressionBarProps {
   disabled?: boolean;
   onSeekStart?: () => void;
   onSeekEnd?: () => void;
+  /**
+   * "stacked" (default): a square track with the frame / time / percent
+   * readout on its own row underneath — the shape it has under the canvas.
+   * "inline": a rounded track sized to sit in a row of controls, with a
+   * compact time readout beside it (see TransportBar).
+   */
+  variant?: "stacked" | "inline";
 }
 
 type AnimationConfig = {
@@ -71,8 +78,10 @@ export default function AnimationProgressionBar( {
   className = "",
   disabled = false,
   onSeekStart,
-  onSeekEnd
+  onSeekEnd,
+  variant = "stacked"
 }: AnimationProgressionBarProps ) {
+  const inline = variant === "inline";
   const [
     {
       activeSlideIndex,
@@ -549,7 +558,9 @@ export default function AnimationProgressionBar( {
         aria-valuemax={ 100 }
         aria-valuenow={ currentValues.percentage }
         tabIndex={ 0 }
-        className={ `relative h-4 bg-background border border-theme touch-none ${ isDragging ? "cursor-grabbing" : "cursor-pointer" }` }
+        className={ `relative bg-background border border-theme touch-none ${
+          inline ? "h-2 rounded-full overflow-hidden" : "h-4"
+        } ${ isDragging ? "cursor-grabbing" : "cursor-pointer" }` }
         style={ {
           touchAction: "none"
         } }
@@ -584,6 +595,7 @@ export default function AnimationProgressionBar( {
       </div>
     ),
     [
+      inline,
       currentValues.percentage,
       isDragging,
       progression,
@@ -649,6 +661,28 @@ export default function AnimationProgressionBar( {
 
   if ( disabled ) {
     return null;
+  }
+
+  // Inline: one row — track, then a compact clock. The frame counter and the
+  // hover readout are dropped on purpose; they belong to the wide stacked bar,
+  // and a transport pill has no room for three readouts.
+  if ( inline ) {
+    return (
+      <div className={ `flex min-w-0 flex-1 items-center gap-2.5 ${ className }` }>
+        <div className="min-w-0 flex-1">{ProgressBar}</div>
+
+        <span className="shrink-0 font-mono text-[0.6875rem] tabular-nums text-label">
+          {formatTime(
+            currentValues.currentSeconds,
+            currentValues.currentMillis
+          )}
+          <span className="text-label/50">
+            {" / "}
+            {animationConfig.duration}s
+          </span>
+        </span>
+      </div>
+    );
   }
 
   return (

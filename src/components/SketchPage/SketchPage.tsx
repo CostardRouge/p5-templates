@@ -425,7 +425,11 @@ export default function SketchPage() {
 
           <EngineSketchRenderer />
 
-          {sketchLoaded && !capturing && !bareFullscreen && (
+          {/* On desktop the scrubber lives in the floating transport bar (play
+              / scrub / record) rendered by SketchOptions; only the narrow
+              layout keeps it welded under the canvas, where there is no room
+              for another floating pill. */}
+          {sketchLoaded && !capturing && !bareFullscreen && !isDesktop && (
             <div
               className="mt-2 mb-4 truncate"
               data-no-drag="true"
@@ -485,6 +489,8 @@ export default function SketchPage() {
             persistedJob={ persistedJob }
             onOptionsChange={ handleOptionsChange }
             onActiveSlideChange={ handleActiveSlideChange }
+            onSeekStart={ handleSeekStart }
+            onSeekEnd={ handleSeekEnd }
             topBarActionsContainer={ dockedDesktop ? actionsSlot : null }
           />
         </>
