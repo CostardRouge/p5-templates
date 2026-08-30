@@ -663,22 +663,42 @@ export default function AnimationProgressionBar( {
     return null;
   }
 
-  // Inline: one row — track, then a compact clock. The frame counter and the
-  // hover readout are dropped on purpose; they belong to the wide stacked bar,
-  // and a transport pill has no room for three readouts.
+  // Inline: one row — track, then the readout. Now that the transport is a
+  // screen-wide bar rather than a pill, the frame counter and the percentage
+  // are back beside the clock; below `md` only the clock survives, which is
+  // all a phone bar has room for. The hover readout stays a stacked-bar
+  // feature — it needs a second line.
   if ( inline ) {
     return (
       <div className={ `flex min-w-0 flex-1 items-center gap-2.5 ${ className }` }>
         <div className="min-w-0 flex-1">{ProgressBar}</div>
 
-        <span className="shrink-0 font-mono text-[0.6875rem] tabular-nums text-label">
-          {formatTime(
-            currentValues.currentSeconds,
-            currentValues.currentMillis
-          )}
-          <span className="text-label/50">
-            {" / "}
-            {animationConfig.duration}s
+        <span className="flex shrink-0 items-center gap-2 font-mono text-[0.6875rem] tabular-nums text-label">
+          <span className="hidden md:inline">
+            {currentValues.currentFrame}
+            <span className="text-label/50">
+              {" / "}
+              {animationConfig.totalFrames}
+            </span>
+          </span>
+
+          <span className="hidden text-label/30 md:inline">·</span>
+
+          <span>
+            {formatTime(
+              currentValues.currentSeconds,
+              currentValues.currentMillis
+            )}
+            <span className="text-label/50">
+              {" / "}
+              {animationConfig.duration}s
+            </span>
+          </span>
+
+          <span className="hidden text-label/30 md:inline">·</span>
+
+          <span className="hidden font-semibold text-foreground md:inline">
+            {currentValues.percentage}%
           </span>
         </span>
       </div>

@@ -105,7 +105,7 @@ export function OptionsPanelBody( {
       {/* The active slide's own content (and its transition settings). */}
       {hasActiveSlide && (
         <PanelSection
-          label={ `slide ${ activeSlideIndex + 1 } content` }
+          label="content"
           meta={ activeSlideContentLength ? String( activeSlideContentLength ) : undefined }
           expanded={ collapsibleStates.slides }
           onToggle={ () => onCollapsibleToggle( "slides" ) }

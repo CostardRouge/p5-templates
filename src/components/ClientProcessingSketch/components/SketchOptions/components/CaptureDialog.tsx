@@ -36,6 +36,9 @@ type CaptureDialogProps = {
   recordingSupported: boolean;
   jobStatus?: string;
   onImportOptions: ( options: SketchOption ) => void;
+  /** Present as a bottom sheet instead of a centred dialog — the mobile shape,
+   *  where a centred 320px card would float in the middle of a phone. */
+  bottomSheet?: boolean;
 };
 
 /**
@@ -58,7 +61,8 @@ export default function CaptureDialog( {
   captureActionsRef,
   recordingSupported,
   jobStatus,
-  onImportOptions
+  onImportOptions,
+  bottomSheet = false
 }: CaptureDialogProps ) {
   useEffect(
     () => {
@@ -91,7 +95,8 @@ export default function CaptureDialog( {
   return (
     <div
       className={ clsx(
-        "absolute inset-0 z-[70] flex items-center justify-center p-4",
+        "absolute inset-0 z-[70] flex justify-center",
+        bottomSheet ? "items-end" : "items-center p-4",
         !open && "pointer-events-none"
       ) }
       aria-hidden={ !open }
@@ -111,10 +116,27 @@ export default function CaptureDialog( {
         aria-modal={ open }
         aria-label="Recording and export"
         className={ clsx(
-          "relative flex max-h-full w-80 flex-col overflow-hidden rounded-2xl border border-theme glass shadow-lg transition-opacity",
-          open ? "opacity-100" : "opacity-0"
+          "relative flex flex-col overflow-hidden border border-theme glass shadow-lg",
+          bottomSheet
+            // A sheet slides: interpolating opacity alone reads as a flash on
+            // a full-width panel, so it moves on transform and the bottom
+            // corners meet the screen edge.
+            ? clsx(
+              "w-full max-h-[85svh] rounded-2xl rounded-b-none border-b-0 transition-transform duration-200 ease-out motion-reduce:transition-none pb-[max(0.75rem,env(safe-area-inset-bottom))]",
+              open ? "translate-y-0" : "translate-y-full"
+            )
+            : clsx(
+              "w-80 max-h-full rounded-2xl transition-opacity",
+              open ? "opacity-100" : "opacity-0"
+            )
         ) }
       >
+        {bottomSheet && (
+          <div className="flex justify-center pt-2">
+            <div className="h-1 w-10 rounded-full bg-foreground/20" />
+          </div>
+        )}
+
         <div className="flex items-center gap-2 border-b border-theme px-3 py-2">
           <span className="flex h-2.5 w-2.5 shrink-0 rounded-full bg-red-500" />
           <span className="text-xs font-medium text-foreground">Record</span>

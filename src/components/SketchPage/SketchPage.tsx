@@ -45,18 +45,12 @@ import DockedTopBar from "@/components/SketchPage/DockedTopBar";
 import getSketchThumbnailURL from "@/utils/getSketchThumbnailURL";
 import {
   STUDIO_DRAWER_HEIGHT_VAR,
-  STUDIO_FILMSTRIP_HEIGHT_VAR
+  STUDIO_FILMSTRIP_HEIGHT_VAR,
+  STUDIO_TRANSPORT_HEIGHT_VAR
 } from "@/components/ClientProcessingSketch/components/SketchOptions/constants/drawer-events";
 
 const SketchOptions = dynamic( () =>
   import( "@/components/ClientProcessingSketch/components/SketchOptions/SketchOptions" ) );
-
-// AnimationProgressionBar is a self-contained scrubber subtree (RAF polling,
-// pointer/scrub handlers, animationBridge/syncSketchOptions wiring) that only
-// renders once `sketchLoaded && !capturing`. Load it as a separate chunk so it
-// stays out of the sketch page's initial compile.
-const AnimationProgressionBar = dynamic( () =>
-  import( "@/components/AnimationProgressionBar" ) );
 
 export default function SketchPage() {
   const [
@@ -376,9 +370,13 @@ export default function SketchPage() {
           !isFullscreen && ( reserveLeft || reserveRight || dockedDesktop ) && "md:w-auto"
         ) }
         style={ isFullscreen ? undefined : {
+          // Every layout now ends on the transport bar, so its height comes
+          // off the viewport in all of them; the docked top bar (3rem) and the
+          // filmstrip band only exist in the docked one, and the drawer
+          // variable is 0 outside mobile.
           height: dockedDesktop
-            ? `calc(100% - 3rem - var(${ STUDIO_FILMSTRIP_HEIGHT_VAR }, 0px) - var(${ STUDIO_DRAWER_HEIGHT_VAR }, 0px))`
-            : `calc(100% - var(${ STUDIO_DRAWER_HEIGHT_VAR }, 0px))`
+            ? `calc(100% - 3rem - var(${ STUDIO_TRANSPORT_HEIGHT_VAR }, 0px) - var(${ STUDIO_FILMSTRIP_HEIGHT_VAR }, 0px) - var(${ STUDIO_DRAWER_HEIGHT_VAR }, 0px))`
+            : `calc(100% - var(${ STUDIO_TRANSPORT_HEIGHT_VAR }, 0px) - var(${ STUDIO_DRAWER_HEIGHT_VAR }, 0px))`
         } }
         hidden={ !sketchLoaded }
       >
@@ -424,30 +422,6 @@ export default function SketchPage() {
           )}
 
           <EngineSketchRenderer />
-
-          {/* On desktop the scrubber lives in the floating transport bar (play
-              / scrub / record) rendered by SketchOptions; only the narrow
-              layout keeps it welded under the canvas, where there is no room
-              for another floating pill. */}
-          {sketchLoaded && !capturing && !bareFullscreen && !isDesktop && (
-            <div
-              className="mt-2 mb-4 truncate"
-              data-no-drag="true"
-              style={
-                {
-                  "--scale-factor": "var(--viewport-scale, 1)",
-                  transform: "scale(calc(1 / var(--scale-factor)))",
-                  transformOrigin: "top left",
-                  width: "calc(100% * var(--scale-factor))"
-                } as React.CSSProperties
-              }
-            >
-              <AnimationProgressionBar
-                onSeekStart={ handleSeekStart }
-                onSeekEnd={ handleSeekEnd }
-              />
-            </div>
-          )}
         </ScalableViewport>
 
         {/* HUD fullscreen in the docked layout hides the top bar (and with it

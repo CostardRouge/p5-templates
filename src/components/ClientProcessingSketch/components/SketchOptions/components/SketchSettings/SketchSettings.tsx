@@ -30,6 +30,9 @@ import type {
 import {
   injectSketchSchemas
 } from "./utils/injectSketchSchemas";
+import {
+  STUDIO_TRANSPORT_HEIGHT_VAR
+} from "../../constants/drawer-events";
 
 type SketchSettingsProps = {
   basePath?: string;
@@ -46,6 +49,16 @@ type SketchSettingsProps = {
   /** Expand state of the sketch's own "N options" section. */
   sketchSectionExpanded?: boolean;
   onSketchSectionToggle?: ( expanded: boolean ) => void;
+};
+
+// The transport bar is the floor of every layout: the docked rail stops on it,
+// the floating card clears it by the usual island margin. Both read the height
+// back from the variable SketchOptions publishes rather than repeating 3rem.
+const RAIL_BOTTOM = {
+  bottom: `var(${ STUDIO_TRANSPORT_HEIGHT_VAR }, 0px)`
+};
+const ISLAND_BOTTOM = {
+  bottom: `calc(var(${ STUDIO_TRANSPORT_HEIGHT_VAR }, 0px) + 1rem)`
 };
 
 const HEADER_ACTION_CLASS =
@@ -192,17 +205,15 @@ export default function SketchSettings( {
     activeSlideIndex
   );
 
-  // The panel header names the surface and its scope; the option count moved
-  // down to title the sketch's own block, where it actually applies.
+  // The panel header names the surface, nothing else. It used to append
+  // "slide N", but the selected slide is named once — by the filmstrip's
+  // highlighted thumbnail — and repeating it here made two panels claim the
+  // same object. The option count likewise moved down to title the sketch's
+  // own block, where it actually applies.
   const headerLabel = (
     <>
       <SlidersHorizontal className="h-3.5 w-3.5 shrink-0" />
       <span className="truncate font-medium">Controls</span>
-      {activeSlideIndex !== undefined && (
-        <span className="truncate text-label">
-          slide {activeSlideIndex + 1}
-        </span>
-      )}
     </>
   );
 
@@ -257,7 +268,10 @@ export default function SketchSettings( {
   // rail's bottom edge when the form is short).
   if ( docked ) {
     return (
-      <div className="absolute z-40 left-0 top-12 bottom-0 w-80 flex flex-col glass border-r border-theme shadow-lg">
+      <div
+        className="absolute z-40 left-0 top-12 w-80 flex flex-col glass border-r border-theme shadow-lg"
+        style={ RAIL_BOTTOM }
+      >
         <div className="flex items-center gap-1.5 px-3 py-2 text-xs text-foreground border-b border-theme">
           {headerLabel}
         </div>
@@ -281,7 +295,10 @@ export default function SketchSettings( {
   // (w-80 <-> w-fit, rounded-2xl <-> rounded-full) that made the card morph
   // into a pill mid-animation — neither is interpolatable.
   return (
-    <div className="absolute z-50 left-4 bottom-4 w-80 max-h-[calc(80svh-5rem)] flex flex-col glass shadow-lg rounded-2xl border border-theme overflow-hidden">
+    <div
+      className="absolute z-50 left-4 w-80 max-h-[calc(80svh-5rem)] flex flex-col glass shadow-lg rounded-2xl border border-theme overflow-hidden"
+      style={ ISLAND_BOTTOM }
+    >
       <div className="flex items-center gap-1.5 px-3 py-2 text-xs text-foreground border-b border-theme">
         {headerLabel}
       </div>

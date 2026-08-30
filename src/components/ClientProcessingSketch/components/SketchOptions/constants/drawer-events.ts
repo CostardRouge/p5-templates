@@ -1,11 +1,4 @@
 /**
- * Window event dispatched (e.g. by the engine controls record shortcut) to
- * open the mobile studio drawer on its Export tab. Lives in its own module so
- * importers don't pull the whole drawer subtree into their bundle.
- */
-export const OPEN_EXPORT_DRAWER_EVENT = "studio:open-export-drawer";
-
-/**
  * Window event dispatched by the on-canvas content-item drag (contentDrag.js)
  * when an item is pressed/grabbed, so the options panel can reveal that item's
  * form section — open its zone (global content / the right slide), open the
@@ -32,3 +25,12 @@ export const STUDIO_DRAWER_HEIGHT_VAR = "--studio-drawer-height";
  * truth for the band's size in all three places.
  */
 export const STUDIO_FILMSTRIP_HEIGHT_VAR = "--studio-filmstrip-height";
+
+/**
+ * Root-level CSS variable holding the height of the transport bar, the one
+ * full-width bar pinned to the bottom edge in every layout. Everything above
+ * it — the docked rails, the filmstrip band, the floating islands, the mobile
+ * stack and the sketch viewport itself — offsets by this value, so the bar's
+ * height is stated once.
+ */
+export const STUDIO_TRANSPORT_HEIGHT_VAR = "--studio-transport-height";
