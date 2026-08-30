@@ -58,6 +58,43 @@ type SizeOverride = { width?: number;
   height?: number };
 
 /**
+ * The "add a slide" slot: a dashed tile the shape and size of the slide that
+ * pressing it would create, so it reads as the next position in the deck
+ * rather than as a button parked next to it. Used by both branches below —
+ * an empty deck is the same row with nothing but this slot in it.
+ */
+function AddSlideTile( {
+  onAdd,
+  disabled,
+  height,
+  aspectRatio,
+  label
+}: {
+  onAdd: () => void;
+  disabled: boolean;
+  height: number;
+  aspectRatio: number;
+  label: string;
+} ) {
+  return (
+    <button
+      type="button"
+      onClick={ onAdd }
+      disabled={ disabled }
+      className="flex shrink-0 flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-theme text-label hover:bg-hover hover:text-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      style={ {
+        height,
+        width: Math.round( height * aspectRatio )
+      } }
+      aria-label={ label }
+      title={ label }
+    >
+      <Plus className="h-4 w-4" />
+    </button>
+  );
+}
+
+/**
  * Horizontal strip of slide thumbnails — the deck laid out in the page body,
  * Keynote-style, instead of folded into an options accordion. Slides are a
  * collection of variants (each one on its way to being a preset), not a
@@ -156,29 +193,38 @@ export default function SlideFilmstrip( {
     );
   };
 
+  // A new slide inherits the active slide's settings (see useSlideManagement),
+  // so the add slot takes that slide's shape — and the canvas's when the deck
+  // is empty (an out-of-range index resolves to the global size).
+  const addAspectRatio = aspectRatioFor( activeIndex ?? -1 );
+
   if ( slideFields.length === 0 ) {
+    // Same box as the populated row — padding included. Without it the tile
+    // set the card's height and its 16px corners read as a pill next to the
+    // other floating panels.
     return (
       <div
         className={ clsx(
-          "flex h-full w-full items-center justify-between gap-3 px-3",
+          "flex h-full w-full items-center gap-3 px-3 py-1.5",
           className
         ) }
       >
-        <span className="truncate text-xs text-label">
-          Single view — the first slide starts a collection from what is on
-          screen.
-        </span>
-
-        <button
-          type="button"
-          onClick={ onAdd }
+        <AddSlideTile
+          onAdd={ onAdd }
           disabled={ isAdding }
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-dashed border-theme px-3 py-1.5 text-xs text-foreground hover:bg-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          aria-label="Add first slide"
-        >
-          <Plus className="h-3.5 w-3.5" />
-          Add slide
-        </button>
+          height={ thumbnailHeight }
+          aspectRatio={ addAspectRatio }
+          label="Add first slide"
+        />
+
+        {/* Desktop-only copy: in the phone's deck card the slot speaks for
+            itself and this sentence only ever truncated. */}
+        <span className="hidden min-w-0 md:block">
+          <span className="line-clamp-2 text-xs text-label">
+            Single view — the first slide starts a collection from what is on
+            screen.
+          </span>
+        </span>
       </div>
     );
   }
@@ -249,20 +295,13 @@ export default function SlideFilmstrip( {
           } )}
         </SortableContext>
 
-        <button
-          type="button"
-          onClick={ onAdd }
+        <AddSlideTile
+          onAdd={ onAdd }
           disabled={ isAdding }
-          className="flex shrink-0 flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-theme text-label hover:bg-hover hover:text-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          style={ {
-            height: thumbnailHeight,
-            width: Math.round( thumbnailHeight * 0.8 )
-          } }
-          aria-label="Add new slide"
-          title="Add new slide"
-        >
-          <Plus className="h-4 w-4" />
-        </button>
+          height={ thumbnailHeight }
+          aspectRatio={ addAspectRatio }
+          label="Add new slide"
+        />
       </div>
     </DndContext>
   );

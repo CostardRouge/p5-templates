@@ -14,9 +14,6 @@ import GenericObjectForm
   from "./RootSettings/components/GenericObjectForm/GenericObjectForm";
 import RootSettings from "./RootSettings/RootSettings";
 import PanelSection from "./PanelSection";
-import SlideFilmstrip, {
-  type SlideFilmstripProps
-} from "./SlideFilmstrip";
 import SketchAssetsProvider from "./SketchAssetsProvider/SketchAssetsProvider";
 import RecordingLockBanner from "./RecordingLockBanner";
 import ImportSuccessBanner from "./ImportSuccessBanner";
@@ -45,10 +42,10 @@ type MobileStudioDrawerProps = {
   jobId?: string;
   /** Content tab: the content rail sections. */
   body: Omit<OptionsPanelBodyProps, "scrollable">;
-  /** Slide strip pinned above the tab content, visible on every tab. */
-  filmstrip: Omit<SlideFilmstripProps, "thumbnailHeight" | "className">;
   /** The transport bar, rendered above the drawer and visible in both states. */
   transport?: React.ReactNode;
+  /** The slide deck, its own card between the transport and the drawer. */
+  deck?: React.ReactNode;
   /** Expand state of the "canvas & animation" section (shared with desktop). */
   rootSettingsExpanded?: boolean;
   onRootSettingsToggle?: ( expanded: boolean ) => void;
@@ -64,13 +61,19 @@ type MobileStudioDrawerProps = {
 };
 
 /**
- * The mobile studio's bottom stack: the transport bar, and under it a drawer
- * whose Sketch / Content tabs share one surface (and the form context owned by
- * SketchOptions), so the panels never compete for the small screen.
+ * The mobile studio's bottom stack: three floating cards — the transport bar,
+ * the slide deck, and a drawer whose Sketch / Content tabs share one surface
+ * (and the form context owned by SketchOptions), so the panels never compete
+ * for the small screen. Same shape as the desktop floating layout, stacked
+ * instead of spread across two columns.
+ *
+ * The deck is a card of its own rather than the first row of the drawer's body:
+ * it is navigation, not a setting, so changing slide must not require opening
+ * the settings drawer — nor scrolling the panel that holds them.
  *
  * Recording and export are NOT a tab: they live in `CaptureDialog`, opened as a
  * bottom sheet by the transport's record dot — the same single home the desktop
- * layouts use. Desktop keeps the separate floating panels.
+ * layouts use.
  */
 export default function MobileStudioDrawer( {
   expanded,
@@ -79,8 +82,8 @@ export default function MobileStudioDrawer( {
   activeSlideId,
   jobId,
   body,
-  filmstrip,
   transport,
+  deck,
   rootSettingsExpanded,
   onRootSettingsToggle,
   sketchSectionExpanded,
@@ -176,17 +179,19 @@ export default function MobileStudioDrawer( {
     >
       {transport}
 
+      {deck}
+
       <CollapsibleItem
         expanded={ expanded }
         onToggle={ onToggle }
         swipeToCollapse
         keepMounted
         className={ clsx(
-          "flex flex-col glass shadow-lg rounded-xl border border-theme",
-          // Float like the app menu / zoom controls: full border and corner
-          // radius (rounded-xl, not a pill or a flush bottom sheet). Collapsed
-          // spans the full width too, with the expand chevron pinned right like
-          // the collapse one when open.
+          "flex flex-col glass shadow-lg rounded-2xl border border-theme",
+          // Float like the transport and the deck above it: same border and
+          // same 16px radius as every other panel, never a pill or a flush
+          // bottom sheet. Collapsed spans the full width too, with the expand
+          // chevron pinned right like the collapse one when open.
           expanded
             ? "max-h-[50svh] overflow-y-auto overscroll-contain"
             : "overflow-hidden"
@@ -278,12 +283,6 @@ export default function MobileStudioDrawer( {
               />
             </div>
           )}
-
-          {/* Slide strip: navigation, not a setting — visible on every tab so
-              switching slides never requires switching tabs. */}
-          <div className="mb-2">
-            <SlideFilmstrip { ...filmstrip } thumbnailHeight={ 48 } />
-          </div>
 
           {/* Tabs stay mounted (hidden) so form fields and the sketch's own
               state survive switching. */}

@@ -704,7 +704,12 @@ export default function SketchOptions( {
                       height: `var(${ STUDIO_FILMSTRIP_HEIGHT_VAR }, 0px)`
                     } }
                   >
-                    <SlideFilmstrip { ...filmstripProps } thumbnailHeight={ 72 } />
+                    {/* The band is 3rem tall when the deck is empty, so the
+                        add slot shrinks with it rather than overflowing. */}
+                    <SlideFilmstrip
+                      { ...filmstripProps }
+                      thumbnailHeight={ hasSlides ? 72 : 32 }
+                    />
                   </div>
                 )}
 
@@ -770,7 +775,6 @@ export default function SketchOptions( {
                 activeSlideId={ activeSlideId }
                 jobId={ jobId }
                 body={ bodyProps }
-                filmstrip={ filmstripProps }
                 rootSettingsExpanded={ collapsibleStates.rootSettings }
                 onRootSettingsToggle={ ( expanded ) => setSection(
                   "rootSettings",
@@ -789,6 +793,11 @@ export default function SketchOptions( {
                     onSeekStart={ onSeekStart }
                     onSeekEnd={ onSeekEnd }
                   />
+                }
+                deck={
+                  <div className="glass border border-theme rounded-2xl shadow-lg overflow-hidden">
+                    <SlideFilmstrip { ...filmstripProps } thumbnailHeight={ 48 } />
+                  </div>
                 }
                 lifecycle={ lifecycle }
                 bannerCloning={ bannerCloning }
