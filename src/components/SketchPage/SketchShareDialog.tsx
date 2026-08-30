@@ -529,7 +529,10 @@ export default function SketchShareDialog() {
         onClick={ () => setOpen( true ) }
         title="Share / embed"
         aria-label="Share or embed this sketch"
-        className="inline-flex h-full items-center justify-center border-r border-border px-3 transition-colors hover:bg-hover group"
+        // No trailing divider: this is the last control in the engine-controls
+        // island now that playback and capture live in the transport bar, and
+        // a border-r would leave a rule hanging off the end of the row.
+        className="inline-flex h-full items-center justify-center px-3 transition-colors hover:bg-hover group"
       >
         <Share2 className="h-4 w-4 text-foreground/70 transition-colors group-hover:text-foreground" />
       </button>

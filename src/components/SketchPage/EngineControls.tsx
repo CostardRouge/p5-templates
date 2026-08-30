@@ -1,30 +1,21 @@
 "use client";
 
-import {
-  Camera, Loader2, Pause, Play
-} from "lucide-react";
 import Github from "@/components/ui/GithubIcon";
 import Link from "next/link";
 import {
-  useRef, useState
-} from "react";
-import clsx from "clsx";
-import {
   resolveSketchPath
 } from "@/engines/metadata";
-import {
-  captureFreshPng, downloadCanvasPng
-} from "@/lib/canvasSnapshot";
 import useSketch from "../ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
 import SketchShareDialog from "./SketchShareDialog";
 
-type ThumbnailSaveState = "idle" | "saving" | "done" | "error";
-
 /**
- * Engine-agnostic playback controls.
+ * What the sketch *is*, rather than what it is doing: a link to its source and
+ * the share/embed dialog.
  *
- * Uses the `SketchEngine` instance from context rather than calling
- * p5-specific globals like `window.toggleLoop()`.
+ * Playback and still capture used to sit here too, duplicating the transport
+ * bar an island's width away from the scrubber they belong with. Both moved —
+ * play/pause to `TransportBar`, the snapshot (dev double-click included) to
+ * `SnapshotButton` inside it.
  *
  * `variant` "floating" (default) renders the rounded island anchored to the
  * top-left of the viewport; "bar" renders the buttons flat for hosting inside
@@ -37,108 +28,9 @@ export function EngineControls( {
 } = {} ) {
   const [
     {
-      engineId, name, engine, looping, browserRecording
-    },
-    dispatch
+      engineId, name
+    }
   ] = useSketch();
-
-  const [
-    thumbnailSaveState,
-    setThumbnailSaveState
-  ] = useState<ThumbnailSaveState>( "idle" );
-  const [
-    thumbnailErrorMessage,
-    setThumbnailErrorMessage
-  ] = useState<string | null>( null );
-
-  const isDev = process.env.NODE_ENV === "development";
-  const singleClickTimerRef = useRef<ReturnType<typeof setTimeout> | null>( null );
-
-  const downloadCanvasAsPng = () => downloadCanvasPng(
-    engine,
-    name
-  );
-
-  const handleCaptureClick = () => {
-    if ( thumbnailSaveState === "saving" ) {
-      return;
-    }
-
-    // In dev, defer the download so a double-click can cancel it and trigger
-    // thumbnail save instead. Outside dev, download immediately.
-    if ( !isDev ) {
-      downloadCanvasAsPng();
-      return;
-    }
-
-    if ( singleClickTimerRef.current ) {
-      clearTimeout( singleClickTimerRef.current );
-    }
-
-    singleClickTimerRef.current = setTimeout(
-      () => {
-        singleClickTimerRef.current = null;
-        downloadCanvasAsPng();
-      },
-      250
-    );
-  };
-
-  const handleSaveCanvasAsThumbnail = async() => {
-    if ( singleClickTimerRef.current ) {
-      clearTimeout( singleClickTimerRef.current );
-      singleClickTimerRef.current = null;
-    }
-
-    if ( !isDev || thumbnailSaveState === "saving" ) {
-      return;
-    }
-
-    setThumbnailSaveState( "saving" );
-    setThumbnailErrorMessage( null );
-
-    try {
-      const dataUrl = await captureFreshPng( engine );
-
-      if ( !dataUrl ) {
-        throw new Error( "No canvas found" );
-      }
-
-      const res = await fetch(
-        "/api/dev/thumbnails/save-from-canvas",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify( {
-            sketch: name,
-            engineId,
-            imagePngBase64: dataUrl
-          } )
-        }
-      );
-
-      if ( !res.ok ) {
-        const text = await res.text();
-
-        throw new Error( text || `HTTP ${ res.status }` );
-      }
-
-      setThumbnailSaveState( "done" );
-      setTimeout(
-        () => setThumbnailSaveState( "idle" ),
-        1500
-      );
-    } catch( err ) {
-      setThumbnailErrorMessage( err instanceof Error ? err.message : String( err ) );
-      setThumbnailSaveState( "error" );
-      setTimeout(
-        () => setThumbnailSaveState( "idle" ),
-        3000
-      );
-    }
-  };
 
   const githubRepoUrl = process.env.NEXT_PUBLIC_GITHUB_REPO_URL;
   const sketchPath = githubRepoUrl ? resolveSketchPath(
@@ -166,71 +58,7 @@ export function EngineControls( {
           <Github className="h-4 w-4 text-foreground/70 group-hover:text-foreground transition-colors" />
         </Link>
       ) }
-      <button
-        onClick={ () => {
-          if ( looping ) {
-            engine?.pause();
-          } else {
-            engine?.play();
-          }
-
-          dispatch( {
-            type: "SET_LOOPING",
-            payload: !looping
-          } );
-        } }
-        disabled={ browserRecording }
-        title={
-          browserRecording
-            ? "Locked while recording"
-            : looping
-              ? "Pause animation"
-              : "Play animation"
-        }
-        aria-label={ looping ? "Pause animation" : "Play animation" }
-        className="h-full px-3 hover:bg-hover transition-colors border-r border-border group inline-flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
-      >
-        {looping ? (
-          <Pause className="h-4 w-4 text-foreground/70 group-hover:text-foreground transition-colors" />
-        ) : (
-          <Play className="h-4 w-4 text-foreground/70 group-hover:text-foreground transition-colors" />
-        )}
-      </button>
-
       <SketchShareDialog />
-
-      <button
-        title={
-          thumbnailSaveState === "error"
-            ? ( thumbnailErrorMessage ?? "Error" )
-            : isDev
-              ? "Save canvas as image (double-click: save as sketch thumbnail 1x + 2x)"
-              : "Save canvas as image"
-        }
-        aria-label="Save canvas as image"
-        disabled={ thumbnailSaveState === "saving" }
-        onClick={ handleCaptureClick }
-        onDoubleClick={ handleSaveCanvasAsThumbnail }
-        className="inline-flex h-full px-3 hover:bg-hover transition-colors group items-center justify-center"
-      >
-        {thumbnailSaveState === "saving" ? (
-          <Loader2 className="h-4 w-4 text-yellow-400/70 animate-spin" />
-        ) : (
-          <Camera
-            className={ clsx(
-              "h-4 w-4 transition-colors",
-              {
-                "text-foreground/70 group-hover:text-foreground":
-                    thumbnailSaveState === "idle",
-                "text-green-400":
-                    thumbnailSaveState === "done",
-                "text-red-400":
-                    thumbnailSaveState === "error"
-              }
-            ) }
-          />
-        )}
-      </button>
     </>
   );
 
