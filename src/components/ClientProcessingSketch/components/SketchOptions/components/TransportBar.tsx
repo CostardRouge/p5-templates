@@ -91,8 +91,11 @@ export default function TransportBar( {
     <div
       role="group"
       aria-label="Transport"
+      // A bar, not an island: full width, flush with the bottom edge, square
+      // corners and a single top rule. It is the floor every other panel
+      // stacks on, so it carries no radius and no shadow of its own.
       className={ clsx(
-        "flex items-center gap-2 rounded-2xl border border-theme glass px-2 py-1.5 shadow-lg",
+        "flex h-12 w-full items-center gap-2 border-t border-theme glass px-3",
         className
       ) }
       style={ style }

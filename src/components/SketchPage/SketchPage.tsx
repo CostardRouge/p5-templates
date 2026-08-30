@@ -45,7 +45,8 @@ import DockedTopBar from "@/components/SketchPage/DockedTopBar";
 import getSketchThumbnailURL from "@/utils/getSketchThumbnailURL";
 import {
   STUDIO_DRAWER_HEIGHT_VAR,
-  STUDIO_FILMSTRIP_HEIGHT_VAR
+  STUDIO_FILMSTRIP_HEIGHT_VAR,
+  STUDIO_TRANSPORT_HEIGHT_VAR
 } from "@/components/ClientProcessingSketch/components/SketchOptions/constants/drawer-events";
 
 const SketchOptions = dynamic( () =>
@@ -369,9 +370,13 @@ export default function SketchPage() {
           !isFullscreen && ( reserveLeft || reserveRight || dockedDesktop ) && "md:w-auto"
         ) }
         style={ isFullscreen ? undefined : {
+          // Every layout now ends on the transport bar, so its height comes
+          // off the viewport in all of them; the docked top bar (3rem) and the
+          // filmstrip band only exist in the docked one, and the drawer
+          // variable is 0 outside mobile.
           height: dockedDesktop
-            ? `calc(100% - 3rem - var(${ STUDIO_FILMSTRIP_HEIGHT_VAR }, 0px) - var(${ STUDIO_DRAWER_HEIGHT_VAR }, 0px))`
-            : `calc(100% - var(${ STUDIO_DRAWER_HEIGHT_VAR }, 0px))`
+            ? `calc(100% - 3rem - var(${ STUDIO_TRANSPORT_HEIGHT_VAR }, 0px) - var(${ STUDIO_FILMSTRIP_HEIGHT_VAR }, 0px) - var(${ STUDIO_DRAWER_HEIGHT_VAR }, 0px))`
+            : `calc(100% - var(${ STUDIO_TRANSPORT_HEIGHT_VAR }, 0px) - var(${ STUDIO_DRAWER_HEIGHT_VAR }, 0px))`
         } }
         hidden={ !sketchLoaded }
       >

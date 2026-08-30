@@ -25,7 +25,7 @@ import {
   useSketchSettings, SketchSettingsActions
 } from "./SketchSettings/SketchSettings";
 import {
-  STUDIO_DRAWER_HEIGHT_VAR
+  STUDIO_DRAWER_HEIGHT_VAR, STUDIO_TRANSPORT_HEIGHT_VAR
 } from "../constants/drawer-events";
 import type {
   RecordingLifecycle
@@ -42,9 +42,7 @@ type MobileStudioDrawerProps = {
   jobId?: string;
   /** Content tab: the content rail sections. */
   body: Omit<OptionsPanelBodyProps, "scrollable">;
-  /** The transport bar, rendered above the drawer and visible in both states. */
-  transport?: React.ReactNode;
-  /** The slide deck, its own card between the transport and the drawer. */
+  /** The slide deck, its own card above the drawer. */
   deck?: React.ReactNode;
   /** Expand state of the "canvas & animation" section (shared with desktop). */
   rootSettingsExpanded?: boolean;
@@ -61,11 +59,11 @@ type MobileStudioDrawerProps = {
 };
 
 /**
- * The mobile studio's bottom stack: three floating cards — the transport bar,
- * the slide deck, and a drawer whose Sketch / Content tabs share one surface
- * (and the form context owned by SketchOptions), so the panels never compete
- * for the small screen. Same shape as the desktop floating layout, stacked
- * instead of spread across two columns.
+ * The mobile studio's stack: two floating cards — the slide deck and a drawer
+ * whose Sketch / Content tabs share one surface (and the form context owned by
+ * SketchOptions) — riding above the transport bar that SketchOptions pins to
+ * the bottom edge in every layout. Same shape as the desktop floating layout,
+ * stacked instead of spread across two columns.
  *
  * The deck is a card of its own rather than the first row of the drawer's body:
  * it is navigation, not a setting, so changing slide must not require opening
@@ -82,7 +80,6 @@ export default function MobileStudioDrawer( {
   activeSlideId,
   jobId,
   body,
-  transport,
   deck,
   rootSettingsExpanded,
   onRootSettingsToggle,
@@ -112,11 +109,12 @@ export default function MobileStudioDrawer( {
     setActiveTab
   ] = useState<Tab>( "sketch" );
 
-  // Publish the height of the whole bottom stack — transport plus drawer — so
-  // the sketch viewport can shrink to the area above it (and fit-to-viewport
-  // targets the visible half). Measured in BOTH states: collapsed, the stack is
-  // still a transport bar plus a pill, and reserving 0 for it let the canvas
-  // run underneath. The ResizeObserver tracks the open/close animation too.
+  // Publish the height of the stack — deck plus drawer, above the transport
+  // bar's own variable — so the sketch viewport can shrink to the area above it
+  // (and fit-to-viewport targets the visible half). Measured in BOTH states:
+  // collapsed, the stack is still a deck card plus a pill, and reserving 0 for
+  // it let the canvas run underneath. The ResizeObserver tracks the open/close
+  // animation too.
   const rootRef = useRef<HTMLDivElement | null>( null );
 
   useEffect(
@@ -175,10 +173,11 @@ export default function MobileStudioDrawer( {
     // trap. Scrolling stays on the collapsible below.
     <div
       ref={ rootRef }
-      className="absolute left-2 right-2 bottom-2 z-[60] flex flex-col gap-2"
+      className="absolute left-2 right-2 z-[60] flex flex-col gap-2"
+      style={ {
+        bottom: `calc(var(${ STUDIO_TRANSPORT_HEIGHT_VAR }, 0px) + 0.5rem)`
+      } }
     >
-      {transport}
-
       {deck}
 
       <CollapsibleItem
