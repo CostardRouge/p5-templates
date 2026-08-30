@@ -184,6 +184,40 @@ export function groupKeyPaths( keys ) {
 }
 
 /**
+ * Every distinct ancestor path of a flat key-path list, outermost first
+ * ("grid.cell.size" → "grid", "grid.cell").
+ *
+ * Used by the breakdown's key picker, where a whole group is a legitimate
+ * entry: `matchesKeyList` treats an ancestor path as covering its subtree.
+ *
+ * @param { string[] } keys
+ * @returns { string[] }
+ */
+export function collectBranchPaths( keys ) {
+  /** @type { string[] } */
+  const branches = [];
+  const seen = new Set();
+
+  for ( const key of keys ) {
+    const segments = String( key ).split( "." );
+
+    for ( let i = 1; i < segments.length; i++ ) {
+      const branch = segments.slice(
+        0,
+        i
+      ).join( "." );
+
+      if ( !seen.has( branch ) ) {
+        seen.add( branch );
+        branches.push( branch );
+      }
+    }
+  }
+
+  return branches;
+}
+
+/**
  * Flatten a sketch-settings object into the list of leaf key-paths whose values
  * are scalars (number/string/boolean) — the bindable sources for HUD widgets.
  */

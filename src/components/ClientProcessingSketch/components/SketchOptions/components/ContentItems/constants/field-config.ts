@@ -218,6 +218,13 @@ interface SourceSelectConfig extends BaseConfig {
   component: "source-select";
 }
 
+// Parameter-key picker for key lists (breakdown snap / exclude): the sketch's
+// key-paths plus their groups, derived at render time (see ControlledKeySelect).
+interface KeySelectConfig extends BaseConfig {
+  component: "key-select";
+  placeholder?: string;
+}
+
 interface AssetInputConfig extends BaseConfig {
   component: "asset";
   /** Asset kind id, e.g. "images", "videos". */
@@ -282,6 +289,7 @@ export type FieldConfig =
   | EasingConfig
   | Vector2DConfig
   | SourceSelectConfig
+  | KeySelectConfig
   | AssetInputConfig
   | AssetStackConfig
   | WebcamDeviceSelectConfig
@@ -919,8 +927,8 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
           component: "item-list",
           itemConfig: {
             label: "Key",
-            component: "text",
-            placeholder: "e.g. seed or sites.seed"
+            component: "key-select",
+            placeholder: "Pick a key or group…"
           }
         },
         excludeKeys: {
@@ -928,8 +936,8 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
           component: "item-list",
           itemConfig: {
             label: "Key",
-            component: "text",
-            placeholder: "e.g. backgroundColor"
+            component: "key-select",
+            placeholder: "Pick a key or group…"
           }
         }
       }

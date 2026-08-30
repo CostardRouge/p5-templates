@@ -12,6 +12,9 @@ import {
   looksLikeVector,
   nearlyEqual
 } from "./format.js";
+import {
+  matchesKeyList
+} from "../keyMatch.js";
 
 // Hard cap so a 100-param sketch stays a watchable narration: overflow steps
 // are flagged — they get no schedule window, stay at their final values from
@@ -28,19 +31,12 @@ function isPlainObject( value ) {
   return value != null && typeof value === "object" && !Array.isArray( value );
 }
 
-// Same matching rule as lerpParams' shouldSnap: a key list entry matches the
-// full dotted path OR the bare leaf name ("seed" matches "sites.seed").
-export function matchesKeyList(
-  path, keys
-) {
-  if ( !Array.isArray( keys ) || !keys.length ) {
-    return false;
-  }
-
-  const leaf = path.includes( "." ) ? path.slice( path.lastIndexOf( "." ) + 1 ) : path;
-
-  return keys.includes( path ) || keys.includes( leaf );
-}
+// Re-exported so the existing importers keep their entry point; the rule now
+// lives in ../keyMatch.js because lerpParams' snap check must apply the very
+// same one (full path, bare leaf name, or ancestor path).
+export {
+  matchesKeyList
+};
 
 export function getByPath(
   obj, path

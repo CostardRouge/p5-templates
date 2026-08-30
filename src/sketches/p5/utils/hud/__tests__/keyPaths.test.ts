@@ -5,7 +5,7 @@
  */
 
 import {
-  groupKeyPaths
+  collectBranchPaths, groupKeyPaths
 } from "../keyPaths.js";
 
 describe(
@@ -118,6 +118,37 @@ describe(
           "colors.text",
           "colors.background"
         ] );
+      }
+    );
+  }
+);
+
+describe(
+  "collectBranchPaths",
+  () => {
+    it(
+      "lists every distinct ancestor path, outermost first",
+      () => {
+        expect( collectBranchPaths( [
+          "seed",
+          "colors.text",
+          "colors.background",
+          "grid.cell.size"
+        ] ) ).toEqual( [
+          "colors",
+          "grid",
+          "grid.cell"
+        ] );
+      }
+    );
+
+    it(
+      "returns nothing for a flat key list",
+      () => {
+        expect( collectBranchPaths( [
+          "seed",
+          "count"
+        ] ) ).toEqual( [] );
       }
     );
   }
