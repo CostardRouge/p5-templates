@@ -19,6 +19,7 @@ import {
   Moon,
   Paintbrush,
   PanelsLeftRight,
+  Wrench,
   Share2,
   Sun,
   Video
@@ -51,6 +52,9 @@ import useMediaQuery from "@/hooks/useMediaQuery";
 import {
   usePanelDock
 } from "@/hooks/usePanelDock";
+import {
+  useDevActions
+} from "@/hooks/useDevActions";
 import sleep from "@/utils/sleep";
 
 type MenuBarProps = {
@@ -332,6 +336,12 @@ function MenuBar( {
     ]
   );
 
+  // Dev affordances only exist in development, and only show once asked for —
+  // the pending badge in particular sat over the canvas in every screenshot.
+  const {
+    devActionsVisible, devActionsAvailable, toggleDevActions
+  } = useDevActions();
+
   if ( searchParams.get( "capturing" ) === "" ) {
     return null;
   }
@@ -399,7 +409,8 @@ function MenuBar( {
     return pathname.startsWith( href );
   };
 
-  const hasPendingActions = hasMissingThumbnails || hasMissingPreviews;
+  const hasPendingActions =
+    devActionsVisible && ( hasMissingThumbnails || hasMissingPreviews );
 
   const renderInline = Boolean( slot?.slotEl && slot.inlineVisible );
 
@@ -489,7 +500,7 @@ function MenuBar( {
           </>
         )}
 
-        {IS_DEV && (
+        {devActionsVisible && (
           <>
             <Divider />
             <SectionLabel>Debug</SectionLabel>
@@ -610,6 +621,33 @@ function MenuBar( {
               )}
             </MenuItem>
           </>
+        )}
+
+        {/* The studio's dev affordances — the pending badge, the Debug section,
+            the inspector's save-defaults / thumbnail / preview trio and the
+            export dialog's preview recorder — are hidden by default so the app
+            reads (and screenshots) as the shipped product. */}
+        {devActionsAvailable && (
+          <MenuItem>
+            {( {
+              focus
+            } ) => (
+              <button
+                type="button"
+                onClick={ toggleDevActions }
+                className={ clsx(
+                  itemClass,
+                  focus && "bg-hover"
+                ) }
+              >
+                <Wrench className="h-4 w-4 text-foreground/70" />
+                <span className="flex-1 text-left">Display dev actions</span>
+                {devActionsVisible && (
+                  <Check className="h-4 w-4 text-foreground" />
+                )}
+              </button>
+            )}
+          </MenuItem>
         )}
 
         <Divider />

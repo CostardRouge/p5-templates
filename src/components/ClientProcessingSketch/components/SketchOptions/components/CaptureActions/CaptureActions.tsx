@@ -22,6 +22,9 @@ import type {
   SketchOptionInput, SlideOptionInput
 } from "@/types/sketch.types";
 import DevPreviewButton from "./components/DevPreviewButton";
+import {
+  useDevActions
+} from "@/hooks/useDevActions";
 import CompletedActions from "./components/CompletedActions";
 import DraftActions from "./components/DraftActions";
 import FailedActions from "./components/FailedActions";
@@ -37,8 +40,6 @@ import type {
 import type {
   RecordingLifecycle
 } from "../../hooks/useRecordingLifecycle";
-
-const IS_DEV = process.env.NODE_ENV === "development";
 
 export type CaptureActionsRef = {
   saveAsDraft: () => Promise<void>;
@@ -97,6 +98,12 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
     effectiveJob,
     isRecording
   } = lifecycle;
+
+  // Hidden by default so a screenshot of the Export dialog does not show a
+  // dropdown reading "DEV preview:" along its bottom edge.
+  const {
+    devActionsVisible
+  } = useDevActions();
 
   const recorderCapabilities: RecorderCapabilities | null = engine
     ? engine.getRecordingCapabilities(
@@ -723,7 +730,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
         <div className="flex flex-col gap-1 h-auto w-full">
           {/* Dev-only preview capture. Downloadable exports live in the export
               panel; this one writes back into the source tree. */}
-          {IS_DEV && !isRecording && browserRecordingSupported && recorderCapabilities && (
+          {devActionsVisible && !isRecording && browserRecordingSupported && recorderCapabilities && (
             <DevPreviewButton
               capabilities={ recorderCapabilities }
               progress={ browserRecorder.progress }

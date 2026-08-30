@@ -15,6 +15,9 @@ import type {
 import type {
   CaptureActionsRef
 } from "./CaptureActions";
+import {
+  useDevActions
+} from "@/hooks/useDevActions";
 
 // Same chunking rationale as SketchOptions: the recording subtree (mediabunny
 // + gif.js encoders, the action buttons, VideoPreviewModal) only compiles when
@@ -65,6 +68,14 @@ export default function CaptureDialog( {
   browserExportSupported,
   bottomSheet = false
 }: CaptureDialogProps ) {
+  const {
+    devActionsVisible
+  } = useDevActions();
+
+  const hasFooterActions =
+    capture.backendRecording ||
+      ( devActionsVisible && capture.browserRecordingSupported );
+
   useEffect(
     () => {
       if ( !open ) {
@@ -174,9 +185,14 @@ export default function CaptureDialog( {
 
         {/* Backend job actions + the dev preview capture. Options
             import/export deliberately does NOT live here: it is a document
-            concern, and it stays in the content rail's own section. */}
+            concern, and it stays in the content rail's own section.
+
+            CaptureActions stays mounted whatever it renders — it carries the
+            autosave handle — so the strip drops its own border and padding
+            when there is nothing to show, rather than leaving an empty band
+            under the table. */}
         {recordingSupported && (
-          <div className="border-t border-theme p-2">
+          <div className={ clsx( hasFooterActions && "border-t border-theme p-2" ) }>
             <CaptureActions
               forwardedRef={ captureActionsRef }
               activeSlideIndex={ activeSlideIndex }

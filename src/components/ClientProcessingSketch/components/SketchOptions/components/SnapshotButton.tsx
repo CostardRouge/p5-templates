@@ -11,6 +11,9 @@ import {
 import {
   captureFreshPng, downloadCanvasPng
 } from "@/lib/canvasSnapshot";
+import {
+  useDevActions
+} from "@/hooks/useDevActions";
 import useSketch from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
 
 type SnapshotState = "idle" | "saving" | "done" | "error";
@@ -45,7 +48,12 @@ export default function SnapshotButton() {
     setErrorMessage
   ] = useState<string | null>( null );
 
-  const isDev = process.env.NODE_ENV === "development";
+  // With the dev actions off, this is exactly the production button —
+  // including its timing: the 250ms deferral below exists only so a
+  // double-click can beat the download, and it must not tax a plain click.
+  const {
+    devActionsVisible
+  } = useDevActions();
   const singleClickTimerRef = useRef<ReturnType<typeof setTimeout> | null>( null );
 
   const downloadCanvasAsPng = () => downloadCanvasPng(
@@ -58,7 +66,7 @@ export default function SnapshotButton() {
       return;
     }
 
-    if ( !isDev ) {
+    if ( !devActionsVisible ) {
       downloadCanvasAsPng();
 
       return;
@@ -83,7 +91,7 @@ export default function SnapshotButton() {
       singleClickTimerRef.current = null;
     }
 
-    if ( !isDev || state === "saving" ) {
+    if ( !devActionsVisible || state === "saving" ) {
       return;
     }
 
@@ -142,7 +150,7 @@ export default function SnapshotButton() {
       title={
         state === "error"
           ? ( errorMessage ?? "Error" )
-          : isDev
+          : devActionsVisible
             ? "Save the current frame as a PNG (double-click: save as sketch thumbnail 1x + 2x)"
             : "Save the current frame as a PNG"
       }
