@@ -30,10 +30,21 @@ import type {
  */
 const EXPORT_ORIGIN = "export";
 
-/** How long to wait for the canvas to actually reach the target size. */
-const SETTLE_TIMEOUT_MS = 2000;
+/**
+ * How many polled frames to give the canvas to reach the target size.
+ *
+ * Budgeted in FRAMES, not milliseconds, on purpose: the settle is waiting on
+ * the engine's own render loop, and a heavy sketch on a software renderer can
+ * take seconds per frame. A wall-clock budget would abort those exports for
+ * being slow rather than for being wrong. The absolute ceiling below is only
+ * there to catch an engine that has stopped drawing altogether.
+ */
+const SETTLE_FRAME_BUDGET = 120;
 
-/** Consecutive frames the surface must hold its dimensions before we trust it. */
+/** Hard stop for an engine that never draws again. */
+const SETTLE_CEILING_MS = 30_000;
+
+/** Consecutive frames the surface must hold its dimensions after a resize. */
 const STABLE_FRAMES = 2;
 
 export type ExportOverride = {
@@ -136,7 +147,9 @@ async function waitForSurface(
   target: ExportSize,
   signal?: AbortSignal
 ): Promise<void> {
-  const deadline = Date.now() + SETTLE_TIMEOUT_MS;
+  const deadline = Date.now() + SETTLE_CEILING_MS;
+  let framesPolled = 0;
+  let sawMismatch = false;
   let stable = 0;
 
   for ( ;; ) {
@@ -148,22 +161,31 @@ async function waitForSurface(
     }
 
     const surface = readSurface( engine );
-
-    if (
-      surface &&
+    const matches = Boolean( surface &&
         surface.width === target.width &&
-        surface.height === target.height
-    ) {
+        surface.height === target.height );
+
+    if ( matches ) {
+      // Already the right size on the very first look: no resize was needed,
+      // so there is nothing to settle. Waiting out the stability window here
+      // would cost two frames on every variant that happens to match the live
+      // canvas — the most common case there is, and seconds of it on a slow
+      // renderer.
+      if ( !sawMismatch ) {
+        return;
+      }
+
       stable++;
 
       if ( stable >= STABLE_FRAMES ) {
         return;
       }
     } else {
+      sawMismatch = true;
       stable = 0;
     }
 
-    if ( Date.now() > deadline ) {
+    if ( framesPolled >= SETTLE_FRAME_BUDGET || Date.now() > deadline ) {
       const seen = surface
         ? `${ surface.width }x${ surface.height }`
         : "an unreadable surface";
@@ -171,6 +193,7 @@ async function waitForSurface(
       throw new Error( `Canvas did not resize to ${ target.width }x${ target.height } (still ${ seen }).` );
     }
 
+    framesPolled++;
     await nextFrame();
   }
 }

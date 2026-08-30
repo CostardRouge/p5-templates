@@ -209,6 +209,47 @@ describe(
     );
 
     it(
+      "does not wait when the canvas is already the target size",
+      async() => {
+        // The most common case by far: a variant whose size matches the live
+        // canvas. Settling it would cost two render frames for nothing — and
+        // on a heavy sketch a frame is seconds, not milliseconds.
+        let frames = 0;
+        const raf = globalThis.requestAnimationFrame;
+
+        globalThis.requestAnimationFrame = ( ( cb: FrameRequestCallback ) => {
+          frames++;
+
+          return raf( cb );
+        } ) as typeof globalThis.requestAnimationFrame;
+
+        try {
+          const handle = await applyExportOverrides(
+            makeEngine( {
+              width: 1080,
+              height: 1350
+            } ),
+            OPTIONS,
+            {
+              size: {
+                width: 1080,
+                height: 1350
+              },
+              framerate: 30
+            }
+          );
+
+          // Only the single post-redraw frame, never a stability window.
+          expect( frames ).toBe( 1 );
+
+          await handle.restore();
+        } finally {
+          globalThis.requestAnimationFrame = raf;
+        }
+      }
+    );
+
+    it(
       "lifts the gate when the resize never lands, rather than deafening the studio",
       async() => {
         // A surface that never reaches the target — the timeout path.

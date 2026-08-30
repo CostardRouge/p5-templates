@@ -24,12 +24,10 @@ const STORAGE_PREFIX = "sketchbook.export.variants.v1";
 
 type Snapshot = {
   variants: ExportVariant[];
-  selectedId: string | null;
 };
 
 const EMPTY: Snapshot = {
-  variants: [],
-  selectedId: null
+  variants: []
 };
 
 const snapshots = new Map<string, Snapshot>();
@@ -104,8 +102,7 @@ export function ensureVariants(
     ];
 
   const snapshot: Snapshot = {
-    variants,
-    selectedId: variants[ 0 ]?.id ?? null
+    variants
   };
 
   snapshots.set(
@@ -154,18 +151,15 @@ export function addVariant(
   update(
     sketchKey,
     ( snapshot ) => {
-      const variant = makeVariant(
-        preset,
-        options,
-        activeSlideIndex
-      );
-
       return {
         variants: [
           ...snapshot.variants,
-          variant
-        ],
-        selectedId: variant.id
+          makeVariant(
+            preset,
+            options,
+            activeSlideIndex
+          )
+        ]
       };
     }
   );
@@ -183,14 +177,11 @@ export function duplicateVariantById(
         return snapshot;
       }
 
-      const copy = duplicateVariant( source );
-
       return {
         variants: [
           ...snapshot.variants,
-          copy
-        ],
-        selectedId: copy.id
+          duplicateVariant( source )
+        ]
       };
     }
   );
@@ -204,7 +195,6 @@ export function patchVariant(
   update(
     sketchKey,
     ( snapshot ) => ( {
-      ...snapshot,
       variants: snapshot.variants.map( ( variant ) => variant.id === id
         ? {
           ...variant,
@@ -220,27 +210,8 @@ export function removeVariant(
 ): void {
   update(
     sketchKey,
-    ( snapshot ) => {
-      const variants = snapshot.variants.filter( ( variant ) => variant.id !== id );
-
-      return {
-        variants,
-        selectedId: snapshot.selectedId === id
-          ? variants[ 0 ]?.id ?? null
-          : snapshot.selectedId
-      };
-    }
-  );
-}
-
-export function selectVariant(
-  sketchKey: string, id: string
-): void {
-  update(
-    sketchKey,
     ( snapshot ) => ( {
-      ...snapshot,
-      selectedId: id
+      variants: snapshot.variants.filter( ( variant ) => variant.id !== id )
     } )
   );
 }
