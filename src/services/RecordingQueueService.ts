@@ -40,6 +40,10 @@ export class RecordingQueueService {
       "recording-queue",
       {
         connection: Redis.getInstance(),
+        // Namespace every BullMQ key so multiple deployments (e.g. ephemeral PR
+        // preview environments) can safely share a single Redis instance.
+        // Defaults to "bull" — BullMQ's own default — so existing data is untouched.
+        prefix: process.env.BULLMQ_PREFIX || "bull",
         defaultJobOptions: {
           removeOnComplete: this.DEFAULT_JOB_OPTIONS.removeOnComplete,
           removeOnFail: this.DEFAULT_JOB_OPTIONS.removeOnFail,

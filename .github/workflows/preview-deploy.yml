@@ -1,0 +1,67 @@
+name: Preview · Deploy (NAS)
+
+# Full-fidelity ephemeral environment on the self-hosted NAS runner.
+# Activated by adding the `preview` label to a PR; redeploys on every new
+# commit while the label is present. Teardown lives in preview-teardown.yml.
+
+on:
+  pull_request:
+    types: [labeled, synchronize, reopened]
+
+concurrency:
+  group: preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    # Only run when the PR carries the `preview` label.
+    if: contains(github.event.pull_request.labels.*.name, 'preview')
+    runs-on: [self-hosted, nas]
+    steps:
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Provision & launch preview
+        id: up
+        run: bash scripts/preview-up.sh
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PREVIEW_DOMAIN: ${{ vars.PREVIEW_DOMAIN }}
+          SHARED_INFRA_NETWORK: ${{ vars.SHARED_INFRA_NETWORK }}
+          TRAEFIK_NETWORK: ${{ vars.TRAEFIK_NETWORK }}
+          TRAEFIK_ENTRYPOINT: ${{ vars.TRAEFIK_ENTRYPOINT }}
+          POSTGRES_HOST: ${{ vars.POSTGRES_HOST }}
+          REDIS_HOST: ${{ vars.REDIS_HOST }}
+          MINIO_HOST: ${{ vars.MINIO_HOST }}
+          POSTGRES_CONTAINER: ${{ vars.POSTGRES_CONTAINER }}
+          MINIO_CONTAINER: ${{ vars.MINIO_CONTAINER }}
+          POSTGRES_USER: ${{ vars.POSTGRES_USER }}
+          S3_PUBLIC_ENDPOINT: ${{ vars.S3_PUBLIC_ENDPOINT }}
+          S3_REGION: ${{ vars.S3_REGION }}
+          PREVIEW_WORKER_CONCURRENCY: ${{ vars.PREVIEW_WORKER_CONCURRENCY }}
+          NEXT_PUBLIC_GITHUB_REPO_URL: ${{ vars.NEXT_PUBLIC_GITHUB_REPO_URL }}
+          POSTGRES_PASSWORD: ${{ secrets.PREVIEW_POSTGRES_PASSWORD }}
+          S3_ACCESS_KEY: ${{ secrets.PREVIEW_S3_ACCESS_KEY }}
+          S3_SECRET_KEY: ${{ secrets.PREVIEW_S3_SECRET_KEY }}
+
+      - name: Comment preview URL on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const url = `https://pr-${context.payload.pull_request.number}.${process.env.PREVIEW_DOMAIN}`;
+            const marker = '<!-- nas-preview -->';
+            const body = `${marker}\n🚀 **NAS preview ready** (full backend: recording, queue, thumbnails)\n\n👉 ${url}\n\n_Updates on every push while the \`preview\` label is set. Remove the label to tear it down._`;
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+            });
+            const existing = comments.find(c => c.body && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({ owner: context.repo.owner, repo: context.repo.repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner: context.repo.owner, repo: context.repo.repo, issue_number: context.payload.pull_request.number, body });
+            }
+        env:
+          PREVIEW_DOMAIN: ${{ vars.PREVIEW_DOMAIN }}
