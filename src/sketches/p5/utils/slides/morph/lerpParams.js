@@ -9,8 +9,8 @@
  *   - boolean / string / enum / type or
  *     length mismatch / null / undefined  → snap (t < 0.5 keeps `from`)
  *   - key listed in `snapKeys` (full
- *     dotted path OR leaf name, e.g.
- *     "seed" matches "sites.seed")        → snap (discrete / cache-invalidating)
+ *     dotted path, leaf name or ancestor
+ *     path — see ../keyMatch.js)          → snap (discrete / cache-invalidating)
  *   - nested plain object                 → recurse
  *   - key present on only one side        → passthrough (no NaN)
  *
@@ -18,6 +18,9 @@
  */
 
 import sequenceProgress from "./sequenceProgress.js";
+import {
+  matchesKeyList
+} from "../keyMatch.js";
 
 function isPlainObject( value ) {
   return value != null && typeof value === "object" && !Array.isArray( value );
@@ -38,11 +41,11 @@ function isEqualLengthNumericArray(
 function shouldSnap(
   a, b, path, snapKeys
 ) {
-  const leaf = path.includes( "." ) ? path.slice( path.lastIndexOf( "." ) + 1 ) : path;
-
   return (
-    snapKeys.includes( path ) ||
-    snapKeys.includes( leaf ) ||
+    matchesKeyList(
+      path,
+      snapKeys
+    ) ||
     a == null ||
     b == null ||
     typeof a !== typeof b ||

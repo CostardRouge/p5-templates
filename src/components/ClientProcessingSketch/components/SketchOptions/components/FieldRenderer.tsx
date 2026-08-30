@@ -21,6 +21,8 @@ import ControlledFormatSelect
   from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/ControlledFormatSelect/ControlledFormatSelect";
 import ControlledSourceSelect
   from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/ControlledSourceSelect/ControlledSourceSelect";
+import ControlledKeySelect
+  from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/ControlledKeySelect/ControlledKeySelect";
 import ControlledEasingInput
   from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/ControlledEasingInput/ControlledEasingInput";
 import ControlledVector2DInput
@@ -626,6 +628,17 @@ export default function FieldRenderer( {
           <ControlledSourceSelect
             name={ registeredName }
             label={ inlineLabel }
+            isModified={ isModified }
+            onReset={ handleReset }
+          />
+        );
+
+      case "key-select":
+        return (
+          <ControlledKeySelect
+            name={ registeredName }
+            label={ inlineLabel }
+            placeholder={ config.placeholder }
             isModified={ isModified }
             onReset={ handleReset }
           />

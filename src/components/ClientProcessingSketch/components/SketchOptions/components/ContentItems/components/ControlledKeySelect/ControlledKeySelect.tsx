@@ -14,28 +14,30 @@ import {
   BarLabelSegment
 } from "../ControlChrome";
 import {
-  BUILTIN_SOURCES, flattenKeys, groupKeyPaths
+  collectBranchPaths, flattenKeys, groupKeyPaths
 } from "@/p5/utils/hud/keyPaths";
 
 type Props = {
   name: string;
   label?: string;
+  placeholder?: string;
   isModified?: boolean;
   onReset?: ( event: React.MouseEvent ) => void;
 };
 
 /**
- * Source picker for HUD widgets. Populated — like the `specs` overlay — by
- * enumerating the keys that already exist in the sketch settings, plus the
- * built-in live sources. No probe registry / runtime bridge required: the form
- * already holds the sketch settings, so the key list is derived client-side.
- *
- * Shares the segmented control-bar chrome: a label segment, the selected value,
- * and an invisible native <select> overlaying the whole bar.
+ * Parameter-key picker for the breakdown's `snapKeys` / `excludeKeys` lists.
+ * Same derivation as `ControlledSourceSelect` — the key-paths that exist in the
+ * sketch settings the form already holds — with two differences: no live
+ * built-in sources (a key list addresses sketch parameters only), and **whole
+ * groups are selectable**. Picking "colors" covers every leaf under it;
+ * `matchesKeyList` (src/sketches/p5/utils/slides/keyMatch.js) applies the
+ * ancestor rule at runtime.
  */
-export default function ControlledSourceSelect( {
+export default function ControlledKeySelect( {
   name,
   label,
+  placeholder,
   isModified,
   onReset
 }: Props ) {
@@ -55,12 +57,16 @@ export default function ControlledSourceSelect( {
   } );
 
   const keys = flattenKeys( sketch ?? {} );
+  const branches = collectBranchPaths( keys );
   const {
     rootOptions, groups
   } = groupKeyPaths( keys );
+
   const currentValue = typeof field.value === "string" ? field.value : "";
-  const builtin = BUILTIN_SOURCES.find( ( source ) => source.value === currentValue );
-  const displayLabel = builtin?.label ?? ( currentValue || "—" );
+  const isKnown =
+    currentValue !== "" &&
+    ( keys.includes( currentValue ) || branches.includes( currentValue ) );
+  const emptyLabel = placeholder ?? "Pick a key…";
 
   return (
     <div className={ CONTROL_BAR_CLASS }>
@@ -71,28 +77,23 @@ export default function ControlledSourceSelect( {
       />
 
       <span className="pointer-events-none flex min-w-0 flex-1 items-center justify-between gap-1 px-2.5">
-        <span className="truncate">{displayLabel}</span>
+        <span className="truncate">{currentValue || emptyLabel}</span>
         <ChevronDown className={ CONTROL_CHEVRON_CLASS } />
       </span>
 
       <select
         id={ name }
-        aria-label={ label ?? "Source" }
+        aria-label={ label ?? "Key" }
         className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
         value={ currentValue }
         onChange={ ( e ) => field.onChange( e.target.value ) }
         onBlur={ field.onBlur }
       >
-        <optgroup label="Live / built-in">
-          {BUILTIN_SOURCES.map( ( source ) => (
-            <option key={ source.value } value={ source.value }>
-              {source.label}
-            </option>
-          ) )}
-        </optgroup>
+        <option value="">{emptyLabel}</option>
 
-        {/* Keep a saved key selectable even if it isn't in the current list. */}
-        {currentValue && !builtin && !keys.includes( currentValue ) && (
+        {/* A key typed before the picker existed — or one whose parameter the
+            current sketch settings no longer carry — stays selected. */}
+        {currentValue && !isKnown && (
           <option value={ currentValue } hidden>
             {currentValue}
           </option>
@@ -103,6 +104,16 @@ export default function ControlledSourceSelect( {
             {rootOptions.map( ( option ) => (
               <option key={ option.value } value={ option.value }>
                 {option.label}
+              </option>
+            ) )}
+          </optgroup>
+        )}
+
+        {branches.length > 0 && (
+          <optgroup label="Whole groups">
+            {branches.map( ( branch ) => (
+              <option key={ branch } value={ branch }>
+                {branch}
               </option>
             ) )}
           </optgroup>
