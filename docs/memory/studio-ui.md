@@ -52,3 +52,7 @@ The floating inspector and the Interactive mixer used to swap `w-80` ↔ `w-fit`
 ## Visual language (from the validated mockup)
 
 2026-08-28 — Monochrome stays the rule: the Export button is an ink-filled pill precisely because nothing else is filled; red is reserved for recording-in-progress (the mobile record shortcut already uses it). The sketch name appears once — the breadcrumb above the canvas — never in the top bar. The full zoom cluster (−, %, +, 100%, fit/fullscreen) survives in the docked bar; do not collapse it to a single fit control.
+
+## HUD source picker: grouped by parent key-path
+
+2026-08-30 — The HUD widgets' "Source" select (`ControlledSourceSelect`) lists the sketch's scalar key-paths, which grow fast and read as a flat wall of `colors.text` / `colors.background` / `magnitude.start`. They are now split into one `<optgroup>` per parent path — group "colors", option "text" — by `groupKeyPaths` in `@/p5/utils/hud/keyPaths` (root scalars stay together under "Sketch parameters", built-ins keep their own group). **Only the presentation is grouped**: the option `value`, the stored setting and everything the runtime resolves stay the full dotted path, and the collapsed bar still shows it so two same-named leaves are distinguishable. A nested key groups under its whole parent (`grid.cell.size` → group "grid.cell"), so the dropdown mirrors the settings tree rather than inventing a two-level hierarchy.
