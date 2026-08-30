@@ -10,6 +10,9 @@ import {
 import RandomizeSettingsButton from "@/components/RandomizeSettingsButton";
 import ResetSettingsButton from "@/components/ResetSettingsButton";
 import ApplyToAllSlidesButton from "@/components/ApplyToAllSlidesButton";
+import {
+  useDevActions
+} from "@/hooks/useDevActions";
 import SaveDefaultsButton from "./SaveDefaultsButton";
 import GenerateThumbnailButton from "./GenerateThumbnailButton";
 import GeneratePreviewButton from "./GeneratePreviewButton";
@@ -127,7 +130,11 @@ export function SketchSettingsActions( {
   config: Record<string, FieldConfig>;
   basePath: string;
 } ) {
-  const isDev = process.env.NODE_ENV === "development";
+  // Hidden by default: this bar is the most-photographed strip in the studio,
+  // and the dev trio doubled the number of affordances a screenshot showed.
+  const {
+    devActionsVisible
+  } = useDevActions();
 
   return (
     <>
@@ -155,13 +162,17 @@ export function SketchSettingsActions( {
           className={ HEADER_ACTION_CLASS }
         />
 
-        {isDev && <span className="mx-1 h-4 w-px shrink-0 bg-border" />}
+        {devActionsVisible && (
+          <>
+            <span className="mx-1 h-4 w-px shrink-0 bg-border" />
 
-        <SaveDefaultsButton />
+            <SaveDefaultsButton />
 
-        <GenerateThumbnailButton />
+            <GenerateThumbnailButton />
 
-        <GeneratePreviewButton />
+            <GeneratePreviewButton />
+          </>
+        )}
       </span>
 
       {/* Outside the capture wrapper so tweaking sound settings doesn't

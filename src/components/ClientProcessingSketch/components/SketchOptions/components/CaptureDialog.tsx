@@ -6,21 +6,24 @@ import React, {
 import dynamic from "next/dynamic";
 import clsx from "clsx";
 import {
-  X
+  Download, X
 } from "lucide-react";
 
 import type {
   SketchOption
 } from "@/types/sketch.types";
-import OptionsImportExport from "./CaptureActions/components/OptionsImportExport";
 import type {
   CaptureActionsRef
 } from "./CaptureActions";
+import {
+  useDevActions
+} from "@/hooks/useDevActions";
 
 // Same chunking rationale as SketchOptions: the recording subtree (mediabunny
 // + gif.js encoders, the action buttons, VideoPreviewModal) only compiles when
 // this dialog mounts.
 const CaptureActions = dynamic( () => import( "./CaptureActions" ) );
+const ExportPanel = dynamic( () => import( "./ExportPanel/ExportPanel" ) );
 
 type CaptureProps = Omit<
   React.ComponentPropsWithoutRef<typeof CaptureActions>,
@@ -34,20 +37,22 @@ type CaptureDialogProps = {
   capture: CaptureProps;
   captureActionsRef: React.Ref<CaptureActionsRef>;
   recordingSupported: boolean;
-  jobStatus?: string;
-  onImportOptions: ( options: SketchOption ) => void;
+  /** Whether the browser can run the in-page export pipeline at all. */
+  browserExportSupported: boolean;
   /** Present as a bottom sheet instead of a centred dialog — the mobile shape,
-   *  where a centred 320px card would float in the middle of a phone. */
+   *  where a centred dialog would float in the middle of a phone. */
   bottomSheet?: boolean;
 };
 
 /**
- * Recording and export, in one modal: the format/encoder pickers, the capture
- * actions and the job state, plus options import/export.
+ * Export, in one modal: the variant list and its editor, plus the backend job
+ * state.
  *
- * It is the single home for that stack — opened by the transport bar's record
- * dot (and, in the docked layout, by the top bar's Export button), never
- * duplicated per layout.
+ * It is the single home for that stack on EVERY layout — opened by the
+ * transport bar's record dot and, in the docked layout, the top bar's Export
+ * button. A centred dialog on desktop, a bottom sheet on mobile, where the
+ * drawer has no Export tab: a surface over the sketch keeps a running export
+ * visible once the drawer is dismissed.
  *
  * The content stays MOUNTED while closed (visibility only, not conditional
  * rendering): `captureActionsRef` is the autosave handle the form calls into,
@@ -60,10 +65,17 @@ export default function CaptureDialog( {
   capture,
   captureActionsRef,
   recordingSupported,
-  jobStatus,
-  onImportOptions,
+  browserExportSupported,
   bottomSheet = false
 }: CaptureDialogProps ) {
+  const {
+    devActionsVisible
+  } = useDevActions();
+
+  const hasFooterActions =
+    capture.backendRecording ||
+      ( devActionsVisible && capture.browserRecordingSupported );
+
   useEffect(
     () => {
       if ( !open ) {
@@ -114,7 +126,7 @@ export default function CaptureDialog( {
       <div
         role="dialog"
         aria-modal={ open }
-        aria-label="Recording and export"
+        aria-label="Export"
         className={ clsx(
           "relative flex flex-col overflow-hidden border border-theme glass shadow-lg",
           bottomSheet
@@ -125,8 +137,10 @@ export default function CaptureDialog( {
               "w-full max-h-[85svh] rounded-2xl rounded-b-none border-b-0 transition-transform duration-200 ease-out motion-reduce:transition-none pb-[max(0.75rem,env(safe-area-inset-bottom))]",
               open ? "translate-y-0" : "translate-y-full"
             )
+            // The export table needs room the old 320px card never did, so the
+            // centred shape is a wide dialog rather than a narrow one.
             : clsx(
-              "w-80 max-h-full rounded-2xl transition-opacity",
+              "w-full max-w-3xl max-h-full rounded-2xl transition-opacity",
               open ? "opacity-100" : "opacity-0"
             )
         ) }
@@ -138,8 +152,9 @@ export default function CaptureDialog( {
         )}
 
         <div className="flex items-center gap-2 border-b border-theme px-3 py-2">
-          <span className="flex h-2.5 w-2.5 shrink-0 rounded-full bg-red-500" />
-          <span className="text-xs font-medium text-foreground">Record</span>
+          <Download className="h-3.5 w-3.5 shrink-0 text-foreground" />
+          <span className="text-xs font-medium text-foreground">Export</span>
+          <span className="truncate text-xs text-label">{capture.name}</span>
 
           <button
             type="button"
@@ -151,31 +166,41 @@ export default function CaptureDialog( {
           </button>
         </div>
 
-        <div className="flex flex-col gap-2 overflow-y-auto p-2">
-          {recordingSupported ? (
+        {/* The variant list + editor. Mounted only while the dialog is open:
+            unlike CaptureActions it holds no autosave handle, and its own
+            state lives in the export variant store, so it survives unmounting. */}
+        {open && browserExportSupported && (
+          <ExportPanel
+            name={ capture.name }
+            options={ capture.options as SketchOption }
+            activeSlideIndex={ activeSlideIndex }
+          />
+        )}
+
+        {!browserExportSupported && (
+          <p className="px-3 py-6 text-center text-xs text-label">
+            Exporting is not supported in this browser.
+          </p>
+        )}
+
+        {/* Backend job actions + the dev preview capture. Options
+            import/export deliberately does NOT live here: it is a document
+            concern, and it stays in the content rail's own section.
+
+            CaptureActions stays mounted whatever it renders — it carries the
+            autosave handle — so the strip drops its own border and padding
+            when there is nothing to show, rather than leaving an empty band
+            under the table. */}
+        {recordingSupported && (
+          <div className={ clsx( hasFooterActions && "border-t border-theme p-2" ) }>
             <CaptureActions
               forwardedRef={ captureActionsRef }
               activeSlideIndex={ activeSlideIndex }
               docked
               { ...capture }
             />
-          ) : (
-            <p className="py-2 text-center text-xs text-label">
-              Recording is not supported in this browser.
-            </p>
-          )}
-
-          <div className="flex border-t border-theme pt-2">
-            <OptionsImportExport
-              options={ capture.options }
-              name={ capture.name }
-              persistedJobId={ capture.persistedJob?.id }
-              jobStatus={ jobStatus }
-              onImportInMemory={ ( importedOptions ) =>
-                onImportOptions( importedOptions as SketchOption ) }
-            />
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

@@ -824,6 +824,7 @@ export default function SketchOptions( {
               plugin is on and the scope has bindings. Lifted above the slide
               filmstrip, which now owns the bottom-center. */}
             {isDesktop && (
+
               <InteractivePanel
                 basePath={ sketchBasePath }
                 bottomOffset={ mixerBottom }
@@ -842,8 +843,7 @@ export default function SketchOptions( {
               capture={ captureProps }
               captureActionsRef={ captureActionsRef }
               recordingSupported={ recordingSupported }
-              jobStatus={ lifecycle.currentStatus }
-              onImportOptions={ handleImportOptions }
+              browserExportSupported={ browserRecordingSupported }
               bottomSheet={ !isDesktop }
             />
           </ContentSelectionProvider>
