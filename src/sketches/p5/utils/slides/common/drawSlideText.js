@@ -2,9 +2,7 @@ import string from "../../string.js";
 import {
   getP5
 } from "../../sketch";
-import {
-  reportItemBounds
-} from "./itemBoundsRegistry.js";
+import reportTextItemBounds from "./textItemBounds.js";
 
 const parseFloatDefault = (
   value, _default = 0.015
@@ -50,62 +48,17 @@ export default function drawSlideText( textOption ) {
     }
   );
 
-  // Nothing drawn (empty string / missing font) → no grab zone to report.
-  if ( !textOption.content ) {
-    return;
-  }
-
-  // Where the glyphs VISIBLY are — p5 rect-mode text aligns them inside the
-  // (x, y, textWidth, textHeight) layout box, so the drawn pixels can sit far
-  // from the (x, y) anchor the drag layer stores. Report an approximate
-  // glyph rectangle so the item can be grabbed by what the user sees.
-  // Width/height come from the font's measured bounds (clamped to the layout
-  // box — word-wrap never draws wider than it).
-  const glyphW = Math.min(
-    Math.max(
-      box?.w ?? textWidth,
-      size
-    ),
-    textWidth
-  );
-  const glyphH = Math.max(
-    box?.h ?? size,
-    size
-  );
-
-  const left = horizontalAlign === "left"
-    ? x
-    : horizontalAlign === "right"
-      ? x + textWidth - glyphW
-      : x + ( textWidth - glyphW ) / 2;
-
-  // Vertical: rect-mode CENTER/BOTTOM/TOP place the glyphs inside the box;
-  // BASELINE is not honoured in rect mode and behaves like TOP, but older
-  // p5 builds treated it as glyphs-above-y — cover both with a band that
-  // spans one glyph height on each side of y.
-  let top;
-  let boundsH = glyphH;
-
-  switch ( verticalAlign ) {
-    case "center":
-      top = y + ( textHeight - glyphH ) / 2;
-      break;
-    case "bottom":
-      top = y + textHeight - glyphH;
-      break;
-    case "top":
-      top = y;
-      break;
-    default: // "baseline"
-      top = y - glyphH;
-      boundsH = glyphH * 2;
-      break;
-  }
-
-  reportItemBounds(
-    left,
-    top,
-    glyphW,
-    boundsH
-  );
+  // Report the visible glyph rectangle so the item can be grabbed by what the
+  // user sees rather than by its (often off-glyph) layout anchor.
+  reportTextItemBounds( {
+    text: textOption.content,
+    box,
+    x,
+    y,
+    layoutWidth: textWidth,
+    layoutHeight: textHeight,
+    size,
+    horizontalAlign,
+    verticalAlign
+  } );
 }
