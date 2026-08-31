@@ -31,6 +31,24 @@
 // stays deterministic under headless capture — the whole composition is a pure
 // function of the frame index. The per-layer `framerate` is expressed in that
 // same loop time (not wall-clock), for the same reason.
+//
+// ── The one sketch shape this cannot run: an async draw that awaits ─────────
+//
+// The swaps above are module globals, so they hold for exactly as long as the
+// embedded draw runs *synchronously*. A `sketch.draw( async () => … )` that
+// awaits mid-frame returns a pending promise, the swaps are restored, and its
+// continuation resumes later reading the HOST's surface and the HOST's
+// parameters — it paints the rest of itself onto the page's canvas, and
+// usually throws first (`options.sketch.<its own key>` is undefined). Holding
+// the swaps across the await is not the fix and was rejected: `freeLayout` goes
+// straight on to the next content item in the same frame, so it would corrupt
+// every layer drawn after this one instead.
+//
+// 38 of 301 p5 sketches draw that way, so this is refused rather than papered
+// over: the module is checked once (`isAsyncDraw`), the layer never runs, and
+// the picker greys those sketches out up front from `metadata.json`'s
+// `asyncDraw` flag. Making them embeddable means giving the embedded run its
+// own module realm — not a smaller change than this whole file.
 
 import sketch, {
   getHostP5,
@@ -70,6 +88,41 @@ const failed = new Map();
 /* ------------------------------------------------------------------ */
 /*  Module loading                                                     */
 /* ------------------------------------------------------------------ */
+
+/**
+ * Whether a sketch's draw suspends mid-frame, which embedding cannot support
+ * (see the header). Checked BEFORE the first call, so a refused layer never
+ * paints a half-frame onto the host canvas.
+ *
+ * `AsyncFunction` is the check that costs nothing and is right for all 38 of
+ * them. It has one false positive — an `async` draw that never actually awaits
+ * would run synchronously and would have been fine — and it fails open if a
+ * build ever downlevels async functions to generators, which is what the
+ * thenable backstop at the call site is for.
+ */
+function isAsyncDraw( drawFn ) {
+  return drawFn?.constructor?.name === "AsyncFunction";
+}
+
+const ASYNC_DRAW_REASON =
+  "draws asynchronously (sketch.draw( async … )), which cannot run as a layer";
+
+/**
+ * Park a sketch in the failed set so no layer retries it, and say why once.
+ * Shares `failed` with a genuine load error: from the renderer's side both mean
+ * "this path never produces a buffer".
+ */
+function markUnsupported( sketchPath ) {
+  if ( failed.has( sketchPath ) ) {
+    return;
+  }
+
+  failed.set(
+    sketchPath,
+    new Error( ASYNC_DRAW_REASON )
+  );
+  console.warn( `[nested-sketch] "${ sketchPath }" ${ ASYNC_DRAW_REASON }` );
+}
 
 function ensureSketchLoaded( sketchPath ) {
   if ( hasSketchFns( sketchPath ) || loading.has( sketchPath ) || failed.has( sketchPath ) ) {
@@ -481,6 +534,15 @@ export function renderNestedSketchLayer(
   }
 
   const fns = getSketchFns( sketchPath );
+
+  // Refused before the buffer is even allocated, and remembered as a load
+  // failure so the layer is inert rather than half-drawn — see the header on
+  // async draws.
+  if ( isAsyncDraw( fns.drawFn ) ) {
+    markUnsupported( sketchPath );
+    return null;
+  }
+
   const type = fns.sketchOptions?.type === "webgl" ? "webgl" : "p2d";
 
   // A different sketch, a different canvas size or a different renderer all
@@ -549,7 +611,7 @@ export function renderNestedSketchLayer(
 
     buffer.push();
 
-    runEmbedded(
+    const result = runEmbedded(
       instance,
       item,
       () => fns.drawFn?.(
@@ -561,6 +623,18 @@ export function renderNestedSketchLayer(
     );
 
     buffer.pop();
+
+    // Backstop for the async-draw refusal above, in case `isAsyncDraw` failed
+    // open. The swaps are already restored by now, so this frame's tail is
+    // beyond saving — but the layer is stopped before a second one, and the
+    // rejection is caught here rather than surfacing as an unhandled error
+    // (which is how this arrives: a runtime overlay pointing at a line deep
+    // inside the embedded sketch, with no hint that a layer is involved).
+    if ( typeof result?.then === "function" ) {
+      result.catch( () => {} );
+      markUnsupported( instance.sketchPath );
+      return null;
+    }
   } catch( error ) {
     instance.error = error;
     console.warn(

@@ -8,7 +8,7 @@ import {
 import GenericObjectForm
   from "@/components/ClientProcessingSketch/components/SketchOptions/components/RootSettings/components/GenericObjectForm/GenericObjectForm";
 import {
-  loadSketchForm, sketchNameFromPath
+  findEmbeddableSketch, loadSketchForm, sketchNameFromPath
 } from "@/lib/sketchLayerCatalogue";
 import type {
   FieldConfig
@@ -125,6 +125,18 @@ export default function EmbeddedSketchFields( {
   if ( state.error ) {
     return (
       <p className="px-1 py-2 text-red-500">{state.error}</p>
+    );
+  }
+
+  // A layer can carry a sketch the picker greys out — one added before the
+  // limitation was known, or restored from an imported options file. The rail
+  // has to say why the canvas shows nothing; the only other signal is a console
+  // warning nobody is looking at.
+  const unavailable = findEmbeddableSketch( sketchPath )?.unavailable;
+
+  if ( unavailable ) {
+    return (
+      <p className="px-1 py-2 text-label/70">{unavailable}.</p>
     );
   }
 

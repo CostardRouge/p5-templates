@@ -141,6 +141,12 @@ function SketchPickerBody( {
     ) => count + group.choices.length,
     0
   );
+  const unavailableCount = groups.reduce(
+    (
+      count, group
+    ) => count + group.choices.filter( ( choice ) => choice.unavailable ).length,
+    0
+  );
 
   return createPortal(
     <div
@@ -192,6 +198,15 @@ function SketchPickerBody( {
             </p>
           )}
 
+          {/* Named once, at the foot, rather than left to a tooltip: a grid
+              with greyed-out tiles and no explanation reads as a bug. */}
+          {unavailableCount > 0 && (
+            <p className="order-last text-[11px] text-label/70">
+              {unavailableCount} greyed-out {unavailableCount === 1 ? "sketch draws" : "sketches draw"}
+              {" "}asynchronously and can&rsquo;t run as a layer yet.
+            </p>
+          )}
+
           {groups.map( ( group ) => (
             <div key={ group.label } className="flex flex-col gap-2">
               <span className="text-[0.6875rem] uppercase tracking-[0.08em] text-label/70">
@@ -203,11 +218,17 @@ function SketchPickerBody( {
                   <button
                     key={ choice.path }
                     type="button"
+                    disabled={ Boolean( choice.unavailable ) }
                     onClick={ () => onPick( choice ) }
-                    title={ choice.path }
+                    title={ choice.unavailable
+                      ? `${ choice.path } — ${ choice.unavailable }`
+                      : choice.path }
                     className={ clsx(
                       "group flex flex-col overflow-hidden rounded-lg border text-left transition",
-                      "hover:border-foreground/30 focus:outline-none focus:ring-1 focus:ring-focus",
+                      "focus:outline-none focus:ring-1 focus:ring-focus",
+                      choice.unavailable
+                        ? "cursor-not-allowed border-theme opacity-40"
+                        : "hover:border-foreground/30",
                       choice.path === value
                         ? "border-focus ring-1 ring-focus"
                         : "border-theme"
@@ -218,7 +239,10 @@ function SketchPickerBody( {
                       alt=""
                       loading="lazy"
                       decoding="async"
-                      className="aspect-[4/5] w-full bg-hover object-cover"
+                      className={ clsx(
+                        "aspect-[4/5] w-full bg-hover object-cover",
+                        choice.unavailable && "grayscale"
+                      ) }
                     />
                     <span className="truncate px-2 py-1.5 text-[11px] text-foreground/80 group-hover:text-foreground">
                       {choice.name}

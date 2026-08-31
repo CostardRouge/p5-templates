@@ -29,7 +29,16 @@ export type SketchChoice = {
   name: string;
   category: string | null;
   thumbnail: string;
+  /**
+   * Why this sketch cannot be a layer, or null when it can. Offered but
+   * disabled rather than hidden: a sketch missing from the picker with no
+   * explanation reads as a bug, and the reason is worth teaching once.
+   */
+  unavailable: string | null;
 };
+
+export const ASYNC_DRAW_REASON =
+  "Draws asynchronously — it can't run as a layer yet";
 
 export type SketchForm = {
   formValues: Record<string, unknown>;
@@ -59,7 +68,8 @@ export function listEmbeddableSketches(): SketchChoice[] {
       thumbnail: getSketchThumbnailURL(
         EMBEDDABLE_ENGINE,
         meta.name
-      )
+      ),
+      unavailable: meta.asyncDraw ? ASYNC_DRAW_REASON : null
     } ) );
 
   return catalogue;
