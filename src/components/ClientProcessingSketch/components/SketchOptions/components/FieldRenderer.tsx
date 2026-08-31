@@ -49,6 +49,12 @@ import {
 import {
   applyToAllHudLayers, canApplyToAllHudLayers
 } from "../utils/applyToAllHudLayers";
+import {
+  addHudElementForControl, hudQuickAddKinds
+} from "../utils/hudQuickAdd";
+import {
+  ITEM_META
+} from "./ContentItems/components/AddItemControls/components/ItemPalette/constants/item-kinds";
 import BindingAffordance
   from "./ContentItems/components/BindingAffordance/BindingAffordance";
 import {
@@ -178,11 +184,18 @@ export default function FieldRenderer( {
     registeredName
   );
 
+  // Sketch parameter controls offer "add a HUD element for this control" —
+  // the new layer arrives with its source already bound to this key-path.
+  const quickAddKinds = hudQuickAddKinds(
+    registeredName,
+    config
+  );
+
   // Whether this field should host a context-menu affordance: at least one
   // entry applies, and not over an editable input (whose native menu and
   // pointer behaviour we leave alone).
   const canContextApply = ( target: EventTarget | null ): boolean => {
-    if ( !canApply && !canApplyHud ) {
+    if ( !canApply && !canApplyHud && quickAddKinds.length === 0 ) {
       return false;
     }
 
@@ -792,7 +805,20 @@ export default function FieldRenderer( {
                   )
                 }
               ]
-              : [] )
+              : [] ),
+            ...quickAddKinds.map( ( kind ) => ( {
+              label: config.label
+                ? `Add a ${ ITEM_META[ kind ].label.toLowerCase() } for "${ config.label }"`
+                : `Add a ${ ITEM_META[ kind ].label.toLowerCase() } for this control`,
+              icon: ITEM_META[ kind ].Icon,
+              onClick: () => addHudElementForControl(
+                getValues,
+                setValue,
+                registeredName,
+                config,
+                kind
+              )
+            } ) )
           ] }
         />
       )}
