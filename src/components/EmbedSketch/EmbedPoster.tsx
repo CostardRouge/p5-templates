@@ -33,6 +33,7 @@ export default function EmbedPoster( {
     >
       {hasThumbnail && (
         <img
+          data-pin-nopin="true"
           src={ thumbnailUrl }
           alt=""
           draggable={ false }

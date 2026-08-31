@@ -1059,6 +1059,7 @@ function Thumbnail( {
 
   return (
     <img
+      data-pin-nopin="true"
       alt={ alt }
       src={ src }
       srcSet={ `${ src } 1x, ${ src2x } 2x` }

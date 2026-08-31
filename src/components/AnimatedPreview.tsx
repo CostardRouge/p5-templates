@@ -262,6 +262,7 @@ export default function AnimatedPreview( {
       { ...hoverHandlers }
     >
       <img
+        data-pin-nopin="true"
         alt={ name }
         src={ thumbnailUrl }
         srcSet={ `${ thumbnailUrl } 1x, ${ thumbnailUrl.replace(

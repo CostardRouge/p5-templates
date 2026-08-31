@@ -206,6 +206,7 @@ function SketchCard( {
           />
         ) : (
           <img
+            data-pin-nopin="true"
             alt={ sketch.name }
             src={ sketch.thumbnail }
             srcSet={ `${ sketch.thumbnail } 1x, ${ sketch.thumbnail.replace(

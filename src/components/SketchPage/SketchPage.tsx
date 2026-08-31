@@ -377,6 +377,7 @@ export default function SketchPage() {
         <div className="flex items-center justify-center absolute h-full w-full">
           <div className="flex flex-col items-center gap-4">
             <img
+              data-pin-nopin="true"
               src={ thumbnailUrl }
               alt={ `${ name } thumbnail` }
               className="w-60 h-auto rounded-lg shadow-lg"

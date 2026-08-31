@@ -429,3 +429,12 @@
         transform: none !important;
     }
 }
+
+/* Pinterest's browser extension draws its hover "Save" badge by listening for
+   mouseover on the <img> itself and ignores its own data-pin-nopin /
+   data-pin-no-hover attributes for that badge (pinterest/widgets#104, #85).
+   Making cover images inert to the pointer removes the badge's target; clicks
+   fall through to the parent link/button, so cards stay clickable. */
+img[data-pin-nopin] {
+    pointer-events: none;
+}
