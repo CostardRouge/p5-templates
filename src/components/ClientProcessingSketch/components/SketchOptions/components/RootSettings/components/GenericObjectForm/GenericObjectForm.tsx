@@ -22,6 +22,17 @@ import {
 // CollapsibleItem chrome stays static, so there is no loading flash on open.
 const FieldRenderer = dynamic( () => import( "@/components/ClientProcessingSketch/components/SketchOptions/components/FieldRenderer" ) );
 
+// A field renders as a full-bleed band, rather than a padded leaf, when it is
+// itself a collapsible group of other fields — a nested-object, or an
+// item-list (a collection is a group too, just a homogeneous one). Both
+// components self-pad their own header/body with `leafPaddingClassName` (see
+// FieldRenderer's nested-object case and ItemListRenderer), so wrapping either
+// in the leaf padding here would double it up.
+const BAND_COMPONENTS = new Set( [
+  "nested-object",
+  "item-list"
+] );
+
 type GenericObjectFormProps = {
   basePath?: string;
   config: Record<string, FieldConfig>;
@@ -86,7 +97,7 @@ export default function GenericObjectForm( {
   // form owns this because the section cannot know how its content ends.
   const endsWithBand =
     depth === 0 &&
-    config[ keys[ keys.length - 1 ] ]?.component === "nested-object";
+    BAND_COMPONENTS.has( config[ keys[ keys.length - 1 ] ]?.component ?? "" );
 
   return (
     <div className={ clsx(
@@ -116,11 +127,11 @@ export default function GenericObjectForm( {
         }
 
         const isBand =
-          depth === 0 && fieldConfig.component === "nested-object";
+          depth === 0 && BAND_COMPONENTS.has( fieldConfig.component );
         const previousIsBand =
           depth === 0 &&
           index > 0 &&
-          config[ keys[ index - 1 ] ]?.component === "nested-object";
+          BAND_COMPONENTS.has( config[ keys[ index - 1 ] ]?.component ?? "" );
 
         // A rule marks every boundary a band takes part in: above a band, and
         // above the field that follows one. Two plain fields in a row are just
