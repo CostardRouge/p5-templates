@@ -54,6 +54,7 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 - Export-time size/framerate overrides go through one scope that strips per-slide overrides, re-applies after every slide switch, waits for the resize to land, and always restores → `recording.md`.
 - A finished export can be previewed in place and handed to the OS share sheet — the only route from a browser export to iOS Photos → `recording.md`.
 - No export loop may `await` a bare `requestAnimationFrame`: a frame that never comes hangs the run rather than slowing it → `recording.md`.
+- Every positioned content item is grabbable on canvas, and that takes three aligned edits (type set, anchor resolution, renderer-reported bounds) — not just a schema → `canvas-interaction.md`.
 
 ## Open items (dated; remove when done)
 
@@ -75,4 +76,5 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 | `docs/memory/deployment.md` | Docker, GHCR, Watchtower, the NAS, `docker-compose.yml` |
 | `docs/memory/local-development.md` | Running the app locally, infra services, `setup.sh`, dev-server config |
 | `docs/memory/studio-ui.md` | The sketch page's panels and layouts (inspector, content rail, filmstrip, export, mobile drawer) |
+| `docs/memory/canvas-interaction.md` | The on-canvas drag/selection layer, item-bounds reporting, a renderer's grab surface |
 | `docs/analytics.md` | Umami config, why auto-track is off, the pageview queue, how to verify tracking (maintained, unlike the rest of `docs/`) |

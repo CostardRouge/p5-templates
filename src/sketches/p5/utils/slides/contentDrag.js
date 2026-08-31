@@ -57,15 +57,28 @@ import {
 // loop — while React still picks the new values up in the form).
 
 // Content item types that carry a normalized `position` and render anchored to
-// it ("meta", "background", "hud" and "images" are laid out differently).
+// it — i.e. every item in ContentItemSchema except the three that have no
+// single position of their own: "background" (fills the canvas), "meta" (four
+// corner labels, each pinned to its corner) and "hud" (handled below, one grab
+// target per offset-anchored widget).
 const DRAGGABLE_TYPES = new Set( [
   "text",
+  "title",
   "image",
   "images-stack",
   "visual",
   "qrcode",
   "specs",
   "breakdown"
+] );
+
+// Items whose renderer offsets the anchor by the item's own margins:
+// `string.write` draws them at (margin + position) * size (see drawSlideText /
+// drawSlideTitle), so their grab anchor sits margin-shifted and a drag writes
+// position = pointer − margin. Everything else anchors at position * size.
+const MARGIN_ANCHORED_TYPES = new Set( [
+  "text",
+  "title"
 ] );
 
 // A "hud" content item has no single position of its own — instead it holds
@@ -117,6 +130,25 @@ const HUD_OFFSET_DEFAULTS = {
 // collapses to a handful of screen pixels on a phone (a 1080-wide buffer shown
 // ~380px wide), which made items feel un-grabbable on mobile.
 const GRAB_RADIUS_SCREEN_PX = 44;
+
+// Anchor-marker geometry, in ON-SCREEN (CSS) pixels for the same reason.
+const ANCHOR_RING_SCREEN_PX = 9;
+const ANCHOR_ARM_SCREEN_PX = 7;
+
+// Affordance colours: neutral white while the pointer only hovers an item,
+// blue once it is held.
+const HOVER_COLOR = [
+  255,
+  255,
+  255,
+  170
+];
+const GRAB_COLOR = [
+  120,
+  200,
+  255,
+  230
+];
 
 export const GLOBAL_CONTENT_SCOPE = "global";
 
@@ -171,7 +203,7 @@ function clamp01( value ) {
 }
 
 // The renderers' fallback anchors when an item has no position yet (matching
-// drawSlideQrCode / drawSlideSpecs defaults; everything else centres).
+// each schema's own `position` default; everything else centres).
 function positionDefaults( type ) {
   switch ( type ) {
     case "qrcode":
@@ -189,6 +221,17 @@ function positionDefaults( type ) {
         x: 0.06,
         y: 0.08
       };
+    case "text":
+      return {
+        x: 0,
+        y: 0.5
+      };
+    case "title":
+    case "visual":
+      return {
+        x: 0,
+        y: 0
+      };
     default:
       return {
         x: 0.5,
@@ -197,9 +240,16 @@ function positionDefaults( type ) {
   }
 }
 
-// Text renders at (margin + position) * size (see drawSlideText), so its grab
-// anchor is offset by the margin — and a drag writes position = pointer − margin.
-function textMargin( item ) {
+// The margin a MARGIN_ANCHORED_TYPES item shifts its anchor by (matching the
+// renderers' own `parseFloatDefault` fallback).
+function itemMargin( item ) {
+  if ( !MARGIN_ANCHORED_TYPES.has( item?.type ) ) {
+    return {
+      h: 0,
+      v: 0
+    };
+  }
+
   const horizontal = Number.parseFloat( item.margin?.horizontal );
   const vertical = Number.parseFloat( item.margin?.vertical );
 
@@ -387,10 +437,7 @@ function collectTargets( p ) {
         index
       ) );
       const position = override ?? item.position ?? {};
-      const margin = item.type === "text" ? textMargin( item ) : {
-        h: 0,
-        v: 0
-      };
+      const margin = itemMargin( item );
 
       targets.push( {
         x: ( ( position.x ?? defaults.x ) + margin.h ) * p.width,
@@ -1003,50 +1050,100 @@ function drawAffordance() {
     }
   };
 
+  // The anchor: the exact point the item's stored `position` refers to, drawn
+  // as a crosshair-in-a-ring. It is shown on HOVER as well as while dragging,
+  // because an item's anchor is routinely nowhere near its glyphs — rect-mode
+  // text centres its letters inside a near-full-width layout box, so a text at
+  // position.x = 0 draws mid-canvas with its anchor on the left edge. Without
+  // the marker the `position` field in the inspector reads as an arbitrary pair
+  // of numbers; with it, the outline says what you can grab and the anchor says
+  // what the numbers mean. Sized in SCREEN pixels (like the pick-up radius) so
+  // it stays legible whatever the canvas buffer size.
+  const anchor = (
+    target, color, weight
+  ) => {
+    const scale = getCanvasDisplayScale();
+    const ring = ANCHOR_RING_SCREEN_PX * scale;
+    const arm = ANCHOR_ARM_SCREEN_PX * scale;
+
+    p.stroke( ...color );
+    p.strokeWeight( weight );
+
+    // Leader line to the nearest edge of the drawn rectangle when the anchor
+    // falls outside it, so the marker reads as part of the item and not as a
+    // second, unrelated thing on the canvas.
+    if ( target.bounds ) {
+      const nearestX = Math.min(
+        Math.max(
+          target.x,
+          target.bounds.x
+        ),
+        target.bounds.x + target.bounds.w
+      );
+      const nearestY = Math.min(
+        Math.max(
+          target.y,
+          target.bounds.y
+        ),
+        target.bounds.y + target.bounds.h
+      );
+
+      if ( nearestX !== target.x || nearestY !== target.y ) {
+        p.line(
+          target.x,
+          target.y,
+          nearestX,
+          nearestY
+        );
+      }
+    }
+
+    p.line(
+      target.x - arm,
+      target.y,
+      target.x + arm,
+      target.y
+    );
+    p.line(
+      target.x,
+      target.y - arm,
+      target.x,
+      target.y + arm
+    );
+    p.circle(
+      target.x,
+      target.y,
+      ring
+    );
+  };
+
   p.push();
   p.noFill();
 
   hovers.forEach( ( index ) => {
     outline(
       targets[ index ],
-      [
-        255,
-        255,
-        255,
-        170
-      ],
+      HOVER_COLOR,
       2
+    );
+    anchor(
+      targets[ index ],
+      HOVER_COLOR,
+      1.5
     );
   } );
 
   grabbed.forEach( ( index ) => {
-    const target = targets[ index ];
-
     outline(
-      target,
-      [
-        120,
-        200,
-        255,
-        230
-      ],
+      targets[ index ],
+      GRAB_COLOR,
       3
     );
-
-    // Anchor dot: the point the stored `position` refers to.
-    p.noStroke();
-    p.fill(
-      120,
-      200,
-      255,
-      230
+    anchor(
+      targets[ index ],
+      GRAB_COLOR,
+      2
     );
-    p.circle(
-      target.x,
-      target.y,
-      6
-    );
-    p.noFill();
   } );
 
   p.pop();
