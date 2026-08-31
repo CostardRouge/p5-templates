@@ -45,6 +45,7 @@
     "exifreader": "^4.41.3",
     "gif.js": "^0.2.0",
     "gsap": "^3.13.0",
+    "heic2any": "^0.0.4",
     "immer": "^11.1.15",
     "ioredis": "^5.11.1",
     "json-edit-react": "^1.30.2",

@@ -31,6 +31,9 @@ import {
   setSketchOptions
 } from "@/lib/syncSketchOptions";
 import useAssetDrop from "@/hooks/useAssetDrop";
+import {
+  IMAGE_INPUT_ACCEPT
+} from "@/lib/assets";
 
 import {
   JobId
@@ -175,7 +178,7 @@ export default function ImageAssets( {
         <input
           ref={ fileInputRef }
           type="file"
-          accept="image/*"
+          accept={ IMAGE_INPUT_ACCEPT }
           multiple
           onChange={ async( e ) => {
             if ( null === e.target.files ) {

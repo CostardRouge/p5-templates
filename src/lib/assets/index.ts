@@ -55,3 +55,7 @@ export type {
 export {
   trackPendingMedia, awaitPendingMedia
 } from "./pendingMedia";
+
+export {
+  IMAGE_INPUT_ACCEPT, normalizeImageFile
+} from "./exotic";
