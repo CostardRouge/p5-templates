@@ -90,10 +90,30 @@ export default function ControlledAssetInput( {
 
   return (
     <div
-      className="relative h-20"
+      // Button semantics and a pointer cursor, not styling: once a photo is
+      // picked the preview below covers the drop zone entirely, so THIS div is
+      // the only tap target left for replacing it — and iOS Safari does not
+      // deliver clicks from a plain div to React's root listener. Without
+      // these, tapping the photo did nothing at all on a phone while working
+      // fine on every desktop browser.
+      className="relative h-20 cursor-pointer"
+      role="button"
+      tabIndex={ 0 }
+      aria-label="Choose a file"
       onClick={ ( e ) => {
         e.stopPropagation();
+
+        if ( e.target === inputRef.current ) {
+          return;
+        }
+
         inputRef.current?.click();
+      } }
+      onKeyDown={ ( e ) => {
+        if ( e.key === "Enter" || e.key === " " ) {
+          e.preventDefault();
+          inputRef.current?.click();
+        }
       } }
       onDragOver={ ( e ) => e.preventDefault() }
       onDrop={ async( e ) => {
