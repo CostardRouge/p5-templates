@@ -603,7 +603,14 @@ export default function FieldRenderer( {
         );
 
       case "item-list":
-        return <ItemListRenderer name={ registeredName } config={ config } />;
+        return (
+          <ItemListRenderer
+            name={ registeredName }
+            config={ config }
+            depth={ depth }
+            leafPaddingClassName={ leafPaddingClassName }
+          />
+        );
 
       case "easing":
         return (
