@@ -58,6 +58,9 @@ import {
 import BindingAffordance
   from "./ContentItems/components/BindingAffordance/BindingAffordance";
 import {
+  bindingKindFor
+} from "./ContentItems/components/BindingAffordance/bindingUtils";
+import {
   interactionBindingsEnabled
 } from "@/lib/interactionBindings";
 import deepClone from "@/utils/deepClone";
@@ -695,6 +698,27 @@ export default function FieldRenderer( {
     }
   };
 
+  // Interactive-binding affordance. `bindingKindFor` is the single list of what
+  // can be modulated (slider / number, the 2D pad, checkbox, select, colour —
+  // see bindingUtils); the affordance hides itself for non-sketch fields.
+  // Gated by the interaction-bindings plugin so a field doesn't even mount the
+  // affordance (and its per-field useWatch) when the feature is off.
+  const bindable =
+    bindingKindFor( config.component ) !== null && interactionBindingsEnabled();
+  const bindingAffordance = bindable ? (
+    <BindingAffordance
+      fieldPath={ registeredName }
+      component={ config.component }
+      config={ config }
+    />
+  ) : null;
+  // One-line bar controls take the pastille beside the bar; the checkbox row
+  // and the 2D pad place it themselves, below.
+  const inlineBinding =
+    bindable &&
+    config.component !== "vector2d" &&
+    config.component !== "checkbox";
+
   // Checkbox: label and switch share a single row — denser, and the whole
   // row is a finger-sized tap target. The reset button lives outside the
   // <label> elements so its clicks never race the label→checkbox activation.
@@ -727,6 +751,8 @@ export default function FieldRenderer( {
               </button>
             )}
 
+            {bindingAffordance}
+
             <label htmlFor={ registeredName } className="cursor-pointer">
               {renderInput()}
             </label>
@@ -749,24 +775,6 @@ export default function FieldRenderer( {
     config.component === "images-stack" ||
     config.component === "asset" ||
     config.component === "asset-stack";
-
-  // Interactive-binding affordance: slider/number get it inline (beside the
-  // bar); the vector2d pad gets it in its outer label row. The affordance
-  // hides itself for non-sketch fields.
-  const inlineBinding =
-    config.component === "slider" || config.component === "number";
-  // Gated by the interaction-bindings plugin so a field doesn't even mount the
-  // affordance (and its per-field useWatch) when the feature is off.
-  const bindable =
-    ( inlineBinding || config.component === "vector2d" ) &&
-    interactionBindingsEnabled();
-  const bindingAffordance = bindable ? (
-    <BindingAffordance
-      fieldPath={ registeredName }
-      component={ config.component }
-      config={ config }
-    />
-  ) : null;
 
   return (
     <div

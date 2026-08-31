@@ -12,9 +12,12 @@
 // frame number) are injected by the caller — see options.js, which wires this
 // into the live `options.sketch` proxy.
 //
-// MVP scope: the "continuous" family (slider / number targets) and the
-// "vector2d" passthrough. The boolean / enum families (threshold, hysteresis,
-// edge-toggle) extend `applyBinding` later via new `kind` branches.
+// Five families, one per `kind`: "continuous" (slider / number), "vector2d"
+// (an {x,y} passthrough), "boolean" (a Schmitt trigger, optionally edge-
+// toggled), "enum" (the shaped signal quantized to one of the target's option
+// values) and "color" (a two-stop [r,g,b,a] ramp). Everything upstream of the
+// mapping — sources, generators, projection, invert, curve — is shared, so a
+// new family is a `kind` branch in `bindingValue` plus a fold rule.
 
 // The shared easing set (pure math, no p5/DOM) — used to shape the 0..1 signal
 // by the same easing keys the form's easing control produces.
@@ -520,6 +523,162 @@ export function mapVector(
   };
 }
 
+// Boolean: a Schmitt trigger over the shaped signal. `threshold` is where it
+// rises; `hysteresis` widens the gap it must fall back through before it goes
+// low again, so a signal hovering on the line does not chatter. In "toggle"
+// mode each RISING edge flips the output instead of tracking the level — one
+// wave cycle = one on/off flip, which is what makes an oscillator usable as a
+// clock. Both modes are stateful, keyed by binding id like the smoothing above:
+// the state advances once per resolve, which `resolveBindings`' frame memo
+// makes once per frame.
+
+// The families whose smoothing lags the 0..1 signal instead of the mapped
+// output — see bindingValue.
+const SIGNAL_SMOOTHED_KINDS = new Set( [
+  "boolean",
+  "enum",
+  "color"
+] );
+
+const _triggerState = new Map();
+
+export function mapBoolean(
+  signal, binding
+) {
+  const mapping = binding.mapping ?? {};
+  const threshold = clamp01( num(
+    mapping.threshold,
+    0.5
+  ) );
+  const hysteresis = clamp01( num(
+    mapping.hysteresis,
+    0
+  ) );
+  const key = binding.id ?? bindingKey( binding );
+  const previous = _triggerState.get( key ) ?? {
+    high: false,
+    value: false
+  };
+
+  const high = previous.high
+    ? signal > threshold - hysteresis
+    : signal >= threshold;
+  const value = mapping.mode === "toggle"
+    ? ( high && !previous.high ? !previous.value : previous.value )
+    : high;
+
+  _triggerState.set(
+    key,
+    {
+      high,
+      value
+    }
+  );
+
+  return value;
+}
+
+// Enum: quantize the shaped signal into the option values the binding carries.
+// The list is stored ON the binding (`mapping.values`) rather than read from
+// the field config, because the resolver runs in the engine, where no form
+// config exists. An empty list yields null — a binding with nothing to choose
+// from is a no-op, not a reason to write `undefined` into the sketch.
+export function mapEnum(
+  signal, binding
+) {
+  const values = Array.isArray( binding.mapping?.values )
+    ? binding.mapping.values
+    : [];
+
+  if ( values.length === 0 ) {
+    return null;
+  }
+
+  const index = Math.min(
+    values.length - 1,
+    Math.floor( clamp01( signal ) * values.length )
+  );
+
+  return values[ index ];
+}
+
+// An [r, g, b, a] tuple (0..255 each, alpha included — the form's colour shape)
+// from whatever the binding carries, falling back component by component.
+function toRgba(
+  value, fallback
+) {
+  const list = Array.isArray( value ) ? value : [];
+
+  return [
+    num(
+      list[ 0 ],
+      fallback[ 0 ]
+    ),
+    num(
+      list[ 1 ],
+      fallback[ 1 ]
+    ),
+    num(
+      list[ 2 ],
+      fallback[ 2 ]
+    ),
+    num(
+      list[ 3 ],
+      fallback[ 3 ]
+    )
+  ];
+}
+
+// A blended component back into the integer 0..255 the colour control stores.
+function clampByte( value ) {
+  return Math.round( Math.min(
+    255,
+    Math.max(
+      0,
+      value
+    )
+  ) );
+}
+
+const COLOR_FROM = [
+  0,
+  0,
+  0,
+  255
+];
+const COLOR_TO = [
+  255,
+  255,
+  255,
+  255
+];
+
+// Colour: a two-stop ramp. The shaped signal crossfades `mapping.from` →
+// `mapping.to` component-wise, alpha included, and the result is rounded back
+// to the integer 0..255 the colour control stores.
+export function mapColor(
+  signal, binding
+) {
+  const mapping = binding.mapping ?? {};
+  const from = toRgba(
+    mapping.from,
+    COLOR_FROM
+  );
+  const to = toRgba(
+    mapping.to,
+    COLOR_TO
+  );
+  const s = clamp01( signal );
+
+  return from.map( (
+    component, i
+  ) => clampByte( lerp(
+    component,
+    to[ i ],
+    s
+  ) ) );
+}
+
 // ── Temporal smoothing (per binding) ────────────────────────────────────────
 // Keyed by the binding's identity so each one lags independently. `smoothing`
 // is 0..1: 0 disables it, higher lags more (calmer, less responsive).
@@ -665,21 +824,68 @@ function bindingValue(
     return null;
   }
 
-  return ( binding.kind ?? "continuous" ) === "vector2d"
-    ? mapVector(
+  const kind = binding.kind ?? "continuous";
+
+  if ( kind === "vector2d" ) {
+    return mapVector(
       channel,
       binding
-    )
-    : mapContinuous(
+    );
+  }
+
+  if ( !SIGNAL_SMOOTHED_KINDS.has( kind ) ) {
+    return mapContinuous(
       channel,
       binding,
       context
     );
+  }
+
+  // Discrete / non-numeric families smooth the SIGNAL, not the output: lagging
+  // a boolean, an option value or a colour tuple after the fact would mean
+  // averaging things that do not average. Lagging the signal first is also what
+  // makes smoothing read as "how long it takes to flip".
+  const signal = smoothNumber(
+    `${ binding.id ?? bindingKey( binding ) }|signal`,
+    shapedScalar(
+      binding,
+      channel,
+      context
+    ),
+    num(
+      binding.smoothing,
+      0
+    )
+  );
+
+  if ( kind === "boolean" ) {
+    return mapBoolean(
+      signal,
+      binding
+    );
+  }
+
+  if ( kind === "enum" ) {
+    return mapEnum(
+      signal,
+      binding
+    );
+  }
+
+  return mapColor(
+    signal,
+    binding
+  );
 }
 
 function smoothBindingValue(
   binding, value, kind
 ) {
+  // The signal-smoothed families already lagged upstream of their mapping.
+  if ( SIGNAL_SMOOTHED_KINDS.has( kind ) ) {
+    return value;
+  }
+
   const key = binding.id ?? bindingKey( binding );
   const amount = num(
     binding.smoothing,
@@ -866,6 +1072,41 @@ function foldTarget(
           weight
         )
       };
+    } else if ( kind === "color" ) {
+      // Colours layer like a compositor's stack: every blend mode applies per
+      // component (multiply darkens, max lightens, …), weight crossfades.
+      const prev = toRgba(
+        started ? acc : baseValue,
+        COLOR_FROM
+      );
+
+      acc = prev.map( (
+        component, i
+      ) => clampByte( blendAxis(
+        component,
+        value[ i ],
+        mode,
+        weight
+      ) ) );
+    } else if ( kind === "boolean" ) {
+      // Folded as 0/1 and re-thresholded, which gives the blend modes their
+      // logical reading: max is OR, min is AND, replace is "the top layer
+      // wins", and a weight below 0.5 leaves the layer beneath standing.
+      const prev = ( started ? acc : baseValue ) ? 1 : 0;
+
+      acc = blendAxis(
+        prev,
+        value ? 1 : 0,
+        mode,
+        weight
+      ) >= 0.5;
+    } else if ( kind === "enum" ) {
+      // One of a list of option values: nothing between two choices exists, so
+      // layers cannot mix — the last one to produce a value wins, and weight 0
+      // means the layer sits this frame out.
+      if ( weight > 0 ) {
+        acc = value;
+      }
     } else {
       acc = blendAxis(
         started ? num(
