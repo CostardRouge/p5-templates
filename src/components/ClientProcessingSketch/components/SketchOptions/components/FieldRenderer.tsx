@@ -46,6 +46,9 @@ import FieldContextMenu, {
 import {
   applyToAllSlides, canApplyToAllSlides
 } from "../utils/applyToAllSlides";
+import {
+  applyToAllHudLayers, canApplyToAllHudLayers
+} from "../utils/applyToAllHudLayers";
 import BindingAffordance
   from "./ContentItems/components/BindingAffordance/BindingAffordance";
 import {
@@ -168,11 +171,18 @@ export default function FieldRenderer( {
     registeredName
   );
 
-  // Whether this field should host the "apply to all slides" affordances:
-  // a multi-slide context, and not over an editable input (whose native menu
-  // and pointer behaviour we leave alone).
+  // HUD layers additionally offer "apply to all HUD layers" on their style
+  // fields, so the split of the shared HUD style stays one right-click away.
+  const canApplyHud = canApplyToAllHudLayers(
+    getValues,
+    registeredName
+  );
+
+  // Whether this field should host a context-menu affordance: at least one
+  // entry applies, and not over an editable input (whose native menu and
+  // pointer behaviour we leave alone).
   const canContextApply = ( target: EventTarget | null ): boolean => {
-    if ( !canApply ) {
+    if ( !canApply && !canApplyHud ) {
       return false;
     }
 
@@ -757,13 +767,32 @@ export default function FieldRenderer( {
           position={ contextMenu.position }
           onClose={ contextMenu.close }
           items={ [
-            {
-              label: config.label
-                ? `Apply "${ config.label }" to all slides`
-                : "Apply to all slides",
-              icon: CopyPlus,
-              onClick: handleApplyToAllSlides
-            }
+            ...( canApply
+              ? [
+                {
+                  label: config.label
+                    ? `Apply "${ config.label }" to all slides`
+                    : "Apply to all slides",
+                  icon: CopyPlus,
+                  onClick: handleApplyToAllSlides
+                }
+              ]
+              : [] ),
+            ...( canApplyHud
+              ? [
+                {
+                  label: config.label
+                    ? `Apply "${ config.label }" to all HUD layers`
+                    : "Apply to all HUD layers",
+                  icon: CopyPlus,
+                  onClick: () => applyToAllHudLayers(
+                    getValues,
+                    setValue,
+                    registeredName
+                  )
+                }
+              ]
+              : [] )
           ] }
         />
       )}

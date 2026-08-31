@@ -18,20 +18,15 @@ import {
 // were reported on so a consumer can ignore stale rects (item removed,
 // renderer bailed early).
 
-const registry = new Map(); // "scope:index[:part]" → { x, y, w, h, frame, order }
+const registry = new Map(); // "scope:index" → { x, y, w, h, frame, order }
 
 let currentKey = null;
 let drawOrder = 0;
 
-// A `part` addresses a positioned sub-item WITHIN a content item — a HUD widget
-// (badge, gauge, …) whose own `offset` places it independently of the item.
-// Whole-item bounds omit it; sub-item bounds append it as a third segment.
 export function itemBoundsKey(
-  scope, index, part
+  scope, index
 ) {
-  const base = `${ scope }:${ index }`;
-
-  return part == null ? base : `${ base }:${ part }`;
+  return `${ scope }:${ index }`;
 }
 
 /** Called by freeLayout before dispatching one item's renderer. */
@@ -80,49 +75,17 @@ export function reportItemBounds(
 }
 
 /**
- * Called by a sub-item renderer (a HUD widget) with the rectangle it just drew,
- * in canvas pixels, tagged with its `part` key. Registers under the current
- * item's `scope:index:part`, so the drag layer can hit-test and move that one
- * widget independently. No-op outside a begin/endItemBounds bracket.
- */
-export function reportItemPartBounds(
-  part, x, y, w, h
-) {
-  if ( !currentKey || part == null || ![
-    x,
-    y,
-    w,
-    h
-  ].every( Number.isFinite ) ) {
-    return;
-  }
-
-  registry.set(
-    `${ currentKey }:${ part }`,
-    {
-      x,
-      y,
-      w,
-      h,
-      frame: getP5()?.frameCount ?? 0,
-      order: drawOrder++
-    }
-  );
-}
-
-/**
  * The rectangle an item was last drawn at, or null when none was reported
  * recently (renderer bailed, item removed, sketch not yet drawn). `maxAge`
  * is in frames; a noLoop sketch doesn't advance frameCount, so its last
  * report stays valid.
  */
 export function getItemBounds(
-  scope, index, part, maxAge = 3
+  scope, index, maxAge = 3
 ) {
   const entry = registry.get( itemBoundsKey(
     scope,
-    index,
-    part
+    index
   ) );
 
   if ( !entry ) {

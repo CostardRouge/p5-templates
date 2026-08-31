@@ -15,10 +15,6 @@ type ContentLayersProps = {
    *  back from one lands you where you were. */
   selectedPath: string | null;
   onSelect: ( itemPath: string ) => void;
-  /** Palette state for the single-group case, where the `+` sits in the
-   *  band's header rather than in a group header of its own. */
-  paletteOpen: boolean;
-  onPaletteOpenChange: ( open: boolean ) => void;
 };
 
 /**
@@ -43,9 +39,7 @@ type ContentLayersProps = {
 export default function ContentLayers( {
   activeSlideIndex,
   selectedPath,
-  onSelect,
-  paletteOpen,
-  onPaletteOpenChange
+  onSelect
 }: ContentLayersProps ) {
   const {
     control
@@ -92,8 +86,6 @@ export default function ContentLayers( {
             baseFieldName="content"
             selectedPath={ selectedPath }
             onSelect={ onSelect }
-            paletteOpen={ hasActiveSlide ? undefined : paletteOpen }
-            onPaletteOpenChange={ hasActiveSlide ? undefined : onPaletteOpenChange }
           />
         </ContentArrayProvider>
       </SketchAssetsProvider>

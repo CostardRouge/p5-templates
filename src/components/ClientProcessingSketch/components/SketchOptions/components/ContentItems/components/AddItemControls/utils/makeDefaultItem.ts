@@ -1,7 +1,13 @@
 import {
   BackgroundItemSchema,
   BreakdownItemSchema,
-  HudItemSchema,
+  HudBadgeItemSchema,
+  HudBoundingBoxItemSchema,
+  HudCounterItemSchema,
+  HudCrosshairsItemSchema,
+  HudGaugeItemSchema,
+  HudSparklineItemSchema,
+  HudSwatchItemSchema,
   ImageItemSchema,
   ImagesStackItemSchema,
   MetaItemSchema,
@@ -48,8 +54,32 @@ export default function makeDefaultItem( type: ItemKind ): ContentItem {
       return BreakdownItemSchema.parse( {
         type
       } );
-    case "hud":
-      return HudItemSchema.parse( {
+    case "hud-badge":
+      return HudBadgeItemSchema.parse( {
+        type
+      } );
+    case "hud-gauge":
+      return HudGaugeItemSchema.parse( {
+        type
+      } );
+    case "hud-sparkline":
+      return HudSparklineItemSchema.parse( {
+        type
+      } );
+    case "hud-counter":
+      return HudCounterItemSchema.parse( {
+        type
+      } );
+    case "hud-crosshairs":
+      return HudCrosshairsItemSchema.parse( {
+        type
+      } );
+    case "hud-swatch":
+      return HudSwatchItemSchema.parse( {
+        type
+      } );
+    case "hud-bounding-box":
+      return HudBoundingBoxItemSchema.parse( {
         type
       } );
     case "background":

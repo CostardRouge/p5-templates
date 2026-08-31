@@ -126,6 +126,28 @@ export default function describeContentItem( item: unknown ): ContentItemDescrip
       case "qrcode":
         return firstNonEmpty( record.domainOverride );
 
+      case "hud-badge": {
+        const segments = record.segments;
+
+        return firstNonEmpty(
+          record.override,
+          Array.isArray( segments ) ? segments.join( " · " ) : undefined
+        );
+      }
+
+      // The rest of the HUD family is recognised by what it watches: its
+      // label when one is set, else the bound source key-path.
+      case "hud-gauge":
+      case "hud-sparkline":
+      case "hud-counter":
+      case "hud-crosshairs":
+      case "hud-swatch":
+      case "hud-bounding-box":
+        return firstNonEmpty(
+          record.label,
+          record.source
+        );
+
       default:
         return undefined;
     }

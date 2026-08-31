@@ -84,10 +84,50 @@ describe(
     );
 
     it(
+      "previews a HUD badge by its override, else its segments",
+      () => {
+        expect( describeContentItem( {
+          type: "hud-badge",
+          override: "custom line",
+          segments: [
+            "engine",
+            "name"
+          ]
+        } ).preview ).toBe( "custom line" );
+        expect( describeContentItem( {
+          type: "hud-badge",
+          override: "",
+          segments: [
+            "engine",
+            "name"
+          ]
+        } ).preview ).toBe( "engine · name" );
+      }
+    );
+
+    it(
+      "previews the other HUD elements by label, else bound source",
+      () => {
+        expect( describeContentItem( {
+          type: "hud-counter",
+          label: "",
+          source: "magnitude.start"
+        } ).preview ).toBe( "magnitude.start" );
+        expect( describeContentItem( {
+          type: "hud-gauge",
+          label: "SPEED",
+          source: "progress%"
+        } ).preview ).toBe( "SPEED" );
+      }
+    );
+
+    it(
       "leaves the preview out when the layer carries nothing readable",
       () => {
         expect( describeContentItem( {
-          type: "hud"
+          type: "hud-badge",
+          override: "",
+          segments: []
         } ).preview ).toBeUndefined();
         expect( describeContentItem( {
           type: "text",

@@ -38,7 +38,7 @@ function toRgbArray( value ) {
  * probe pushed with a colour value (e.g. a dominant colour).
  */
 export default function swatch(
-  cfg, style, part
+  cfg, style
 ) {
   withHudTransform( ( p ) => {
     const arr = toRgbArray( resolveValue( cfg.source ) );
@@ -67,7 +67,6 @@ export default function swatch(
 
     // Report the visible rectangle so the on-canvas drag can grab this swatch.
     reportWidgetBounds(
-      part,
       blockX,
       blockY,
       blockW,
