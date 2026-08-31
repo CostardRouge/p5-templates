@@ -178,7 +178,7 @@ export default function CaptureDialog( {
         )}
 
         {!browserExportSupported && (
-          <p className="px-3 py-6 text-center text-xs text-label">
+          <p className="bg-background px-3 py-6 text-center text-xs text-label">
             Exporting is not supported in this browser.
           </p>
         )}

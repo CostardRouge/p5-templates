@@ -195,7 +195,11 @@ export default function ExportPanel( {
       {/* The table keeps a floor width and the container scrolls: crushing
           six editable columns into a phone would be worse than a sideways
           scroll inside the dialog. */}
-      <div className="min-h-0 flex-1 overflow-auto">
+      {/* Opaque, unlike the dialog's glass chrome around it: a table of small
+          mono values with a sketch showing through is unreadable, and this is
+          the region you actually read. The glass stays on the title bar and
+          the footer, where it still frames the dialog against the canvas. */}
+      <div className="min-h-0 flex-1 overflow-auto bg-background">
         <table className="w-full min-w-[600px] border-collapse">
           <thead className="sticky top-0 z-10 bg-background">
             <tr className="border-b border-theme">
