@@ -22,6 +22,7 @@ import {
 import {
   triggerDownload
 } from "./download";
+import nextFrame from "./nextFrame";
 import {
   resolveFrameIndices
 } from "./frameSampling";
@@ -57,6 +58,18 @@ export type ExportItemState = {
 
 export type ExportBatchProgress = ( items: ExportItemState[] ) => void;
 
+/**
+ * Hand a finished variant's files to the caller, so they can be previewed.
+ *
+ * Deliberately a second channel rather than a field on `ExportItemState`: that
+ * type is the progress feed, copied for every listener on every frame, and is
+ * no place for blobs. The caller owns what it keeps and when it releases it —
+ * the runner itself retains nothing once this returns.
+ */
+export type ExportBatchArtifacts = (
+  variantId: string, artifacts: ExportArtifact[]
+) => void;
+
 export type RunExportBatchArgs = {
   engine: SketchEngine;
   options: SketchOption;
@@ -64,6 +77,7 @@ export type RunExportBatchArgs = {
   activeSlideIndex: number | undefined;
   variants: ExportVariant[];
   onProgress?: ExportBatchProgress;
+  onArtifacts?: ExportBatchArtifacts;
   signal?: AbortSignal;
   /** Switch slides. Injected so the runner stays testable without `window`. */
   selectSlide?: ( slideIndex: number ) => Promise<void>;
@@ -83,21 +97,6 @@ function abortError(): DOMException {
     "Export cancelled.",
     "AbortError"
   );
-}
-
-function nextFrame(): Promise<void> {
-  return new Promise( ( resolve ) => {
-    if ( typeof requestAnimationFrame !== "function" ) {
-      setTimeout(
-        resolve,
-        16
-      );
-
-      return;
-    }
-
-    requestAnimationFrame( () => resolve() );
-  } );
 }
 
 /** The default slide switcher: the runtime bridge the studio already uses. */
@@ -243,6 +242,7 @@ export async function runExportBatch( {
   activeSlideIndex,
   variants,
   onProgress,
+  onArtifacts,
   signal,
   selectSlide = defaultSelectSlide
 }: RunExportBatchArgs ): Promise<ExportItemState[]> {
@@ -346,6 +346,13 @@ export async function runExportBatch( {
           artifacts,
           sketchName,
           runSize
+        );
+
+        // After delivering, so a preview can never delay the download the
+        // user is already waiting on.
+        onArtifacts?.(
+          variant.id,
+          artifacts
         );
 
         item.status = "done";

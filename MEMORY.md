@@ -52,6 +52,8 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 - The sketch page is one inspector (canvas+animation above the sketch form), a content rail, a bottom filmstrip and Export in the docked top bar; "document" is not a UI scope and the filmstrip is not a timeline → `studio-ui.md`.
 - Front-end export is a list of variants, each re-laying the sketch out at its own resolution and framerate; the variant list doubles as the run queue → `studio-ui.md`, `recording.md`.
 - Export-time size/framerate overrides go through one scope that strips per-slide overrides, re-applies after every slide switch, waits for the resize to land, and always restores → `recording.md`.
+- A finished export can be previewed in place and handed to the OS share sheet — the only route from a browser export to iOS Photos → `recording.md`.
+- No export loop may `await` a bare `requestAnimationFrame`: a frame that never comes hangs the run rather than slowing it → `recording.md`.
 
 ## Open items (dated; remove when done)
 

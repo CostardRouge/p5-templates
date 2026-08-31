@@ -5,9 +5,6 @@ import {
   type ExportVariant,
   type ExportVariantPreset
 } from "./variants";
-import type {
-  SketchOption
-} from "@/types/sketch.types";
 
 /**
  * The export variant list, per sketch.
@@ -20,7 +17,11 @@ import type {
  * precedent keeps the dialog free to unmount without losing the list.
  */
 
-const STORAGE_PREFIX = "sketchbook.export.variants.v1";
+// v2 discards every v1 set on purpose. v1 seeded its default variant with the
+// sketch's size and framerate resolved to concrete values, so those variants
+// stopped following the sketch the moment it changed — and no migration can
+// tell a rate the user pinned deliberately from one that bug pinned for them.
+const STORAGE_PREFIX = "sketchbook.export.variants.v2";
 
 type Snapshot = {
   variants: ExportVariant[];
@@ -75,15 +76,12 @@ function load( sketchKey: string ): ExportVariant[] {
 /**
  * The list for a sketch, seeded on first read.
  *
- * A first-time list is not empty: it holds one variant matching the sketch's
- * current canvas, so "open Export, press the button" reproduces exactly what
- * the old single-shot recorder did.
+ * A first-time list is not empty: it holds one variant that follows the
+ * sketch's own size and framerate, so "open Export, press the button"
+ * reproduces exactly what the old single-shot recorder did — and keeps
+ * reproducing it after the canvas or the framerate is changed.
  */
-export function ensureVariants(
-  sketchKey: string,
-  options: SketchOption,
-  activeSlideIndex: number | undefined
-): Snapshot {
+export function ensureVariants( sketchKey: string ): Snapshot {
   const existing = snapshots.get( sketchKey );
 
   if ( existing ) {
@@ -94,11 +92,7 @@ export function ensureVariants(
   const variants = stored.length > 0
     ? stored
     : [
-      makeVariant(
-        VARIANT_PRESETS.find( ( preset ) => preset.key === "current" )!,
-        options,
-        activeSlideIndex
-      )
+      makeVariant( VARIANT_PRESETS.find( ( preset ) => preset.key === "current" )! )
     ];
 
   const snapshot: Snapshot = {
@@ -144,24 +138,16 @@ function update(
 
 export function addVariant(
   sketchKey: string,
-  preset: ExportVariantPreset,
-  options: SketchOption,
-  activeSlideIndex: number | undefined
+  preset: ExportVariantPreset
 ): void {
   update(
     sketchKey,
-    ( snapshot ) => {
-      return {
-        variants: [
-          ...snapshot.variants,
-          makeVariant(
-            preset,
-            options,
-            activeSlideIndex
-          )
-        ]
-      };
-    }
+    ( snapshot ) => ( {
+      variants: [
+        ...snapshot.variants,
+        makeVariant( preset )
+      ]
+    } )
   );
 }
 

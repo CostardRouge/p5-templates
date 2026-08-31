@@ -10,7 +10,7 @@ import {
   Menu, MenuButton, MenuItem, MenuItems
 } from "@headlessui/react";
 import {
-  runExportBatch, type ExportItemState
+  runExportBatch, type ExportArtifact, type ExportItemState
 } from "@/lib/export/runExportBatch";
 import {
   addVariant,
@@ -30,6 +30,7 @@ import {
   type ExportVariant
 } from "@/lib/export/variants";
 import useSketch from "../../../SketchProvider/hooks/useSketch";
+import ExportPreview from "./components/ExportPreview";
 import VariantTableRow from "./components/VariantTableRow";
 import type {
   RecordingFormat
@@ -82,11 +83,7 @@ export default function ExportPanel( {
 
   // Seed before the first subscription read so the table is never momentarily
   // empty on open.
-  ensureVariants(
-    sketchKey,
-    options,
-    activeSlideIndex
-  );
+  ensureVariants( sketchKey );
 
   const snapshot = useSyncExternalStore(
     subscribeVariants,
@@ -105,6 +102,18 @@ export default function ExportPanel( {
   const [
     error,
     setError
+  ] = useState<string | null>( null );
+
+  // What each finished variant produced, kept only so it can be previewed.
+  // ExportPanel is mounted only while the dialog is open, so this dies with
+  // the dialog — which is the whole intended lifetime.
+  const [
+    artifacts,
+    setArtifacts
+  ] = useState<Record<string, ExportArtifact[]>>( {} );
+  const [
+    previewing,
+    setPreviewing
   ] = useState<string | null>( null );
   const abortRef = useRef<AbortController | null>( null );
 
@@ -169,6 +178,10 @@ export default function ExportPanel( {
     abortRef.current = controller;
     setRunning( true );
     setError( null );
+    // A new run replaces the last one's results; holding both would pin two
+    // batches' worth of blobs for no reason.
+    setPreviewing( null );
+    setArtifacts( {} );
 
     try {
       await runExportBatch( {
@@ -178,7 +191,13 @@ export default function ExportPanel( {
         activeSlideIndex,
         variants: snapshot.variants,
         signal: controller.signal,
-        onProgress: setItems
+        onProgress: setItems,
+        onArtifacts: (
+          variantId, produced
+        ) => setArtifacts( ( current ) => ( {
+          ...current,
+          [ variantId ]: produced
+        } ) )
       } );
     } catch( caught ) {
       // A cancel is a normal outcome, not a failure worth shouting about —
@@ -194,12 +213,31 @@ export default function ExportPanel( {
 
   const stateFor = ( id: string ) => items.find( ( item ) => item.variantId === id );
 
+  const previewed = previewing ? artifacts[ previewing ] : undefined;
+
+  // The preview takes over the table's region rather than opening a second
+  // modal: the dialog is already a bottom sheet on mobile, and stacking a
+  // surface over that fights the chrome instead of using it.
+  if ( previewing && previewed && previewed.length > 0 ) {
+    return (
+      <ExportPreview
+        title={ snapshot.variants.find( ( variant ) => variant.id === previewing )?.name ?? "Export" }
+        artifacts={ previewed }
+        onBack={ () => setPreviewing( null ) }
+      />
+    );
+  }
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {/* The table keeps a floor width and the container scrolls: crushing
           six editable columns into a phone would be worse than a sideways
           scroll inside the dialog. */}
-      <div className="min-h-0 flex-1 overflow-auto">
+      {/* Opaque, unlike the dialog's glass chrome around it: a table of small
+          mono values with a sketch showing through is unreadable, and this is
+          the region you actually read. The glass stays on the title bar and
+          the footer, where it still frames the dialog against the canvas. */}
+      <div className="min-h-0 flex-1 overflow-auto bg-background">
         <table className="w-full min-w-[600px] border-collapse">
           <thead className="sticky top-0 z-10 bg-background">
             <tr className="border-b border-theme">
@@ -238,6 +276,9 @@ export default function ExportPanel( {
                 supportedFormats={ supportedFormats }
                 state={ stateFor( variant.id ) }
                 running={ running }
+                onPreview={ artifacts[ variant.id ]?.length
+                  ? () => setPreviewing( variant.id )
+                  : undefined }
                 removable={ snapshot.variants.length > 1 }
                 onPatch={ ( patch ) => patchVariant(
                   sketchKey,
@@ -278,9 +319,7 @@ export default function ExportPanel( {
                   type="button"
                   onClick={ () => addVariant(
                     sketchKey,
-                    preset,
-                    options,
-                    activeSlideIndex
+                    preset
                   ) }
                   className="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-left text-xs text-foreground data-focus:bg-hover"
                 >

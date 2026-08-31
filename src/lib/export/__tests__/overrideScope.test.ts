@@ -278,5 +278,90 @@ describe(
       },
       10_000
     );
+
+    describe(
+      "when the browser stops delivering animation frames",
+      () => {
+        // A backgrounded tab, a minimised window, or a software renderer with
+        // nothing left to composite: `requestAnimationFrame` is accepted and
+        // never called back. Every wait here sits in a loop whose deadline is
+        // checked BETWEEN frames, so a frame that never comes does not make an
+        // export slow — it hangs it forever on "Preparing…".
+        const deadRaf = ( () => 1 ) as unknown as typeof globalThis.requestAnimationFrame;
+
+        it(
+          "still finishes a push whose size already matches",
+          async() => {
+            const raf = globalThis.requestAnimationFrame;
+
+            globalThis.requestAnimationFrame = deadRaf;
+            jest.useFakeTimers();
+
+            try {
+              const pending = applyExportOverrides(
+                makeEngine( {
+                  width: 1080,
+                  height: 1350
+                } ),
+                OPTIONS,
+                {
+                  size: {
+                    width: 1080,
+                    height: 1350
+                  },
+                  framerate: 30
+                }
+              );
+
+              await jest.advanceTimersByTimeAsync( 1_000 );
+
+              const handle = await pending;
+
+              await handle.restore();
+              expect( isReactSketchOptionsSyncSuspended() ).toBe( false );
+            } finally {
+              jest.useRealTimers();
+              globalThis.requestAnimationFrame = raf;
+            }
+          }
+        );
+
+        it(
+          "gives up on a resize that never lands, instead of waiting forever",
+          async() => {
+            const raf = globalThis.requestAnimationFrame;
+
+            globalThis.requestAnimationFrame = deadRaf;
+            jest.useFakeTimers();
+
+            try {
+              const pending = applyExportOverrides(
+                makeEngine( {
+                  width: 1080,
+                  height: 1350
+                } ),
+                OPTIONS,
+                {
+                  size: {
+                    width: 1080,
+                    height: 1920
+                  },
+                  framerate: 30
+                }
+              );
+              const rejects = expect( pending ).rejects.toThrow( /did not resize/ );
+
+              await jest.advanceTimersByTimeAsync( 31_000 );
+              await rejects;
+
+              expect( isReactSketchOptionsSyncSuspended() ).toBe( false );
+            } finally {
+              jest.useRealTimers();
+              globalThis.requestAnimationFrame = raf;
+            }
+          }
+        );
+      }
+    );
   }
 );
