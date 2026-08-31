@@ -1,6 +1,7 @@
 # TODO — sketchbook
 
-> Last cleaned: 2026-07-19
+> Last cleaned: 2026-08-31 — items checked off against the current source, not
+> from memory; each newly ticked line names what closed it.
 
 ---
 
@@ -44,10 +45,10 @@ What's left requires actions only the repo owner can take, in this order:
 - [x] **Sketch duration control** — top-level global duration field (per-slide values override it); needs UI input and schema update
 - [x] **Full screen button** — Fullscreen API toggle on the canvas viewport; must account for scalable viewport dimensions on resize
 - [x] **Sketch preview page** — `/sketch/:id/preview` route showing canvas only (no settings, no header); accept query params to override options
-- [ ] **Sketch layout uses full window height** — fix flex/grid so canvas fills all available vertical space on desktop
-- [ ] **Lazy slide rendering** — only the active slide's P5 sketch runs; inactive slides show their saved thumbnail to save memory and CPU
-  - [ ] Swap active sketch in/out without losing form state
-  - [ ] Display other slides as page indicators or a static thumbnail strip
+- [x] **Sketch layout uses full window height** — the viewport is sized `calc(100% - top bar - transport - filmstrip - drawer)` in `SketchPage`, and the three fullscreen axes give it the whole surface when the chrome is hidden
+- [x] **Lazy slide rendering** — only the active slide's sketch runs; the filmstrip shows the others as `SlideThumbnail`s
+  - [x] Swap active sketch in/out without losing form state — slides stay in the RHF field array, only the rendered one is mounted
+  - [x] Display other slides as page indicators or a static thumbnail strip
 - [x] **Revamp slide carousel** — show current slide large in viewport, others as a horizontal strip of static thumbnails; non-active slides must not run the sketch
 - [x] **Drag items on canvas** — pick up content items by position and update their x/y in form values in real time (decision: P5 events vs React overlay — see bug B4)
 - [ ] **Copy / paste items** — Ctrl+C / Ctrl+V to deep-clone a selected item and append it to the slide's content array
@@ -62,7 +63,9 @@ What's left requires actions only the repo owner can take, in this order:
 - [x] **Meta to enable / disable a sketch** — boolean `enabled` field in template metadata; disabled sketches hidden from picker and cannot be recorded
 - [ ] **Migrate old sketches** — audit legacy sketch files (pre-refactor, `canvasdefault0` refs, old option schemas) and port them to the current template format
 - [x] **Enhance current sketch settings** — better grouping, collapsible sections, field tooltips, validation feedback (umbrella — file sub-tasks per specific UI issue)
-- [ ] **Component split** — identify remaining large components (>300 lines), split following the TemplateOptions pattern (hooks + small UI); priority: `CaptureActions`, `SketchSettings`
+- [x] **Component split — `CaptureActions`, `SketchSettings`** — both are folders now, split the TemplateOptions way: `CaptureActions/` has `hooks/useBrowserRecorder`, `useBrowserRecordingSupported`, `utils/`, and one component per job state (`NoJobActions`, `DraftActions`, `RecordingActions`, `CompletedActions`, `FailedActions`, `OptionsImportExport`); `SketchSettings/` sits at 327 lines beside `GenerateThumbnailButton`, `GeneratePreviewButton`, `SaveDefaultsButton`, `UiSoundSettingsButton` and `utils/createSketchFormConfigFromDefaults`
+- [ ] **Component split, round 2** — the two named above are done, but the studio grew new heavyweights. Current >800-line non-generated files, in order: `ContentItems/constants/field-config.ts` (1871), `types/sketch.types.ts` (1666), `BindingAffordance.tsx` (1157), `SketchesList.tsx` (1074), `SlideTransitionSettings.tsx` (978), `SketchOptions.tsx` (885), `FieldRenderer.tsx` (871), `FormUndoRedo.tsx` (842), `CaptureActions/CaptureActions.tsx` (764 — the shell kept the orchestration). Same rule: hooks + small UI, no behaviour change per commit
+  - [ ] Drop the 7-line `components/CaptureActions.tsx` re-export shim: it duplicates `CaptureActions/index.ts`, and `CaptureDialog` already `dynamic()`-imports the folder
 - [ ] **Unit tests** — cover form utilities, slide management logic, recording step calculations, thumbnail utils, and API route handlers; start with pure functions then hooks
 
 ---
@@ -73,13 +76,13 @@ What's left requires actions only the repo owner can take, in this order:
 - [ ] **Sketch code utils** — extract shared P5 utilities (`getImages`, `getBg`, color helpers, noise helpers, etc.) into a shared module importable by all sketch templates
 - [ ] **Common images handling** — define a standard `ImageInput` type and loader utility used by all sketches for loading, caching, and fallback
 - [ ] **Migrate images-stack to multiple inputs** — replace the single multi-image array field with individual typed image inputs per slot, with per-slot drag-and-drop
-- [ ] **Item-list component** — reusable ordered-array component (add / remove / reorder via drag-and-drop) that delegates each item's config to the appropriate field renderer
+- [x] **Item-list component** — `item-list` is a field type in `FieldRenderer`; it delegates each entry to the renderer for the configured item type (the breakdown item's `snapKeys` / `excludeKeys` are `item-list`s of `key-select`)
 - [ ] **Options: button field type** — support a `button` type in the settings schema; clicking triggers a named callback in the sketch (e.g. Randomize, Reset, Capture frame)
 - [ ] **Specialized input components**
-  - [ ] Color / Palette — palette picker (iridescent, rainbow, purple, blue/yellow, B&W, gold) + opacity slider
+  - [ ] Color / Palette — the named palette picker (iridescent, rainbow, purple, blue/yellow, B&W, gold) is still missing; `ControlledColorInput` already covers the colour + alpha half (draggable alpha bar over a checkerboard preview, numeric entry)
   - [ ] Noise — LOD detail, seed, noise type selector
-  - [ ] Easing — curve preset picker + custom bezier editor
-  - [ ] Vector (2D / 3D) — XY(Z) number inputs with optional linked scaling
+  - [x] Easing — `ControlledEasingInput`, `easing` field type
+  - [x] Vector (2D) — `ControlledVector2DInput` + `Vector2DPad`, `vector2d` field type (a 3D variant is still open, file it when a sketch needs one)
   - [ ] Camera — rotation and translate controls
   - [ ] Global animation curve — waveform picker (sine, square, linear, triangle) + multiplier + speed
   - [x] Webcam picker — dropdown of available `videoDeviceId`s
@@ -159,7 +162,7 @@ What's left requires actions only the repo owner can take, in this order:
 ## ⚙️ Infrastructure & DevOps
 
 - [ ] **Sentry error tracking** — frontend (error boundaries + unhandled rejections) and backend (API routes + BullMQ worker); source maps uploaded in CI
-- [ ] **Secure `.env`** — audit all env vars, ensure no secrets committed, add `.env.example`, document required vs optional; consider secrets manager for production
+- [ ] **Secure `.env`** — `.env.example` is tracked (ec49040) and no secret was ever committed (`git log --diff-filter=A -- '.env*'` is empty); what remains is documenting required vs optional per var and deciding on a secrets manager for production
 - [x] **Notification settings corner (PWA)** — widget to manage push notification preferences (enable/disable, test notification, permission status); part of PWA install flow
 - [ ] **Multi-user support** — user accounts with auth (email/password or OAuth); recordings and jobs scoped to `userId` in DB; API auth middleware; break into sub-tasks before starting
 

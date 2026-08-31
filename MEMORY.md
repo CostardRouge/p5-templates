@@ -21,6 +21,7 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 - 2026-08-20 — Work reaches `main` through pull requests: every feature commit on `main` has a paired `(#NNN)` merge commit. Open a PR; do not push to `main`.
 - 2026-08-20 — Commit bodies here are long and explanatory (see `Fix engine double-mount race exposed by Next 16.3 dev mode`): symptom, root cause, why the obvious fix did not work, how the result was verified. Match that depth — a one-line body reads as unfinished work.
 - 2026-08-20 — Verification is expected to be empirical, not asserted. Recent commit bodies end with what was actually observed ("one canvas, pause freezes the frame, … a fully opaque 1080×1350 PNG"). The `verify` skill in `.claude/skills/verify/` exists for exactly this.
+- 2026-08-31 — `TODO.md` is the backlog of record, and it lags the code: a burst of work closes items nobody unticks, so it reads as a longer backlog than it is. Before planning from it, check its claims against the source — and tick what you find done, naming what closed each line, in the same pass.
 - 2026-08-20 — Automation is preferred over discipline: a `/fix-lint` bot, a pre-commit hook that regenerates the sketch catalogue, a custom git merge driver for it, a regression test that fails on drift. When a rule can be enforced by tooling, enforce it there rather than writing it down.
 
 ## Direction in five lines
@@ -67,7 +68,6 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 ## Open items (dated; remove when done)
 
 - 2026-09-01 — **Loading-screen UX shipped** (poster-as-progress + reserved caption, precomputed total, monotonic progress, 150ms anti-flash). Details and the traps it cost in `docs/memory/architecture.md`. Still open: the engine's `ready` event is not gated on assets settling — `TODO.md` asks for it, but it needs a timeout/failure policy first.
-- 2026-08-20 — **`.env.example` is missing.** `setup.sh` runs `cp .env.example .env` under `set -e` and `README.md` points at it for the full env list, but no such file is tracked or on disk, so a fresh clone fails at the first setup step. `.gitignore` now permits it (`!.env.example`); someone who knows the real key set has to author it. Deliberately not inferred here — guessing key names into a template would be worse than its absence.
 - 2026-08-20 — `.vscode/settings.json` was untracked as accidental IDE state (it arrived inside a sketch commit, 1ccd877). Its content was genuinely useful: eslint format-on-save matching the repo's `@stylistic` rules. If that is wanted as shared project config, re-add it deliberately with a `!.vscode/settings.json` negation — the file is still on disk.
 - 2026-08-20 — `.husky/pre-push` is entirely commented out, so nothing runs `npm run build` before a push; `.github/workflows/lint-fix.yml` records the reason as "a known issue with NEXT_BUILD_DIR resolution". Either fix the resolution and re-enable it, or delete the file. Left alone: hooks are the maintainer's call.
 - 2026-08-20 — `fast-check` is a devDependency that nothing imports. Either start using it for the maths helpers or drop it.
