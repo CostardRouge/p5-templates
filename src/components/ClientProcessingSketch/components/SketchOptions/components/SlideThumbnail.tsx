@@ -181,14 +181,17 @@ export default function SlideThumbnail( {
             reveal it), fades in on desktop hover/focus like the old corner
             icons did. */}
         <div className="absolute inset-x-0 bottom-0 flex justify-center pb-1.5 pt-6 bg-gradient-to-t from-black/45 to-transparent opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity">
-          <div className="glass flex gap-0.5 rounded-full p-0.5 shadow-sm">
+          {/* rounded-lg, not a pill: the block echoes the tile's own radius so
+              it reads as part of the thumbnail rather than a badge dropped on
+              it. Buttons are rounded-md so they nest inside it correctly. */}
+          <div className="glass flex gap-0.5 rounded-lg p-0.5 shadow-sm">
             <button
               type="button"
               onClick={ ( e ) => {
                 e.stopPropagation();
                 onDuplicate();
               } }
-              className="flex items-center justify-center w-7 h-7 rounded-full text-foreground hover:bg-hover"
+              className="flex items-center justify-center w-7 h-7 rounded-md text-foreground hover:bg-hover"
               title="Duplicate"
             >
               <Copy className="w-3.5 h-3.5" />
@@ -199,7 +202,7 @@ export default function SlideThumbnail( {
                 e.stopPropagation();
                 onDelete();
               } }
-              className="flex items-center justify-center w-7 h-7 rounded-full text-foreground hover:bg-red-500/15 hover:text-red-500"
+              className="flex items-center justify-center w-7 h-7 rounded-md text-foreground hover:bg-red-500/15 hover:text-red-500"
               title="Delete"
             >
               <Trash2 className="w-3.5 h-3.5" />

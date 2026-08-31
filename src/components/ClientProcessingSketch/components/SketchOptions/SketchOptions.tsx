@@ -551,14 +551,14 @@ export default function SketchOptions( {
 
   // Publish the docked filmstrip band's height so the viewport (SketchPage)
   // can subtract it, the band can size itself and the Interactive mixer can
-  // clear it — one value, read through the CSS variable. 8rem fits a slide
-  // thumbnail row (96px tile + name line + the strip's own padding); 3rem
-  // the empty-state invite; 0 outside the docked layout.
+  // clear it — one value, read through the CSS variable. 9rem fits a slide
+  // thumbnail row (112px tile + 16px name line + the strip's own 12px
+  // padding); 3rem the empty-state invite; 0 outside the docked layout.
   useEffect(
     () => {
       document.documentElement.style.setProperty(
         STUDIO_FILMSTRIP_HEIGHT_VAR,
-        dockedDesktop ? ( hasSlides ? "8rem" : "3rem" ) : "0px"
+        dockedDesktop ? ( hasSlides ? "9rem" : "3rem" ) : "0px"
       );
 
       return () => {
@@ -693,7 +693,7 @@ export default function SketchOptions( {
                       canvas. Docked keeps it as a band between the rails. */}
                   {!dockedDesktop && (
                     <div className="glass border border-theme rounded-2xl shadow-lg overflow-hidden">
-                      <SlideFilmstrip { ...filmstripProps } thumbnailHeight={ 72 } />
+                      <SlideFilmstrip { ...filmstripProps } thumbnailHeight={ 104 } />
                     </div>
                   )}
                 </div>
@@ -734,7 +734,7 @@ export default function SketchOptions( {
                         add slot shrinks with it rather than overflowing. */}
                     <SlideFilmstrip
                       { ...filmstripProps }
-                      thumbnailHeight={ hasSlides ? 96 : 32 }
+                      thumbnailHeight={ hasSlides ? 112 : 32 }
                     />
                   </div>
                 )}
@@ -791,7 +791,7 @@ export default function SketchOptions( {
                 ) }
                 deck={
                   <div className="glass border border-theme rounded-2xl shadow-lg overflow-hidden">
-                    <SlideFilmstrip { ...filmstripProps } thumbnailHeight={ 64 } />
+                    <SlideFilmstrip { ...filmstripProps } thumbnailHeight={ 88 } />
                   </div>
                 }
                 lifecycle={ lifecycle }
