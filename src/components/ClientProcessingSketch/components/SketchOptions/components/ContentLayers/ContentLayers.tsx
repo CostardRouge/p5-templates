@@ -15,6 +15,10 @@ type ContentLayersProps = {
    *  back from one lands you where you were. */
   selectedPath: string | null;
   onSelect: ( itemPath: string ) => void;
+  /** Palette state for the single-group case, where the `+` sits in the
+   *  band's header rather than in a group header of its own. */
+  paletteOpen: boolean;
+  onPaletteOpenChange: ( open: boolean ) => void;
 };
 
 /**
@@ -27,6 +31,11 @@ type ContentLayersProps = {
  * no third "inherited, read-only" state — it would be a mode to learn for no
  * gain.
  *
+ * Without slides there is only one scope, so the group drops its header
+ * entirely: the band above already reads "layers" with the same count, and
+ * its `+` is the one in the band's own header. A group names itself only when
+ * there is another group to tell it apart from.
+ *
  * Each group is mounted inside its own scope providers, because a layer's
  * assets belong to its scope: an image in a slide layer resolves against that
  * slide's asset list, not the sketch's.
@@ -34,7 +43,9 @@ type ContentLayersProps = {
 export default function ContentLayers( {
   activeSlideIndex,
   selectedPath,
-  onSelect
+  onSelect,
+  paletteOpen,
+  onPaletteOpenChange
 }: ContentLayersProps ) {
   const {
     control
@@ -77,10 +88,12 @@ export default function ContentLayers( {
       <SketchAssetsProvider scope="global" assetsName="assets" jobId={ jobId }>
         <ContentArrayProvider name="content">
           <LayerGroup
-            label={ hasActiveSlide ? "shared by all slides" : "layers" }
+            label={ hasActiveSlide ? "shared by all slides" : undefined }
             baseFieldName="content"
             selectedPath={ selectedPath }
             onSelect={ onSelect }
+            paletteOpen={ hasActiveSlide ? undefined : paletteOpen }
+            onPaletteOpenChange={ hasActiveSlide ? undefined : onPaletteOpenChange }
           />
         </ContentArrayProvider>
       </SketchAssetsProvider>

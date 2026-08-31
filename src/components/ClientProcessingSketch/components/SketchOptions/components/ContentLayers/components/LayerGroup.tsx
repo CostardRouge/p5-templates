@@ -38,12 +38,18 @@ import useContentArray from "../../ContentArrayProvider/hooks/useContentArray";
 import LayerRow from "./LayerRow";
 
 type LayerGroupProps = {
-  /** What this group's layers apply to, e.g. "this slide". */
-  label: string;
+  /** What this group's layers apply to, e.g. "this slide". Omitted when the
+   *  group is the only one: the band above it already says "layers", and the
+   *  panel would print the same word twice. */
+  label?: string;
   /** Form path of the content array, e.g. `content` or `slides.1.content`. */
   baseFieldName: string;
   selectedPath: string | null;
   onSelect: ( itemPath: string ) => void;
+  /** Controlled palette, for the unlabelled case where the `+` lives in the
+   *  band's header instead of this group's own. */
+  paletteOpen?: boolean;
+  onPaletteOpenChange?: ( open: boolean ) => void;
 };
 
 /**
@@ -59,7 +65,9 @@ export default function LayerGroup( {
   label,
   baseFieldName,
   selectedPath,
-  onSelect
+  onSelect,
+  paletteOpen: controlledPaletteOpen,
+  onPaletteOpenChange
 }: LayerGroupProps ) {
   const {
     fields, remove, move, insert, append
@@ -69,9 +77,25 @@ export default function LayerGroup( {
   } = useFormContext();
 
   const [
-    paletteOpen,
-    setPaletteOpen
+    internalPaletteOpen,
+    setInternalPaletteOpen
   ] = React.useState( false );
+
+  const paletteOpen = controlledPaletteOpen ?? internalPaletteOpen;
+  const setPaletteOpen = React.useCallback(
+    ( open: boolean ) => {
+      if ( onPaletteOpenChange ) {
+        onPaletteOpenChange( open );
+
+        return;
+      }
+
+      setInternalPaletteOpen( open );
+    },
+    [
+      onPaletteOpenChange
+    ]
+  );
 
   const sensors = useSensors(
     useSensor(
@@ -161,41 +185,44 @@ export default function LayerGroup( {
       setPaletteOpen( false );
     },
     [
-      append
+      append,
+      setPaletteOpen
     ]
   );
 
   return (
     <div className="flex flex-col">
-      <div className="flex items-center gap-2 px-1 pb-0.5 pt-1.5">
-        <span className="truncate text-[0.6875rem] uppercase tracking-[0.08em] text-label/70">
-          {label}
-        </span>
-
-        {fields.length > 0 && (
-          <span className="text-[0.6875rem] tabular-nums text-label/50">
-            {fields.length}
+      {label && (
+        <div className="flex items-center gap-2 px-1 pb-0.5 pt-1.5">
+          <span className="truncate text-[0.6875rem] uppercase tracking-[0.08em] text-label/70">
+            {label}
           </span>
-        )}
 
-        <button
-          type="button"
-          onClick={ () => setPaletteOpen( ( open ) => !open ) }
-          aria-expanded={ paletteOpen }
-          aria-label={ `Add a layer to ${ label }` }
-          title={ `Add a layer to ${ label }` }
-          className={ clsx(
-            "ml-auto shrink-0 rounded-md p-2 md:p-1 transition-colors hover:bg-hover",
-            paletteOpen ? "text-foreground" : "text-label hover:text-foreground"
-          ) }
-        >
-          {paletteOpen ? (
-            <X className="h-4 w-4 md:h-3.5 md:w-3.5" />
-          ) : (
-            <Plus className="h-4 w-4 md:h-3.5 md:w-3.5" />
+          {fields.length > 0 && (
+            <span className="text-[0.6875rem] tabular-nums text-label/50">
+              {fields.length}
+            </span>
           )}
-        </button>
-      </div>
+
+          <button
+            type="button"
+            onClick={ () => setPaletteOpen( !paletteOpen ) }
+            aria-expanded={ paletteOpen }
+            aria-label={ `Add a layer to ${ label }` }
+            title={ `Add a layer to ${ label }` }
+            className={ clsx(
+              "ml-auto shrink-0 rounded-md p-2 md:p-1 transition-colors hover:bg-hover",
+              paletteOpen ? "text-foreground" : "text-label hover:text-foreground"
+            ) }
+          >
+            {paletteOpen ? (
+              <X className="h-4 w-4 md:h-3.5 md:w-3.5" />
+            ) : (
+              <Plus className="h-4 w-4 md:h-3.5 md:w-3.5" />
+            )}
+          </button>
+        </div>
+      )}
 
       {/* The palette animates open under the header rather than appearing at
           once: CollapsibleItem also keeps it unmounted until first opened, so

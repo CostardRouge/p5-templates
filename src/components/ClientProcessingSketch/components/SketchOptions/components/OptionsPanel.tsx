@@ -10,6 +10,9 @@ import {
 import {
   JobModel
 } from "@/types/recording.types";
+import {
+  Plus, X
+} from "lucide-react";
 import PanelSection from "./PanelSection";
 
 // Two chunks, split where the weight is. The LIST is light — rows, icons and
@@ -107,6 +110,16 @@ export function OptionsPanelBody( {
     selectPath( itemPath );
   };
 
+  // Without slides the list has a single group, which then goes unlabelled —
+  // so its `+` is hosted here, in the band's own header, and the panel never
+  // prints "layers" twice.
+  const [
+    paletteOpen,
+    setPaletteOpen
+  ] = React.useState( false );
+
+  const showBandAddButton = !address && !hasActiveSlide;
+
   return (
     <div
       className={ clsx(
@@ -127,6 +140,33 @@ export function OptionsPanelBody( {
         onToggle={ () => onCollapsibleToggle( "content" ) }
         bodyPaddingClassName="px-2 pb-2 pt-0.5"
         last={ !hasActiveSlide }
+        actions={ showBandAddButton ? (
+          <button
+            type="button"
+            onClick={ () => {
+              // Opening the palette while the band is shut would unfold it out
+              // of sight, so the band comes with it.
+              if ( !collapsibleStates.content ) {
+                onCollapsibleToggle( "content" );
+              }
+
+              setPaletteOpen( !paletteOpen );
+            } }
+            aria-expanded={ paletteOpen }
+            aria-label="Add a layer"
+            title="Add a layer"
+            className={ clsx(
+              "rounded-md p-2 md:p-1 transition-colors hover:bg-hover",
+              paletteOpen ? "text-foreground" : "text-label hover:text-foreground"
+            ) }
+          >
+            {paletteOpen ? (
+              <X className="h-4 w-4 md:h-3.5 md:w-3.5" />
+            ) : (
+              <Plus className="h-4 w-4 md:h-3.5 md:w-3.5" />
+            )}
+          </button>
+        ) : undefined }
       >
         {address ? (
           <ContentLayerDetail
@@ -138,6 +178,8 @@ export function OptionsPanelBody( {
             activeSlideIndex={ activeSlideIndex }
             selectedPath={ lastOpenedPath }
             onSelect={ openLayer }
+            paletteOpen={ paletteOpen }
+            onPaletteOpenChange={ setPaletteOpen }
           />
         )}
       </PanelSection>
@@ -145,7 +187,12 @@ export function OptionsPanelBody( {
       {/* A transition belongs to the slide, not to any layer, so it stays a
           band of its own rather than a row in the list. */}
       {hasActiveSlide && (
-        <PanelSection label="transition" expanded last>
+        <PanelSection
+          label="transition"
+          expanded={ collapsibleStates.transition }
+          onToggle={ () => onCollapsibleToggle( "transition" ) }
+          last
+        >
           <SlideTransitionSettings activeIndex={ activeSlideIndex } />
         </PanelSection>
       )}

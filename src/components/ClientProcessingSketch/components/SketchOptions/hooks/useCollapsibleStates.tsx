@@ -5,6 +5,7 @@ import {
 export type CollapsibleSection =
   | "rootSettings"
   | "content"
+  | "transition"
   | "sketchSettings"
   | "sketchSection";
 
@@ -22,6 +23,7 @@ type AllCollapsibleStates = Record<CollapsibleSection | NestedCollapsibleKey, bo
 const DEFAULT_STATES: CollapsibleStates = {
   rootSettings: true,
   content: true,
+  transition: true,
   // The panel itself (floating card / mobile drawer) and the sketch's own
   // "N options" band inside it.
   sketchSettings: true,
