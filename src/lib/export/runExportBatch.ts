@@ -5,7 +5,7 @@ import {
   type RecorderProgress
 } from "@/engines/recording";
 import {
-  captureFreshPng
+  captureFreshPngBlob
 } from "@/lib/canvasSnapshot";
 import {
   createZip, type ZipEntry
@@ -131,12 +131,6 @@ function canvasToPngBlob( canvas: HTMLCanvasElement ): Promise<Blob> {
       "image/png"
     );
   } );
-}
-
-async function dataUrlToBlob( dataUrl: string ): Promise<Blob> {
-  const response = await fetch( dataUrl );
-
-  return response.blob();
 }
 
 /**
@@ -487,9 +481,9 @@ async function runImageVariant( args: RunVariantArgs ): Promise<ExportArtifact[]
       position + 1
     );
 
-    const dataUrl = await captureFreshPng( engine );
+    const blob = await captureFreshPngBlob( engine );
 
-    if ( !dataUrl ) {
+    if ( !blob ) {
       throw new Error( "Could not read a frame from the sketch." );
     }
 
@@ -502,7 +496,7 @@ async function runImageVariant( args: RunVariantArgs ): Promise<ExportArtifact[]
           slideIndex: slideIndices.length > 1 ? slideIndex : undefined
         }
       ),
-      blob: await dataUrlToBlob( dataUrl )
+      blob
     } );
   }
 
