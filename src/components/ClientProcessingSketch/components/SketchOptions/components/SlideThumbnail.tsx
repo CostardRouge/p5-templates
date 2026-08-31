@@ -2,7 +2,7 @@ import React, {
   useState, useEffect, useRef
 } from "react";
 import {
-  Copy, Trash2, Edit2, Check
+  Copy, Trash2, Check
 } from "lucide-react";
 import clsx from "clsx";
 import {
@@ -96,8 +96,7 @@ export default function SlideThumbnail( {
       ref={ dragBinder?.setHandleRef }
       { ...( dragBinder?.handleProps ?? {} ) }
       className={ clsx(
-        "group relative flex flex-col gap-1",
-        "cursor-pointer",
+        "group relative cursor-pointer",
         {
           "opacity-50": dragBinder?.isDragging
         }
@@ -176,6 +175,44 @@ export default function SlideThumbnail( {
           </div>
         )}
 
+        {/* Name badge — the slide is named *inside* its own tile, so the cell
+            stays a plain rectangle. That is what lets the strip use one
+            uniform padding and keep the tile's radius concentric with the
+            filmstrip card's; a name line under the thumbnail forced 6px above
+            it against 26px below and made the radii impossible to reconcile.
+            Clicking the badge renames — the hover toolbar stays at two
+            buttons, since a third would be wider than the tile itself. */}
+        {isEditing ? (
+          <input
+            ref={ inputRef }
+            type="text"
+            value={ editedName }
+            onChange={ ( e ) => setEditedName( e.target.value ) }
+            onBlur={ handleRenameSubmit }
+            onKeyDown={ handleKeyDown }
+            onPointerDown={ ( e ) => e.stopPropagation() }
+            onMouseDown={ ( e ) => e.stopPropagation() }
+            onTouchStart={ ( e ) => e.stopPropagation() }
+            onDragStart={ ( e ) => e.preventDefault() }
+            onClick={ ( e ) => e.stopPropagation() }
+            className="absolute top-1 left-1 right-1 z-10 text-xs bg-background border border-theme rounded-md px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-focus cursor-text"
+            autoFocus
+          />
+        ) : (
+          <button
+            type="button"
+            onClick={ ( e ) => {
+              e.stopPropagation();
+              setIsEditing( true );
+            } }
+            onPointerDown={ ( e ) => e.stopPropagation() }
+            className="glass absolute top-1 left-1 z-10 max-w-[calc(100%-0.5rem)] truncate rounded-md px-1.5 py-0.5 text-[11px] font-medium leading-tight text-foreground hover:bg-hover"
+            title="Rename slide"
+          >
+            {name}
+          </button>
+        )}
+
         {/* Overlay Actions — one toolbar on a bottom scrim, not two icons
             pinned on the artwork. Always visible on touch (no hover state to
             reveal it), fades in on desktop hover/focus like the old corner
@@ -209,49 +246,6 @@ export default function SlideThumbnail( {
             </button>
           </div>
         </div>
-      </div>
-
-      {/* Name / Rename Input */}
-      <div className="h-4 flex items-center justify-center px-1">
-        {isEditing ? (
-          <input
-            ref={ inputRef }
-            type="text"
-            value={ editedName }
-            onChange={ ( e ) => setEditedName( e.target.value ) }
-            onBlur={ handleRenameSubmit }
-            onKeyDown={ handleKeyDown }
-            onPointerDown={ ( e ) => e.stopPropagation() }
-            onMouseDown={ ( e ) => e.stopPropagation() }
-            onTouchStart={ ( e ) => e.stopPropagation() }
-            onDragStart={ ( e ) => e.preventDefault() }
-            onClick={ ( e ) => e.stopPropagation() }
-            className="w-full text-xs text-center bg-background border border-theme rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-focus cursor-text"
-            autoFocus
-          />
-        ) : (
-          <div
-            className="flex items-center gap-1 max-w-full group/name"
-            onDoubleClick={ ( e ) => {
-              e.stopPropagation();
-              setIsEditing( true );
-            } }
-          >
-            <span className="text-xs text-foreground truncate font-medium">
-              {name}
-            </span>
-            <button
-              type="button"
-              onClick={ ( e ) => {
-                e.stopPropagation();
-                setIsEditing( true );
-              } }
-              className="p-0 text-label hover:text-foreground opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity"
-            >
-              <Edit2 className="w-2.5 h-2.5" />
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );

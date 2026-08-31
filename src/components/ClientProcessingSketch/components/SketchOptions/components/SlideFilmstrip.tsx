@@ -205,7 +205,7 @@ export default function SlideFilmstrip( {
     return (
       <div
         className={ clsx(
-          "flex h-full w-full items-center gap-3 px-3 py-1.5",
+          "flex h-full w-full items-center gap-3 p-2",
           className
         ) }
       >
@@ -240,12 +240,16 @@ export default function SlideFilmstrip( {
     >
       <div
         className={ clsx(
-          // items-start, not items-center: a slide is a thumbnail plus a name
-          // line under it, so centring the items would push the add button —
-          // which has no name line — half a line down out of alignment.
+          // items-center now that a slide is a bare thumbnail: the name moved
+          // inside the tile, so every item in the row — add slot included — is
+          // one rectangle of the same height and they centre cleanly.
+          // The padding is deliberately UNIFORM (p-2 = 8px): the tile's 8px
+          // radius is only concentric with the filmstrip card's 16px one when
+          // the inset is the same on every side (8 = 16 - 8). Splitting it
+          // back into px-3/py-1.5 breaks that on both axes at once.
           // touch-pan-x: a vertical drag started on a thumbnail must fall
           // through to the drawer's own scroll instead of being eaten here.
-          "flex h-full w-full items-start gap-2 overflow-x-auto overflow-y-hidden touch-pan-x px-3 py-1.5",
+          "flex h-full w-full items-center gap-2 overflow-x-auto overflow-y-hidden touch-pan-x p-2",
           className
         ) }
       >
