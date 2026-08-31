@@ -56,6 +56,7 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 - A finished export can be previewed in place and handed to the OS share sheet — the only route from a browser export to iOS Photos → `recording.md`.
 - No export loop may `await` a bare `requestAnimationFrame`: a frame that never comes hangs the run rather than slowing it → `recording.md`.
 - Every positioned content item is grabbable on canvas, and that takes three aligned edits (type set, anchor resolution, renderer-reported bounds) — not just a schema → `canvas-interaction.md`.
+- The home page documents the editor surface by surface with real screenshots of it, as a server component slotted into the client page → `home-and-seo.md`.
 
 ## Open items (dated; remove when done)
 
@@ -78,4 +79,5 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 | `docs/memory/local-development.md` | Running the app locally, infra services, `setup.sh`, dev-server config |
 | `docs/memory/studio-ui.md` | The sketch page's panels and layouts (inspector, content rail, filmstrip, export, mobile drawer) |
 | `docs/memory/canvas-interaction.md` | The on-canvas drag/selection layer, item-bounds reporting, a renderer's grab surface |
+| `docs/memory/home-and-seo.md` | The home page and its studio tour, the capture assets, site metadata, JSON-LD, the sitemap |
 | `docs/analytics.md` | Umami config, why auto-track is off, the pageview queue, how to verify tracking (maintained, unlike the rest of `docs/`) |
