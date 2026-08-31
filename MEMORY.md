@@ -56,6 +56,7 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 - A finished export can be previewed in place and handed to the OS share sheet — the only route from a browser export to iOS Photos → `recording.md`.
 - No export loop may `await` a bare `requestAnimationFrame`: a frame that never comes hangs the run rather than slowing it → `recording.md`.
 - Every positioned content item is grabbable on canvas, and that takes three aligned edits (type set, anchor resolution, renderer-reported bounds) — not just a schema → `canvas-interaction.md`.
+- An asset path is minted from the file's name, and a name is not an identity — every iOS camera-roll pick is `image.jpg` → `assets.md`.
 - Pixels that become a file travel as a Blob; a data URL is a mobile-Safari dead end → `assets.md`, `recording.md`.
 
 ## Open items (dated; remove when done)
