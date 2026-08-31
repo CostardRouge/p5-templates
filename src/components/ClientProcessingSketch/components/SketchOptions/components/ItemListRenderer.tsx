@@ -69,6 +69,9 @@ type SortableItemProps = {
   itemConfig: FieldConfig;
   onRemove: () => void;
   locked?: boolean;
+  /** Nesting level for the item's own field, threaded from ItemListRenderer's
+   *  own depth + 1 (see the comment on the FieldRenderer call below). */
+  depth: number;
 };
 
 function createId() {
@@ -103,7 +106,8 @@ function SortableItem( {
   fieldPath,
   itemConfig,
   onRemove,
-  locked
+  locked,
+  depth
 }: SortableItemProps ) {
   const {
     attributes,
@@ -156,11 +160,20 @@ function SortableItem( {
       </button>
 
       <div className="min-w-0 flex-1">
+        {/* depth + 1, never the default 0: itemConfig can itself be a
+            nested-object (this list's "Photo"), and depth 0 gives a
+            nested-object the full band treatment meant for a direct child of
+            a PanelSection — its own "py-2 md:py-1.5" plus a self-applied
+            leafPaddingClassName — doubled on top of this row's own border and
+            p-1. One level down uses the lighter indent-guide treatment
+            instead, sized for sitting inside something that already has its
+            own chrome. */}
         <FieldRenderer
           fieldBasePath={ fieldPath }
           fieldName=""
           config={ itemConfig }
           hideLabel={ true }
+          depth={ depth + 1 }
         />
       </div>
 
@@ -476,6 +489,7 @@ export default function ItemListRenderer( {
                     itemConfig={ config.itemConfig }
                     onRemove={ () => handleRemove( index ) }
                     locked={ config.locked }
+                    depth={ depth }
                   />
                 ) )}
               </SortableContext>
