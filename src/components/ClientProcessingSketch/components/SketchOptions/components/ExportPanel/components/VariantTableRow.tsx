@@ -102,6 +102,8 @@ type VariantTableRowProps = {
   state?: ExportItemState;
   running: boolean;
   removable: boolean;
+  /** Present once this variant's files are in hand and can be previewed. */
+  onPreview?: () => void;
   onPatch: ( patch: Partial<ExportVariant> ) => void;
   onDuplicate: () => void;
   onRemove: () => void;
@@ -129,6 +131,7 @@ export default function VariantTableRow( {
   state,
   running,
   removable,
+  onPreview,
   onPatch,
   onDuplicate,
   onRemove
@@ -291,9 +294,20 @@ export default function VariantTableRow( {
         )}
 
         {status === "done" && (
-          <span className="text-green-500">
-            ✓ {state?.bytes === undefined ? "Done" : formatBytes( state.bytes )}
-          </span>
+          onPreview ? (
+            <button
+              type="button"
+              onClick={ onPreview }
+              title="See what this produced"
+              className="rounded-md px-1 py-0.5 text-green-500 underline decoration-dotted underline-offset-2 transition-colors hover:bg-hover"
+            >
+              ✓ {state?.bytes === undefined ? "Done" : formatBytes( state.bytes )}
+            </button>
+          ) : (
+            <span className="text-green-500">
+              ✓ {state?.bytes === undefined ? "Done" : formatBytes( state.bytes )}
+            </span>
+          )
         )}
 
         {status === "failed" && (

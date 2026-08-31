@@ -10,7 +10,7 @@ import {
   Menu, MenuButton, MenuItem, MenuItems
 } from "@headlessui/react";
 import {
-  runExportBatch, type ExportItemState
+  runExportBatch, type ExportArtifact, type ExportItemState
 } from "@/lib/export/runExportBatch";
 import {
   addVariant,
@@ -30,6 +30,7 @@ import {
   type ExportVariant
 } from "@/lib/export/variants";
 import useSketch from "../../../SketchProvider/hooks/useSketch";
+import ExportPreview from "./components/ExportPreview";
 import VariantTableRow from "./components/VariantTableRow";
 import type {
   RecordingFormat
@@ -102,6 +103,18 @@ export default function ExportPanel( {
     error,
     setError
   ] = useState<string | null>( null );
+
+  // What each finished variant produced, kept only so it can be previewed.
+  // ExportPanel is mounted only while the dialog is open, so this dies with
+  // the dialog — which is the whole intended lifetime.
+  const [
+    artifacts,
+    setArtifacts
+  ] = useState<Record<string, ExportArtifact[]>>( {} );
+  const [
+    previewing,
+    setPreviewing
+  ] = useState<string | null>( null );
   const abortRef = useRef<AbortController | null>( null );
 
   const slideCount = Array.isArray( options.slides ) ? options.slides.length : 0;
@@ -165,6 +178,10 @@ export default function ExportPanel( {
     abortRef.current = controller;
     setRunning( true );
     setError( null );
+    // A new run replaces the last one's results; holding both would pin two
+    // batches' worth of blobs for no reason.
+    setPreviewing( null );
+    setArtifacts( {} );
 
     try {
       await runExportBatch( {
@@ -174,7 +191,13 @@ export default function ExportPanel( {
         activeSlideIndex,
         variants: snapshot.variants,
         signal: controller.signal,
-        onProgress: setItems
+        onProgress: setItems,
+        onArtifacts: (
+          variantId, produced
+        ) => setArtifacts( ( current ) => ( {
+          ...current,
+          [ variantId ]: produced
+        } ) )
       } );
     } catch( caught ) {
       // A cancel is a normal outcome, not a failure worth shouting about —
@@ -189,6 +212,21 @@ export default function ExportPanel( {
   };
 
   const stateFor = ( id: string ) => items.find( ( item ) => item.variantId === id );
+
+  const previewed = previewing ? artifacts[ previewing ] : undefined;
+
+  // The preview takes over the table's region rather than opening a second
+  // modal: the dialog is already a bottom sheet on mobile, and stacking a
+  // surface over that fights the chrome instead of using it.
+  if ( previewing && previewed && previewed.length > 0 ) {
+    return (
+      <ExportPreview
+        title={ snapshot.variants.find( ( variant ) => variant.id === previewing )?.name ?? "Export" }
+        artifacts={ previewed }
+        onBack={ () => setPreviewing( null ) }
+      />
+    );
+  }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -238,6 +276,9 @@ export default function ExportPanel( {
                 supportedFormats={ supportedFormats }
                 state={ stateFor( variant.id ) }
                 running={ running }
+                onPreview={ artifacts[ variant.id ]?.length
+                  ? () => setPreviewing( variant.id )
+                  : undefined }
                 removable={ snapshot.variants.length > 1 }
                 onPatch={ ( patch ) => patchVariant(
                   sketchKey,

@@ -10,6 +10,7 @@ import {
   suspendReactSketchOptionsSync
 } from "@/lib/syncSketchOptions";
 import deepClone from "@/utils/deepClone";
+import nextFrame from "./nextFrame";
 import type {
   SketchEngine
 } from "@/engines/types";
@@ -31,20 +32,22 @@ import type {
 const EXPORT_ORIGIN = "export";
 
 /**
- * How many polled frames to give the canvas to reach the target size.
+ * How many drawn frames to give the canvas to reach the target size.
  *
  * Budgeted in FRAMES, not milliseconds, on purpose: the settle is waiting on
  * the engine's own render loop, and a heavy sketch on a software renderer can
  * take seconds per frame. A wall-clock budget would abort those exports for
- * being slow rather than for being wrong. The absolute ceiling below is only
- * there to catch an engine that has stopped drawing altogether.
+ * being slow rather than for being wrong. Only frames the engine actually drew
+ * count — `nextFrame()` also returns on a timer, and spending the budget on
+ * ticks the renderer had no part in would reintroduce the wall clock through
+ * the back door.
  */
 const SETTLE_FRAME_BUDGET = 120;
 
 /** Hard stop for an engine that never draws again. */
 const SETTLE_CEILING_MS = 30_000;
 
-/** Consecutive frames the surface must hold its dimensions after a resize. */
+/** Consecutive polls the surface must hold its dimensions after a resize. */
 const STABLE_FRAMES = 2;
 
 export type ExportOverride = {
@@ -62,21 +65,6 @@ export type OverrideHandle = {
   /** Put the sketch back the way it was found. Safe to call twice. */
   restore: () => Promise<void>;
 };
-
-function nextFrame(): Promise<void> {
-  return new Promise( ( resolve ) => {
-    if ( typeof requestAnimationFrame !== "function" ) {
-      setTimeout(
-        resolve,
-        16
-      );
-
-      return;
-    }
-
-    requestAnimationFrame( () => resolve() );
-  } );
-}
 
 /**
  * Strip every per-slide `size` / `animation` override.
@@ -193,8 +181,13 @@ async function waitForSurface(
       throw new Error( `Canvas did not resize to ${ target.width }x${ target.height } (still ${ seen }).` );
     }
 
-    framesPolled++;
-    await nextFrame();
+    const {
+      framed
+    } = await nextFrame();
+
+    if ( framed ) {
+      framesPolled++;
+    }
   }
 }
 
