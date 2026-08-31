@@ -2,9 +2,6 @@
 
 import dynamic from "next/dynamic";
 import clsx from "clsx";
-import {
-  Minimize
-} from "lucide-react";
 import type React from "react";
 import {
   useCallback, useEffect, useMemo, useRef, useState
@@ -29,15 +26,14 @@ import {
 import useSketchDevWatch from "@/hooks/useSketchDevWatch";
 import usePageVisibility from "@/hooks/usePageVisibility";
 import useMediaQuery from "@/hooks/useMediaQuery";
-import useFullscreenViewport from "@/hooks/useFullscreenViewport";
+import usePresentationMode from "@/hooks/usePresentationMode";
 import {
-  enterViewportFullscreen,
-  exitViewportFullscreen,
-  registerFullscreenTarget
-} from "@/lib/fullscreen/fullscreenViewport";
-import type {
-  FullscreenControls
-} from "@/components/ScalableViewport/components/ZoomControls";
+  applyPresentationPreset,
+  exitPresentation,
+  registerPresentationSurface,
+  togglePresentationAxis
+} from "@/lib/presentation/presentationMode";
+import PresentationExitButton from "@/components/SketchPage/PresentationExitButton";
 import {
   usePanelDock
 } from "@/hooks/usePanelDock";
@@ -77,58 +73,96 @@ export default function SketchPage() {
   const reserveLeft = dockedDesktop;
   const reserveRight = dockedDesktop;
 
-  // Fullscreen mode (desktop only, official Fullscreen API). The viewport
-  // wrapper below is the element that goes fullscreen; the size select and the
-  // zoom-controls hover menu both drive the shared controller. Two modes: `hud`
-  // keeps the on-canvas overlays around the sketch; `bare` shows only the
-  // canvas, stretched to the screen resolution.
+  // Presentation mode — three independent axes (fullscreen · hide interface ·
+  // stretch canvas), driven from the zoom-controls hover menu and the shortcuts
+  // below. The viewport element registered here is what the stretch *measures*;
+  // the Fullscreen API targets the document root, which is what lets the
+  // interface stay up in fullscreen ("Focus") instead of being wiped by the
+  // browser. See src/lib/presentation/presentationMode.ts.
   const {
-    isFullscreen, mode: fullscreenMode, isSupported: fullscreenSupported
-  } = useFullscreenViewport();
-  const fullscreenAvailable = isDesktop && fullscreenSupported;
-  const bareFullscreen = isFullscreen && fullscreenMode === "bare";
-  const hudFullscreen = isFullscreen && fullscreenMode === "hud";
+    hideInterface, stretchCanvas, isPresenting
+  } = usePresentationMode();
 
   const registerViewport = useCallback(
-    ( el: HTMLDivElement | null ) => registerFullscreenTarget( el ),
+    ( el: HTMLDivElement | null ) => registerPresentationSurface( el ),
     []
   );
 
-  const fullscreenControls: FullscreenControls = useMemo(
-    () => ( {
-      available: fullscreenAvailable,
-      isFullscreen,
-      onEnter: ( targetMode ) => void enterViewportFullscreen( targetMode ),
-      onExit: () => void exitViewportFullscreen()
-    } ),
-    [
-      fullscreenAvailable,
-      isFullscreen
-    ]
-  );
+  const hotkeysEnabled = sketchLoaded && !capturing;
 
-  // "F" toggles fullscreen — exits if already in it, otherwise enters the
-  // default "keep UI" mode (the zoom-controls menu's plain "Fullscreen"
-  // entry; "Fill screen" stays a deliberate, menu-only choice).
-  const toggleFullscreen = useCallback(
-    () => {
-      if ( isFullscreen ) {
-        void exitViewportFullscreen();
-      } else if ( fullscreenAvailable ) {
-        void enterViewportFullscreen( "hud" );
-      }
-    },
-    [
-      isFullscreen,
-      fullscreenAvailable
-    ]
-  );
-
+  // One key per axis, plus "P" for the Present preset (all three at once — the
+  // shop/expo mode). Note "F" now toggles fullscreen *only*: it no longer hides
+  // the studio, which is the whole point of splitting the axes.
   useGlobalHotkey( {
     code: "KeyF",
-    onTrigger: toggleFullscreen,
-    enabled: sketchLoaded && !capturing
+    onTrigger: useCallback(
+      () => togglePresentationAxis( "fullscreen" ),
+      []
+    ),
+    enabled: hotkeysEnabled && isDesktop
   } );
+
+  useGlobalHotkey( {
+    code: "KeyH",
+    onTrigger: useCallback(
+      () => togglePresentationAxis( "hideInterface" ),
+      []
+    ),
+    enabled: hotkeysEnabled
+  } );
+
+  useGlobalHotkey( {
+    code: "KeyL",
+    onTrigger: useCallback(
+      () => togglePresentationAxis( "stretchCanvas" ),
+      []
+    ),
+    enabled: hotkeysEnabled
+  } );
+
+  useGlobalHotkey( {
+    code: "KeyP",
+    onTrigger: useCallback(
+      () => applyPresentationPreset( "present" ),
+      []
+    ),
+    enabled: hotkeysEnabled && isDesktop
+  } );
+
+  // The browser hands Esc back only while the Fullscreen API is engaged; "Fill
+  // the page" and "Clean preview" hide everything without it, so Esc has to be
+  // ours too. Not routed through useGlobalHotkey: Esc must still work with a
+  // button focused, and dismissing a dialog has to win over leaving the mode.
+  useEffect(
+    () => {
+      if ( !isPresenting ) {
+        return;
+      }
+
+      const onKeyDown = ( event: KeyboardEvent ) => {
+        const target = event.target as HTMLElement | null;
+
+        if ( event.key !== "Escape" || target?.closest( "[role=\"dialog\"], [aria-modal=\"true\"]" ) ) {
+          return;
+        }
+
+        exitPresentation();
+      };
+
+      window.addEventListener(
+        "keydown",
+        onKeyDown
+      );
+
+      return () => window.removeEventListener(
+        "keydown",
+        onKeyDown
+      );
+    },
+    [
+      isPresenting
+    ]
+  );
 
   // Portal targets inside the docked top bar: the viewport's zoom controls,
   // and the options form's bar actions (undo/redo + Export — filled by
@@ -376,24 +410,33 @@ export default function SketchPage() {
         ref={ registerViewport }
         className={ clsx(
           "w-full relative",
-          // Fullscreen owns the whole screen: the browser sizes this element to
-          // fill the display, so drop the layout insets/padding and just give
-          // it a solid backdrop.
-          isFullscreen
-            ? "bg-background"
+          // The insets key off `hideInterface`, never off fullscreen: "Focus"
+          // is fullscreen *with* the studio chrome, so its layout must stay
+          // exactly the docked one, only larger. With the chrome gone the
+          // viewport owns the whole surface — drop the insets and the mobile
+          // top strip, and give it a solid backdrop.
+          //
+          // `h-full` is load-bearing: the inline height below is what gives
+          // this element a box, and it goes with the insets. Fullscreen used to
+          // cover for that (the browser sizes the fullscreen element itself),
+          // but "Fill the page" and "Clean preview" hide the chrome without it,
+          // and an unsized wrapper collapses — the stretch then measures a zero
+          // box and the canvas silently keeps the framed size.
+          hideInterface
+            ? "h-full bg-background"
             : "pt-12 md:pt-0",
-          // Bare fullscreen: canvas only — suppress the on-hover outline (see
-          // the `.fullscreen-bare` rule in globals.css).
-          bareFullscreen && "fullscreen-bare",
+          // Nothing frames the canvas in presentation — suppress the on-hover
+          // outline (see the `.presentation-bare` rule in globals.css).
+          hideInterface && "presentation-bare",
           // Docked: inset the viewport by the top bar (h-12) and the rails
           // (w-80 / w-72) so it fits the framed area. The container resize
           // triggers ScalableViewport's refit observer.
-          !isFullscreen && dockedDesktop && "md:mt-12",
-          !isFullscreen && reserveLeft && "md:ml-80",
-          !isFullscreen && reserveRight && "md:mr-72",
-          !isFullscreen && ( reserveLeft || reserveRight || dockedDesktop ) && "md:w-auto"
+          !hideInterface && dockedDesktop && "md:mt-12",
+          !hideInterface && reserveLeft && "md:ml-80",
+          !hideInterface && reserveRight && "md:mr-72",
+          !hideInterface && ( reserveLeft || reserveRight || dockedDesktop ) && "md:w-auto"
         ) }
-        style={ isFullscreen ? undefined : {
+        style={ hideInterface ? undefined : {
           // Every layout now ends on the transport bar, so its height comes
           // off the viewport in all of them; the docked top bar (3rem) and the
           // filmstrip band only exist in the docked one, and the drawer
@@ -406,19 +449,18 @@ export default function SketchPage() {
       >
         <ScalableViewport
           disable={ capturing }
-          showZoomControls={ !capturing && sketchLoaded && !bareFullscreen }
+          showZoomControls={ !capturing && sketchLoaded && !hideInterface }
           resolutionKey={ `${ effectiveSettings.size.width }x${ effectiveSettings.size.height }` }
           isReady={ sketchLoaded }
           disableTouchGestures={ disableTouchGestures }
           lockInteractions={ browserRecording }
           docked={ dockedDesktop }
           zoomControlsContainer={ zoomSlot }
-          fullscreen={ fullscreenControls }
-          actualPixels={ bareFullscreen }
+          actualPixels={ stretchCanvas }
           onInteractionStart={ handleInteractionStart }
           onInteractionEnd={ handleInteractionEnd }
         >
-          {sketchLoaded && !capturing && !bareFullscreen && (
+          {sketchLoaded && !capturing && !hideInterface && (
             <div
               onClick={ ( e ) => e.stopPropagation() }
               className="flex justify-between font-mono text-sm mt-2"
@@ -448,22 +490,10 @@ export default function SketchPage() {
           <EngineSketchRenderer />
         </ScalableViewport>
 
-        {/* HUD fullscreen in the docked layout hides the top bar (and with it
-            the zoom-controls fullscreen menu), so surface a dedicated exit
-            affordance. The floating layout keeps its zoom controls on-screen
-            (the menu offers Exit there), and bare fullscreen is canvas-only by
-            design. Esc always works in every case. */}
-        {hudFullscreen && dockedDesktop && (
-          <button
-            onClick={ () => void exitViewportFullscreen() }
-            title="Exit fullscreen (Esc)"
-            aria-label="Exit fullscreen"
-            className="absolute top-4 left-1/2 -translate-x-1/2 z-50 inline-flex items-center gap-1.5 h-9 px-3 bg-background/90 backdrop-blur-xl border border-border rounded-xl shadow-md text-foreground/70 hover:text-foreground hover:bg-hover transition-colors"
-          >
-            <Minimize className="w-4 h-4" />
-            <span className="text-xs font-semibold">Exit fullscreen</span>
-          </button>
-        )}
+        {/* With the chrome hidden the zoom-controls menu is gone with it, so
+            this is the only visible way back — in every layout, and whether or
+            not the Fullscreen API is engaged. */}
+        {hideInterface && <PresentationExitButton />}
       </div>
 
       {/* Controls & options panel */}
@@ -471,15 +501,18 @@ export default function SketchPage() {
         <>
           {/* Docked: the top bar hosts the menu, engine and zoom controls,
               flat and edge-to-edge. Floating: the engine controls are their
-              own island (menu and zoom float in the corners). */}
-          {dockedDesktop ? (
+              own island (menu and zoom float in the corners). Both are chrome,
+              so both go while the interface is hidden — the form below stays
+              mounted regardless (it owns the capture dialog's autosave handle
+              and any running recording). */}
+          {!hideInterface && ( dockedDesktop ? (
             <DockedTopBar
               zoomSlotRef={ setZoomSlot }
               actionsSlotRef={ setActionsSlot }
             />
           ) : (
             <EngineControls />
-          )}
+          ) )}
 
           <SketchOptions
             name={ name }

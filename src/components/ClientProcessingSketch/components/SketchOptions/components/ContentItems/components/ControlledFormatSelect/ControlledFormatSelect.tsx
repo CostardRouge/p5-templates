@@ -20,17 +20,7 @@ import {
 import {
   BarLabelSegment
 } from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/ControlChrome";
-import useMediaQuery from "@/hooks/useMediaQuery";
-import useFullscreenViewport from "@/hooks/useFullscreenViewport";
-import {
-  enterViewportFullscreen
-} from "@/lib/fullscreen/fullscreenViewport";
-import {
-  FULLSCREEN_PRESETS,
-  fullscreenModeForValue,
-  fullscreenValueForMode,
-  isFullscreenFormatValue
-} from "@/lib/fullscreen/constants";
+import usePresentationMode from "@/hooks/usePresentationMode";
 
 type Props = {
   id: string;
@@ -64,26 +54,15 @@ export default function ControlledFormatSelect( {
     name: heightField
   } ) as number | undefined;
 
-  // Fullscreen is a desktop-only affordance driven by the browser Fullscreen
-  // API. Only surface it where the size config actually carries the sentinel
-  // options (the global canvas size), the viewport is wide, and the browser
-  // permits it.
-  const hasFullscreenOption = options.some( ( option ) => isFullscreenFormatValue( option.value ) );
-  const isDesktop = useMediaQuery( "(min-width: 768px)" );
+  // While the canvas is stretched, the presentation controller owns the size:
+  // it writes the surface's dimensions into the form and restores the sketch's
+  // own on exit. Offering a preset here would be a control fighting a live
+  // driver, so the select reads out the effective size instead.
   const {
-    isFullscreen, mode, isSupported
-  } = useFullscreenViewport();
-  const fullscreenAvailable = hasFullscreenOption && isDesktop && isSupported;
-  const fullscreenActive = fullscreenAvailable && isFullscreen;
+    stretchCanvas
+  } = usePresentationMode();
 
-  const currentValue = fullscreenActive
-    ? fullscreenValueForMode( mode ) ?? FULLSCREEN_PRESETS[ 0 ].value
-    : width && height
-      ? `${ width }x${ height }`
-      : "";
-
-  // The fullscreen sentinels are rendered on their own (below); keep them out of
-  // the W×H preset groups so they never land among the size options.
+  const currentValue = width && height ? `${ width }x${ height }` : "";
   const {
     ungrouped, groups
   } = useMemo(
@@ -92,10 +71,6 @@ export default function ControlledFormatSelect( {
       const groups = new Map<string, SelectOption[]>();
 
       for ( const option of options ) {
-        if ( isFullscreenFormatValue( option.value ) ) {
-          continue;
-        }
-
         if ( option.group ) {
           if ( !groups.has( option.group ) ) {
             groups.set(
@@ -125,15 +100,6 @@ export default function ControlledFormatSelect( {
     if ( !value ) {
       return;
     } // keep current size if user picked placeholder
-
-    const fullscreenMode = fullscreenModeForValue( value );
-
-    if ( fullscreenMode ) {
-      // Issued synchronously inside this change handler so the user gesture
-      // still authorises the Fullscreen request.
-      void enterViewportFullscreen( fullscreenMode );
-      return;
-    }
 
     const parsedFormat = parseFormat( value );
 
@@ -169,6 +135,23 @@ export default function ControlledFormatSelect( {
     matchedOption?.label ??
     ( currentValue ? `${ width } × ${ height }` : ( noneLabel ?? "--" ) );
 
+  if ( stretchCanvas ) {
+    return (
+      <div className={ `${ CONTROL_BAR_CLASS } opacity-60` }>
+        <BarLabelSegment label={ label } />
+
+        <span
+          className="flex min-w-0 flex-1 items-center gap-1 px-2.5"
+          title="The canvas is following the available surface. Turn off “Stretch canvas” to pick a size again."
+        >
+          <span className="truncate">
+            {currentValue ? `Adaptive — ${ width } × ${ height }` : "Adaptive"}
+          </span>
+        </span>
+      </div>
+    );
+  }
+
   return (
     <div className={ CONTROL_BAR_CLASS }>
       <BarLabelSegment label={ label } />
@@ -187,17 +170,9 @@ export default function ControlledFormatSelect( {
       >
         {noneLabel ? <option value="">{noneLabel}</option> : null}
 
-        {/* Fullscreen modes — desktop only, and only when the browser allows it. */}
-        {fullscreenAvailable &&
-          FULLSCREEN_PRESETS.map( ( preset ) => (
-            <option key={ preset.value } value={ preset.value }>
-              {preset.label}
-            </option>
-          ) )}
-
         {/* Keep the native select consistent when the current size matches
             no preset. */}
-        {currentValue && !isFullscreenFormatValue( currentValue ) && !matchedOption && (
+        {currentValue && !matchedOption && (
           <option value={ currentValue } hidden>
             {displayLabel}
           </option>
