@@ -8,6 +8,7 @@ import {
 
 import AnimationProgressionBar from "@/components/AnimationProgressionBar";
 import useSketch from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
+import useGlobalHotkey from "@/hooks/useGlobalHotkey";
 import SnapshotButton from "./SnapshotButton";
 
 type TransportBarProps = {
@@ -47,18 +48,34 @@ export default function TransportBar( {
     dispatch
   ] = useSketch();
 
-  const togglePlayback = () => {
-    if ( looping ) {
-      engine?.pause();
-    } else {
-      engine?.play();
-    }
+  const togglePlayback = React.useCallback(
+    () => {
+      if ( looping ) {
+        engine?.pause();
+      } else {
+        engine?.play();
+      }
 
-    dispatch( {
-      type: "SET_LOOPING",
-      payload: !looping
-    } );
-  };
+      dispatch( {
+        type: "SET_LOOPING",
+        payload: !looping
+      } );
+    },
+    [
+      engine,
+      looping,
+      dispatch
+    ]
+  );
+
+  // Spacebar toggles play/pause from anywhere on the page, matching the
+  // convention of every video/timeline editor. Locked out while recording,
+  // mirroring the button's own `disabled`.
+  useGlobalHotkey( {
+    code: "Space",
+    onTrigger: togglePlayback,
+    enabled: !browserRecording
+  } );
 
   return (
     <div

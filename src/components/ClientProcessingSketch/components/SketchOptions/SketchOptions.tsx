@@ -5,7 +5,7 @@ import {
 } from "lucide-react";
 import type React from "react";
 import {
-  useEffect, useRef, useState
+  useCallback, useEffect, useRef, useState
 } from "react";
 import {
   createPortal
@@ -42,6 +42,7 @@ import UndoRedo from "./components/UndoRedo";
 import InteractivePanel from "./components/InteractivePanel/InteractivePanel";
 import SketchAssetsProvider from "./components/SketchAssetsProvider/SketchAssetsProvider";
 import useMediaQuery from "@/hooks/useMediaQuery";
+import useGlobalHotkey from "@/hooks/useGlobalHotkey";
 import {
   useFormState
 } from "./hooks/useFormState";
@@ -160,6 +161,18 @@ export default function SketchOptions( {
     captureOpen,
     setCaptureOpen
   ] = useState( false );
+
+  // "E" opens the same dialog as the transport bar's record dot / the docked
+  // top bar's Export button — one more trigger for the one dialog, not a copy.
+  const openCapture = useCallback(
+    () => setCaptureOpen( true ),
+    []
+  );
+
+  useGlobalHotkey( {
+    code: "KeyE",
+    onTrigger: openCapture
+  } );
 
   const handleBannerClone = async() => {
     if ( !captureActionsRef.current ) {
@@ -755,7 +768,7 @@ export default function SketchOptions( {
                       <div className="flex items-center px-2">
                         <button
                           type="button"
-                          onClick={ () => setCaptureOpen( true ) }
+                          onClick={ openCapture }
                           title="Recording, export and options import/export"
                           className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-foreground px-3 text-xs font-medium text-background transition-opacity hover:opacity-85"
                         >
@@ -811,7 +824,7 @@ export default function SketchOptions( {
                 again. */}
             <div className="absolute bottom-0 left-0 right-0 z-40">
               <TransportBar
-                onOpenCapture={ () => setCaptureOpen( true ) }
+                onOpenCapture={ openCapture }
                 recording={ browserRecording || lifecycle.isRecording }
                 onSeekStart={ onSeekStart }
                 onSeekEnd={ onSeekEnd }

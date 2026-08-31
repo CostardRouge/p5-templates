@@ -41,6 +41,7 @@ import type {
 import {
   usePanelDock
 } from "@/hooks/usePanelDock";
+import useGlobalHotkey from "@/hooks/useGlobalHotkey";
 import DockedTopBar from "@/components/SketchPage/DockedTopBar";
 import getSketchThumbnailURL from "@/utils/getSketchThumbnailURL";
 import {
@@ -105,6 +106,29 @@ export default function SketchPage() {
       isFullscreen
     ]
   );
+
+  // "F" toggles fullscreen — exits if already in it, otherwise enters the
+  // default "keep UI" mode (the zoom-controls menu's plain "Fullscreen"
+  // entry; "Fill screen" stays a deliberate, menu-only choice).
+  const toggleFullscreen = useCallback(
+    () => {
+      if ( isFullscreen ) {
+        void exitViewportFullscreen();
+      } else if ( fullscreenAvailable ) {
+        void enterViewportFullscreen( "hud" );
+      }
+    },
+    [
+      isFullscreen,
+      fullscreenAvailable
+    ]
+  );
+
+  useGlobalHotkey( {
+    code: "KeyF",
+    onTrigger: toggleFullscreen,
+    enabled: sketchLoaded && !capturing
+  } );
 
   // Portal targets inside the docked top bar: the viewport's zoom controls,
   // and the options form's bar actions (undo/redo + Export — filled by
