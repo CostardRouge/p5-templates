@@ -5,12 +5,13 @@ import {
 } from "lucide-react";
 import clsx from "clsx";
 import {
-  useEffect, useMemo, useState
+  useCallback, useEffect, useMemo, useState
 } from "react";
 import {
   createPortal
 } from "react-dom";
 import useSketch from "../ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
+import useGlobalHotkey from "@/hooks/useGlobalHotkey";
 import {
   buildEmbedHash, diffSketchOptions, EMBED_SIZE_FILL, parseEmbedSize
 } from "@/lib/embedOptions";
@@ -93,6 +94,18 @@ export default function SketchShareDialog() {
     },
     []
   );
+
+  // "S" opens this dialog from anywhere on the page — same trigger as the
+  // engine-controls share button.
+  const openShare = useCallback(
+    () => setOpen( true ),
+    []
+  );
+
+  useGlobalHotkey( {
+    code: "KeyS",
+    onTrigger: openShare
+  } );
 
   // Close on Escape while the dialog is open.
   useEffect(
@@ -526,7 +539,7 @@ export default function SketchShareDialog() {
     <>
       <button
         type="button"
-        onClick={ () => setOpen( true ) }
+        onClick={ openShare }
         title="Share / embed"
         aria-label="Share or embed this sketch"
         // No trailing divider: this is the last control in the engine-controls

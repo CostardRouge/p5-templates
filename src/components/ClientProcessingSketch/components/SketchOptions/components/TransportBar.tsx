@@ -8,38 +8,8 @@ import {
 
 import AnimationProgressionBar from "@/components/AnimationProgressionBar";
 import useSketch from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
+import useGlobalHotkey from "@/hooks/useGlobalHotkey";
 import SnapshotButton from "./SnapshotButton";
-
-// Elements Space already has a native or ARIA meaning on — text entry,
-// buttons/links/controls (including the play button itself, which would
-// otherwise double-toggle: its own click-on-Space plus this handler), and
-// anything inside an open modal dialog.
-const INTERACTIVE_SELECTOR = [
-  "input",
-  "textarea",
-  "select",
-  "button",
-  "a[href]",
-  "[contenteditable=\"true\"]",
-  "[role=\"button\"]",
-  "[role=\"checkbox\"]",
-  "[role=\"switch\"]",
-  "[role=\"slider\"]",
-  "[role=\"menuitem\"]",
-  "[role=\"tab\"]",
-  "[role=\"dialog\"]",
-  "[aria-modal=\"true\"]"
-].join( ", " );
-
-function isSpaceReservedTarget( target: EventTarget | null ) {
-  const node = target as HTMLElement | null;
-
-  if ( !node ) {
-    return false;
-  }
-
-  return node.isContentEditable || Boolean( node.closest( INTERACTIVE_SELECTOR ) );
-}
 
 type TransportBarProps = {
   /** Opens the capture dialog — the record dot's only job. */
@@ -99,45 +69,13 @@ export default function TransportBar( {
   );
 
   // Spacebar toggles play/pause from anywhere on the page, matching the
-  // convention of every video/timeline editor — except while it would step on
-  // a focused control's own use of the key (see isSpaceReservedTarget) or
-  // while recording locks the transport (mirrors the button's `disabled`).
-  React.useEffect(
-    () => {
-      if ( browserRecording ) {
-        return;
-      }
-
-      const onKeyDown = ( event: KeyboardEvent ) => {
-        if ( event.code !== "Space" || event.repeat ) {
-          return;
-        }
-        if ( event.metaKey || event.ctrlKey || event.altKey ) {
-          return;
-        }
-        if ( isSpaceReservedTarget( event.target ) ) {
-          return;
-        }
-
-        event.preventDefault();
-        togglePlayback();
-      };
-
-      window.addEventListener(
-        "keydown",
-        onKeyDown
-      );
-
-      return () => window.removeEventListener(
-        "keydown",
-        onKeyDown
-      );
-    },
-    [
-      browserRecording,
-      togglePlayback
-    ]
-  );
+  // convention of every video/timeline editor. Locked out while recording,
+  // mirroring the button's own `disabled`.
+  useGlobalHotkey( {
+    code: "Space",
+    onTrigger: togglePlayback,
+    enabled: !browserRecording
+  } );
 
   return (
     <div
