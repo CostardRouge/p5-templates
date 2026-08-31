@@ -22,6 +22,13 @@ import type {
 type HomePageProps = {
   sketches: SketchItem[];
   engineLabels: Record<string, string>;
+  /**
+   * The detailed studio tour, rendered between the capabilities grid and the
+   * footer. Passed in as a slot rather than imported here: it is a server
+   * component (static prose + screenshots), and importing it from this client
+   * component would ship the whole thing to the browser.
+   */
+  studioFeatures?: React.ReactNode;
 };
 
 // Still the p5-templates slug until the repo itself is renamed (see TODO.md,
@@ -37,31 +44,38 @@ const MAX_RESULTS = 24;
 const CARD_GRID =
   "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4";
 
+// The capabilities grid doubles as the table of contents for the studio tour
+// below it: every card but the last links to the section that shows it.
 const FEATURES = [
   {
     icon: SlidersHorizontal,
     title: "Live parameters",
-    text: "Sliders, colors, text fields and image drop-zones — generated per sketch. Every change re-renders on the canvas instantly."
-  },
-  {
-    icon: Shuffle,
-    title: "One-click randomize",
-    text: "Reroll every setting to a valid random value — the fastest way to a variant you didn't plan."
+    text: "Sliders, colors, text, easing curves and image, video or audio drop-zones — generated per sketch. Every change re-renders instantly.",
+    href: "#controls"
   },
   {
     icon: Radio,
-    title: "Record in the browser",
-    text: "Capture mp4 or webm straight from the canvas, or save a still frame as an image. 9:16, 1:1, 4:5."
-  },
-  {
-    icon: Server,
-    title: "Headless rendering",
-    text: "Offload long renders to the built-in server queue and keep working while it cooks."
+    title: "Driven by anything",
+    text: "Bind a parameter to the microphone, a hand, a face, a gamepad — or to an oscillator that needs no permission at all.",
+    href: "#modulation"
   },
   {
     icon: Layers,
-    title: "Multi-engine",
-    text: "p5.js sketches, gsap animations and html stages share one editor, recorder and exporter."
+    title: "Layers and telemetry",
+    text: "Seventeen kinds of overlay: text, images, QR codes, specs and breakdown panels, plus seven live readouts bound to the sketch.",
+    href: "#elements"
+  },
+  {
+    icon: Shuffle,
+    title: "Variants and montage",
+    text: "Randomize a look, keep it as a slide, then let one slide morph all the others into each other on a loop.",
+    href: "#slides"
+  },
+  {
+    icon: Server,
+    title: "An export queue",
+    text: "mp4, webm, gif, png or a png sequence — several sizes at once, in the browser or handed to the server queue.",
+    href: "#export"
   },
   {
     icon: Github,
@@ -195,19 +209,23 @@ function SketchCard( {
           paddingTop: "125%"
         } }
       >
+        {/* The picture is decorative: the card prints the sketch's name right
+            under it, inside the same link, so alt text repeating it would make
+            a screen reader say the name twice (axe `image-redundant-alt`). */}
         { sketch.preview ? (
           <AnimatedPreview
             previewUrl={ sketch.preview }
             previewUrlDesktop={ sketch.previewMd ?? undefined }
             thumbnailUrl={ sketch.thumbnail }
             name={ sketch.name }
+            alt=""
             eager={ eager }
             imgClassName="w-full h-full object-cover"
           />
         ) : (
           <img
             data-pin-nopin="true"
-            alt={ sketch.name }
+            alt=""
             src={ sketch.thumbnail }
             srcSet={ `${ sketch.thumbnail } 1x, ${ sketch.thumbnail.replace(
               /\.webp$/,
@@ -232,7 +250,8 @@ function SketchCard( {
 
 export default function HomePage( {
   sketches,
-  engineLabels
+  engineLabels,
+  studioFeatures
 }: HomePageProps ) {
   const [
     query,
@@ -549,26 +568,46 @@ export default function HomePage( {
             <SectionHeader label="/capabilities" title="What you can do" />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-              { FEATURES.map( ( feature ) => (
-                <article
-                  key={ feature.title }
-                  className="p-5 rounded-xl sm:rounded-2xl border border-border bg-background"
-                >
-                  <feature.icon
-                    className="w-4 h-4 text-fuchsia-500 mb-3"
-                    strokeWidth={ 1.5 }
-                  />
-                  <h3 className="text-sm sm:text-base font-bold tracking-tight mb-1.5">
-                    { feature.title }
-                  </h3>
-                  <p className="text-xs sm:text-sm text-label leading-relaxed">
-                    { feature.text }
-                  </p>
-                </article>
-              ) ) }
+              { FEATURES.map( ( feature ) => {
+                const body = (
+                  <>
+                    <feature.icon
+                      className="w-4 h-4 text-fuchsia-500 mb-3"
+                      strokeWidth={ 1.5 }
+                    />
+                    <h3 className="text-sm sm:text-base font-bold tracking-tight mb-1.5">
+                      { feature.title }
+                    </h3>
+                    <p className="text-xs sm:text-sm text-label leading-relaxed">
+                      { feature.text }
+                    </p>
+                  </>
+                );
+
+                return (
+                  <article
+                    key={ feature.title }
+                    className="rounded-xl sm:rounded-2xl border border-border bg-background"
+                  >
+                    { feature.href ? (
+                      <a
+                        href={ feature.href }
+                        className="block p-5 rounded-xl sm:rounded-2xl hover:bg-hover/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40 transition-colors"
+                      >
+                        { body }
+                      </a>
+                    ) : (
+                      <div className="p-5">{ body }</div>
+                    ) }
+                  </article>
+                );
+              } ) }
             </div>
           </section>
         </Reveal>
+
+        {/* ============ STUDIO TOUR ============ */}
+        { studioFeatures }
 
         {/* ============ FOOTER CTA ============ */}
         <Reveal>

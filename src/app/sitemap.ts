@@ -12,8 +12,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = getBaseUrl();
   const now = new Date();
 
-  // Always-present pages
+  // Always-present pages. The home page carries the studio tour (the only
+  // page documenting the editor), so it belongs here at top priority — it was
+  // missing entirely before that tour existed.
   const staticPages: MetadataRoute.Sitemap = [
+    {
+      url: baseUrl,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 1.0
+    },
     {
       url: `${ baseUrl }/sketches`,
       lastModified: now,

@@ -2,9 +2,10 @@ import type {
   Metadata
 } from "next";
 import HomePage from "@/components/HomePage";
+import StudioFeatures from "@/components/StudioFeatures";
 import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd/BreadcrumbJsonLd";
 import {
-  buildOgTitle, getBaseUrl, SITE_DESCRIPTION, SITE_NAME
+  buildOgTitle, getBaseUrl, HOME_DESCRIPTION, SITE_NAME
 } from "@/lib/seo";
 import {
   getSketchesData
@@ -12,13 +13,15 @@ import {
 
 export const metadata: Metadata = {
   title: SITE_NAME,
-  description: SITE_DESCRIPTION,
+  // The home page now documents the editor in detail, so it gets a
+  // description of its own rather than the site-wide one.
+  description: HOME_DESCRIPTION,
   alternates: {
     canonical: "/"
   },
   openGraph: {
     title: buildOgTitle( "Home" ),
-    description: SITE_DESCRIPTION,
+    description: HOME_DESCRIPTION,
     url: "/",
     siteName: SITE_NAME,
     type: "website"
@@ -53,6 +56,7 @@ export default async function Home() {
       <HomePage
         sketches={ gallerySketches }
         engineLabels={ engineLabels }
+        studioFeatures={ <StudioFeatures /> }
       />
     </>
   );
