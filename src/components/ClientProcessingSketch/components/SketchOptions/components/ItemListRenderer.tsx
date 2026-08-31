@@ -126,8 +126,13 @@ function SortableItem( {
     <div
       ref={ setNodeRef }
       style={ style }
+      // A border, not just the space-y gap between rows: bg-background on a
+      // bg-background/50 parent (see the box below) painted the same color as
+      // the parent it sits in, so items had no visible edge of their own —
+      // exactly what the parent's own "Add Item" row already avoids with this
+      // same border.
       className={ clsx(
-        "relative flex items-center gap-1 p-1 rounded-lg bg-background",
+        "relative flex items-center gap-1 p-1 rounded-lg border border-theme bg-background",
         "data-[dragging=true]:opacity-70"
       ) }
       data-dragging={ isDragging ? "true" : "false" }
