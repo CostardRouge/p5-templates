@@ -15,6 +15,14 @@ import {
   indexToLetters, makeCopyName, nextSlideLetter
 } from "@/utils/slideNaming";
 import makeDefaultSlide from "../utils/makeDefaultSlide";
+import type {
+  CaptureThumbnailOptions
+} from "./useThumbnails";
+
+// How long the pre-switch outgoing-slide capture may delay the actual slide
+// switch. The wait normally settles in ~2 frames; this only bites when the
+// canvas is wedged, and then the switch must not lag perceptibly.
+const OUTGOING_CAPTURE_TIMEOUT_MS = 350;
 
 type UseSlideManagementProps = {
   slideFields: UseFieldArrayReturn<SketchOptionInput, "slides", "id">[ "fields" ];
@@ -26,7 +34,11 @@ type UseSlideManagementProps = {
   setValue: UseFormSetValue<SketchOptionInput>;
   sketchFormValues: any;
   onActiveSlideChange?: ( index: number | undefined ) => void;
-  captureThumbnail?: ( slideId: string, slideIndex?: number ) => Promise<void>;
+  captureThumbnail?: (
+    slideId: string,
+    slideIndex?: number,
+    options?: CaptureThumbnailOptions
+  ) => Promise<void>;
   copyThumbnail?: ( fromSlideId: string, toSlideId: string ) => void;
   enableThumbnails: boolean;
   pendingThumbnailCaptureRef: React.MutableRefObject<number | null>;
@@ -57,6 +69,11 @@ export function useSlideManagement( {
   ] = useState( false );
   const pendingSelectIndexRef = useRef<number | null>( null );
   const pendingThumbnailCopyFromIndexRef = useRef<number | null>( null );
+  // Target of a slide switch deferred behind the outgoing-thumbnail capture.
+  // While one is in flight, re-clicks must compare against it rather than the
+  // not-yet-updated activeSlideIndex, or a quick A→B→A would swallow the
+  // return click. `null` = no deferred switch pending.
+  const pendingSwitchTargetRef = useRef<{ index: number | undefined } | null>( null );
   const onActiveSlideChangeRef = useRef( onActiveSlideChange );
 
   useEffect(
@@ -117,48 +134,86 @@ export function useSlideManagement( {
         return; // Invalid index
       }
 
-      // Capture the previous slide thumbnail before switching
-      if (
-        enableThumbnails &&
-        captureThumbnail &&
-        activeSlideIndex !== undefined &&
-        index !== activeSlideIndex
-      ) {
-        const previousSlideId = slideFields[ activeSlideIndex ]?.id;
+      const targetIndex = pendingSwitchTargetRef.current
+        ? pendingSwitchTargetRef.current.index
+        : activeSlideIndex;
 
-        if ( previousSlideId ) {
-          void captureThumbnail( previousSlideId );
-        }
-      }
-
-      if ( index === activeSlideIndex ) {
+      if ( index === targetIndex ) {
         return;
       }
 
-      setActiveSlideIndex( index );
-      notifyActiveSlideChange( index );
+      const switchTarget = {
+        index
+      };
 
-      if ( typeof window.setSlide === "function" ) {
-        window.setSlide( index ?? 0 );
-      }
+      pendingSwitchTargetRef.current = switchTarget;
 
-      // Capture the incoming slide's thumbnail after it finishes rendering.
-      // Skip if a pending add/duplicate capture is already scheduled — that
-      // effect owns the capture for newly created slides.
+      const performSwitch = () => {
+        // A later click may have superseded this switch's bookkeeping; only
+        // the latest target clears the ref.
+        if ( pendingSwitchTargetRef.current === switchTarget ) {
+          pendingSwitchTargetRef.current = null;
+        }
+
+        setActiveSlideIndex( index );
+        notifyActiveSlideChange( index );
+
+        if ( typeof window.setSlide === "function" ) {
+          window.setSlide( index ?? 0 );
+        }
+
+        // Capture the incoming slide's thumbnail after it finishes rendering.
+        // Skip if a pending add/duplicate capture is already scheduled — that
+        // effect owns the capture for newly created slides.
+        if (
+          enableThumbnails &&
+          captureThumbnail &&
+          index !== undefined &&
+          pendingThumbnailCaptureRef.current === null
+        ) {
+          const incomingSlideId = slideFields[ index ]?.id;
+
+          if ( incomingSlideId ) {
+            void captureThumbnail(
+              incomingSlideId,
+              index
+            );
+          }
+        }
+      };
+
+      // Refresh the outgoing slide's thumbnail BEFORE the engine switches
+      // away, deferring the switch until the capture settles. The old
+      // fire-and-forget capture raced the switch and read the canvas
+      // mid-transition — on a WEBGL canvas that read is a blank buffer,
+      // flattened into a solid black JPEG and stored for good. Passing the
+      // current index aligns the read with the draw loop (it settles in ~2
+      // frames), and since the switch has not happened yet, whatever frame it
+      // reads still belongs to the outgoing slide; the bounded wait keeps a
+      // wedged canvas from delaying the switch perceptibly.
+      const previousSlideId =
+        activeSlideIndex !== undefined
+          ? slideFields[ activeSlideIndex ]?.id
+          : undefined;
+
       if (
         enableThumbnails &&
         captureThumbnail &&
-        index !== undefined &&
-        pendingThumbnailCaptureRef.current === null
+        previousSlideId &&
+        index !== undefined
       ) {
-        const incomingSlideId = slideFields[ index ]?.id;
-
-        if ( incomingSlideId ) {
-          void captureThumbnail(
-            incomingSlideId,
-            index
-          );
-        }
+        void captureThumbnail(
+          previousSlideId,
+          activeSlideIndex,
+          {
+            waitTimeoutMs: OUTGOING_CAPTURE_TIMEOUT_MS
+          }
+        ).then(
+          performSwitch,
+          performSwitch
+        );
+      } else {
+        performSwitch();
       }
     },
     [

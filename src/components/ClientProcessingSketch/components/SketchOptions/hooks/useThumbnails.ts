@@ -9,8 +9,15 @@ import type {
 } from "@/engines/types";
 import {
   captureThumbnailFromCanvas,
+  getRenderedSlideIndex,
   waitForSlideRendered
 } from "../utils/thumbnailUtils";
+
+export type CaptureThumbnailOptions = {
+  // Bounds waitForSlideRendered for callers that defer work on the capture
+  // settling (the pre-switch outgoing capture). Default 5000ms.
+  waitTimeoutMs?: number;
+};
 
 type UseThumbnailsProps = {
   enabled: boolean;
@@ -170,7 +177,7 @@ export function useThumbnails( {
 
   const captureThumbnail = useCallback(
     async(
-      slideId: string, slideIndex?: number
+      slideId: string, slideIndex?: number, options?: CaptureThumbnailOptions
     ) => {
       // Don't capture while a recording is in flight — a GSAP capture would
       // rasterise the same mirror canvas the recorder is driving.
@@ -178,10 +185,19 @@ export function useThumbnails( {
         return;
       }
 
+      // Whether the frame about to be read was confirmed to belong to
+      // `slideIndex`. Only a confirmed capture may store a uniform (flat)
+      // frame — see below.
+      let confirmed = false;
+
       // If slideIndex is provided, wait for the slide to be rendered
       if ( slideIndex !== undefined ) {
         try {
-          await waitForSlideRendered( slideIndex );
+          confirmed =
+            ( await waitForSlideRendered(
+              slideIndex,
+              options?.waitTimeoutMs
+            ) ) === "matched";
         } catch( error ) {
           console.warn(
             `Failed to wait for slide ${ slideIndex } rendering:`,
@@ -189,16 +205,38 @@ export function useThumbnails( {
           );
           // Continue with capture anyway to avoid completely breaking thumbnails
         }
+
+        // Rapid successive switches can leave this wait behind: if the engine
+        // is now rendering another slide, storing its frame under `slideId`
+        // would pin the wrong artwork on the tile. Drop the capture instead —
+        // the lazy re-capture path retries on the slide's next visit.
+        const renderedIndex = getRenderedSlideIndex();
+
+        if ( renderedIndex !== undefined && renderedIndex !== slideIndex ) {
+          return;
+        }
       }
 
-      const dataUrl = await captureThumbnailFromCanvas( engineRef.current );
+      const capture = await captureThumbnailFromCanvas( engineRef.current );
 
-      if ( dataUrl ) {
-        setThumbnails( ( prev ) => ( {
-          ...prev,
-          [ slideId ]: dataUrl
-        } ) );
+      if ( !capture ) {
+        return;
       }
+
+      // A uniform frame from an unconfirmed read is almost certainly a failed
+      // capture (blank WEBGL buffer, mid-switch clear) flattened into a solid
+      // JPEG — storing it would freeze a black tile forever, since the lazy
+      // re-capture path skips slides that already hold a thumbnail. Discard it
+      // so that path retries. A confirmed capture keeps its uniform frame: a
+      // sketch that legitimately renders flat gets an accurate tile.
+      if ( capture.isUniform && !confirmed ) {
+        return;
+      }
+
+      setThumbnails( ( prev ) => ( {
+        ...prev,
+        [ slideId ]: capture.dataUrl
+      } ) );
     },
     [
       enabled
