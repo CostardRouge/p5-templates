@@ -7,7 +7,7 @@ import {
 import clsx from "clsx";
 import {
   DragBinder
-} from "./ContentItems/ContentItems";
+} from "./SortableRow";
 import {
   useLiveThumbnail
 } from "../utils/useLiveThumbnail";

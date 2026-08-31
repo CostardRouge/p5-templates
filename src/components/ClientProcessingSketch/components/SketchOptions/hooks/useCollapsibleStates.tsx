@@ -4,8 +4,8 @@ import {
 
 export type CollapsibleSection =
   | "rootSettings"
-  | "globalContent"
-  | "slides"
+  | "content"
+  | "transition"
   | "sketchSettings"
   | "sketchSection";
 
@@ -15,14 +15,15 @@ type NestedCollapsibleKey = string;
 
 type AllCollapsibleStates = Record<CollapsibleSection | NestedCollapsibleKey, boolean>;
 
-// rootSettings = the inspector's "canvas & animation" section; slides = the
-// content rail's "slide N content" section — both open by default since the
-// layout rework gave each its own home. globalContent (shared content) stays
-// collapsed so the heavy content editor is not compiled on every page open.
+// rootSettings = the inspector's "canvas & animation" section; content = the
+// rail's layers band, which holds both scopes since the list replaced the two
+// separate sections. Both open by default: the band shows the layer LIST, and
+// the heavy item forms now sit behind ContentLayerDetail's own dynamic import,
+// so opening a page no longer compiles them.
 const DEFAULT_STATES: CollapsibleStates = {
   rootSettings: true,
-  globalContent: false,
-  slides: true,
+  content: true,
+  transition: true,
   // The panel itself (floating card / mobile drawer) and the sketch's own
   // "N options" band inside it.
   sketchSettings: true,
