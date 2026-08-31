@@ -25,6 +25,15 @@ const iconClassName = "w-4 h-4 text-foreground/70 group-hover:text-foreground tr
 // The presets are the cells of the matrix worth naming; the toggles below them
 // reach the rest. Ordered most-committed first, so "Present" — the shop/expo
 // mode — is the one under the pointer when the menu opens.
+//
+// Two of them set a single axis and so duplicate a toggle six rows down
+// ("Focus" = Fullscreen, "Clean preview" = Hide interface). That is deliberate:
+// a named row reaches someone who would not think to reason in axes. What they
+// must NOT carry is that toggle's shortcut hint — a preset sets all three axes
+// at once while the key flips one, so from anywhere but idle they part ways
+// (from "Present", F un-fullscreens and leaves hide+stretch on; it does not
+// apply "Focus"). The hint belongs to the toggle; only "Present" keeps a key,
+// because nothing else claims P.
 const PRESETS: {
   preset: PresentationPreset;
   icon: LucideIcon;
@@ -51,7 +60,7 @@ const PRESETS: {
     preset: "focus",
     icon: Maximize,
     label: "Focus",
-    hint: "F",
+    hint: "",
     needsFullscreen: true
   },
   {
