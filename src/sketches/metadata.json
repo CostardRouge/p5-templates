@@ -3372,6 +3372,18 @@
     "ctime": "2026-07-04T04:06:56.402Z"
   },
   {
+    "name": "synastar-terminal",
+    "engine": "p5",
+    "category": null,
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "mtime": "2026-07-05T23:09:56.565Z",
+    "ctime": "2026-07-05T23:09:31.085Z"
+  },
+  {
     "name": "face-mesh-v1",
     "engine": "p5",
     "category": "face-capture",
