@@ -131,8 +131,15 @@ function SortableItem( {
       // the parent it sits in, so items had no visible edge of their own —
       // exactly what the parent's own "Add Item" row already avoids with this
       // same border.
+      //
+      // items-start, not items-center: itemConfig can be a "nested-object"
+      // that expands into a tall form (this list's own "Photo"), and a
+      // vertically centred drag handle / delete then floats at the middle of
+      // the whole card instead of sitting beside its header row. Both action
+      // buttons are sized to that header's own row height (see their classes
+      // below) so they land beside it, not merely "near the top".
       className={ clsx(
-        "relative flex items-center gap-1 p-1 rounded-lg border border-theme bg-background",
+        "relative flex items-start gap-1 p-1 rounded-lg border border-theme bg-background",
         "data-[dragging=true]:opacity-70"
       ) }
       data-dragging={ isDragging ? "true" : "false" }
@@ -142,13 +149,13 @@ function SortableItem( {
         ref={ setActivatorNodeRef }
         { ...attributes }
         { ...listeners }
-        className="cursor-grab active:cursor-grabbing"
+        className="flex shrink-0 cursor-grab items-center justify-center rounded-md p-2 text-label transition-colors hover:bg-hover hover:text-foreground active:cursor-grabbing md:p-1.5"
         aria-label="Drag to reorder"
       >
-        <GripVertical className="h-4 w-3.5 text-foreground" />
+        <GripVertical className="h-4 w-3.5" />
       </button>
 
-      <div className="flex-1">
+      <div className="min-w-0 flex-1">
         <FieldRenderer
           fieldBasePath={ fieldPath }
           fieldName=""
@@ -161,7 +168,7 @@ function SortableItem( {
         <button
           type="button"
           onClick={ onRemove }
-          className="text-red-500 hover:text-red-700"
+          className="flex shrink-0 items-center justify-center rounded-md p-2 text-red-500 transition-colors hover:bg-hover hover:text-red-700 md:p-1.5"
           aria-label="Remove item"
         >
           <Trash2 className="h-4 w-4" />
