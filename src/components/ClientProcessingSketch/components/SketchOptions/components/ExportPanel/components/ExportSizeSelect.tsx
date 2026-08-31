@@ -62,10 +62,21 @@ export default function ExportSizeSelect( {
     []
   );
 
+  const nativeValue = `${ nativeSize.width }x${ nativeSize.height }`;
+
+  // Following the sketch shows as the sketch's own dimensions, selected among
+  // the ordinary presets — there is no separate "Sketch's own" entry. Picking
+  // that same value back is what returns a pinned variant to following (see
+  // onChange), so the capability survives without a label repeating a number
+  // the row already shows.
   const currentValue = value
     ? `${ value.width }x${ value.height }`
-    : mixedSizes ? `${ NATIVE }:${ sizeStrategy }` : NATIVE;
+    : mixedSizes ? `${ NATIVE }:${ sizeStrategy }` : nativeValue;
   const matchesPreset = presets.some( ( option ) => option.value === currentValue );
+
+  // A sketch sized outside the preset table still has to be selectable.
+  const nativeIsUnlisted =
+    !mixedSizes && !presets.some( ( option ) => option.value === nativeValue );
 
   // Custom stays open while the user types, even if the numbers momentarily
   // land on a preset — closing the inputs mid-edit would be hostile.
@@ -182,19 +193,23 @@ export default function ExportSizeSelect( {
             return;
           }
 
-          onChange( parseFormat( next ) );
+          // Choosing the sketch's own dimensions means following it, not
+          // pinning a number that happens to match today: a later canvas
+          // change should still carry the variant with it.
+          onChange( next === nativeValue ? null : parseFormat( next ) );
         } }
         className="w-full cursor-pointer appearance-none rounded-md border border-transparent bg-transparent py-1 pl-1 pr-5 font-mono text-[11px] tabular-nums text-foreground transition-colors hover:border-theme focus:border-theme focus:outline-none disabled:opacity-50"
       >
-        {mixedSizes ? (
+        {mixedSizes && (
           <optgroup label="Sketch's own — slides differ">
             <option value={ `${ NATIVE }:smallest` }>Smallest slide</option>
             <option value={ `${ NATIVE }:biggest` }>Biggest slide</option>
             <option value={ `${ NATIVE }:root` }>Root canvas</option>
           </optgroup>
-        ) : (
-          <option value={ NATIVE }>
-            Sketch&apos;s own ({nativeSize.width}×{nativeSize.height})
+        )}
+        {nativeIsUnlisted && (
+          <option value={ nativeValue }>
+            {nativeSize.width} × {nativeSize.height}
           </option>
         )}
         {groups.map( ( group ) => (
