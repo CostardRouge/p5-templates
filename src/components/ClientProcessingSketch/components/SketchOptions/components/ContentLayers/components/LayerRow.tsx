@@ -3,7 +3,7 @@
 import React from "react";
 import clsx from "clsx";
 import {
-  Copy, GripVertical, Trash2
+  Copy, Eye, EyeOff, GripVertical, Trash2
 } from "lucide-react";
 import {
   useWatch, useFormContext
@@ -48,7 +48,8 @@ export default function LayerRow( {
   dragBinder
 }: LayerRowProps ) {
   const {
-    control
+    control,
+    setValue
   } = useFormContext();
 
   const item = useWatch( {
@@ -63,6 +64,28 @@ export default function LayerRow( {
     type?: ItemKind
   } | undefined )?.type;
   const Icon = type ? ITEM_META[ type ]?.Icon : undefined;
+
+  // Only types carrying a top-level `enabled` (the HUD elements) get the eye:
+  // for everything else, deleting the layer is the only way to hide it, and a
+  // toggle that silently does nothing would be worse than none.
+  const enabled = ( item as {
+    enabled?: boolean
+  } | undefined )?.enabled;
+  const canToggleVisibility = typeof enabled === "boolean";
+  const hidden = canToggleVisibility && !enabled;
+
+  const toggleVisibility = ( event: React.MouseEvent ) => {
+    event.stopPropagation();
+    setValue(
+      `${ itemPath }.enabled`,
+      !enabled,
+      {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: true
+      }
+    );
+  };
 
   return (
     <div
@@ -101,17 +124,50 @@ export default function LayerRow( {
           />
         )}
 
-        <span className="truncate text-foreground">{label}</span>
+        <span
+          className={ clsx(
+            "truncate",
+            hidden ? "text-label/60" : "text-foreground"
+          ) }
+        >
+          {label}
+        </span>
 
         {preview && (
           <span className="truncate text-label/70">{preview}</span>
         )}
       </button>
 
+      {/* A hidden layer must be spottable without hovering, so its eye stays
+          visible while the rest of the cluster keeps the hover reveal. */}
+      {canToggleVisibility && hidden && (
+        <button
+          type="button"
+          onClick={ toggleVisibility }
+          aria-label="Show layer"
+          className={ clsx(
+            ROW_ACTION_CLASS,
+            "shrink-0"
+          ) }
+        >
+          <EyeOff className="h-4 w-4 md:h-3.5 md:w-3.5" />
+        </button>
+      )}
+
       {/* Kept out of the row button so a mis-aimed tap selects the layer
           instead of deleting it; revealed on hover, always reachable by
           keyboard. */}
       <div className="flex shrink-0 items-center gap-0.5 transition-opacity focus-within:opacity-100 md:opacity-0 md:group-hover:opacity-100">
+        {canToggleVisibility && !hidden && (
+          <button
+            type="button"
+            onClick={ toggleVisibility }
+            aria-label="Hide layer"
+            className={ ROW_ACTION_CLASS }
+          >
+            <Eye className="h-4 w-4 md:h-3.5 md:w-3.5" />
+          </button>
+        )}
         <button
           type="button"
           onClick={ ( event ) => {

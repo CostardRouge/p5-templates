@@ -1,7 +1,7 @@
 import drawSlideVisual from "../common/drawSlideVisual.js";
 import drawSlideMeta from "../common/drawSlideMeta.js";
 import drawSlideSpecs from "../common/drawSlideSpecs.js";
-import drawSlideHud from "../common/drawSlideHud.js";
+import drawHudElement from "../common/drawHudElement.js";
 import drawSlideText from "../common/drawSlideText.js";
 import drawSlideTitle from "../common/drawSlideTitle.js";
 import drawSlideImage from "../common/drawSlideImage.js";
@@ -54,8 +54,17 @@ export default function freeLayout(
       case "breakdown":
         drawSlideBreakdown( item );
         break;
-      case "hud":
-        drawSlideHud( item );
+      // HUD elements stack in array order like every other item — reordering
+      // layers reorders their z-order (the old single "hud" container forced
+      // its own internal order; the migration preserves it via insertion order).
+      case "hud-badge":
+      case "hud-gauge":
+      case "hud-sparkline":
+      case "hud-counter":
+      case "hud-crosshairs":
+      case "hud-swatch":
+      case "hud-bounding-box":
+        drawHudElement( item );
         break;
       case "text":
         drawSlideText( item );

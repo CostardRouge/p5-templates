@@ -4,7 +4,7 @@ import sketch, {
   getP5
 } from "../../sketch.js";
 import {
-  reportItemPartBounds
+  reportItemBounds
 } from "../../slides/common/itemBoundsRegistry.js";
 import drawItemBackground from "../../slides/common/drawItemBackground.js";
 
@@ -162,16 +162,15 @@ export function anchoredRect(
 }
 
 /**
- * Report a widget's drawn rectangle (canvas pixels) under its HUD sub-key, so
- * the on-canvas content drag can grab and move that one widget by its visible
- * body. `part` is the widget key (badge, gauge, sparkline, counter, swatch);
- * a no-op outside a content-item bounds bracket (see itemBoundsRegistry).
+ * Report a widget's drawn rectangle (canvas pixels), so the on-canvas content
+ * drag can grab and move the element by its visible body. Each HUD element is
+ * its own content item now, so this is plain item bounds; a no-op outside a
+ * content-item bounds bracket (see itemBoundsRegistry).
  */
 export function reportWidgetBounds(
-  part, x, y, w, h
+  x, y, w, h
 ) {
-  reportItemPartBounds(
-    part,
+  reportItemBounds(
     x,
     y,
     w,
@@ -183,7 +182,7 @@ export function reportWidgetBounds(
  * Paint the shared HUD background panel behind one widget's readout, using the
  * rectangle it just reported. `size` is the widget's font size, driving the
  * padding so the chip hugs the text. A no-op unless the HUD item sets a
- * non-transparent `backgroundColor` (see drawSlideHud). Call it right after
+ * non-transparent `backgroundColor` (see drawHudElement). Call it right after
  * reportWidgetBounds, before drawing the widget's own marks.
  */
 export function paintWidgetBackground(

@@ -19,7 +19,7 @@ import {
  * its source live each frame (deterministic — no wall-clock lerp).
  */
 export default function counter(
-  cfg, style, part
+  cfg, style
 ) {
   withHudTransform( ( p ) => {
     const raw = resolveValue( cfg.source );
@@ -80,7 +80,6 @@ export default function counter(
     );
 
     reportWidgetBounds(
-      part,
       rect.x,
       rect.y,
       rect.w,

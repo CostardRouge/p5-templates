@@ -11,9 +11,6 @@ import {
   type ReactNode
 } from "react";
 
-import {
-  useCollapsibleContext
-} from "./useCollapsibleStates";
 import type {
   CollapsibleSection
 } from "./useCollapsibleStates";
@@ -156,9 +153,6 @@ export function useContentSelectionListener( {
   onSelectSlide,
   activeSlideIndex
 }: ListenerOptions ) {
-  const {
-    setExpanded
-  } = useCollapsibleContext();
   const context = useContext( ContentSelectionContext );
   const selectPath = context?.selectPath;
 
@@ -168,7 +162,6 @@ export function useContentSelectionListener( {
     setSection,
     onSelectSlide,
     activeSlideIndex,
-    setExpanded,
     selectPath
   } );
 
@@ -176,7 +169,6 @@ export function useContentSelectionListener( {
     setSection,
     onSelectSlide,
     activeSlideIndex,
-    setExpanded,
     selectPath
   };
 
@@ -186,7 +178,6 @@ export function useContentSelectionListener( {
         const detail = ( event as CustomEvent ).detail as {
           scope?: string;
           index?: number | string;
-          part?: string | null;
         } | undefined;
 
         if ( !detail?.scope ) {
@@ -223,18 +214,7 @@ export function useContentSelectionListener( {
           return;
         }
 
-        const itemPath = `${ base }.${ detail.index }`;
-
-        // A HUD sub-widget lives in a nested-object section of the item form;
-        // open it too so its fields are visible once the item is revealed.
-        if ( detail.part ) {
-          api.setExpanded(
-            `nested-${ itemPath }.${ detail.part }`,
-            true
-          );
-        }
-
-        api.selectPath?.( itemPath );
+        api.selectPath?.( `${ base }.${ detail.index }` );
       };
 
       window.addEventListener(

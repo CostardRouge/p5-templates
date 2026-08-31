@@ -10,10 +10,9 @@ import {
 import {
   JobModel
 } from "@/types/recording.types";
-import {
-  Plus, X
-} from "lucide-react";
 import PanelSection from "./PanelSection";
+import AddLayerPopover from "./ContentItems/components/AddItemControls/components/ItemPalette/AddLayerPopover";
+import makeDefaultItem from "./ContentItems/components/AddItemControls/utils/makeDefaultItem";
 
 // Two chunks, split where the weight is. The LIST is light — rows, icons and
 // dnd-kit — and mounts with the band. The DETAIL drags in the recursive item
@@ -70,7 +69,9 @@ export function OptionsPanelBody( {
   scrollable = true
 }: OptionsPanelBodyProps ) {
   const {
-    control
+    control,
+    getValues,
+    setValue
   } = useFormContext();
 
   const rootContentLength = useWatch( {
@@ -112,11 +113,24 @@ export function OptionsPanelBody( {
 
   // Without slides the list has a single group, which then goes unlabelled —
   // so its `+` is hosted here, in the band's own header, and the panel never
-  // prints "layers" twice.
-  const [
-    paletteOpen,
-    setPaletteOpen
-  ] = React.useState( false );
+  // prints "layers" twice. It appends through setValue on the array name,
+  // which RHF propagates to the group's useFieldArray.
+  const addRootLayer = ( kind: Parameters<typeof makeDefaultItem>[ 0 ] ) => {
+    const current = getValues( "content" );
+
+    setValue(
+      "content",
+      [
+        ...( Array.isArray( current ) ? current : [] ),
+        makeDefaultItem( kind )
+      ],
+      {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: true
+      }
+    );
+  };
 
   const showBandAddButton = !address && !hasActiveSlide;
 
@@ -141,31 +155,17 @@ export function OptionsPanelBody( {
         bodyPaddingClassName="px-2 pb-2 pt-0.5"
         last={ !hasActiveSlide }
         actions={ showBandAddButton ? (
-          <button
-            type="button"
-            onClick={ () => {
-              // Opening the palette while the band is shut would unfold it out
-              // of sight, so the band comes with it.
+          <AddLayerPopover
+            onAdd={ addRootLayer }
+            ariaLabel="Add a layer"
+            onOpen={ () => {
+              // Adding into a shut band would land the new row out of sight,
+              // so the band opens with the palette.
               if ( !collapsibleStates.content ) {
                 onCollapsibleToggle( "content" );
               }
-
-              setPaletteOpen( !paletteOpen );
             } }
-            aria-expanded={ paletteOpen }
-            aria-label="Add a layer"
-            title="Add a layer"
-            className={ clsx(
-              "rounded-md p-2 md:p-1 transition-colors hover:bg-hover",
-              paletteOpen ? "text-foreground" : "text-label hover:text-foreground"
-            ) }
-          >
-            {paletteOpen ? (
-              <X className="h-4 w-4 md:h-3.5 md:w-3.5" />
-            ) : (
-              <Plus className="h-4 w-4 md:h-3.5 md:w-3.5" />
-            )}
-          </button>
+          />
         ) : undefined }
       >
         {address ? (
@@ -178,8 +178,6 @@ export function OptionsPanelBody( {
             activeSlideIndex={ activeSlideIndex }
             selectedPath={ lastOpenedPath }
             onSelect={ openLayer }
-            paletteOpen={ paletteOpen }
-            onPaletteOpenChange={ setPaletteOpen }
           />
         )}
       </PanelSection>

@@ -6,7 +6,8 @@ import {
  * Per-source ring-buffer history for sparkline widgets. Fed automatically by the
  * sparkline renderer each frame (no push API needed). Keyed on frameCount so it
  * replays identically during recording; multiple appends in one frame overwrite
- * the latest slot.
+ * the latest slot. Two sparkline elements watching the same source share one
+ * buffer by design — both write the same value into the same frame slot.
  *
  * The buffer auto-clears when the p5 instance changes (i.e. between sketches),
  * so values never leak across sketch loads.

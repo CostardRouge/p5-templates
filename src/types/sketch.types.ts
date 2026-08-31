@@ -882,10 +882,15 @@ export const QrCodeItemSchema = z.object( {
   ] )
 } );
 
-/* ---------------- HUD / telemetry content-item ------------------ */
-// A single "hud" content-item holds one slot per telemetry widget. Each widget
-// binds to a `source`: a built-in live key (fps / frame / progression …) or a
-// dotted key-path into the sketch settings ("magnitude.start").
+/* ---------------- HUD / telemetry content-items ------------------ */
+// Each telemetry widget is its own standalone content-item type ("hud-badge",
+// "hud-gauge", …) with its own style and placement. They used to live as slots
+// inside a single "hud" container item — legacy trees are expanded by
+// `migrateLegacyHudItems` (src/utils) BEFORE OptionsSchema parses, because an
+// unknown `type` in the strictly-parsed content array would trip initOptions'
+// top-level `.catch` and reset the whole options. Widgets bind to a `source`:
+// a built-in live key (fps / frame / progression …) or a dotted key-path into
+// the sketch settings ("magnitude.start").
 
 const HudAnchor = z.enum( [
   "top-left",
@@ -933,226 +938,337 @@ export const BADGE_SEGMENTS = [
   "name"
 ] as const;
 
-export const HudBadgeSchema = z
-  .object( {
-    enabled: z.boolean().default( false ),
-    // Which values to print, in order — each renders as its own segment with a
-    // "·" separator between them. Defaults to the sketch identity line
-    // (engine · category · name). A bad persisted token heals to "name" so one
-    // stale value never resets the whole deck.
-    segments: z
-      .array( z.enum( BADGE_SEGMENTS ).catch( "name" ) )
-      .default( [
-        "engine",
-        "category",
-        "name"
-      ] ),
-    // When non-empty, replaces the entire badge text (segments are ignored).
-    override: z.string().default( "" ),
-    anchor: HudAnchor.default( "top-right" ),
-    offset: hudOffset(
-      0.95,
-      0.06
-    ),
-    size: z.number().positive()
-      .default( 20 ),
-    fill: RGBA.optional(),
-    font: z.string().optional(),
-    blend: Blend.optional()
-  } )
-  .prefault( {} );
-
-export const HudGaugeSchema = z
-  .object( {
-    enabled: z.boolean().default( true ),
-    source: z.string().default( "progress%" ),
-    anchor: HudAnchor.default( "bottom-left" ),
-    offset: hudOffset(
-      0.05,
-      0.9
-    ),
-    size: z.number().positive()
-      .default( 18 ),
-    min: z.number().default( 0 ),
-    max: z.number().default( 100 ),
-    label: z.string().default( "" ),
-    unit: z.string().default( "" ),
-    decimals: z.number().int()
-      .min( 0 )
-      .max( 4 )
-      .default( 0 ),
-    easingFn: z.string().default( "linear" ),
-    fill: RGBA.optional(),
-    blend: Blend.optional(),
-    ...hudWindow
-  } )
-  .prefault( {} );
-
-export const HudSparklineSchema = z
-  .object( {
-    enabled: z.boolean().default( true ),
-    source: z.string().default( "progress%" ),
-    anchor: HudAnchor.default( "bottom-right" ),
-    offset: hudOffset(
-      0.95,
-      0.9
-    ),
-    size: z.number().positive()
-      .default( 16 ),
-    min: z.number().default( 0 ),
-    max: z.number().default( 100 ),
-    historySize: z.number().int()
-      .min( 8 )
-      .max( 180 )
-      .default( 120 ),
-    decimals: z.number().int()
-      .min( 0 )
-      .max( 4 )
-      .default( 0 ),
-    unit: z.string().default( "" ),
-    fill: RGBA.optional(),
-    blend: Blend.optional(),
-    ...hudWindow
-  } )
-  .prefault( {} );
-
-export const HudCounterSchema = z
-  .object( {
-    enabled: z.boolean().default( false ),
-    source: z.string().default( "frame" ),
-    anchor: HudAnchor.default( "top-left" ),
-    offset: hudOffset(
-      0.05,
-      0.85
-    ),
-    size: z.number().positive()
-      .default( 28 ),
-    label: z.string().default( "" ),
-    unit: z.string().default( "" ),
-    decimals: z.number().int()
-      .min( 0 )
-      .max( 4 )
-      .default( 0 ),
-    fill: RGBA.optional(),
-    blend: Blend.optional(),
-    ...hudWindow
-  } )
-  .prefault( {} );
-
-export const HudCrosshairsSchema = z
-  .object( {
-    enabled: z.boolean().default( false ),
-    source: z.string().default( "center" ),
-    size: z.number().positive()
-      .default( 16 ),
-    fill: RGBA.optional(),
-    blend: Blend.optional(),
-    ...hudWindow
-  } )
-  .prefault( {} );
-
-export const HudSwatchSchema = z
-  .object( {
-    enabled: z.boolean().default( false ),
-    // Bind to a live colour source by default (the sketch fill, falling back to
-    // the HUD accent) so the swatch renders a chip out of the box instead of
-    // staying blank on an empty source.
-    source: z.string().default( "fill" ),
-    anchor: HudAnchor.default( "top-right" ),
-    offset: hudOffset(
-      0.95,
-      0.2
-    ),
-    size: z.number().positive()
-      .default( 18 ),
-    label: z.string().default( "COLOR" ),
-    fill: RGBA.default( [
-      0,
-      255,
-      120,
-      255
-    ] ),
-    font: z.string().default( "spaceMonoRegular" ),
-    blend: Blend.default( "source-over" ),
-    ...hudWindow
-  } )
-  .prefault( {} );
-
-export const HudBoundingBoxSchema = z
-  .object( {
-    enabled: z.boolean().default( false ),
-    source: z.string().default( "" ),
-    size: z.number().positive()
-      .default( 14 ),
-    region: z
-      .object( {
-        x: z.number().min( 0 )
-          .max( 1 )
-          .default( 0.2 ),
-        y: z.number().min( 0 )
-          .max( 1 )
-          .default( 0.2 ),
-        w: z.number().min( 0 )
-          .max( 1 )
-          .default( 0.6 ),
-        h: z.number().min( 0 )
-          .max( 1 )
-          .default( 0.6 )
-      } )
-      .default( {
-        x: 0.2,
-        y: 0.2,
-        w: 0.6,
-        h: 0.6
-      } ),
-    label: z.string().default( "ROI" ),
-    fill: RGBA.optional(),
-    blend: Blend.optional(),
-    ...hudWindow
-  } )
-  .prefault( {} );
-
-export const HudItemSchema = z.object( {
-  type: z.literal( "hud" ),
+// Style every standalone HUD element carries — the old container-level
+// defaults, so an element renders identically whether it was added fresh or
+// expanded out of a legacy "hud" item.
+const hudElementStyle = {
   fill: RGBA.default( [
     0,
     255,
     120,
     255
   ] ),
-  // Panel painted behind each widget's readout. Transparent black by default
-  // (draws nothing) — set a colour to keep the telemetry readable over busy
-  // sketches. Applies to the boxed widgets, not the full-canvas crosshairs /
-  // bounding-box overlays.
+  font: z.string().default( "spaceMonoRegular" ),
+  blend: Blend.default( "source-over" )
+};
+
+// Panel painted behind a boxed element's readout (badge, gauge, sparkline,
+// counter, swatch — not the full-canvas crosshairs / bounding-box overlays).
+// Transparent black by default (draws nothing) — set a colour to keep the
+// telemetry readable over busy sketches. The stroke defaults to the accent
+// with zero opacity; raise the alpha to reveal a border.
+const hudBoxStyle = {
   backgroundColor: RGBA.default( [
     0,
     0,
     0,
     0
   ] ),
-  // Optional outline around each widget's panel. Defaults to the fill colour
-  // with zero opacity (draws nothing) — raise the alpha to reveal a border in
-  // the same colour as the readout.
   backgroundStroke: RGBA.default( [
     0,
     255,
     120,
     0
   ] ),
-  // Corner radius of those panels, in pixels. 0 = sharp rectangle.
+  // Corner radius of the panel, in pixels. 0 = sharp rectangle.
   backgroundRadius: z.number().min( 0 )
     .max( 200 )
+    .default( 0 )
+};
+
+// Legacy widget-slot style: optional, so an unset value fell back to the
+// containing "hud" item's shared style. Only the migration parses this shape.
+const legacyHudStyle = {
+  fill: RGBA.optional(),
+  font: z.string().optional(),
+  blend: Blend.optional()
+};
+
+const hudBadgeFields = {
+  // Which values to print, in order — each renders as its own segment with a
+  // "·" separator between them. Defaults to the sketch identity line
+  // (engine · category · name). A bad persisted token heals to "name" so one
+  // stale value never resets the whole deck.
+  segments: z
+    .array( z.enum( BADGE_SEGMENTS ).catch( "name" ) )
+    .default( [
+      "engine",
+      "category",
+      "name"
+    ] ),
+  // When non-empty, replaces the entire badge text (segments are ignored).
+  override: z.string().default( "" ),
+  anchor: HudAnchor.default( "top-right" ),
+  offset: hudOffset(
+    0.95,
+    0.06
+  ),
+  size: z.number().positive()
+    .default( 20 )
+};
+
+const hudGaugeFields = {
+  source: z.string().default( "progress%" ),
+  anchor: HudAnchor.default( "bottom-left" ),
+  offset: hudOffset(
+    0.05,
+    0.9
+  ),
+  size: z.number().positive()
+    .default( 18 ),
+  min: z.number().default( 0 ),
+  max: z.number().default( 100 ),
+  label: z.string().default( "" ),
+  unit: z.string().default( "" ),
+  decimals: z.number().int()
+    .min( 0 )
+    .max( 4 )
     .default( 0 ),
-  font: z.string().default( "spaceMonoRegular" ),
-  blend: Blend.default( "source-over" ),
-  badge: HudBadgeSchema,
-  gauge: HudGaugeSchema,
-  sparkline: HudSparklineSchema,
-  counter: HudCounterSchema,
-  crosshairs: HudCrosshairsSchema,
-  swatch: HudSwatchSchema,
-  boundingBox: HudBoundingBoxSchema
+  easingFn: z.string().default( "linear" ),
+  ...hudWindow
+};
+
+const hudSparklineFields = {
+  source: z.string().default( "progress%" ),
+  anchor: HudAnchor.default( "bottom-right" ),
+  offset: hudOffset(
+    0.95,
+    0.9
+  ),
+  size: z.number().positive()
+    .default( 16 ),
+  min: z.number().default( 0 ),
+  max: z.number().default( 100 ),
+  historySize: z.number().int()
+    .min( 8 )
+    .max( 180 )
+    .default( 120 ),
+  decimals: z.number().int()
+    .min( 0 )
+    .max( 4 )
+    .default( 0 ),
+  unit: z.string().default( "" ),
+  ...hudWindow
+};
+
+const hudCounterFields = {
+  source: z.string().default( "frame" ),
+  anchor: HudAnchor.default( "top-left" ),
+  offset: hudOffset(
+    0.05,
+    0.85
+  ),
+  size: z.number().positive()
+    .default( 28 ),
+  label: z.string().default( "" ),
+  unit: z.string().default( "" ),
+  decimals: z.number().int()
+    .min( 0 )
+    .max( 4 )
+    .default( 0 ),
+  ...hudWindow
+};
+
+const hudCrosshairsFields = {
+  source: z.string().default( "center" ),
+  size: z.number().positive()
+    .default( 16 ),
+  ...hudWindow
+};
+
+const hudSwatchFields = {
+  // Bind to a live colour source by default (the sketch fill, falling back to
+  // the HUD accent) so the swatch renders a chip out of the box instead of
+  // staying blank on an empty source.
+  source: z.string().default( "fill" ),
+  anchor: HudAnchor.default( "top-right" ),
+  offset: hudOffset(
+    0.95,
+    0.2
+  ),
+  size: z.number().positive()
+    .default( 18 ),
+  label: z.string().default( "COLOR" ),
+  ...hudWindow
+};
+
+const hudBoundingBoxFields = {
+  source: z.string().default( "" ),
+  size: z.number().positive()
+    .default( 14 ),
+  region: z
+    .object( {
+      x: z.number().min( 0 )
+        .max( 1 )
+        .default( 0.2 ),
+      y: z.number().min( 0 )
+        .max( 1 )
+        .default( 0.2 ),
+      w: z.number().min( 0 )
+        .max( 1 )
+        .default( 0.6 ),
+      h: z.number().min( 0 )
+        .max( 1 )
+        .default( 0.6 )
+    } )
+    .default( {
+      x: 0.2,
+      y: 0.2,
+      w: 0.6,
+      h: 0.6
+    } ),
+  label: z.string().default( "ROI" ),
+  ...hudWindow
+};
+
+// Every standalone element defaults to enabled — a layer added from the
+// palette must show up. (The legacy slots mostly defaulted to `false`, but
+// that only made sense while one item carried all seven at once.)
+const hudEnabled = z.boolean().default( true );
+
+export const HudBadgeItemSchema = z.object( {
+  type: z.literal( "hud-badge" ),
+  enabled: hudEnabled,
+  ...hudBadgeFields,
+  ...hudElementStyle,
+  ...hudBoxStyle
 } );
+
+export const HudGaugeItemSchema = z.object( {
+  type: z.literal( "hud-gauge" ),
+  enabled: hudEnabled,
+  ...hudGaugeFields,
+  ...hudElementStyle,
+  ...hudBoxStyle
+} );
+
+export const HudSparklineItemSchema = z.object( {
+  type: z.literal( "hud-sparkline" ),
+  enabled: hudEnabled,
+  ...hudSparklineFields,
+  ...hudElementStyle,
+  ...hudBoxStyle
+} );
+
+export const HudCounterItemSchema = z.object( {
+  type: z.literal( "hud-counter" ),
+  enabled: hudEnabled,
+  ...hudCounterFields,
+  ...hudElementStyle,
+  ...hudBoxStyle
+} );
+
+export const HudCrosshairsItemSchema = z.object( {
+  type: z.literal( "hud-crosshairs" ),
+  enabled: hudEnabled,
+  ...hudCrosshairsFields,
+  ...hudElementStyle
+} );
+
+export const HudSwatchItemSchema = z.object( {
+  type: z.literal( "hud-swatch" ),
+  enabled: hudEnabled,
+  ...hudSwatchFields,
+  ...hudElementStyle,
+  ...hudBoxStyle
+} );
+
+export const HudBoundingBoxItemSchema = z.object( {
+  type: z.literal( "hud-bounding-box" ),
+  enabled: hudEnabled,
+  ...hudBoundingBoxFields,
+  ...hudElementStyle
+} );
+
+// Legacy "hud" container slots, with their ORIGINAL defaults — the migration
+// (src/utils/migrateLegacyHudItems.ts) parses persisted slots against these to
+// tell "was configured" apart from "untouched default". Nothing else may use
+// them: new code reads the Hud*ItemSchema shapes above.
+const legacySlot = (
+  enabledDefault: boolean, fields: Record<string, z.ZodType>
+) =>
+  z
+    .object( {
+      enabled: z.boolean().default( enabledDefault ),
+      ...fields,
+      ...legacyHudStyle
+    } )
+    .prefault( {} );
+
+// Ordered like drawSlideHud's old WIDGET_ORDER (later = on top), so a migrated
+// container expands into items whose array order reproduces the stacking the
+// renderer used to force.
+export const LEGACY_HUD_WIDGETS = [
+  {
+    key: "boundingBox",
+    type: "hud-bounding-box",
+    legacy: legacySlot(
+      false,
+      hudBoundingBoxFields
+    ),
+    item: HudBoundingBoxItemSchema
+  },
+  {
+    key: "crosshairs",
+    type: "hud-crosshairs",
+    legacy: legacySlot(
+      false,
+      hudCrosshairsFields
+    ),
+    item: HudCrosshairsItemSchema
+  },
+  {
+    key: "sparkline",
+    type: "hud-sparkline",
+    legacy: legacySlot(
+      true,
+      hudSparklineFields
+    ),
+    item: HudSparklineItemSchema
+  },
+  {
+    key: "gauge",
+    type: "hud-gauge",
+    legacy: legacySlot(
+      true,
+      hudGaugeFields
+    ),
+    item: HudGaugeItemSchema
+  },
+  {
+    key: "swatch",
+    type: "hud-swatch",
+    // The legacy swatch slot carried its own non-optional style defaults
+    // (identical to hudElementStyle's), so it never actually inherited the
+    // container style — parsing it with those defaults preserves that.
+    legacy: z
+      .object( {
+        enabled: z.boolean().default( false ),
+        ...hudSwatchFields,
+        ...hudElementStyle
+      } )
+      .prefault( {} ),
+    item: HudSwatchItemSchema
+  },
+  {
+    key: "counter",
+    type: "hud-counter",
+    legacy: legacySlot(
+      false,
+      hudCounterFields
+    ),
+    item: HudCounterItemSchema
+  },
+  {
+    key: "badge",
+    type: "hud-badge",
+    legacy: legacySlot(
+      false,
+      hudBadgeFields
+    ),
+    item: HudBadgeItemSchema
+  }
+] as const;
 
 export const ContentItemSchema = z.discriminatedUnion(
   "type",
@@ -1167,7 +1283,13 @@ export const ContentItemSchema = z.discriminatedUnion(
     ImageItemSchema,
     VisualItemSchema,
     QrCodeItemSchema,
-    HudItemSchema
+    HudBadgeItemSchema,
+    HudGaugeItemSchema,
+    HudSparklineItemSchema,
+    HudCounterItemSchema,
+    HudCrosshairsItemSchema,
+    HudSwatchItemSchema,
+    HudBoundingBoxItemSchema
   ]
 );
 

@@ -49,6 +49,7 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 - Deployment is event-driven: GHCR image plus a Watchtower HTTP API call on a NAS, replacing registry polling → `deployment.md`.
 - Analytics is self-hosted Umami with auto-track off and a hand-rolled pageview queue; an empty website id disables it → `architecture.md`, `docs/analytics.md`.
 - Dev-only studio affordances are hidden behind a menu toggle, off by default, so the app reads and screenshots as the shipped product → `studio-ui.md`.
+- HUD telemetry widgets are seven standalone `hud-*` content-item types (own style, own layer row, eye toggle); the legacy single `hud` container is expanded lazily on read, before the zod parse → `studio-ui.md`.
 - The sketch page is one inspector (canvas+animation above the sketch form), a content rail, a bottom filmstrip and Export in the docked top bar; "document" is not a UI scope and the filmstrip is not a timeline → `studio-ui.md`.
 - Front-end export is a list of variants, each re-laying the sketch out at its own resolution and framerate; the variant list doubles as the run queue → `studio-ui.md`, `recording.md`.
 - Export-time size/framerate overrides go through one scope that strips per-slide overrides, re-applies after every slide switch, waits for the resize to land, and always restores → `recording.md`.

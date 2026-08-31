@@ -20,7 +20,7 @@ import {
  * (linear) by default; an optional easingFn restyles it.
  */
 export default function gauge(
-  cfg, style, part
+  cfg, style
 ) {
   withHudTransform( ( p ) => {
     const raw = resolveValue( cfg.source );
@@ -49,7 +49,6 @@ export default function gauge(
 
     // Report the visible rectangle so the on-canvas drag can grab this gauge.
     reportWidgetBounds(
-      part,
       blockX,
       blockY,
       barW,
