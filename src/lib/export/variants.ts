@@ -4,6 +4,9 @@ import {
 import {
   getEffectiveSlideSettings
 } from "@/lib/effectiveSlideSettings";
+import {
+  getPresentationSizeSnapshot
+} from "@/lib/presentation/presentationMode";
 import type {
   RecordingFormat
 } from "@/engines/recording";
@@ -190,10 +193,25 @@ export function nativeSizeFor(
   options: SketchOption,
   slideIndex?: number
 ): ExportSize {
+  // "The sketch's own size" means the size it is authored at. While a
+  // presentation is stretching the canvas it has overwritten `size` (and every
+  // slide's) with the surface's dimensions — a transient view state, not a
+  // document edit — so resolve through the snapshot it took instead. Otherwise
+  // opening Export from a stretched preview would silently repoint every
+  // variant that follows the sketch at the screen resolution.
+  const snapshot = getPresentationSizeSnapshot();
+  const source = snapshot
+    ? {
+      ...options,
+      size: snapshot.size,
+      slides: snapshot.slides
+    } as SketchOption
+    : options;
+
   const {
     size
   } = getEffectiveSlideSettings(
-    options,
+    source,
     slideIndex
   );
 

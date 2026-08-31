@@ -10,9 +10,6 @@ import {
   formatOptions
 } from "../../RootSettings/constants/root-field-config";
 import parseFormat from "../../ContentItems/components/ControlledFormatSelect/utils/parseFormat";
-import {
-  isFullscreenFormatValue
-} from "@/lib/fullscreen/constants";
 import type {
   ExportSize, ExportSizeStrategy
 } from "@/lib/export/variants";
@@ -41,12 +38,9 @@ type ExportSizeSelectProps = {
  * offers, and a second hand-maintained table would drift the first time
  * someone adds a preset.
  *
- * Two entries are filtered out or added on top of that list:
- *   - **fullscreen sentinels are dropped** — they are not a W×H at all, they
- *     drive the browser Fullscreen API, which is meaningless as an export
- *     target;
- *   - **Custom…** swaps the control for a width/height pair, because a size
- *     worth exporting is not always a size worth adding to the preset list.
+ * One entry is added on top of that list: **Custom…**, which swaps the control
+ * for a width/height pair, because a size worth exporting is not always a size
+ * worth adding to the preset list.
  */
 export default function ExportSizeSelect( {
   value,
@@ -57,11 +51,7 @@ export default function ExportSizeSelect( {
   sizeStrategy,
   onStrategyChange
 }: ExportSizeSelectProps ) {
-  const presets = useMemo(
-    () => formatOptions.filter( ( option ) => !isFullscreenFormatValue( option.value ) ),
-    []
-  );
-
+  const presets = formatOptions;
   const nativeValue = `${ nativeSize.width }x${ nativeSize.height }`;
 
   // Following the sketch shows as the sketch's own dimensions, selected among

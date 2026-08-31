@@ -24,9 +24,6 @@ import {
 import {
   formatOptions
 } from "@/components/ClientProcessingSketch/components/SketchOptions/components/RootSettings/constants/root-field-config";
-import {
-  isFullscreenFormatValue
-} from "@/lib/fullscreen/constants";
 
 type ControlsMode = "none" | "all" | "custom";
 
@@ -174,8 +171,7 @@ export default function SketchShareDialog() {
     ]
   );
 
-  // Resolution presets, minus the fullscreen sentinels the canvas-size select
-  // uses — those drive the Fullscreen API, which means nothing inside a frame.
+  // Resolution presets, straight from the canvas-size select's own list.
   const sizePresets = useMemo(
     () => {
       const groups = new Map<string, {
@@ -184,10 +180,6 @@ export default function SketchShareDialog() {
       }[]>();
 
       for ( const option of formatOptions ) {
-        if ( isFullscreenFormatValue( option.value ) ) {
-          continue;
-        }
-
         const group = option.group ?? "Other";
 
         if ( !groups.has( group ) ) {
