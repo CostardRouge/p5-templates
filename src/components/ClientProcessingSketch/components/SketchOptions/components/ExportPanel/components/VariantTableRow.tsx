@@ -85,6 +85,14 @@ function currentChoiceValue( variant: ExportVariant ): string {
 
 const CELL = "px-2.5 py-1.5 align-middle";
 
+/**
+ * Sentinel for "whatever the sketch is set to", mirroring `ExportSizeSelect`'s
+ * own native entry. A `<select>` cannot carry `null` as an option value, so
+ * without it there is no way back to following the sketch once a rate is
+ * picked — the variant stays pinned for the life of the stored list.
+ */
+const NATIVE_FRAMERATE = "native";
+
 /** A muted em dash: this column does not apply to this variant. */
 function NotApplicable() {
   return <span className="text-label/60">—</span>;
@@ -139,6 +147,10 @@ export default function VariantTableRow( {
     variant.framerate ?? nativeFramerate,
     nativeFramerate
   );
+  // A pinned rate and a followed one can resolve to the same number, so the
+  // cell reads the variant rather than the resolved value — otherwise there is
+  // no way to see, or to get back to, "whatever the sketch is set to".
+  const followsFramerate = variant.framerate === null;
   const isMultiSlide = slideSpan > 1;
   const status = state?.status;
 
@@ -231,18 +243,23 @@ export default function VariantTableRow( {
       >
         {variant.kind === "video" ? (
           <select
-            value={ String( effectiveFramerate ) }
+            value={ followsFramerate ? NATIVE_FRAMERATE : String( effectiveFramerate ) }
             disabled={ running }
             aria-label="Frame rate"
             onChange={ ( event ) => onPatch( {
-              framerate: Number( event.target.value )
+              framerate: event.target.value === NATIVE_FRAMERATE
+                ? null
+                : Number( event.target.value )
             } ) }
             className={ selectClass }
             title={ `The sketch renders at ${ nativeFramerate } fps` }
           >
-            {framerates.map( ( rate ) => (
-              <option key={ rate } value={ rate }>{rate}</option>
-            ) )}
+            <option value={ NATIVE_FRAMERATE }>{nativeFramerate} (sketch)</option>
+            {framerates
+              .filter( ( rate ) => rate !== nativeFramerate )
+              .map( ( rate ) => (
+                <option key={ rate } value={ rate }>{rate}</option>
+              ) )}
           </select>
         ) : (
           <NotApplicable />

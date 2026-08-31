@@ -82,11 +82,7 @@ export default function ExportPanel( {
 
   // Seed before the first subscription read so the table is never momentarily
   // empty on open.
-  ensureVariants(
-    sketchKey,
-    options,
-    activeSlideIndex
-  );
+  ensureVariants( sketchKey );
 
   const snapshot = useSyncExternalStore(
     subscribeVariants,
@@ -278,9 +274,7 @@ export default function ExportPanel( {
                   type="button"
                   onClick={ () => addVariant(
                     sketchKey,
-                    preset,
-                    options,
-                    activeSlideIndex
+                    preset
                   ) }
                   className="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-left text-xs text-foreground data-focus:bg-hover"
                 >

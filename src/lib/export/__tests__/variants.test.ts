@@ -1,9 +1,11 @@
 import {
   framerateOptionsFor,
   hasMixedSlideSizes,
+  makeVariant as buildVariant,
   resolveRunSize,
   resolveSlideIndices,
   variantFileName,
+  VARIANT_PRESETS,
   type ExportVariant
 } from "../variants";
 import type {
@@ -55,6 +57,49 @@ const DECK = {
     }
   ]
 } as unknown as SketchOption;
+
+describe(
+  "makeVariant",
+  () => {
+    const presetFor = ( key: string ) =>
+      VARIANT_PRESETS.find( ( preset ) => preset.key === key )!;
+
+    it(
+      "leaves a preset that names no size following the sketch",
+      () => {
+        // The seeded default. Resolving these to concrete values froze the
+        // variant at whatever the canvas and framerate were when the list was
+        // first built, so it stopped tracking the sketch afterwards.
+        const variant = buildVariant( presetFor( "current" ) );
+
+        expect( variant.size ).toBeNull();
+        expect( variant.framerate ).toBeNull();
+      }
+    );
+
+    it(
+      "still pins a preset that names a size — that is what picking Reel means",
+      () => {
+        const variant = buildVariant( presetFor( "reel" ) );
+
+        expect( variant.size ).toEqual( {
+          width: 1080,
+          height: 1920
+        } );
+        // Its framerate is nobody's business but the sketch's, still.
+        expect( variant.framerate ).toBeNull();
+      }
+    );
+
+    it(
+      "carries the preset's kind, so a still is not seeded as a video",
+      () => {
+        expect( buildVariant( presetFor( "still" ) ).kind ).toBe( "image" );
+        expect( buildVariant( presetFor( "reel" ) ).kind ).toBe( "video" );
+      }
+    );
+  }
+);
 
 describe(
   "framerateOptionsFor",

@@ -123,7 +123,7 @@ export const VARIANT_PRESETS: ReadonlyArray<ExportVariantPreset> = [
   },
   {
     key: "current",
-    label: "Current canvas"
+    label: "Sketch's own size"
   },
   {
     key: "still",
@@ -212,29 +212,26 @@ function makeId(): string {
 }
 
 /**
- * Build a variant from a preset, reading the live sketch options for the
- * fields a preset does not pin (the "current canvas" size, the native
- * framerate).
+ * Build a variant from a preset.
+ *
+ * It deliberately does not read the sketch: everything a preset leaves unsaid
+ * stays `null`, which the table and the runner both read as "follow the
+ * sketch". Resolving those to concrete values here is what used to freeze a
+ * new variant at whatever the canvas and framerate happened to be when the
+ * list was seeded.
  */
-export function makeVariant(
-  preset: ExportVariantPreset,
-  options: SketchOption,
-  slideIndex?: number
-): ExportVariant {
+export function makeVariant( preset: ExportVariantPreset ): ExportVariant {
   const kind = preset.kind ?? "video";
-  const size = preset.size ?? nativeSizeFor(
-    options,
-    slideIndex
-  );
 
   return {
     id: makeId(),
     name: preset.label,
     kind,
-    // The "current canvas" preset pins the size it resolved to rather than
-    // staying null: the user picked a concrete format, and a later change to
-    // the sketch's canvas must not silently retarget an existing variant.
-    size,
+    // A preset that names a size pins it — that is what picking "Reel" means.
+    // One that names none follows the sketch, and keeps following it: resolving
+    // it to a concrete W×H here would freeze the variant at whatever the canvas
+    // happened to be the moment the list was seeded.
+    size: preset.size ?? null,
     framerate: null,
     format: "mp4",
     frameCount: 10,
