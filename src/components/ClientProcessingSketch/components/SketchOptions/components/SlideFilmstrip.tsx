@@ -31,7 +31,7 @@ import {
 } from "@/lib/effectiveSlideSettings";
 import {
   SortableRow
-} from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/ContentItems";
+} from "@/components/ClientProcessingSketch/components/SketchOptions/components/SortableRow";
 import {
   indexToLetters
 } from "@/utils/slideNaming";

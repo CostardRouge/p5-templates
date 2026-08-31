@@ -11,19 +11,22 @@ import {
   JobModel
 } from "@/types/recording.types";
 import PanelSection from "./PanelSection";
-import SketchAssetsProvider from "./SketchAssetsProvider/SketchAssetsProvider";
 
-// The content sections start collapsed or absent (see useCollapsibleStates
-// DEFAULT_STATES), so CollapsibleItem never mounts their content until the
-// user expands them. Loading them as separate chunks means the dev server
-// doesn't compile this whole subtree — the recursive content editor and its
-// dnd-kit deps (~2.6k LOC) — just to open a sketch page; it compiles only when
-// a section is actually opened. The collapsible headers live here in
-// OptionsPanel and stay static, so there is no loading flash.
-const ContentItems = dynamic( () => import( "./ContentItems/ContentItems" ) );
-const SlideEditor = dynamic( () => import( "./SlideEditor" ) );
+// Two chunks, split where the weight is. The LIST is light — rows, icons and
+// dnd-kit — and mounts with the band. The DETAIL drags in the recursive item
+// editor (FieldRenderer and every Controlled* input, ~2.6k LOC), so it only
+// compiles once a layer is actually opened: a sketch page that is never
+// edited never pays for it.
+const ContentLayers = dynamic( () => import( "./ContentLayers/ContentLayers" ) );
+const ContentLayerDetail = dynamic( () => import( "./ContentLayers/ContentLayerDetail" ) );
+const SlideTransitionSettings = dynamic( () => import( "./SlideTransitionSettings" ) );
 
-import ContentArrayProvider from "./ContentArrayProvider/ContentArrayProvider";
+import {
+  parseLayerPath
+} from "./ContentLayers/ContentLayerDetail";
+import {
+  useContentSelection, useSelectContentPath
+} from "@/components/ClientProcessingSketch/components/SketchOptions/hooks/useContentItemSelection";
 import OptionsImportExport from "./CaptureActions/components/OptionsImportExport";
 import UndoRedo from "./UndoRedo";
 import type {
@@ -32,7 +35,6 @@ import type {
 
 export type OptionsPanelBodyProps = {
   activeSlideIndex: number | undefined;
-  slideFields: any[];
   collapsibleStates: CollapsibleStates;
   onCollapsibleToggle: ( section: CollapsibleSection ) => void;
   /** The desktop panel scrolls internally; the mobile drawer scrolls itself. */
@@ -51,14 +53,15 @@ type OptionsPanelProps = OptionsPanelBodyProps & {
 };
 
 /**
- * The content rail: the elements that enrich the sketch — text, images, QR
- * codes… — presented as the active slide's own items plus the shared (root)
- * items that apply to every slide. Slides themselves live in the filmstrip;
- * canvas & animation moved into the inspector.
+ * The content rail: a layers list of everything drawn over the sketch — text,
+ * images, QR codes… — grouped by what it applies to, this slide first and the
+ * shared content after it. Pressing a layer opens its inspector in place of
+ * the list; the back arrow returns.
+ *
+ * Slides themselves live in the filmstrip, canvas & animation in the inspector.
  */
 export function OptionsPanelBody( {
   activeSlideIndex,
-  slideFields,
   collapsibleStates,
   onCollapsibleToggle,
   scrollable = true
@@ -70,27 +73,39 @@ export function OptionsPanelBody( {
   const rootContentLength = useWatch( {
     control,
     name: "content"
-  } )?.length;
+  } )?.length ?? 0;
   const activeSlideContentLength = useWatch( {
     control,
     name:
       activeSlideIndex !== undefined
         ? `slides.${ activeSlideIndex }.content`
         : "content"
-  } )?.length;
-
-  const jobId = useWatch( {
-    control,
-    name: "id"
-  } ) as string | undefined;
-
-  const slideIds = slideFields.map( ( field ) => field.id );
-  const editorKey =
-    activeSlideIndex !== undefined && slideIds[ activeSlideIndex ]
-      ? slideIds[ activeSlideIndex ]
-      : `no-slides-${ slideFields.length }`;
+  } )?.length ?? 0;
 
   const hasActiveSlide = activeSlideIndex !== undefined;
+
+  // The band counts every layer it holds, both scopes — without a slide the
+  // two watches read the same array, so only count it once.
+  const layerCount = hasActiveSlide
+    ? rootContentLength + activeSlideContentLength
+    : rootContentLength;
+
+  const selection = useContentSelection();
+  const selectPath = useSelectContentPath();
+  const address = parseLayerPath( selection?.path ?? null );
+
+  // The layer you came back from stays marked in the list. The live selection
+  // cannot do that job: it is cleared by the back arrow (or the detail would
+  // reopen), and while it is set the list is not on screen at all.
+  const [
+    lastOpenedPath,
+    setLastOpenedPath
+  ] = React.useState<string | null>( null );
+
+  const openLayer = ( itemPath: string ) => {
+    setLastOpenedPath( itemPath );
+    selectPath( itemPath );
+  };
 
   return (
     <div
@@ -102,37 +117,38 @@ export function OptionsPanelBody( {
         maxHeight: "calc(80svh - 3rem)"
       } : undefined }
     >
-      {/* The active slide's own content (and its transition settings). */}
+      {/* One band for the whole stack: the list, or the inspector of the
+          layer picked out of it. The meta count stays on the list — in the
+          detail the band already names the layer. */}
+      <PanelSection
+        label={ address ? "layer" : "layers" }
+        meta={ !address && layerCount ? String( layerCount ) : undefined }
+        expanded={ collapsibleStates.content }
+        onToggle={ () => onCollapsibleToggle( "content" ) }
+        bodyPaddingClassName="px-2 pb-2 pt-0.5"
+        last={ !hasActiveSlide }
+      >
+        {address ? (
+          <ContentLayerDetail
+            address={ address }
+            onBack={ () => selectPath( null ) }
+          />
+        ) : (
+          <ContentLayers
+            activeSlideIndex={ activeSlideIndex }
+            selectedPath={ lastOpenedPath }
+            onSelect={ openLayer }
+          />
+        )}
+      </PanelSection>
+
+      {/* A transition belongs to the slide, not to any layer, so it stays a
+          band of its own rather than a row in the list. */}
       {hasActiveSlide && (
-        <PanelSection
-          label="content"
-          meta={ activeSlideContentLength ? String( activeSlideContentLength ) : undefined }
-          expanded={ collapsibleStates.slides }
-          onToggle={ () => onCollapsibleToggle( "slides" ) }
-        >
-          <SlideEditor key={ editorKey } activeIndex={ activeSlideIndex } />
+        <PanelSection label="transition" expanded last>
+          <SlideTransitionSettings activeIndex={ activeSlideIndex } />
         </PanelSection>
       )}
-
-      {/* The root content: applies to every slide. Without slides it is
-          simply the sketch's content. */}
-      <PanelSection
-        label={ hasActiveSlide ? "shared content" : "content" }
-        meta={ rootContentLength ? String( rootContentLength ) : undefined }
-        expanded={ collapsibleStates.globalContent }
-        onToggle={ () => onCollapsibleToggle( "globalContent" ) }
-        last
-      >
-        <SketchAssetsProvider
-          scope="global"
-          assetsName="assets"
-          jobId={ jobId }
-        >
-          <ContentArrayProvider name="content">
-            <ContentItems baseFieldName="content" />
-          </ContentArrayProvider>
-        </SketchAssetsProvider>
-      </PanelSection>
     </div>
   );
 }
