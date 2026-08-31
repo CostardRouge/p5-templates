@@ -13,25 +13,20 @@ import {
 } from "../constants/field-config";
 import FieldRenderer from "../../FieldRenderer";
 
-import ItemFormWrapper from "./ItemFormWrapper";
-import {
-  DragBinder
-} from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/ContentItems";
-
 type GenericItemFormProps = {
   baseFieldName: "content" | `slides.${ number }.content`;
   index: number;
-  onRemove: () => void;
-  onDuplicate: () => void;
-  dragBinder?: DragBinder;
 };
 
+/**
+ * The fields of one content item, and nothing else — the layers panel opens an
+ * item as a detail view that supplies its own header (back arrow, name,
+ * duplicate, delete), so this renders bare. It used to be wrapped in an
+ * accordion card, back when every item was stacked in the rail at once.
+ */
 export default function GenericItemForm( {
   baseFieldName,
-  index,
-  onRemove,
-  onDuplicate,
-  dragBinder
+  index
 }: GenericItemFormProps ) {
   const {
     watch
@@ -58,38 +53,30 @@ export default function GenericItemForm( {
   const fieldNames = Object.keys( itemSchema.shape );
 
   return (
-    <ItemFormWrapper
-      dragBinder={ dragBinder }
-      onDuplicate={ onDuplicate }
-      onRemove={ onRemove }
-      itemType={ itemType }
-      itemPath={ `${ baseFieldName }.${ index }` }
-    >
-      <div className="flex flex-col gap-2">
-        {fieldNames.map( ( fieldName ) => {
-          // Don't render a field for the 'type' discriminator itself
-          if ( fieldName === "type" ) {
-            return null;
-          }
+    <div className="flex flex-col gap-2">
+      {fieldNames.map( ( fieldName ) => {
+        // Don't render a field for the 'type' discriminator itself
+        if ( fieldName === "type" ) {
+          return null;
+        }
 
-          const fieldConfig = itemConfig[ fieldName ];
+        const fieldConfig = itemConfig[ fieldName ];
 
-          if ( !fieldConfig ) {
-            // This is a helpful warning if you add a field to Zod but forget to configure it
-            console.warn( `No form config found for field "${ fieldName }" in type "${ itemType }".` );
-            return null;
-          }
+        if ( !fieldConfig ) {
+          // This is a helpful warning if you add a field to Zod but forget to configure it
+          console.warn( `No form config found for field "${ fieldName }" in type "${ itemType }".` );
+          return null;
+        }
 
-          return (
-            <FieldRenderer
-              key={ fieldName }
-              fieldBasePath={ `${ baseFieldName }.${ index }` }
-              fieldName={ fieldName }
-              config={ fieldConfig }
-            />
-          );
-        } )}
-      </div>
-    </ItemFormWrapper>
+        return (
+          <FieldRenderer
+            key={ fieldName }
+            fieldBasePath={ `${ baseFieldName }.${ index }` }
+            fieldName={ fieldName }
+            config={ fieldConfig }
+          />
+        );
+      } )}
+    </div>
   );
 }

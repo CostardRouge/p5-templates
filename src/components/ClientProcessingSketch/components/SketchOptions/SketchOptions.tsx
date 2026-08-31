@@ -588,7 +588,6 @@ export default function SketchOptions( {
 
   const bodyProps = {
     activeSlideIndex,
-    slideFields,
     collapsibleStates,
     onCollapsibleToggle: toggleSection
   };

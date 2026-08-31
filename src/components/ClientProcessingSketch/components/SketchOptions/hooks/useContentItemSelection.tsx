@@ -23,10 +23,9 @@ import {
 
 /**
  * Bridges an on-canvas content-item press (dispatched by contentDrag.js as the
- * `CONTENT_ITEM_SELECT_EVENT` window event) to the options panel: it opens the
- * item's zone (global content, or the right slide), opens the item's form
- * section, and publishes the item's path so the rendered ItemFormWrapper can
- * scroll to and pulse itself.
+ * `CONTENT_ITEM_SELECT_EVENT` window event) to the options panel: it switches
+ * to the owning slide, opens the content section, and publishes the item's
+ * path — which the layers panel reads to open that layer's inspector.
  *
  * Two moving parts:
  *  - the CONTEXT holds the currently-selected item path + a monotonically
@@ -46,7 +45,7 @@ function scopeToBase( scope: string ): {
   if ( scope === "global" ) {
     return {
       base: "content",
-      section: "globalContent"
+      section: "content"
     };
   }
 
@@ -60,7 +59,7 @@ function scopeToBase( scope: string ): {
 
   return {
     base: `slides.${ slideIndex }.content`,
-    section: "slides",
+    section: "content",
     slideIndex
   };
 }
@@ -72,7 +71,7 @@ type Selection = {
 
 type ContentSelectionValue = {
   selection: Selection | null;
-  selectPath: ( path: string ) => void;
+  selectPath: ( path: string | null ) => void;
 };
 
 const ContentSelectionContext = createContext<ContentSelectionValue | null>( null );
@@ -90,7 +89,13 @@ export function ContentSelectionProvider( {
   const nonceRef = useRef( 0 );
 
   const selectPath = useCallback(
-    ( path: string ) => {
+    ( path: string | null ) => {
+      if ( path === null ) {
+        setSelection( null );
+
+        return;
+      }
+
       nonceRef.current += 1;
       setSelection( {
         path,
@@ -121,6 +126,19 @@ export function ContentSelectionProvider( {
 /** Read the current selection (for an item to decide whether to reveal itself). */
 export function useContentSelection(): Selection | null {
   return useContext( ContentSelectionContext )?.selection ?? null;
+}
+
+/**
+ * Select a layer, or clear the selection with `null`.
+ *
+ * The same channel serves the canvas (through the window event below) and the
+ * layers list, so pressing an object on the sketch and pressing its row open
+ * the very same inspector.
+ */
+export function useSelectContentPath(): ( path: string | null ) => void {
+  const context = useContext( ContentSelectionContext );
+
+  return context?.selectPath ?? ( () => {} );
 }
 
 type ListenerOptions = {
@@ -206,11 +224,6 @@ export function useContentSelectionListener( {
         }
 
         const itemPath = `${ base }.${ detail.index }`;
-
-        api.setExpanded(
-          `item-${ itemPath }`,
-          true
-        );
 
         // A HUD sub-widget lives in a nested-object section of the item form;
         // open it too so its fields are visible once the item is revealed.
