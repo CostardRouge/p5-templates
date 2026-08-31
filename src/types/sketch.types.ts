@@ -831,6 +831,76 @@ export const VisualItemSchema = z.object( {
   rotation: z.number().default( 0 )
 } );
 
+/* ---------------- embedded-sketch content item ------------------- */
+// A whole other sketch, composited as a layer. It runs in its own p5 graphics
+// buffer (see src/sketches/p5/utils/nestedSketch.js), so its `background()`
+// calls, its canvas size and its frame rate are all the layer's own rather
+// than the host's — which is what makes "add a sketch on top of a sketch"
+// behave like every other content item instead of fighting the host's canvas.
+
+/** Layer box shapes offered beside "follow the host canvas". */
+export const SketchLayerAspectRatio = z.enum( [
+  "canvas",
+  "1:1",
+  "4:5",
+  "3:4",
+  "2:3",
+  "9:16",
+  "3:2",
+  "4:3",
+  "16:9"
+] );
+
+export const SketchLayerItemSchema = z.object( {
+  type: z.literal( "sketch" ),
+  // Catalogue path of the embedded sketch — "<category>/<name>", or a bare
+  // "<name>" for an uncategorised one. The same string the sketch routes and
+  // the generated module registry are keyed by, so the picker, the runtime
+  // loader and a shared options JSON all speak one identifier. p5 only: the
+  // layer renders into a p5 graphics buffer, which no other engine can fill.
+  sketch: z.string().default( "" ),
+  // The embedded sketch's own parameters. Free-form on purpose — every sketch
+  // declares its own shape in its options.ts, and the inspector renders that
+  // sketch's `formConfiguration` against this object.
+  settings: z.any().default( {} ),
+
+  enabled: z.boolean().default( true ),
+
+  position: Vec2.default( {
+    x: 0.5,
+    y: 0.5
+  } ),
+  // The layer's width as a fraction of the host canvas' width.
+  scale: z.number().min( 0.05 )
+    .max( 4 )
+    .default( 1 ),
+  rotation: z.number().default( 0 ),
+  aspectRatio: SketchLayerAspectRatio.default( "canvas" ),
+  // Buffer resolution as a fraction of the layer's on-canvas size. Below 1 the
+  // sketch renders into fewer pixels and is scaled back up — the cheapest lever
+  // there is on a heavy embedded sketch, and a look in its own right.
+  resolution: z.number().min( 0.05 )
+    .max( 2 )
+    .default( 1 ),
+  // Redraws per second of loop time; 0 follows the host's own frame rate. It
+  // buys back performance AND is a design control (a 6fps layer over a 60fps
+  // sketch reads as stop-motion).
+  framerate: z.number().min( 0 )
+    .max( 120 )
+    .default( 0 ),
+  opacity: z.number().min( 0 )
+    .max( 1 )
+    .default( 1 ),
+  blend: Blend.default( "source-over" ),
+  // Let the embedded sketch paint its own background. Off by default: nearly
+  // every sketch opens its draw with background(), which would make each
+  // embedded sketch an opaque rectangle hiding the layers below it.
+  drawBackground: z.boolean().default( false ),
+  // Wipe the buffer before each redraw. Off keeps what earlier frames drew,
+  // which is what trail / feedback sketches expect.
+  clearEachFrame: z.boolean().default( true )
+} );
+
 export const QrCodeItemSchema = z.object( {
   type: z.literal( "qrcode" ),
   // Origin to encode. Empty -> NEXT_PUBLIC_SITE_URL (the production domain),
@@ -1282,6 +1352,7 @@ export const ContentItemSchema = z.discriminatedUnion(
     ImagesStackItemSchema,
     ImageItemSchema,
     VisualItemSchema,
+    SketchLayerItemSchema,
     QrCodeItemSchema,
     HudBadgeItemSchema,
     HudGaugeItemSchema,

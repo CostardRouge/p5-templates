@@ -53,16 +53,6 @@ type P5SketchRuntime = {
 export class P5Engine implements SketchEngine {
   readonly engineId = "p5";
 
-  // ES modules are cached after first import — the module body won't
-  // re-execute on second visit, so _setupFn/_drawFn stay null after reset().
-  // We cache them here and restore on subsequent visits.
-  private static readonly _sketchModuleCache = new Set<string>();
-  private static readonly _sketchFnCache = new Map<string, {
-    setupFn: ( ( ...args: any[] ) => any ) | null;
-    drawFn: ( ( ...args: any[] ) => any ) | null;
-    sketchOptions: any;
-  }>();
-
   private _isReady = false;
   // Set by destroy(). init() re-checks it after every await: React strict
   // mode (dev) mounts, destroys and re-mounts the renderer synchronously, so
@@ -170,12 +160,16 @@ export class P5Engine implements SketchEngine {
     }
 
     // ES modules are cached — on second visit the module doesn't re-run,
-    // leaving _setupFn/_drawFn null. Restore them from our static cache.
+    // leaving _setupFn/_drawFn null. Restore them from the shared per-path
+    // cache, which the embedded-sketch loader writes to and reads from as well
+    // (see src/sketches/p5/utils/sketchFnCache.js for why it must be shared).
     const runtime = this.sketchRuntime as any;
+    const {
+      getSketchFns, hasSketchFns, rememberSketchFns
+    } = await import( "@/p5/utils/sketchFnCache.js" );
 
-    if ( !P5Engine._sketchModuleCache.has( sketchPath ) ) {
-      P5Engine._sketchModuleCache.add( sketchPath );
-      P5Engine._sketchFnCache.set(
+    if ( !hasSketchFns( sketchPath ) ) {
+      rememberSketchFns(
         sketchPath,
         {
           setupFn: runtime._setupFn,
@@ -184,7 +178,7 @@ export class P5Engine implements SketchEngine {
         }
       );
     } else {
-      const cached = P5Engine._sketchFnCache.get( sketchPath );
+      const cached = getSketchFns( sketchPath );
 
       if ( cached ) {
         runtime._setupFn = cached.setupFn;

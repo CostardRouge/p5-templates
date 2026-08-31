@@ -5,12 +5,12 @@ import {
 } from "./constants/item-kinds";
 
 import {
-  ItemKind, ItemKindGroup
+  AddItemHandler, ItemKind, ItemKindGroup
 } from "./types/item-kinds";
 import clsx from "clsx";
 
 type Props = {
-  onAdd: ( kind: ItemKind ) => void;
+  onAdd: AddItemHandler;
   kinds?: ItemKind[];
   /** Labelled sections (Content / HUD…) — takes precedence over `kinds`. */
   groups?: ItemKindGroup[];
@@ -22,7 +22,7 @@ function PaletteGrid( {
   onAdd
 }: {
   kinds: ItemKind[];
-  onAdd: ( kind: ItemKind ) => void;
+  onAdd: AddItemHandler;
 } ) {
   return (
     <div

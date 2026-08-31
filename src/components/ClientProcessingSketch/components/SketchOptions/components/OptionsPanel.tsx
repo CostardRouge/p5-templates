@@ -13,6 +13,9 @@ import {
 import PanelSection from "./PanelSection";
 import AddLayerPopover from "./ContentItems/components/AddItemControls/components/ItemPalette/AddLayerPopover";
 import makeDefaultItem from "./ContentItems/components/AddItemControls/utils/makeDefaultItem";
+import type {
+  AddItemHandler
+} from "./ContentItems/components/AddItemControls/components/ItemPalette/types/item-kinds";
 
 // Two chunks, split where the weight is. The LIST is light — rows, icons and
 // dnd-kit — and mounts with the band. The DETAIL drags in the recursive item
@@ -115,14 +118,19 @@ export function OptionsPanelBody( {
   // so its `+` is hosted here, in the band's own header, and the panel never
   // prints "layers" twice. It appends through setValue on the array name,
   // which RHF propagates to the group's useFieldArray.
-  const addRootLayer = ( kind: Parameters<typeof makeDefaultItem>[ 0 ] ) => {
+  const addRootLayer: AddItemHandler = (
+    kind, seed
+  ) => {
     const current = getValues( "content" );
 
     setValue(
       "content",
       [
         ...( Array.isArray( current ) ? current : [] ),
-        makeDefaultItem( kind )
+        makeDefaultItem(
+          kind,
+          seed
+        )
       ],
       {
         shouldDirty: true,

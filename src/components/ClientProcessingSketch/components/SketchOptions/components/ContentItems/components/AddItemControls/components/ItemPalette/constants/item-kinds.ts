@@ -6,6 +6,7 @@ import {
   Layers as StackIcon,
   PaintBucket as BgIcon,
   Sparkles as VisualIcon,
+  Blocks as SketchIcon,
   Terminal as SpecsIcon,
   QrCode as QrCodeIcon,
   ListOrdered as BreakdownIcon,
@@ -25,6 +26,7 @@ import {
 
 export const ITEM_ORDER: ItemKind[] = [
   "visual",
+  "sketch",
   "text",
   "title",
   "image",
@@ -50,6 +52,7 @@ export const ITEM_GROUPS: ItemKindGroup[] = [
     label: "Content",
     kinds: [
       "visual",
+      "sketch",
       "text",
       "title",
       "image",
@@ -155,6 +158,11 @@ export const ITEM_META: Record<ItemKind, ItemKindMeta> = {
     label: "Visual",
     Icon: VisualIcon,
     description: "2D/3D visual"
+  },
+  sketch: {
+    label: "Sketch",
+    Icon: SketchIcon,
+    description: "Another sketch, running in its own buffer as a layer"
   },
   qrcode: {
     label: "QR code",

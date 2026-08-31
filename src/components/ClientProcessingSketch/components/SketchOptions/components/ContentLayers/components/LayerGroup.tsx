@@ -26,7 +26,7 @@ import {
 } from "../../SortableRow";
 import AddLayerPopover from "../../ContentItems/components/AddItemControls/components/ItemPalette/AddLayerPopover";
 import type {
-  ItemKind
+  AddItemHandler
 } from "../../ContentItems/components/AddItemControls/components/ItemPalette/types/item-kinds";
 import makeDefaultItem from "../../ContentItems/components/AddItemControls/utils/makeDefaultItem";
 import useContentArray from "../../ContentArrayProvider/hooks/useContentArray";
@@ -142,10 +142,15 @@ export default function LayerGroup( {
     ]
   );
 
-  const handleAdd = React.useCallback(
-    ( kind: ItemKind ) => {
+  const handleAdd = React.useCallback<AddItemHandler>(
+    (
+      kind, seed
+    ) => {
       append(
-        makeDefaultItem( kind ),
+        makeDefaultItem(
+          kind,
+          seed
+        ),
         {
           shouldFocus: false
         }

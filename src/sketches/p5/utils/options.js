@@ -110,6 +110,29 @@ function collectImagePathsDeep(
   }
 }
 
+// An embedded-sketch layer ("sketch" content item) carries a whole sketch's
+// parameters under `settings`, and a photo sketch keeps its image paths in
+// there — exactly like the page's own `sketch` block, which is already walked
+// below. Without this, dropping a photo sketch in as a layer would render it
+// with no photos at all. Only that one item type is walked: every other content
+// item resolves its images out of the asset list, which is collected already.
+function collectEmbeddedSketchImages(
+  content, acc
+) {
+  if ( !Array.isArray( content ) ) {
+    return;
+  }
+
+  for ( const item of content ) {
+    if ( item?.type === "sketch" ) {
+      collectImagePathsDeep(
+        item.settings,
+        acc
+      );
+    }
+  }
+}
+
 async function _refreshAssets() {
   // The 80ms debounce above outlives the sketch: leaving a sketch page fires
   // `sketch.destroy()` (which does `setP5( null )`) while a refresh is still
@@ -144,14 +167,25 @@ async function _refreshAssets() {
       slide?.sketch,
       fromSlide
     );
+    collectEmbeddedSketchImages(
+      slide?.content,
+      fromSlide
+    );
     return fromSlide;
   } );
+  const embeddedImages = [];
+
+  collectEmbeddedSketchImages(
+    opts.content,
+    embeddedImages
+  );
 
   const allPaths = [
     ...new Set( [
       ...globalImages,
       ...sketchImages,
-      ...slideImages
+      ...slideImages,
+      ...embeddedImages
     ] )
   ];
 
@@ -431,8 +465,15 @@ function handleOptionsChange(
     newOptions?.slides ?? null,
     previousOptions.slides ?? null
   );
+  // Root content is watched for the same reason slides are: an embedded-sketch
+  // layer holds a whole sketch's parameters, image paths included, so adding or
+  // repointing one has to re-run the asset pass.
+  const contentChanged = !valuesEqual(
+    newOptions?.content ?? null,
+    previousOptions.content ?? null
+  );
 
-  if ( hasChanges || assetsChanged || slidesChanged ) {
+  if ( hasChanges || assetsChanged || slidesChanged || contentChanged ) {
     refreshAssets();
 
     if ( assetsChanged ) {
@@ -440,6 +481,9 @@ function handleOptionsChange(
     }
     if ( slidesChanged ) {
       previousOptions.slides = structuredClone( newOptions?.slides ?? null );
+    }
+    if ( contentChanged ) {
+      previousOptions.content = structuredClone( newOptions?.content ?? null );
     }
   }
 }
@@ -488,7 +532,8 @@ function initializeOptionsSubscription() {
     } : null,
     // Snapshots, not references — the store mutates these in place.
     assets: structuredClone( initialOptions?.assets ?? null ),
-    slides: structuredClone( initialOptions?.slides ?? null )
+    slides: structuredClone( initialOptions?.slides ?? null ),
+    content: structuredClone( initialOptions?.content ?? null )
   };
 
   // Subscribe to future changes
@@ -788,12 +833,47 @@ function resolveSketch( live ) {
   }
 }
 
+/* ------------------------------------------------------------------ */
+/*  Embedded-sketch options override                                   */
+/*                                                                    */
+/*  A "sketch" content item runs another sketch as a layer. That sketch */
+/*  reads its parameters through `options.sketch` like any other, so    */
+/*  while it draws the proxy must hand back the LAYER's settings — not  */
+/*  the host page's. Same lever as getP5()'s surface override in        */
+/*  sketch.js: one swap redirects the whole module graph, so no sketch  */
+/*  and no helper needs to know it is embedded.                         */
+/*                                                                    */
+/*  Only `sketch` and `size` are overridden. Assets, slides and the     */
+/*  animation clock stay the host's on purpose: the images belong to    */
+/*  the host document, and one shared clock is what keeps an embedded   */
+/*  layer deterministic under capture.                                  */
+/* ------------------------------------------------------------------ */
+
+let _optionsOverride = null;
+
+/** Returns the previous override, to hand back to popOptionsOverride. */
+export function pushOptionsOverride( override ) {
+  const previous = _optionsOverride;
+
+  _optionsOverride = override ?? null;
+
+  return previous;
+}
+
+export function popOptionsOverride( previous ) {
+  _optionsOverride = previous ?? null;
+}
+
 const optionsProxy = new Proxy(
   {},
   {
     get(
       _, prop
     ) {
+      if ( _optionsOverride && prop in _optionsOverride ) {
+        return _optionsOverride[ prop ];
+      }
+
       const live = getSketchOptions();
 
       if ( prop === "sketch" ) {

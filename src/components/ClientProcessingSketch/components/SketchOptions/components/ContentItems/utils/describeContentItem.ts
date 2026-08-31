@@ -104,6 +104,15 @@ export default function describeContentItem( item: unknown ): ContentItemDescrip
         return firstNonEmpty( visual?.name );
       }
 
+      case "sketch": {
+        // The embedded sketch is stored as its catalogue path
+        // ("category/name"); the row shows the name, which is what the picker,
+        // the gallery and the URL all call it.
+        const path = firstNonEmpty( record.sketch );
+
+        return path ? basename( path ) : undefined;
+      }
+
       case "specs":
         return firstNonEmpty( record.style );
 

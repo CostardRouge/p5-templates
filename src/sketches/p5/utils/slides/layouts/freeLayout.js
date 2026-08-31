@@ -10,12 +10,14 @@ import drawSlideBackground from "../common/drawSlideBackground.js";
 import drawSlideImagesStack from "../common/drawSlideImagesStack.js";
 import drawSlideQrCode from "../common/drawSlideQrCode.js";
 import drawSlideBreakdown from "../common/drawSlideBreakdown.js";
+import drawSlideSketch from "../common/drawSlideSketch.js";
 import {
   resolveDraggedItem
 } from "../contentDrag.js";
 import {
   beginItemBounds,
-  endItemBounds
+  endItemBounds,
+  itemBoundsKey
 } from "../common/itemBoundsRegistry.js";
 
 // `scope` says which content list is being rendered ("global" or "slide:<n>")
@@ -94,6 +96,19 @@ export default function freeLayout(
         drawSlideVisual(
           item,
           options
+        );
+        break;
+      // An embedded sketch keeps one graphics buffer per layer, so its
+      // renderer needs the layer's address — the same (scope, index) key the
+      // bounds registry brackets it with.
+      case "sketch":
+        drawSlideSketch(
+          item,
+          options,
+          itemBoundsKey(
+            scope,
+            index
+          )
         );
         break;
       case "qrcode":

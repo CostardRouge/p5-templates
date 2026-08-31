@@ -24,12 +24,74 @@ let _p5 = null;
 let _container = null;
 let _p5ClassPromise = null;
 
+// ---- nested-sketch surface override ---------------------------------
+// A "sketch" content item runs ANOTHER sketch as a layer, into its own p5
+// graphics buffer (see ./nestedSketch.js). Sketch code and every helper under
+// @/p5/utils/ reach the drawing surface through getP5() and nothing else, so
+// swapping what getP5() returns for the duration of the embedded draw is the
+// single lever that redirects a whole sketch — its own draw, the shared grid /
+// colors / shapes helpers, everything — onto the buffer. Nothing else has to
+// know embedding exists.
+//
+// The override is a stack (embedding is allowed to nest) and is always
+// restored in a `finally`: leaking it would send the host's own draw into a
+// dead buffer, which looks like a sketch that silently stopped rendering.
+let _surfaceOverride = null;
+
 export function setP5( instance ) {
   _p5 = instance;
 }
 
 export function getP5() {
+  return _surfaceOverride ?? _p5;
+}
+
+/** The real p5 instance, ignoring any embedded-sketch surface override. */
+export function getHostP5() {
   return _p5;
+}
+
+/** Redirect getP5() at `surface`; returns the previous override to restore. */
+export function pushSurfaceOverride( surface ) {
+  const previous = _surfaceOverride;
+
+  _surfaceOverride = surface ?? null;
+
+  return previous;
+}
+
+export function popSurfaceOverride( previous ) {
+  _surfaceOverride = previous ?? null;
+}
+
+export function getSurfaceOverride() {
+  return _surfaceOverride;
+}
+
+// ---- sketch-module registration capture ------------------------------
+// Importing a sketch module runs its top level, which calls sketch.setup() and
+// sketch.draw() on THIS singleton — fine for the page's own sketch, fatal for
+// an embedded one, which would overwrite the host's callbacks mid-run. While a
+// capture is open both setters write into it instead, so the host is untouched
+// and the embedded sketch's functions come back addressable.
+let _capture = null;
+
+export function beginSketchCapture() {
+  _capture = {
+    setupFn: null,
+    drawFn: null,
+    sketchOptions: undefined
+  };
+
+  return _capture;
+}
+
+export function endSketchCapture() {
+  const captured = _capture;
+
+  _capture = null;
+
+  return captured;
 }
 
 export function setContainer( el ) {
@@ -110,13 +172,29 @@ const sketch = {
       },
       sketchOptions
     );
-    sketch.sketchOptions = sketchOptions;
-    sketch._setupFn = typeof setupEngineFunction === "function"
+
+    const setupFn = typeof setupEngineFunction === "function"
       ? setupEngineFunction
       : null;
+
+    // An embedded sketch's registration is captured, never installed — see
+    // beginSketchCapture above.
+    if ( _capture ) {
+      _capture.sketchOptions = sketchOptions;
+      _capture.setupFn = setupFn;
+      return;
+    }
+
+    sketch.sketchOptions = sketchOptions;
+    sketch._setupFn = setupFn;
   },
 
   draw: ( drawFunction ) => {
+    if ( _capture ) {
+      _capture.drawFn = drawFunction;
+      return;
+    }
+
     sketch._drawFn = drawFunction;
   },
 
@@ -434,6 +512,11 @@ const sketch = {
   // ---- reset (called by P5Engine.ts on destroy) -----------------------
 
   reset: () => {
+    // Embedded-sketch layers hold a graphics buffer (and a hidden canvas
+    // element) each. nestedSketch.js installs this when it loads; a static
+    // import here would make the core runtime depend on the embedding feature.
+    sketch.disposeNestedSketches?.();
+
     setP5( null );
     setContainer( null );
     sketch._setupFn = null;
@@ -487,7 +570,17 @@ const sketch = {
       };
     }
 
-    if ( sketch.canvas?.isP3D ) {
+    // While an embedded sketch is drawing, "the canvas" is its buffer: its own
+    // dimensions (p.width/p.height already follow the override) and its own
+    // renderer mode. Reading sketch.canvas here would hand a WEBGL layer the
+    // host's 2D centre, and every sketch that lays out from `center` would draw
+    // a quarter-canvas off.
+    const surface = getSurfaceOverride();
+    const isP3D = surface
+      ? Boolean( surface._renderer?.isP3D )
+      : Boolean( sketch.canvas?.isP3D );
+
+    if ( isP3D ) {
       return p.createVector(
         0,
         0

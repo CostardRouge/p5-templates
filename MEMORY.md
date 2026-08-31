@@ -56,6 +56,7 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 - A finished export can be previewed in place and handed to the OS share sheet — the only route from a browser export to iOS Photos → `recording.md`.
 - No export loop may `await` a bare `requestAnimationFrame`: a frame that never comes hangs the run rather than slowing it → `recording.md`.
 - Every positioned content item is grabbable on canvas, and that takes three aligned edits (type set, anchor resolution, renderer-reported bounds) — not just a schema → `canvas-interaction.md`.
+- A whole sketch can be a layer inside another sketch (`sketch` content item), by overriding three module singletons — the surface, the options and the registration — never by special-casing sketches → `architecture.md`, `studio-ui.md`.
 
 ## Open items (dated; remove when done)
 
