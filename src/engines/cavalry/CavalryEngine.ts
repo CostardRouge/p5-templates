@@ -59,6 +59,14 @@ export class CavalryEngine implements SketchEngine {
   readonly engineId = "cavalry";
 
   private _isReady = false;
+  // Set by destroy(). init() re-checks it after every await: React strict
+  // mode (dev) mounts, destroys and re-mounts the renderer synchronously, so
+  // a destroyed engine's still-pending init would otherwise resume alongside
+  // the replacement's and append a SECOND canvas to the shared container —
+  // two stacked players, with capture reading the dead one. Clearing stale
+  // canvases at the top of init() cannot catch it: both inits get past that
+  // clear before either has appended anything.
+  private destroyed = false;
   private container: HTMLElement | null = null;
   private player: CavalryPlayerHandle | null = null;
   private placeholderCanvas: HTMLCanvasElement | null = null;
@@ -86,7 +94,9 @@ export class CavalryEngine implements SketchEngine {
     this.container = container;
     this.options = options;
 
-    container.querySelectorAll( ".cavalry-canvas, .cavalry-placeholder" )
+    // Remove stale canvases from a previous run
+    container
+      .querySelectorAll( "canvas" )
       .forEach( ( el ) => el.remove() );
 
     // Seed the shared options store so any live parameter binding reads the
@@ -94,6 +104,10 @@ export class CavalryEngine implements SketchEngine {
     const {
       setSketchOptions
     } = await import( "@/lib/syncSketchOptions" );
+
+    if ( this.destroyed ) {
+      return;
+    }
 
     setSketchOptions(
       options,
@@ -116,10 +130,18 @@ export class CavalryEngine implements SketchEngine {
         loadSketchModule
       } = await import( "@/generated/sketchModuleRegistry" );
 
+      if ( this.destroyed ) {
+        return;
+      }
+
       const templateModule = await loadSketchModule(
         "cavalry",
         sketchPath
       ).catch( () => null );
+
+      if ( this.destroyed ) {
+        return;
+      }
 
       const mod = ( templateModule?.default ?? templateModule ) as CavalrySketchModule | null;
 
@@ -135,6 +157,10 @@ export class CavalryEngine implements SketchEngine {
       size.height,
       scenePath ?? null
     );
+
+    if ( this.destroyed ) {
+      return;
+    }
 
     this._isReady = true;
 
@@ -177,6 +203,14 @@ export class CavalryEngine implements SketchEngine {
         height
       } );
 
+      // The player mounts its own canvas, so a destroyed engine must dispose
+      // it rather than return — otherwise it outlives us in the container.
+      if ( this.destroyed ) {
+        player.dispose();
+
+        return;
+      }
+
       const {
         resolveAssetURL
       } = await import( "@/lib/assets/resolveAssetURL" );
@@ -194,6 +228,13 @@ export class CavalryEngine implements SketchEngine {
       const bytes = await response.arrayBuffer();
 
       await player.loadScene( bytes );
+
+      if ( this.destroyed ) {
+        player.dispose();
+
+        return;
+      }
+
       player.getCanvas().classList.add( "cavalry-canvas" );
 
       this.player = player;
@@ -224,6 +265,12 @@ export class CavalryEngine implements SketchEngine {
     height: number,
     message: string
   ): void {
+    // Reached from init() after several awaits — a destroyed engine must not
+    // append anything to a container the replacement engine already owns.
+    if ( this.destroyed ) {
+      return;
+    }
+
     const canvas = document.createElement( "canvas" );
 
     canvas.width = width;
@@ -261,6 +308,7 @@ export class CavalryEngine implements SketchEngine {
   }
 
   destroy(): void {
+    this.destroyed = true;
     this.stopPerformanceLoop();
     unregisterServerCaptureController();
 
