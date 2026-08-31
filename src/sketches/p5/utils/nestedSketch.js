@@ -133,6 +133,54 @@ function ensureSketchLoaded( sketchPath ) {
 
 const NOOP = () => {};
 
+// p5.Graphics copies every p5.prototype method onto itself, bound to itself —
+// including the ones that are only meaningful on a real p5 *instance*. They are
+// there, they are callable, and they throw: `createGraphics` ends in
+// `pInst._elements.push( … )`, and a p5.Graphics has no `_elements` (found as
+// "Cannot read properties of undefined (reading 'push')" from
+// `graphics.createAutoResizableGraphics`, i.e. from every GPU-helper sketch).
+//
+// These are routed to the host instead. What they have in common is that they
+// need instance state (the element registry, the user node, the preload
+// counter) and produce something renderer-INdependent — a buffer, an image, a
+// font, a DOM element — which the embedded sketch then uses on its own surface.
+//
+// Deliberately NOT here: `createShader` / `loadShader` / `createFramebuffer` /
+// `createCamera`, which must belong to the buffer's own GL context, and
+// `createCanvas`, which no sketch calls (the runtime does) and which on the
+// host would replace the page's canvas.
+const HOST_METHODS = new Set( [
+  "createGraphics",
+  "loadImage",
+  "loadFont",
+  "loadModel",
+  "loadStrings",
+  "loadJSON",
+  "loadXML",
+  "loadTable",
+  "loadBytes",
+  "createCapture",
+  "createVideo",
+  "createAudio",
+  "createImg",
+  "createA",
+  "createDiv",
+  "createP",
+  "createSpan",
+  "createElement",
+  "createInput",
+  "createFileInput",
+  "createSlider",
+  "createButton",
+  "createCheckbox",
+  "createSelect",
+  "createRadio",
+  "createColorPicker",
+  "select",
+  "selectAll",
+  "removeElements"
+] );
+
 /**
  * What the embedded sketch sees as `p`.
  *
@@ -141,6 +189,8 @@ const NOOP = () => {};
  * are the p5 *instance* properties — `frameCount`, `mouseX`, `deltaTime`, the
  * key state — which live on the running instance; those fall through to the
  * host, which is also the honest answer (the pointer is over the host canvas).
+ * The methods in HOST_METHODS go the other way: present on the buffer, but
+ * broken there, so they are forwarded to the host.
  *
  * `background()` is intercepted rather than filtered at the parameter level:
  * "ignore the sketch's own background" has to hold whether the sketch paints
@@ -158,6 +208,10 @@ function makeSurfaceProxy(
       ) {
         if ( prop === "background" && state.suppressBackground ) {
           return NOOP;
+        }
+
+        if ( host && HOST_METHODS.has( prop ) && typeof host[ prop ] === "function" ) {
+          return host[ prop ].bind( host );
         }
 
         const value = Reflect.get(
