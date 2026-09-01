@@ -111,6 +111,7 @@ export const sketchFormLoaders: Record<string, SketchModuleLoader> = {
   "p5:flowers/flowers-v3-petals-flapping": () => import( "@/p5/sketches/flowers/flowers-v3-petals-flapping/options" ),
   "p5:flowers/flowers-v4-easing-curves": () => import( "@/p5/sketches/flowers/flowers-v4-easing-curves/options" ),
   "p5:flowers/flowers-v5-spiral": () => import( "@/p5/sketches/flowers/flowers-v5-spiral/options" ),
+  "p5:hand-capture/hand-clip-studio-v1": () => import( "@/p5/sketches/hand-capture/hand-clip-studio-v1/options" ),
   "p5:hand-capture/hand-tracking-v0-move": () => import( "@/p5/sketches/hand-capture/hand-tracking-v0-move/options" ),
   "p5:hand-capture/hand-tracking-v1-attract": () => import( "@/p5/sketches/hand-capture/hand-tracking-v1-attract/options" ),
   "p5:hand-capture/hand-tracking-v10-finger-echo": () => import( "@/p5/sketches/hand-capture/hand-tracking-v10-finger-echo/options" ),

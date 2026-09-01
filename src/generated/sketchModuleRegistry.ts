@@ -93,6 +93,7 @@ export const sketchModuleLoaders: Record<string, SketchModuleLoader> = {
   "p5:flowers/flowers-v3-petals-flapping": () => import( "@/p5/sketches/flowers/flowers-v3-petals-flapping/index.js" ),
   "p5:flowers/flowers-v4-easing-curves": () => import( "@/p5/sketches/flowers/flowers-v4-easing-curves/index.js" ),
   "p5:flowers/flowers-v5-spiral": () => import( "@/p5/sketches/flowers/flowers-v5-spiral/index.js" ),
+  "p5:hand-capture/hand-clip-studio-v1": () => import( "@/p5/sketches/hand-capture/hand-clip-studio-v1/index.js" ),
   "p5:hand-capture/hand-tracking-v0-move": () => import( "@/p5/sketches/hand-capture/hand-tracking-v0-move/index.js" ),
   "p5:hand-capture/hand-tracking-v1-attract": () => import( "@/p5/sketches/hand-capture/hand-tracking-v1-attract/index.js" ),
   "p5:hand-capture/hand-tracking-v10-finger-echo": () => import( "@/p5/sketches/hand-capture/hand-tracking-v10-finger-echo/index.js" ),

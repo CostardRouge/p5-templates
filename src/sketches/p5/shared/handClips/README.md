@@ -1,11 +1,14 @@
 # Shared hand clips
 
 Portable pre-recorded hand-landmark takes in the `p5t-handclip` .json format
-— produced by the hand-clip studio sketch (record a pinch/drag with your own
-hand on camera, bake, export) or by `bakeHandClip()` in
-`src/sketches/p5/utils/interaction/handClips/process.js`.
+— produced by the `hand-capture/hand-clip-studio-v1` sketch (record a
+pinch/drag with your own hand on camera, bake, review, export) or by
+`bakeHandClip()` in `src/sketches/p5/utils/interaction/handClips/process.js`.
 
-Drop a downloaded `.json` here to make it importable by any sketch:
+In the studio, **R** arms a take, **E** downloads the reviewed clip and, in
+`npm run dev`, **S** writes it straight into this directory through
+`POST /api/dev/save-hand-clip`. Otherwise drop a downloaded `.json` here to
+make it importable by any sketch:
 
 ```js
 import pinchDrag from "@/p5/shared/handClips/pinch-drag-slow.json";
