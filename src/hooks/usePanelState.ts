@@ -43,8 +43,19 @@ const PERSISTED_KEY_PREFIXES = [
   "list-"
 ];
 
+/**
+ * One of the panel's named sections, as opposed to a key generated from a form
+ * path. The two are held by different stores — `useCollapsibleStates` owns the
+ * sections, `CollapsibleProvider` owns everything else — and each persists only
+ * its own, so the provider's vestigial copy of the section defaults cannot
+ * overwrite the values the hook actually drives the UI with.
+ */
+export function isPanelSectionKey( key: string ): boolean {
+  return PERSISTED_SECTIONS.has( key );
+}
+
 export function isPersistableCollapsibleKey( key: string ): boolean {
-  if ( PERSISTED_SECTIONS.has( key ) ) {
+  if ( isPanelSectionKey( key ) ) {
     return true;
   }
 

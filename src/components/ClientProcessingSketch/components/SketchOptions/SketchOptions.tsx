@@ -278,9 +278,14 @@ export default function SketchOptions( {
 
   const [
     {
-      backendRecording, sketchFormValues, engine, browserRecording
+      backendRecording, sketchFormValues, engine, browserRecording, engineId
     }
   ] = useSketch();
+
+  // Identifies the PAGE, not the document: the same `<engineId>:<name>` pair
+  // `resolveSketchPath` resolves a sketch with, so coming back to a sketch
+  // finds the panel as it was left and no other sketch's.
+  const panelStorageKey = `${ engineId }:${ name }`;
 
   // Thumbnail management (only when enabled)
   const {
@@ -351,9 +356,12 @@ export default function SketchOptions( {
     states: collapsibleStates,
     toggleSection,
     setSection
-  } = useCollapsibleStates( isDesktop ? undefined : {
-    rootSettings: false
-  } );
+  } = useCollapsibleStates(
+    isDesktop ? undefined : {
+      rootSettings: false
+    },
+    panelStorageKey
+  );
 
   // Debounce thumbnail capture: refresh the active slide's thumbnail 1 second
   // after the user stops changing form values (e.g., releasing a slider).
@@ -592,7 +600,8 @@ export default function SketchOptions( {
   const bodyProps = {
     activeSlideIndex,
     collapsibleStates,
-    onCollapsibleToggle: toggleSection
+    onCollapsibleToggle: toggleSection,
+    storageKey: panelStorageKey
   };
 
   const filmstripProps = {
@@ -638,7 +647,7 @@ export default function SketchOptions( {
           and wires Cmd/Ctrl+Z / Shift+Z hotkeys. Undo/redo replay through
           reset(), which propagates to the sketch like an options import. */}
       <FormUndoRedo autoCapture="debounced">
-        <CollapsibleProvider>
+        <CollapsibleProvider storageKey={ panelStorageKey }>
           <ContentSelectionProvider>
             <ContentSelectionListener
               setSection={ setSection }
