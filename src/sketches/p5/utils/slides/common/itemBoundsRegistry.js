@@ -12,8 +12,9 @@ import {
 // (the way splines-v2-draggable works, where the visible dots ARE the
 // anchors) requires knowing the drawn rectangle.
 //
-// freeLayout brackets each item render with beginItemBounds(scope, index) /
-// endItemBounds(), and each renderer reports the rectangle it actually drew
+// slides.render() (slides/index.js) brackets each item render with
+// beginItemBounds(scope, index) / endItemBounds(), and each renderer reports
+// the rectangle it actually drew
 // (canvas-pixel space) via reportItemBounds(). Entries carry the frame they
 // were reported on so a consumer can ignore stale rects (item removed,
 // renderer bailed early).
@@ -29,7 +30,7 @@ export function itemBoundsKey(
   return `${ scope }:${ index }`;
 }
 
-/** Called by freeLayout before dispatching one item's renderer. */
+/** Called by slides.render() before dispatching one item's renderer. */
 export function beginItemBounds(
   scope, index
 ) {
@@ -39,7 +40,7 @@ export function beginItemBounds(
   );
 }
 
-/** Called by freeLayout after the renderer returns. */
+/** Called by slides.render() after the renderer returns. */
 export function endItemBounds() {
   currentKey = null;
 }

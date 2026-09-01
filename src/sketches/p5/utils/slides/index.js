@@ -6,9 +6,18 @@ import sketch, {
   getContainer, getP5
 } from "../sketch.js";
 
-import {
-  _layouts
-} from "./layouts";
+import drawSlideMeta from "./common/drawSlideMeta.js";
+import drawSlideSpecs from "./common/drawSlideSpecs.js";
+import drawHudElement from "./common/drawHudElement.js";
+import drawSlideText from "./common/drawSlideText.js";
+import drawSlideTitle from "./common/drawSlideTitle.js";
+import drawSlideImage from "./common/drawSlideImage.js";
+import drawSlideImages from "./common/drawSlideImages.js";
+import drawSlideBackground from "./common/drawSlideBackground.js";
+import drawSlideImagesStack from "./common/drawSlideImagesStack.js";
+import drawSlideSketch from "./common/drawSlideSketch.js";
+import drawSlideQrCode from "./common/drawSlideQrCode.js";
+import drawSlideBreakdown from "./common/drawSlideBreakdown.js";
 
 import getMontageSketch from "./morph/index.js";
 import getBreakdownSketch, {
@@ -21,6 +30,7 @@ import drawMontageTitle from "./montageTitle/index.js";
 
 import {
   registerContentDrag,
+  resolveDraggedItem,
   slideContentScope,
   GLOBAL_CONTENT_SCOPE,
   MONTAGE_TITLE_INDEX
@@ -28,7 +38,8 @@ import {
 
 import {
   beginItemBounds,
-  endItemBounds
+  endItemBounds,
+  itemBoundsKey
 } from "./common/itemBoundsRegistry.js";
 
 import {
@@ -216,19 +227,107 @@ const slides = {
     );
   },
 
+  // `scope` says which content list is being rendered ("global" or
+  // "slide:<n>") so an in-flight on-canvas drag (see contentDrag.js) can
+  // substitute the live position of the grabbed item without touching the
+  // option store every frame. Each item's render is bracketed with
+  // begin/endItemBounds so the renderer's reportItemBounds() call lands on
+  // the right (scope, index) — that visible rectangle is what the drag layer
+  // hit-tests.
   render(
     source, scope = GLOBAL_CONTENT_SCOPE
   ) {
     // Pass the source straight through. For global content `source` is the
     // live options proxy; destructuring/spreading it would drop every key
     // (its target is empty and it has only a get trap), silently discarding
-    // global `content`. freeLayout reads `.content` via the get trap instead.
-    // `scope` tells the content-drag layer which list is rendering.
-    // ( _layouts[ source?.layout ] ?? _layouts.auto )( source );
-    _layouts.free(
-      source,
-      scope
-    );
+    // global `content`. `.content` is read below via the get trap instead.
+    source?.content?.forEach( (
+      rawItem, index
+    ) => {
+      const item = resolveDraggedItem(
+        scope,
+        index,
+        rawItem
+      );
+
+      beginItemBounds(
+        scope,
+        index
+      );
+
+      switch ( item?.type ) {
+        case "background":
+          drawSlideBackground( item );
+          break;
+        case "meta":
+          drawSlideMeta( item );
+          break;
+        case "specs":
+          drawSlideSpecs( item );
+          break;
+        case "breakdown":
+          drawSlideBreakdown( item );
+          break;
+        // HUD elements stack in array order like every other item —
+        // reordering layers reorders their z-order (the old single "hud"
+        // container forced its own internal order; the migration preserves
+        // it via insertion order).
+        case "hud-badge":
+        case "hud-gauge":
+        case "hud-sparkline":
+        case "hud-counter":
+        case "hud-crosshairs":
+        case "hud-swatch":
+        case "hud-bounding-box":
+          drawHudElement( item );
+          break;
+        case "text":
+          drawSlideText( item );
+          break;
+        case "title":
+          drawSlideTitle( item );
+          break;
+        case "images":
+          drawSlideImages(
+            item,
+            source
+          );
+          break;
+        case "image":
+          drawSlideImage(
+            item,
+            source
+          );
+          break;
+        case "images-stack":
+          drawSlideImagesStack(
+            item,
+            source
+          );
+          break;
+        // An embedded sketch keeps one graphics buffer per layer, so its
+        // renderer needs the layer's address — the same (scope, index) key the
+        // bounds registry brackets it with.
+        case "sketch":
+          drawSlideSketch(
+            item,
+            source,
+            itemBoundsKey(
+              scope,
+              index
+            )
+          );
+          break;
+        case "qrcode":
+          drawSlideQrCode(
+            item,
+            source
+          );
+          break;
+      }
+
+      endItemBounds();
+    } );
   },
 
   renderCurrentSlide() {

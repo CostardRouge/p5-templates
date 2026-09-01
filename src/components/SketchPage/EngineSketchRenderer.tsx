@@ -9,7 +9,8 @@ import {
   getEngine
 } from "@/engines/registry";
 import type {
-  SketchEngine
+  SketchEngine,
+  EngineEventMap
 } from "@/engines/types";
 import useSketch from "../ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
 import {
@@ -72,6 +73,20 @@ export default function EngineSketchRenderer() {
         handleReady
       );
 
+      // Mirror the engine's per-asset loading report into the context so
+      // the loading placeholder can show which step is in flight.
+      const handleLoading = ( progress: EngineEventMap[ "loading" ] ) => {
+        dispatch( {
+          type: "SET_LOADING_PROGRESS",
+          payload: progress
+        } );
+      };
+
+      instance.on(
+        "loading",
+        handleLoading
+      );
+
       instance
         .init(
           containerRef.current,
@@ -97,7 +112,15 @@ export default function EngineSketchRenderer() {
           "ready",
           handleReady
         );
+        instance.off(
+          "loading",
+          handleLoading
+        );
         instance.destroy();
+        dispatch( {
+          type: "SET_LOADING_PROGRESS",
+          payload: null
+        } );
         engineRef.current = null;
         dispatch( {
           type: "SET_ENGINE",

@@ -32,7 +32,7 @@ import {
 // the left edge). Hit-testing a disc around the anchor therefore missed the
 // item the user was actually clicking, and the press fell through to a
 // viewport pan. Instead, every renderer reports the rectangle it actually
-// drew (itemBoundsRegistry, bracketed per item by freeLayout) and the press
+// drew (itemBoundsRegistry, bracketed per item by slides.render()) and the press
 // is tested against those visible rectangles — topmost first, with the
 // anchor disc kept only as a fallback for items whose renderer reported
 // nothing this frame (a renderer that bailed early, an item still loading).
@@ -51,7 +51,7 @@ import {
 //
 // Positions are stored NORMALIZED (0..1) in item.position (resize-proof, saved/
 // exported with the template). While a drag is live the moved position lives in
-// an override map that freeLayout consults when it renders (via
+// an override map that slides.render() consults when it renders (via
 // resolveDraggedItem); the store is written only on RELEASE (setSketchOptions
 // origin "p5", so the options module skips its own change handler — no feedback
 // loop — while React still picks the new values up in the form).
@@ -169,8 +169,8 @@ export function slideContentScope( index ) {
 }
 
 // Live drag overrides: `${scope}:${contentIndex}` → normalized { x, y }
-// position. Consulted by freeLayout while a drag is in flight; flushed into the
-// option store on release.
+// position. Consulted by slides.render() while a drag is in flight; flushed
+// into the option store on release.
 const overrides = new Map();
 
 // The pointer currently dragging an item, or null. `pointerId` scopes every
@@ -265,8 +265,9 @@ function overrideKey(
 
 /**
  * The item as it should render this frame: while it is being dragged, its live
- * (not yet persisted) position replaces the stored one. Called by freeLayout
- * for every content item; returns the item untouched when no drag is in flight.
+ * (not yet persisted) position replaces the stored one. Called by
+ * slides.render() for every content item; returns the item untouched when no
+ * drag is in flight.
  */
 export function resolveDraggedItem(
   scope, index, item
@@ -301,7 +302,8 @@ export function resolveDraggedItem(
  * The montage title's live position for the given slide while it is being
  * dragged, or its stored position otherwise. drawMontageTitle calls this so the
  * label follows the pointer before the move is persisted (the overlay renders
- * outside freeLayout, so it can't go through resolveDraggedItem).
+ * outside slides.render()'s content loop, so it can't go through
+ * resolveDraggedItem).
  */
 export function resolveMontageTitlePosition(
   slideIndex, position
@@ -319,7 +321,7 @@ export function resolveMontageTitlePosition(
 }
 
 // Same wrap as slides/index.js uses to resolve the rendered slide, so the scope
-// written here always matches the scope freeLayout renders with.
+// written here always matches the scope slides.render() renders with.
 function currentSlideIndex( count ) {
   const raw = typeof window !== "undefined"
     ? window.getCurrentSlide?.()?.index
@@ -331,8 +333,8 @@ function currentSlideIndex( count ) {
 
 // Every draggable content item on screen right now, as pixel-space grab targets
 // carrying where they came from (scope + index) so a move knows where to write
-// back. Current slide items first, then the global list — freeLayout draws them
-// in that order too.
+// back. Current slide items first, then the global list — slides.render() draws
+// them in that order too.
 function collectTargets( p ) {
   const store = getSketchOptions();
   const targets = [];
