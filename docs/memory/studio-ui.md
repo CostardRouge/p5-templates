@@ -236,14 +236,22 @@ and `initOptions`' top-level `.catch` resets **that deck's whole options** to
 defaults, not just the offending layer. If a report ever arrives that "a deck
 came back empty", this is the first thing to check.
 
-## A reversible toggle belongs on the row, not behind hover
+## A layer row shows its whole action set at rest
 
-2026-09-01 — The layers list hides its action cluster until hover
-(`md:opacity-0 md:group-hover:opacity-100`) so a mis-aimed tap cannot hit
-duplicate or delete. The eye was in that cluster and was reported as *missing* —
-it was present and working the whole time, just invisible. It now renders
-outside the cluster in both states, which is the rule the file had already
-half-adopted for hidden layers ("spottable without hovering"). **How to apply**:
-hide an action behind hover only when a mis-click is destructive; a toggle you
-can undo by clicking again is not.
+2026-09-01 — The layers list used to fade its action cluster in on hover
+(`md:opacity-0 md:group-hover:opacity-100`), and the eye inside it was reported
+as **missing** — it had been present and working the whole time, just invisible
+until the row was hovered. Eye, duplicate and delete are now all visible at
+rest. They stay their own buttons outside the row button, so pressing one acts
+on the layer instead of selecting it; that separation was the half of the old
+rationale worth keeping. The other half — "so a mis-aimed tap does not delete"
+— never applied to what changed, because the reveal was `md:`-gated and touch
+always saw the cluster.
 
+**How to apply**: reserve a hover reveal for controls that sit **on top of
+artwork** (`SlideThumbnail`, `RecordingThumbnail`, `RecordingCard` keep theirs,
+so a thumbnail is not permanently covered by its own buttons). In a text row
+whose icons sit beside the content, hiding them buys nothing and costs
+discoverability. Note the first fix here was too narrow — only the eye was
+pulled out — so if a report says an icon is missing, check the whole cluster
+before concluding.
