@@ -56,13 +56,13 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 - A finished export can be previewed in place and handed to the OS share sheet — the only route from a browser export to iOS Photos → `recording.md`.
 - No export loop may `await` a bare `requestAnimationFrame`: a frame that never comes hangs the run rather than slowing it → `recording.md`.
 - Every positioned content item is grabbable on canvas, and that takes three aligned edits (type set, anchor resolution, renderer-reported bounds) — not just a schema → `canvas-interaction.md`.
+- Recorded hand takes are baked offline into the uniform-fps `p5t-handclip` format and replayed as hand-shaped groups through the existing pinch/drag layer — never a second pointer path → `hand-clips.md`.
 
 ## Open items (dated; remove when done)
 
 - 2026-08-20 — **`.env.example` is missing.** `setup.sh` runs `cp .env.example .env` under `set -e` and `README.md` points at it for the full env list, but no such file is tracked or on disk, so a fresh clone fails at the first setup step. `.gitignore` now permits it (`!.env.example`); someone who knows the real key set has to author it. Deliberately not inferred here — guessing key names into a template would be worse than its absence.
 - 2026-08-20 — `.vscode/settings.json` was untracked as accidental IDE state (it arrived inside a sketch commit, 1ccd877). Its content was genuinely useful: eslint format-on-save matching the repo's `@stylistic` rules. If that is wanted as shared project config, re-add it deliberately with a `!.vscode/settings.json` negation — the file is still on disk.
 - 2026-08-20 — `.husky/pre-push` is entirely commented out, so nothing runs `npm run build` before a push; `.github/workflows/lint-fix.yml` records the reason as "a known issue with NEXT_BUILD_DIR resolution". Either fix the resolution and re-enable it, or delete the file. Left alone: hooks are the maintainer's call.
-- 2026-08-20 — `fast-check` is a devDependency that nothing imports. Either start using it for the maths helpers or drop it.
 - 2026-08-20 — No secret has ever been tracked in this repo (`git log --diff-filter=A -- '.env*'` is empty), so nothing needs rotating.
 
 ## Topic files — read before touching the area
@@ -78,4 +78,5 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 | `docs/memory/local-development.md` | Running the app locally, infra services, `setup.sh`, dev-server config |
 | `docs/memory/studio-ui.md` | The sketch page's panels and layouts (inspector, content rail, filmstrip, export, mobile drawer) |
 | `docs/memory/canvas-interaction.md` | The on-canvas drag/selection layer, item-bounds reporting, a renderer's grab surface |
+| `docs/memory/hand-clips.md` | The `p5t-handclip` format, the bake pipeline, the hand-clip studio, replaying recorded hands as virtual pointers |
 | `docs/analytics.md` | Umami config, why auto-track is off, the pageview queue, how to verify tracking (maintained, unlike the rest of `docs/`) |
