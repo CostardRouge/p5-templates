@@ -17,9 +17,9 @@ import SketchPerformanceLabel from "@/components/SketchPage/SketchPerformanceLab
  * edge that frames the viewport together with the left/right rails. It hosts
  * the global menu (relocated here through {@link MenuBarSlot}), the engine +
  * category + sketch name, the engine playback controls, and — via
- * `zoomSlotRef` — the viewport's zoom controls (with the fps readout beside
- * them), each rendered flat and separated by full-height dividers instead of
- * as floating islands.
+ * `zoomSlotRef` — the viewport's zoom controls, each rendered flat and
+ * separated by full-height dividers instead of as floating islands. The fps
+ * readout sits undivided against the zoom controls, reading as one cluster.
  *
  * Desktop-only; rendered by {@link SketchPage} only in the docked
  * layout. `items-stretch` + `h-full` cells make every divider span the whole
@@ -83,8 +83,6 @@ export default function DockedTopBar( {
           interactionMode={ interactionMode }
         />
       </div>
-
-      <Divider />
 
       <div
         ref={ zoomSlotRef }
