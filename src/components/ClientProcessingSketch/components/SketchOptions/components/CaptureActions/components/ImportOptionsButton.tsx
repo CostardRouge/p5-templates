@@ -10,6 +10,9 @@ import {
   SketchOptionInput
 } from "@/types/sketch.types";
 import Toast from "@/components/Toast";
+import {
+  HIDDEN_FILE_INPUT_CLASS
+} from "@/components/hiddenFileInput";
 
 type ImportOptionsButtonProps = {
   persistedJobId?: string;
@@ -142,7 +145,7 @@ export default function ImportOptionsButton( {
         type="file"
         accept=".json"
         onChange={ handleFileChange }
-        className="hidden"
+        className={ HIDDEN_FILE_INPUT_CLASS }
       />
       <button
         onClick={ handleImportClick }

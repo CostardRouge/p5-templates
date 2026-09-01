@@ -31,6 +31,9 @@ import {
   setSketchOptions
 } from "@/lib/syncSketchOptions";
 import useAssetDrop from "@/hooks/useAssetDrop";
+import {
+  IMAGE_INPUT_ACCEPT
+} from "@/lib/assets";
 
 import {
   JobId
@@ -38,6 +41,9 @@ import {
 import {
   AssetsOption
 } from "@/types/sketch.types";
+import {
+  HIDDEN_FILE_INPUT_CLASS
+} from "@/components/hiddenFileInput";
 
 export default function ImageAssets( {
   assets,
@@ -175,7 +181,7 @@ export default function ImageAssets( {
         <input
           ref={ fileInputRef }
           type="file"
-          accept="image/*"
+          accept={ IMAGE_INPUT_ACCEPT }
           multiple
           onChange={ async( e ) => {
             if ( null === e.target.files ) {
@@ -190,7 +196,7 @@ export default function ImageAssets( {
 
             e.target.value = "";
           } }
-          className="hidden"
+          className={ HIDDEN_FILE_INPUT_CLASS }
         />
       </div>
     </DndContext>

@@ -59,7 +59,7 @@ type Props = {
   config?: Vector2DInputConfig;
   /** Accessible name prefix for the x / y number inputs. Defaults to "vector". */
   ariaLabel?: string;
-  /** Overrides the wrapper sizing. Defaults to a compact 100px-wide column. */
+  /** Overrides the wrapper sizing. Defaults to a compact 140px-wide column. */
   className?: string;
 };
 
@@ -264,11 +264,18 @@ export default function Vector2DPad( {
   ) * 100;
   const pointTop = valueYToFraction( current.y ) * 100;
 
+  // The native spin buttons are dropped on purpose: Chrome reserves ~13px for
+  // them inside a 48px-wide field, which was enough to clip the last digit of a
+  // value like -0.75 — and at a 0.01 step they were unusable anyway. Stepping
+  // still works through the arrow keys, on the input and on the pad alike.
   const numberInputClassName =
-    "w-full text-center text-xs font-mono px-1 py-0.5 rounded border border-theme/30 bg-theme/20 focus:outline-none focus:ring-1 focus:ring-theme";
+    "w-full min-w-0 text-center text-xs font-mono tabular-nums px-1 py-0.5 rounded border border-theme/30 bg-theme/20 focus:outline-none focus:ring-1 focus:ring-theme [appearance:textfield] [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none";
 
   return (
-    <div className={ className ?? "flex w-full max-w-[100px] flex-col gap-1" }>
+    // 140px, not the 100px this used to be: two fields sharing that width left
+    // ~40px of text each, too narrow for a signed two-decimal value. The pad is
+    // square and follows the same width, which also makes it easier to drag.
+    <div className={ className ?? "flex w-full max-w-[140px] flex-col gap-1" }>
       <div className="flex items-center gap-1">
         <input
           type="number"

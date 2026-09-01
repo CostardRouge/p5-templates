@@ -58,7 +58,9 @@ export default function ControlledAssetInput( {
       return;
     }
 
-    setPreviewURL( URL.createObjectURL( files[ 0 ] ) );
+    const optimisticURL = URL.createObjectURL( files[ 0 ] );
+
+    setPreviewURL( optimisticURL );
 
     const paths = await uploadFiles(
       files,
@@ -68,6 +70,12 @@ export default function ControlledAssetInput( {
     if ( paths.length ) {
       setSinglePath( paths[ 0 ] );
     }
+
+    // Drop the optimistic preview once the upload has registered a blob for
+    // the path: for converted formats (e.g. HEIC) the raw file's object URL
+    // isn't renderable, while the registered blob always is.
+    setPreviewURL( null );
+    URL.revokeObjectURL( optimisticURL );
   }
 
   function clear( event: React.MouseEvent<HTMLButtonElement, MouseEvent> ) {
@@ -90,10 +98,30 @@ export default function ControlledAssetInput( {
 
   return (
     <div
-      className="relative h-20"
+      // Button semantics and a pointer cursor, not styling: once a photo is
+      // picked the preview below covers the drop zone entirely, so THIS div is
+      // the only tap target left for replacing it — and iOS Safari does not
+      // deliver clicks from a plain div to React's root listener. Without
+      // these, tapping the photo did nothing at all on a phone while working
+      // fine on every desktop browser.
+      className="relative h-20 cursor-pointer"
+      role="button"
+      tabIndex={ 0 }
+      aria-label="Choose a file"
       onClick={ ( e ) => {
         e.stopPropagation();
+
+        if ( e.target === inputRef.current ) {
+          return;
+        }
+
         inputRef.current?.click();
+      } }
+      onKeyDown={ ( e ) => {
+        if ( e.key === "Enter" || e.key === " " ) {
+          e.preventDefault();
+          inputRef.current?.click();
+        }
       } }
       onDragOver={ ( e ) => e.preventDefault() }
       onDrop={ async( e ) => {

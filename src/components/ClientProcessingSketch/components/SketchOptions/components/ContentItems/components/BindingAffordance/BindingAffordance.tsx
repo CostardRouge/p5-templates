@@ -34,12 +34,19 @@ import {
 import {
   needsInteractionBlock
 } from "@/p5/utils/interaction/bindings.js";
+import ControlledColorInput from "../ControlledColorInput/ControlledColorInput";
 import {
   type Binding,
   type BindingKind,
   type SourceCategory,
+  asRgba,
+  bindingKindFor,
   BLEND_OPTIONS,
+  BOOLEAN_MODE_OPTIONS,
+  complementRgba,
+  DEFAULT_BOOLEAN_MAPPING,
   DEFAULT_WEIGHT,
+  enumMappingValues,
   bindingSourceLabel,
   channelSourceGroups,
   channelSourceOptions,
@@ -67,6 +74,15 @@ type Props = {
   component: FieldConfig[ "component" ];
   config: FieldConfig;
 };
+
+// Opaque black — the stop a colour ramp falls back to when the field carries
+// no usable colour yet.
+const DEFAULT_COLOR = [
+  0,
+  0,
+  0,
+  255
+];
 
 // Resolve the slider domain for the mapping-range controls from the field's
 // own config, so a modulation range is dragged within the parameter's real
@@ -140,7 +156,10 @@ export default function BindingAffordance( {
     return null;
   }
 
-  const kind: BindingKind = component === "vector2d" ? "vector2d" : "continuous";
+  // Boolean / enum / colour targets map the signal to something that is not a
+  // number on a range, so they replace the min/max pair with their own mapping
+  // controls (threshold, option cycle, colour ramp) further down.
+  const kind: BindingKind = bindingKindFor( component ) ?? "continuous";
   const list: Binding[] = Array.isArray( bindings ) ? bindings : [];
 
   // Every binding driving THIS parameter, with its index in the bindings array —
@@ -166,6 +185,20 @@ export default function BindingAffordance( {
   const bound = layers.length > 0;
   const sourceOptions = channelSourceOptions( kind );
   const domain = fieldDomain( config );
+
+  // The options an enum binding walks, labelled. The values live on the binding
+  // (the engine has no form config to read them from), so one whose field has
+  // since changed its options is reported by raw value rather than dropped —
+  // that mismatch is exactly what the reader needs to see.
+  const cycledLabels: string[] =
+    kind === "enum" && Array.isArray( binding?.mapping?.values )
+      ? binding.mapping.values.map( ( value: unknown ) => {
+        const option = ( config as any ).options?.find( ( candidate: { value: string | number } ) =>
+          String( candidate.value ) === String( value ) );
+
+        return option?.label ?? String( value );
+      } )
+      : [];
 
   // The selected input source's full "Family · Detail" label — shown only on
   // the closed control, since the open list already groups by family under
@@ -282,11 +315,68 @@ export default function BindingAffordance( {
   // target starts on the oscillator (see makeDefaultBinding) — a generator, so
   // nothing is enabled and no interaction block is seeded; a vector2d target
   // starts on an input source, which is enabled like any explicit source pick.
+  // Per-kind defaults, shared by the "reset all" button and by every control's
+  // own reset arrow so the two never disagree about what "default" means.
+  // Boolean and enum default to no smoothing: a lagged signal there delays the
+  // flip rather than calming it.
+  const defaultSmoothing =
+    kind === "vector2d"
+      ? 0.15
+      : ( kind === "boolean" || kind === "enum" ? 0 : 0.2 );
+
+  const defaultMapping = () => {
+    if ( kind === "vector2d" ) {
+      return {
+        x: {
+          min: domain.min,
+          max: domain.max
+        },
+        y: {
+          min: domain.min,
+          max: domain.max
+        }
+      };
+    }
+
+    if ( kind === "boolean" ) {
+      return {
+        ...DEFAULT_BOOLEAN_MAPPING
+      };
+    }
+
+    if ( kind === "enum" ) {
+      return {
+        values: enumMappingValues( config )
+      };
+    }
+
+    if ( kind === "color" ) {
+      const from = asRgba(
+        getValues( fieldPath ),
+        DEFAULT_COLOR
+      );
+
+      return {
+        from,
+        to: complementRgba( from ),
+        curve: "linear"
+      };
+    }
+
+    return {
+      min: domain.min,
+      max: domain.max,
+      curve: "linear"
+    };
+  };
+
   const addLayer = () => {
     const binding = makeDefaultBinding(
       target,
       kind,
-      config
+      config,
+      // A colour ramp starts from the colour the field is showing right now.
+      kind === "color" ? getValues( fieldPath ) : undefined
     );
 
     writeBindings( [
@@ -331,23 +421,8 @@ export default function BindingAffordance( {
       weight: binding.weight,
       blend: binding.blend,
       solo: binding.solo,
-      smoothing: kind === "vector2d" ? 0.15 : 0.2,
-      mapping: kind === "vector2d"
-        ? {
-          x: {
-            min: domain.min,
-            max: domain.max
-          },
-          y: {
-            min: domain.min,
-            max: domain.max
-          }
-        }
-        : {
-          min: domain.min,
-          max: domain.max,
-          curve: "linear"
-        }
+      smoothing: defaultSmoothing,
+      mapping: defaultMapping()
     };
 
     if ( binding.source === "oscillator" ) {
@@ -638,8 +713,10 @@ export default function BindingAffordance( {
             <div className="flex flex-col gap-1.5">
               <span className="text-label">Source</span>
 
-              {/* Category selector (generators are continuous-only) */}
-              {kind === "continuous" && (
+              {/* Category selector — every scalar-driven kind can run off a
+                  generator; only the vector2d passthrough needs a real
+                  channel. */}
+              {kind !== "vector2d" && (
                 <select
                   value={ category }
                   onChange={ ( e ) =>
@@ -984,7 +1061,10 @@ export default function BindingAffordance( {
                   />
                 </label>
               </div>
-              {layers.length > 1 && (
+              {/* An enum layer picks one option out of a list: there is nothing
+                  between two choices to blend or crossfade, so the top layer
+                  simply wins and neither control is offered. */}
+              {layers.length > 1 && kind !== "enum" && (
                 <select
                   value={ binding.blend ?? "replace" }
                   onChange={ ( e ) => setField(
@@ -1000,22 +1080,24 @@ export default function BindingAffordance( {
                   ) )}
                 </select>
               )}
-              <ControlledSliderInput
-                name={ `${ bindingPath }.weight` }
-                label="Weight"
-                min={ 0 }
-                max={ 1 }
-                step={ 0.05 }
-                { ...resetFor(
-                  "weight",
-                  binding.weight,
-                  DEFAULT_WEIGHT
-                ) }
-              />
+              {kind !== "enum" && (
+                <ControlledSliderInput
+                  name={ `${ bindingPath }.weight` }
+                  label="Weight"
+                  min={ 0 }
+                  max={ 1 }
+                  step={ 0.05 }
+                  { ...resetFor(
+                    "weight",
+                    binding.weight,
+                    DEFAULT_WEIGHT
+                  ) }
+                />
+              )}
             </div>
 
             {/* Mapping range — real sliders over the parameter's own domain */}
-            {kind === "continuous" ? (
+            {kind === "continuous" && (
               <div className="flex flex-col gap-1">
                 <ControlledSliderInput
                   name={ `${ bindingPath }.mapping.min` }
@@ -1042,7 +1124,9 @@ export default function BindingAffordance( {
                   ) }
                 />
               </div>
-            ) : (
+            )}
+
+            {kind === "vector2d" && (
               <div className="flex flex-col gap-1">
                 <ControlledSliderInput
                   name={ `${ bindingPath }.mapping.x.min` }
@@ -1095,9 +1179,84 @@ export default function BindingAffordance( {
               </div>
             )}
 
-            {/* Easing + invert (continuous only) — same easing control as the
-                rest of the form */}
-            {kind === "continuous" && (
+            {/* Boolean: where the signal flips, and how far back it has to
+                fall before it flips again. */}
+            {kind === "boolean" && (
+              <div className="flex flex-col gap-1">
+                <select
+                  value={ binding.mapping?.mode ?? DEFAULT_BOOLEAN_MAPPING.mode }
+                  onChange={ ( e ) => setField(
+                    "mapping.mode",
+                    e.target.value
+                  ) }
+                  className="h-8 w-full rounded-md border border-theme bg-background px-2 text-foreground"
+                >
+                  {BOOLEAN_MODE_OPTIONS.map( ( option ) => (
+                    <option key={ option.value } value={ option.value }>
+                      {option.label}
+                    </option>
+                  ) )}
+                </select>
+                <ControlledSliderInput
+                  name={ `${ bindingPath }.mapping.threshold` }
+                  label="Threshold"
+                  min={ 0 }
+                  max={ 1 }
+                  step={ 0.01 }
+                  { ...resetFor(
+                    "mapping.threshold",
+                    binding.mapping?.threshold,
+                    DEFAULT_BOOLEAN_MAPPING.threshold
+                  ) }
+                />
+                <ControlledSliderInput
+                  name={ `${ bindingPath }.mapping.hysteresis` }
+                  label="Hysteresis"
+                  min={ 0 }
+                  max={ 0.5 }
+                  step={ 0.01 }
+                  { ...resetFor(
+                    "mapping.hysteresis",
+                    binding.mapping?.hysteresis,
+                    DEFAULT_BOOLEAN_MAPPING.hysteresis
+                  ) }
+                />
+              </div>
+            )}
+
+            {/* Enum: the signal walks this list in order. Shown rather than
+                edited — the options are the field's own, and a binding that
+                offered a different set would silently drift from them. */}
+            {kind === "enum" && (
+              <div className="flex flex-col gap-1">
+                <span className="text-label">
+                  Cycles through {cycledLabels.length} option
+                  {cycledLabels.length === 1 ? "" : "s"}
+                </span>
+                <p className="rounded-md border border-theme px-2 py-1.5 text-label">
+                  {cycledLabels.join( " → " ) || "This field has no options." }
+                </p>
+              </div>
+            )}
+
+            {/* Colour: the two stops the signal crossfades between. */}
+            {kind === "color" && (
+              <div className="flex flex-col gap-1">
+                <ControlledColorInput
+                  name={ `${ bindingPath }.mapping.from` }
+                  label="From"
+                />
+                <ControlledColorInput
+                  name={ `${ bindingPath }.mapping.to` }
+                  label="To"
+                />
+              </div>
+            )}
+
+            {/* Easing + invert — everything driven by the 0..1 signal shapes it
+                the same way; only the vector2d passthrough has no scalar to
+                shape. */}
+            {kind !== "vector2d" && (
               <>
                 <ControlledEasingInput
                   name={ `${ bindingPath }.mapping.curve` }
@@ -1127,7 +1286,7 @@ export default function BindingAffordance( {
               { ...resetFor(
                 "smoothing",
                 binding.smoothing,
-                kind === "vector2d" ? 0.15 : 0.2
+                defaultSmoothing
               ) }
             />
 

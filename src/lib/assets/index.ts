@@ -1,5 +1,5 @@
 export {
-  registerBlob, getBlobURL, revokeBlob
+  registerBlob, registerBlobUnique, getBlobURL, revokeBlob
 } from "./blobMap";
 export {
   resolveAssetURL
@@ -55,3 +55,7 @@ export type {
 export {
   trackPendingMedia, awaitPendingMedia
 } from "./pendingMedia";
+
+export {
+  IMAGE_INPUT_ACCEPT, normalizeImageFile
+} from "./exotic";
