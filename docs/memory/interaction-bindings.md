@@ -28,6 +28,15 @@ Consequences worth knowing before extending it:
 - **Boolean is stateful** (Schmitt trigger, and toggle counts rising edges), keyed by binding id in a module map like the smoothing state. It advances once per resolve, which `resolveBindings`' frame memo makes once per frame; capture stays reproducible because headless runs render frames in order from 0.
 - **Defaults are chosen so a first click is legible**: a new binding starts on a generator (no device, no permission, no interaction block), and the wave matches the family — square for a boolean blink, sawtooth to walk an enum in order, sine to crossfade a colour. A colour ramp starts at the colour already on the field and ends at its complement, with mid-greys pushed to the opposite end of the greyscale so the ramp is never invisible.
 
+## What is still not bindable, and why
+
+2026-09-01 — Five kinds exist; the gaps are known and listed in `TODO.md` under *Input / Interaction*. Two are worth knowing before someone re-derives them:
+
+- **The 2D pad cannot run off a generator.** Generators emit one scalar, and `mapVector` reads a channel's `x`/`y`, so `channelSourceOptions( "vector2d" )` offers only the fourteen vector2d input channels and the popover hides the category selector for that kind. Of those channels, **Orbit** (a Lissajous off `animation.angle`, so a pure function of the loop clock) and **Perlin noise** (an offset advanced once per `frameCount`) animate with no device and survive capture; everything else needs a mouse, a camera, a mic or a controller. Giving the pad real generators means one generator per axis on a shared clock with a phase offset — not a single wave.
+- **Easing, asset and text targets have no kind yet**, and easing/asset are the cheap ones: both are "pick one value from an ordered list", which is exactly the enum fold rule once the list is copied onto the binding.
+
+Widening *targets* (content items, canvas size, duration) is a different axis from adding a kind — it is `getSketchScope`, not `bindingKindFor` — and is held back on purpose: modulating size or framerate would fight the capture pipeline.
+
 ## Adding a kind
 
 2026-08-31 — Four aligned edits, and the last one is the one that gets forgotten: (1) a `mapXxx` in `bindings.js` plus its branch in `bindingValue`, (2) a fold rule in `foldTarget`, (3) `bindingKindFor` in `bindingUtils.ts` — the single list of which form components are bindable, read by both `FieldRenderer` and the affordance — and (4) the mapping controls in the popover, plus the per-kind defaults in `makeDefaultBinding` **and** `defaultMapping`/`defaultSmoothing` in the affordance (the reset button and the per-control reset arrows both read the latter, and they must agree with the former).

@@ -113,6 +113,12 @@ What's left requires actions only the repo owner can take, in this order:
   - [ ] `useAudio` — Web Audio API analyser data
   - [ ] `useOrbit` — 3D orbit camera controls
   - [ ] `usePerlinNoise` — seeded Perlin/Simplex noise with optional animated offset
+- [ ] **Bind the exotic value types** — modulation covers number, 2D pad, boolean, select and colour (see `docs/memory/interaction-bindings.md`); the rest still has no `kind`
+  - [ ] **Generators for the 2D pad** — it can only follow a live vector2d channel today (Orbit and Perlin noise animate without a device; everything else needs one). One generator per axis on a shared clock, with a phase offset, would give circles / figure-eights / drifts
+  - [ ] **Easing** — an ordered list of easing keys, so it maps like the enum family
+  - [ ] **Asset / image** — cycle a stack of assets; the value is a path, so the enum fold rule applies once the list is on the binding
+  - [ ] **Text** — a list of strings to step through; decide first whether that is modulation or a content feature
+  - [ ] **Widen the targets, not just the kinds** — bindings only address paths under `sketch` (`getSketchScope`), so a content item's position and the canvas/animation settings carry no pastille. Deliberate for now: capture determinism for size/framerate, and per-item scoping for content
 - [ ] **Fake mouse pointer** — custom cursor overlay on the canvas (circle or crosshair) that follows pointer; useful when the system cursor isn't visible in recordings
 - [ ] **Switch webcam ID** — re-initialize `getUserMedia` with new `deviceId` without reloading the sketch when the user changes webcam in the picker
 
