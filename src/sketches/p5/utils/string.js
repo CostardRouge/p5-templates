@@ -20,7 +20,9 @@ const string = {
           ready
         } = loadFontAsset(
           path,
-          key
+          {
+            label: key
+          }
         );
 
         string.fonts.loaded[ key ] = font;
