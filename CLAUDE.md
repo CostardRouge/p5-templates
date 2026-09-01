@@ -70,6 +70,36 @@ Obligations:
 
 @MEMORY.md
 
+## Rule 3 — Sync with `main` before working a branch (MANDATORY)
+
+Every time you start OR resume work on an existing branch, bring `main` in
+first, before writing any code. A branch that drifts becomes a pull request
+nobody can merge, and conflicts found at the end — after the work is verified —
+are the expensive kind.
+
+1. `git fetch origin main`, then check: `git merge-base --is-ancestor origin/main HEAD`.
+   If that passes, you are up to date; carry on.
+2. Otherwise **merge** it: `git merge origin/main`. Merge, not rebase — the
+   branch is usually already pushed with an open PR, and rebasing means a
+   force-push that rewrites it (see the no-history-rewriting rule below). The
+   repo does this too: `4f34e97 Merge remote-tracking branch 'origin/main'
+   into claude/…`.
+3. Resolve every conflict, then **re-verify** — a clean textual merge is not a
+   correctness argument. Read the hunks in files BOTH sides touched: `main` may
+   have moved the code your change hooks into. It has happened twice on this
+   branch alone — the content-item dispatch moved out of a deleted
+   `layouts/freeLayout.js` into `slides.render()`, and per-sketch image
+   collection moved into a shared `collectSketchImagePaths`. In both cases the
+   merge was clean and the feature would have silently stopped working.
+4. Re-run `npm run check` and `npm run build` after the merge, and re-run
+   whatever empirical check the feature has. `npm ci` if `package.json` moved —
+   a new dependency on `main` fails the build with a module-not-found that
+   looks like a merge error and is not.
+
+`git merge-tree --write-tree --name-only HEAD origin/main` previews the
+conflicts without touching the working tree, which is the cheap way to see what
+you are in for before starting.
+
 ## Verification — trust the disk, not the context
 
 - A tool answering "success" is not proof. Before saying a change is done, prove it through the repo: `git status --porcelain`, `git diff`, `grep` for the expected value, `git show HEAD:<file>` compared to the file on disk.
