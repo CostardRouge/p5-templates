@@ -1,6 +1,18 @@
 import {
-  createContext, useContext, useState, useCallback, useMemo, type ReactNode
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+  useMemo,
+  type Dispatch,
+  type ReactNode,
+  type SetStateAction
 } from "react";
+
+import {
+  isPanelSectionKey, readSketchPanelState, saveCollapsibleKeys
+} from "@/hooks/usePanelState";
 
 export type CollapsibleSection =
   | "rootSettings"
@@ -39,12 +51,101 @@ type CollapsibleContextValue = {
 
 const CollapsibleContext = createContext<CollapsibleContextValue | null>( null );
 
+/**
+ * Hydrate a collapsible store from the sketch's persisted record once, then
+ * write every later change through.
+ *
+ * Hydration runs in an effect rather than in the `useState` initialiser
+ * because this subtree is server-rendered: reading localStorage during the
+ * first render would make the client's markup disagree with the server's. The
+ * cost is one frame at the defaults — the same trade `usePanelDock`'s
+ * `getServerSnapshot` makes.
+ *
+ * The write waits for `hydratedKey` to catch up rather than a ref, so it never
+ * runs on the pass that is still holding the defaults. A ref would flip to
+ * true in the hydrating effect and let the very next effect save the defaults
+ * over the values it had just read.
+ *
+ * `storageKey` undefined means "do not persist": the embed panel mounts a
+ * provider too, and a public embed has no business carrying a viewer's panel
+ * state.
+ */
+function usePersistedCollapsibles(
+  storageKey: string | undefined,
+  states: Record<string, boolean>,
+  setStates: Dispatch<SetStateAction<Record<string, boolean>>>,
+  owns: ( key: string ) => boolean
+) {
+  const [
+    hydratedKey,
+    setHydratedKey
+  ] = useState<string | null>( null );
+
+  useEffect(
+    () => {
+      if ( !storageKey ) {
+        return;
+      }
+
+      const stored = readSketchPanelState( storageKey );
+      const restored = Object.fromEntries( Object.entries( stored?.keys ?? {} )
+        .filter( ( [
+          key
+        ] ) => owns( key ) ) );
+
+      if ( Object.keys( restored ).length > 0 ) {
+        setStates( ( previous ) => ( {
+          ...previous,
+          ...restored
+        } ) );
+      }
+
+      setHydratedKey( storageKey );
+    },
+    // `owns` is a module-level predicate; re-running on a new sketch is what
+    // storageKey is for.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [
+      storageKey,
+      setStates
+    ]
+  );
+
+  useEffect(
+    () => {
+      if ( !storageKey || hydratedKey !== storageKey ) {
+        return;
+      }
+
+      saveCollapsibleKeys(
+        storageKey,
+        Object.fromEntries( Object.entries( states ).filter( ( [
+          key
+        ] ) => owns( key ) ) )
+      );
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [
+      storageKey,
+      hydratedKey,
+      states
+    ]
+  );
+}
+
+/** The provider owns every key that is not one of the named sections. */
+const ownsDynamicKey = ( key: string ) => !isPanelSectionKey( key );
+
 export function CollapsibleProvider( {
   children,
-  initialStates
+  initialStates,
+  storageKey
 }: {
   children: ReactNode;
   initialStates?: Partial<CollapsibleStates>;
+  /** `<engineId>:<name>` to remember this sketch's groups; omit to stay
+   *  ephemeral (see usePersistedCollapsibles). */
+  storageKey?: string;
 } ) {
   const [
     states,
@@ -53,6 +154,13 @@ export function CollapsibleProvider( {
     ...DEFAULT_STATES,
     ...initialStates
   } );
+
+  usePersistedCollapsibles(
+    storageKey,
+    states,
+    setStates,
+    ownsDynamicKey
+  );
 
   const getExpanded = useCallback(
     (
@@ -119,7 +227,18 @@ export function useCollapsibleContext() {
   return context;
 }
 
-export function useCollapsibleStates( initialStates?: Partial<CollapsibleStates> ) {
+/**
+ * The panel's named sections.
+ *
+ * `initialStates` are DEFAULTS, not overrides: a stored value wins over them,
+ * including the mobile drawer's `rootSettings: false`. Remembering a panel
+ * matters most on the small screen, so that is the last place the default
+ * should keep winning.
+ */
+export function useCollapsibleStates(
+  initialStates?: Partial<CollapsibleStates>,
+  storageKey?: string
+) {
   const [
     states,
     setStates
@@ -127,6 +246,13 @@ export function useCollapsibleStates( initialStates?: Partial<CollapsibleStates>
     ...DEFAULT_STATES,
     ...initialStates
   } );
+
+  usePersistedCollapsibles(
+    storageKey,
+    states,
+    setStates as Dispatch<SetStateAction<Record<string, boolean>>>,
+    isPanelSectionKey
+  );
 
   const toggleSection = useCallback(
     ( section: CollapsibleSection ) => {

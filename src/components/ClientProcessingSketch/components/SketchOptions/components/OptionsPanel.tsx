@@ -29,6 +29,9 @@ import {
 import {
   useContentSelection, useSelectContentPath
 } from "@/components/ClientProcessingSketch/components/SketchOptions/hooks/useContentItemSelection";
+import {
+  readSketchPanelState, saveOpenLayer
+} from "@/hooks/usePanelState";
 import OptionsImportExport from "./CaptureActions/components/OptionsImportExport";
 import UndoRedo from "./UndoRedo";
 import type {
@@ -41,6 +44,8 @@ export type OptionsPanelBodyProps = {
   onCollapsibleToggle: ( section: CollapsibleSection ) => void;
   /** The desktop panel scrolls internally; the mobile drawer scrolls itself. */
   scrollable?: boolean;
+  /** `<engineId>:<name>`, to remember which layer was last opened. */
+  storageKey?: string;
 };
 
 type OptionsPanelProps = OptionsPanelBodyProps & {
@@ -66,7 +71,8 @@ export function OptionsPanelBody( {
   activeSlideIndex,
   collapsibleStates,
   onCollapsibleToggle,
-  scrollable = true
+  scrollable = true,
+  storageKey
 }: OptionsPanelBodyProps ) {
   const {
     control,
@@ -106,9 +112,45 @@ export function OptionsPanelBody( {
     setLastOpenedPath
   ] = React.useState<string | null>( null );
 
+  // Restore the marker, never the view: coming back to a sketch shows the
+  // list, not the inspector of a layer left open days ago. A stored path can
+  // also outlive its layer — the content it addressed may have been deleted
+  // since — so it is checked against the array before it is trusted.
+  React.useEffect(
+    () => {
+      if ( !storageKey ) {
+        return;
+      }
+
+      const stored = readSketchPanelState( storageKey )?.layer ?? null;
+      const storedAddress = parseLayerPath( stored );
+
+      if ( !storedAddress ) {
+        return;
+      }
+
+      const list = getValues( storedAddress.baseFieldName );
+
+      if ( Array.isArray( list ) && storedAddress.index < list.length ) {
+        setLastOpenedPath( stored );
+      }
+    },
+    [
+      storageKey,
+      getValues
+    ]
+  );
+
   const openLayer = ( itemPath: string ) => {
     setLastOpenedPath( itemPath );
     selectPath( itemPath );
+
+    if ( storageKey ) {
+      saveOpenLayer(
+        storageKey,
+        itemPath
+      );
+    }
   };
 
   // Without slides the list has a single group, which then goes unlabelled —

@@ -174,8 +174,8 @@ What's left requires actions only the repo owner can take, in this order:
 ## 🐛 Bugs
 
 - [ ] **Save draft removes capture actions** — capture actions panel disappears or resets after saving a draft; should persist with its current state
-- [ ] **LocalStorage drift** — UI state (collapsed sections, view mode) stored in `localStorage` can fall out of sync with DB state; audit and add reconciliation on load
-- [ ] **Keep sketch options open with same collapsibles** — collapsible sections reset to default on navigation; persist open/closed state per-sketch in `localStorage` or URL hash
+- [x] **LocalStorage drift** — UI state (collapsed sections, view mode) stored in `localStorage` can fall out of sync with DB state; audit and add reconciliation on load — answered for the options panel by only persisting schema-shaped keys (`docs/memory/studio-ui.md`); content-shaped ones (`conditional-<path>`, which addresses an item by index) are never stored, so there is nothing to reconcile
+- [x] **Keep sketch options open with same collapsibles** — collapsible sections reset to default on navigation; persist open/closed state per-sketch in `localStorage` or URL hash
 - [x] **Drag items — decision pending** — item drag on canvas is partially implemented but inconsistent; must decide between P5 events vs React overlay before more work
 - [ ] **useAudio / MIDI not working** — audio and MIDI hooks are wired but non-functional; likely async init order issue or missing user-gesture unlock for Web Audio / WebMidi
 - [x] **Apply sketch options to other slides** — "apply to all slides" action shallow-copies nested objects and drops nested keys; fix the deep-merge logic
