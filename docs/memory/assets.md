@@ -2,6 +2,10 @@
 
 Read before touching asset upload, the blob registry, path resolution or the p5 image cache.
 
+## A sketch's default `photo.image` must not be a bare `global/...` S3 path
+
+2026-09-01 — `photo-segmentation-v2-noise-reveal`'s default `formValues.photo.image` was hardcoded to `"global/images/IMG_1821.jpeg"`, an author-uploaded S3 asset that only resolves for the account that uploaded it. On the public site it 404s, so the sketch fell back to its "add a photo :)" placeholder for every visitor instead of showing the intended reveal. `photo-segmentation-v1-mask` had already hit and fixed the same trap: use `(await getTestImagePaths())[0]` (`src/utils/getTestImagePaths.ts`) — a bundled `public/assets/images/test/` file, or `fallbackTestImageFileNames` if that directory is empty — instead of any `global/...` path in a sketch's checked-in defaults. **How to apply**: when adding or copying a photo-driven sketch, grep the new `options.ts` for a literal `global/` default before committing; that pattern only ever works for its author.
+
 ## The pipeline, end to end
 
 2026-08-31 — A file the user drops or picks travels: `useAssetDrop.addAssets` (the single funnel — `ImageAssets`, `ControlledAssetInput` and `DropZoneButton` all reach it, the last two through `useAssetsBridge.uploadFiles`) → `registerBlobUnique` puts it in `window.__blobAssetMap` under a `<scope>/<type>/<name>` path → the path is pushed into `assets[type]` and into whatever form field asked for it → `setSketchOptions` → the p5 side's `_refreshAssets` (`src/sketches/p5/utils/options.js`) resolves each path with `resolveAssetURL` and `loadImage`s it into the `imagesMap` cache that `common.getAsset()` reads. On save, `CaptureActions.handleSubmit` re-fetches each path's blob and uploads it to S3 under the same path. **How to apply**: the path string is the identity that ties all five stages together — change how it is minted and you change the S3 layout too, so keep the `<scope>/<type>/<name>` shape.

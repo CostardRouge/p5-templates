@@ -2,9 +2,10 @@ import getTestImagePaths from "@/utils/getTestImagePaths";
 
 export const formValues = {
   photo: {
-    // Author-uploaded S3 asset; when it isn't reachable the sketch falls back
-    // to its "add a photo :)" prompt instead of hanging.
-    image: "global/images/IMG_1821.jpeg",
+    // A bundled test image: a `global/...` S3 path only resolves for the
+    // account that uploaded it, so it 404s (and falls back to the "add a
+    // photo :)" prompt) for everyone else — see photo-segmentation-v1-mask.
+    image: ( await getTestImagePaths() )[ 0 ],
     margin: 0.1,
     scale: 1.1,
     center: true,
