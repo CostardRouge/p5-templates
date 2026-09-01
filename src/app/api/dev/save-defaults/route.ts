@@ -3,6 +3,9 @@ import path from "node:path";
 import {
   findSketchMeta
 } from "@/engines/metadata";
+import {
+  findNonPortableAssetPaths
+} from "./nonPortableAssetPaths";
 
 function getOptionsFilePath(
   sketchName: string, engineId: string
@@ -577,6 +580,28 @@ export async function POST( request: Request ) {
     originalFormValues,
     formValues
   );
+
+  const unsafeChanges = changes
+    .map( ( change ) => ( {
+      change,
+      paths: findNonPortableAssetPaths( change.newValue )
+    } ) )
+    .filter( ( entry ) => entry.paths.length > 0 );
+
+  if ( unsafeChanges.length > 0 ) {
+    const details = unsafeChanges
+      .map( ( {
+        change, paths
+      } ) => `${ change.path.join( "." ) } = ${ paths.join( ", " ) }` )
+      .join( "; " );
+
+    return new Response(
+      `Refusing to save default(s) that reference an uploaded asset's storage key, which only resolves for the account that uploaded it and 404s for everyone else: ${ details }. Pick a bundled test asset instead (see getTestImagePaths) or clear the field.`,
+      {
+        status: 422
+      }
+    );
+  }
 
   if ( changes.length === 0 ) {
     return new Response(
