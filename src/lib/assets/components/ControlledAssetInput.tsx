@@ -58,7 +58,9 @@ export default function ControlledAssetInput( {
       return;
     }
 
-    setPreviewURL( URL.createObjectURL( files[ 0 ] ) );
+    const optimisticURL = URL.createObjectURL( files[ 0 ] );
+
+    setPreviewURL( optimisticURL );
 
     const paths = await uploadFiles(
       files,
@@ -68,6 +70,12 @@ export default function ControlledAssetInput( {
     if ( paths.length ) {
       setSinglePath( paths[ 0 ] );
     }
+
+    // Drop the optimistic preview once the upload has registered a blob for
+    // the path: for converted formats (e.g. HEIC) the raw file's object URL
+    // isn't renderable, while the registered blob always is.
+    setPreviewURL( null );
+    URL.revokeObjectURL( optimisticURL );
   }
 
   function clear( event: React.MouseEvent<HTMLButtonElement, MouseEvent> ) {
