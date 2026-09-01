@@ -1,5 +1,5 @@
 import {
-  getScopeAssetPath, registerBlobUnique, revokeBlob
+  getScopeAssetPath, normalizeImageFile, registerBlobUnique, revokeBlob
 } from "@/lib/assets";
 
 import {
@@ -42,16 +42,33 @@ export default function useAssetDrop() {
     );
 
     for ( const file of Array.from( files ) ) {
+      let processed = file;
+
+      if ( type === "images" ) {
+        // Exotic formats (HEIC/HIF/DNG) are converted to plain JPEG here,
+        // at ingest, so every consumer downstream — preview, p5, S3,
+        // backend recording — only ever sees browser-native images.
+        try {
+          processed = await normalizeImageFile( file );
+        } catch( error ) {
+          console.error(
+            `[assets] skipping ${ file.name }: conversion failed`,
+            error
+          );
+          continue;
+        }
+      }
+
       // The path the file's own name asks for, and the one it actually gets:
       // a phone hands every camera-roll pick over as `image.jpg`, so the name
       // alone is not an identity (see `registerBlobUnique`).
       const registeredBlobName = registerBlobUnique(
         getScopeAssetPath(
-          file.name,
+          processed.name,
           type,
           scope
         ),
-        file
+        processed
       );
 
       registeredBlobNames.push( registeredBlobName );

@@ -4,6 +4,9 @@ import React from "react";
 import type {
   AssetInstance, AssetKind, AssetPreviewProps
 } from "../types";
+import {
+  IMAGE_INPUT_ACCEPT
+} from "../exotic";
 
 type ImageParams = Record<string, never>;
 
@@ -27,7 +30,7 @@ function ImagePreview( {
 export const imagesKind: AssetKind<ImageParams> = {
   id: "images",
   label: "Image",
-  accept: "image/*",
+  accept: IMAGE_INPUT_ACCEPT,
   hasParams: false,
   defaultParams: () => ( {} ),
 
