@@ -57,7 +57,7 @@ sketch.setup( async( {
 // cached; the assembled point list (including the per-cell random offset) is
 // cached too so it stays stable across frames. Behaviour is identical to the
 // previous inline reduction.
-async function createGridAlphaPoints(
+function createGridAlphaPoints(
   gridOptions, textPointsMatrix, cacheKey
 ) {
   const storeKey = `alpha-points-matrix+${ cacheKey }`;
@@ -71,7 +71,7 @@ async function createGridAlphaPoints(
   const fields = [];
 
   for ( let i = 0; i < textPointsMatrix.length; i++ ) {
-    fields.push( await gridMask.field( {
+    fields.push( gridMask.field( {
       gridOptions,
       points: textPointsMatrix[ i ],
       signature: `${ cacheKey }+${ i }`,
@@ -151,7 +151,7 @@ function updateInteractivePosition( p ) {
   );
 }
 
-sketch.draw( async() => {
+sketch.draw( () => {
   const p = getP5();
 
   p.clear();
@@ -218,7 +218,7 @@ sketch.draw( async() => {
 
   const randomDistance = options.sketch?.animation?.randomDistance ?? 1500;
 
-  const alphaPoints = await createGridAlphaPoints(
+  const alphaPoints = createGridAlphaPoints(
     gridOptions,
     textPointsMatrix,
     cache.key(

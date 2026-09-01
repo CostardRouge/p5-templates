@@ -34,7 +34,7 @@ sketch.setup(
   }
 );
 
-sketch.draw( async() => {
+sketch.draw( () => {
   const p = getP5();
 
   p.clear();
@@ -143,7 +143,7 @@ sketch.draw( async() => {
   const colorFunction = colors?.[ palette ] ?? colors.rainbow;
   const hueOffsetSpeed = color.hueOffsetSpeed ?? 1;
 
-  const field = await gridMask.field( {
+  const field = gridMask.field( {
     gridOptions,
     points,
     signature: string.textPointsSignature( {

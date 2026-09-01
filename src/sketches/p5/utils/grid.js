@@ -3,8 +3,20 @@ import {
   getP5, loadP5Class
 } from "./sketch.js";
 
+// Every function here is SYNCHRONOUS, and must stay that way.
+//
+// `create` computes cell geometry and memoises it — it has never awaited
+// anything. But while it was declared `async`, `draw`, `prepare` and
+// `gridMask.field` had to await it, the sketches had to await those, and 38
+// draws ended up declared `async` for no reason at all. That is not free: a
+// draw that suspends mid-frame cannot be embedded as a layer (the surface and
+// options swaps in @/p5/utils/nestedSketch.js only hold across a synchronous
+// call), and it leaves the engine reading the canvas before the frame is
+// finished. Note that `await` on a non-promise still yields to the microtask
+// queue, so dropping `async` here is only half of it — the callers must drop
+// their `await` too.
 const grid = {
-  create: async(
+  create: (
     {
       rows = 2,
       columns = 2,
@@ -313,10 +325,10 @@ const grid = {
       );
     }
   },
-  prepare: async( gridOptions ) => {
+  prepare: ( gridOptions ) => {
     const {
       cells
-    } = await grid.create( gridOptions );
+    } = grid.create( gridOptions );
 
     return {
       cells,
@@ -338,12 +350,12 @@ const grid = {
       }
     };
   },
-  draw: async(
+  draw: (
     gridOptions, handler
   ) => {
     const {
       cells
-    } = await grid.create( gridOptions );
+    } = grid.create( gridOptions );
 
     cells.forEach( (
       {

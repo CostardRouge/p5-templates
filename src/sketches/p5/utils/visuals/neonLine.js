@@ -3,6 +3,9 @@ import colors from "@/p5/utils/colors.js";
 import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import iterators from "@/p5/utils/iterators.js";
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 export default function neonLine( {
   innerCircleSize = 10,

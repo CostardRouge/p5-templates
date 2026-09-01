@@ -12,8 +12,7 @@ import {
   SpecsHighlightSchema,
   SpecsSoundRepeatSchema,
   SpecsVisibilitySchema,
-  VerticalAlign,
-  VisualOptions
+  VerticalAlign
 } from "@/types/sketch.types";
 
 // Step 1: Define a common base for all config types
@@ -173,6 +172,13 @@ interface HiddenFieldConfig extends BaseConfig {
   component: "hidden";
 }
 
+// The embedded-sketch layer's chooser: a thumbnail tile naming the sketch the
+// layer runs, which opens the catalogue picker. A plain select was rejected —
+// nobody picks a visual out of 298 names, and the thumbnails already exist.
+interface SketchPickerConfig extends BaseConfig {
+  component: "sketch-picker";
+}
+
 interface EasingConfig extends BaseConfig {
   component: "easing";
 }
@@ -286,6 +292,7 @@ export type FieldConfig =
   | JsonConfig
   | ItemListConfig
   | HiddenFieldConfig
+  | SketchPickerConfig
   | EasingConfig
   | Vector2DConfig
   | SourceSelectConfig
@@ -505,29 +512,6 @@ const hudBoxStyleFields: Record<string, FieldConfig> = {
   }
 };
 
-const visualSelectOptions = [
-  {
-    label: "Neon graffiti",
-    value: "neon-graffiti",
-    config: {}
-  },
-  {
-    label: "Neon line",
-    value: "neon-line",
-    config: {}
-  },
-  {
-    label: "Neon dot",
-    value: "neon-dot",
-    config: {}
-  },
-  {
-    label: "Churros snake",
-    value: "churros-snake",
-    config: {}
-  }
-];
-
 const gridPatternFields: ItemFormConfig = {
   columns: {
     label: "Columns",
@@ -704,7 +688,7 @@ const soundOnChangeField: FieldConfig = {
         }
       },
 
-      // @ts-expect-error schema carries a .default() wrapper, like VisualOptions
+      // @ts-expect-error schema carries a .default() wrapper
       schema: SpecsSoundRepeatSchema
     }
   }
@@ -1100,7 +1084,7 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
         permanent: {}
       },
 
-      // @ts-expect-error schema carries a .default() wrapper, like VisualOptions
+      // @ts-expect-error schema carries a .default() wrapper
       schema: SpecsVisibilitySchema
     },
     highlight: {
@@ -1215,7 +1199,7 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
         }
       },
 
-      // @ts-expect-error schema carries a .default() wrapper, like VisualOptions
+      // @ts-expect-error schema carries a .default() wrapper
       schema: SpecsHighlightSchema
     },
     sound: soundOnChangeField
@@ -1733,7 +1717,19 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
       schema: ImagesStackAnimations
     }
   },
-  visual: {
+  // The embedded-sketch layer. `settings` is deliberately absent from this
+  // table: the embedded sketch's own parameters have no fixed shape, so
+  // GenericItemForm renders them from that sketch's `formConfiguration`,
+  // fetched for whichever sketch the layer currently runs.
+  sketch: {
+    sketch: {
+      label: "Sketch",
+      component: "sketch-picker"
+    },
+    enabled: {
+      label: "Visible",
+      component: "checkbox"
+    },
     position: {
       label: "Position",
       component: "vector2d",
@@ -1744,11 +1740,53 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
       yDown: true
     },
     scale: {
-      label: "Scale",
+      label: "Size",
       component: "slider",
-      min: -10,
-      max: 10,
+      min: 0.05,
+      max: 4,
       step: 0.01
+    },
+    aspectRatio: {
+      label: "Aspect ratio",
+      component: "select",
+      options: [
+        {
+          value: "canvas",
+          label: "Follow the canvas"
+        },
+        {
+          value: "1:1",
+          label: "1:1 — square"
+        },
+        {
+          value: "4:5",
+          label: "4:5 — portrait"
+        },
+        {
+          value: "3:4",
+          label: "3:4"
+        },
+        {
+          value: "2:3",
+          label: "2:3"
+        },
+        {
+          value: "9:16",
+          label: "9:16 — story"
+        },
+        {
+          value: "3:2",
+          label: "3:2"
+        },
+        {
+          value: "4:3",
+          label: "4:3"
+        },
+        {
+          value: "16:9",
+          label: "16:9 — wide"
+        }
+      ]
     },
     rotation: {
       label: "Rotation",
@@ -1757,30 +1795,39 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
       max: Math.PI * 2,
       step: 0.001
     },
-    visual: {
-      component: "conditional-group",
-      conditionalOn: "name",
-      typeSelector: {
-        options: visualSelectOptions.map( ( {
-          value, label
-        } ) => ( {
-          value,
-          label
-        } ) )
-      },
-      configs: visualSelectOptions.reduce(
-        (
-          finalConfigs, visualSelectOption
-        ) => {
-          finalConfigs[ visualSelectOption.value ] = visualSelectOption.config;
-
-          return finalConfigs;
-        },
-        {} as ConditionalGroupConfig[ "configs" ]
-      ),
-
-      // @ts-expect-error
-      schema: VisualOptions
+    opacity: {
+      label: "Opacity",
+      component: "slider",
+      min: 0,
+      max: 1,
+      step: 0.01
+    },
+    blend: {
+      label: "Blend",
+      component: "select",
+      options: blendSelectOptions
+    },
+    resolution: {
+      label: "Render resolution",
+      component: "slider",
+      min: 0.05,
+      max: 2,
+      step: 0.05
+    },
+    framerate: {
+      label: "Frame rate (0 = follow)",
+      component: "slider",
+      min: 0,
+      max: 120,
+      step: 1
+    },
+    drawBackground: {
+      label: "Draw its own background",
+      component: "checkbox"
+    },
+    clearEachFrame: {
+      label: "Clear between frames",
+      component: "checkbox"
     }
   },
   qrcode: {

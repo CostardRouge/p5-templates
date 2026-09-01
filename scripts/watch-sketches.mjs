@@ -54,6 +54,39 @@ function findEntryFile( dir ) {
 }
 
 /**
+ * Whether the sketch registers an ASYNC draw — `sketch.draw( async () => … )`.
+ *
+ * Read straight off the entry file's source because the one consumer needs it
+ * before anything is imported: a sketch that suspends mid-draw cannot run as an
+ * embedded layer (see src/sketches/p5/utils/nestedSketch.js), and the layer
+ * picker greys those tiles out rather than letting someone add a layer that
+ * will never render. Every registration in the catalogue is one of two exact
+ * shapes — `sketch.draw(` followed by an arrow, or by `async` — so matching the
+ * text is reliable here; the runtime keeps its own check regardless.
+ */
+function hasAsyncDraw(
+  sketchDir, entryFile
+) {
+  if ( !entryFile ) {
+    return false;
+  }
+
+  try {
+    const source = fs.readFileSync(
+      path.join(
+        sketchDir,
+        entryFile
+      ),
+      "utf8"
+    );
+
+    return /sketch\s*\.\s*draw\s*\(\s*async\b/.test( source );
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Build the metadata + registry record for a single sketch directory.
  *
  * Visibility markers (touch one of these files inside the sketch dir):
@@ -67,6 +100,7 @@ function buildRecord(
   sketchDir, name, engineId, category
 ) {
   const stats = fs.statSync( sketchDir );
+  const entryFile = findEntryFile( sketchDir );
   const assetsBase = path.join(
     __dirname,
     `../public/assets/images/templates/${ engineId }/${ name }`
@@ -97,6 +131,10 @@ function buildRecord(
       sketchDir,
       ".hidden-template"
     ) ),
+    asyncDraw: hasAsyncDraw(
+      sketchDir,
+      entryFile
+    ),
     mtime: stats.mtime.toISOString(),
     ctime: stats.birthtime?.toISOString() || stats.ctime.toISOString()
   };
@@ -106,7 +144,7 @@ function buildRecord(
     // Registry-only fields (never written to metadata.json).
     engine: engineId,
     sketchPath: category ? `${ category }/${ name }` : name,
-    entryFile: findEntryFile( sketchDir ),
+    entryFile,
     hasOptionsTs,
     hasOptionsJson: fs.existsSync( path.join(
       sketchDir,

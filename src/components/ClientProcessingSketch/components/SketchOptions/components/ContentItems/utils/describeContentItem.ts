@@ -98,10 +98,13 @@ export default function describeContentItem( item: unknown ): ContentItemDescrip
           : `${ sources.length } images`;
       }
 
-      case "visual": {
-        const visual = record.visual as Record<string, unknown> | undefined;
+      case "sketch": {
+        // The embedded sketch is stored as its catalogue path
+        // ("category/name"); the row shows the name, which is what the picker,
+        // the gallery and the URL all call it.
+        const path = firstNonEmpty( record.sketch );
 
-        return firstNonEmpty( visual?.name );
+        return path ? basename( path ) : undefined;
       }
 
       case "specs":

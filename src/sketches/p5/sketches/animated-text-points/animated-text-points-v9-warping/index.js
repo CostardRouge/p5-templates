@@ -16,7 +16,7 @@ sketch.setup(
   }
 );
 
-sketch.draw( async() => {
+sketch.draw( () => {
   const p = getP5();
 
   p.clear();
@@ -112,7 +112,7 @@ sketch.draw( async() => {
 
     fieldByLetter.set(
       letter,
-      await gridMask.field( {
+      gridMask.field( {
         gridOptions,
         points: letterPoints,
         signature: string.textPointsSignature( {

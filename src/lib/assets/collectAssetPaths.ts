@@ -94,16 +94,44 @@ function visit(
   }
 }
 
+type ContentLike = Array<{ type?: string;
+  settings?: unknown } | null | undefined>;
+
 type OptionsLike = {
   assets?: { images?: string[] };
   sketch?: unknown;
+  content?: ContentLike;
   slides?: Array<{ assets?: { images?: string[] };
-    sketch?: unknown } | null | undefined>;
+    sketch?: unknown;
+    content?: ContentLike } | null | undefined>;
 } | null | undefined;
 
 /**
+ * An embedded-sketch layer (`sketch` content item) carries a WHOLE sketch's
+ * parameters under `settings`, so a photo sketch dropped in as a layer keeps
+ * its image paths there — exactly like the page's own `sketch` block. Without
+ * this it would render with no photos at all.
+ *
+ * Only that one item type is walked. Every other content item resolves its
+ * images out of the asset list, which is collected already, and widening this
+ * to the whole content array would inflate the loading planner's total with
+ * paths no step ever opens.
+ */
+function pushEmbeddedSketchImages(
+  content: ContentLike | undefined,
+  push: ( value: unknown ) => void
+): void {
+  for ( const item of content ?? [] ) {
+    if ( item?.type === "sketch" ) {
+      push( item.settings );
+    }
+  }
+}
+
+/**
  * Every image the given options ask for: the global `assets.images` list, any
- * image stored directly in a sketch form field, and the same two per slide —
+ * image stored directly in a sketch form field, any carried by an
+ * embedded-sketch layer's own settings, and the same three per slide —
  * de-duplicated, in encounter order.
  */
 export function collectSketchImagePaths( options: OptionsLike ): string[] {
@@ -118,10 +146,18 @@ export function collectSketchImagePaths( options: OptionsLike ): string[] {
 
   push( options?.assets?.images );
   push( options?.sketch );
+  pushEmbeddedSketchImages(
+    options?.content,
+    push
+  );
 
   for ( const slide of options?.slides ?? [] ) {
     push( slide?.assets?.images );
     push( slide?.sketch );
+    pushEmbeddedSketchImages(
+      slide?.content,
+      push
+    );
   }
 
   return acc;

@@ -35,7 +35,7 @@ import {
 // drew (itemBoundsRegistry, bracketed per item by slides.render()) and the press
 // is tested against those visible rectangles — topmost first, with the
 // anchor disc kept only as a fallback for items whose renderer reported
-// nothing this frame (e.g. "visual", whose size isn't measurable).
+// nothing this frame (a renderer that bailed early, an item still loading).
 //
 // Why this owns raw pointer events instead of the shared draggable layer:
 // content templates don't necessarily animate every frame, and the canvas
@@ -66,10 +66,10 @@ const DRAGGABLE_TYPES = new Set( [
   "title",
   "image",
   "images-stack",
-  "visual",
   "qrcode",
   "specs",
-  "breakdown"
+  "breakdown",
+  "sketch"
 ] );
 
 // Items whose renderer offsets the anchor by the item's own margins:
@@ -226,7 +226,6 @@ function positionDefaults( type ) {
         y: 0.5
       };
     case "title":
-    case "visual":
       return {
         x: 0,
         y: 0
@@ -957,7 +956,7 @@ function drawAffordance() {
 
   // Outline the grabbable surface itself — the item's visible rectangle —
   // so the affordance shows exactly what a press will pick up. Anchor circle
-  // only for items without reported bounds (e.g. "visual").
+  // only for items without reported bounds (a renderer that reported none).
   const outline = (
     target, color, weight
   ) => {

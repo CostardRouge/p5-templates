@@ -28,10 +28,10 @@ const getBackgroundColor = () =>
 // Single-layer falloff mask delegated to the shared gridMask utility, which
 // computes the per-cell alpha field once (spatial-hash accelerated) and caches
 // it. Behaviour is identical to the previous inline reduction.
-async function createGridAlphaPoints(
+function createGridAlphaPoints(
   gridOptions, maskPoints, cacheKey, distance
 ) {
-  const field = await gridMask.field( {
+  const field = gridMask.field( {
     gridOptions,
     points: maskPoints,
     signature: cacheKey,
@@ -53,7 +53,7 @@ async function createGridAlphaPoints(
 // 6-step pattern: hold start 3 frames, transition, hold end 2 frames, return.
 const SWAP_VALUES_COUNT = 6;
 
-sketch.draw( async() => {
+sketch.draw( () => {
   const p = getP5();
 
   p.clear();
@@ -120,7 +120,7 @@ sketch.draw( async() => {
     distance
   ].join( "+" );
 
-  const alphaPoints = await createGridAlphaPoints(
+  const alphaPoints = createGridAlphaPoints(
     gridOptions,
     letterPoints,
     cacheKey,

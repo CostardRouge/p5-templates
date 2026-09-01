@@ -238,6 +238,14 @@ export interface SketchMetadata {
   // files inside a sketch dir — see scripts/watch-sketches.mjs).
   hiddenFromHome?: boolean;
   hiddenFromGallery?: boolean;
+  /**
+   * The sketch registers an async draw (`sketch.draw( async … )`). Read off the
+   * entry file's source by the generator, for the one consumer that needs to
+   * know before importing anything: such a sketch cannot run as an embedded
+   * layer, and the layer picker greys it out rather than offering a layer that
+   * will never render (src/sketches/p5/utils/nestedSketch.js explains why).
+   */
+  asyncDraw?: boolean;
   mtime: string;
   ctime: string;
 }

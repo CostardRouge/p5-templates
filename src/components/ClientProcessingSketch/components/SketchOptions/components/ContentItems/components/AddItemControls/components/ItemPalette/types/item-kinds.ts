@@ -1,5 +1,5 @@
 export type ItemKind =
-  | "visual"
+  | "sketch"
   | "text"
   | "title"
   | "meta"
@@ -16,6 +16,18 @@ export type ItemKind =
   | "images-stack"
   | "background"
   | "qrcode";
+
+/**
+ * Adding a layer, optionally pre-filled.
+ *
+ * The seed exists because one kind cannot be added blind: an embedded-sketch
+ * layer with no sketch chosen renders nothing, so its palette tile picks first
+ * and hands the choice (and that sketch's own defaults) through here.
+ */
+export type AddItemHandler = (
+  kind: ItemKind,
+  seed?: Record<string, unknown>
+) => void;
 
 export type ItemKindGroup = {
   label: string;

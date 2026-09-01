@@ -37,7 +37,7 @@ const COLOR_PRECISION_VALUES = [
 
 sketch.setup( () => {} );
 
-sketch.draw( async() => {
+sketch.draw( () => {
   const p = getP5();
 
   p.clear();
@@ -121,7 +121,7 @@ sketch.draw( async() => {
     )
     : 0;
 
-  await grid.draw(
+  grid.draw(
     gridOptions,
     (
       position, {

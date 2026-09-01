@@ -57,7 +57,7 @@ sketch.setup( async() => {
 // layer's per-cell field is computed once (spatial-hash accelerated) and
 // cached; the assembled point list is cached too so it stays stable across
 // frames. Behaviour is identical to the previous inline reduction.
-async function createGridAlphaPoints(
+function createGridAlphaPoints(
   gridOptions, textPointsMatrix, cacheKey
 ) {
   const storeKey = `alpha-points-matrix+${ cacheKey }`;
@@ -71,7 +71,7 @@ async function createGridAlphaPoints(
   const fields = [];
 
   for ( let i = 0; i < textPointsMatrix.length; i++ ) {
-    fields.push( await gridMask.field( {
+    fields.push( gridMask.field( {
       gridOptions,
       points: textPointsMatrix[ i ],
       signature: `${ cacheKey }+${ i }`,
@@ -108,7 +108,7 @@ const getBackgroundColor = () =>
     225
   ];
 
-sketch.draw( async() => {
+sketch.draw( () => {
   const p = getP5();
 
   if ( !shape.graphics ) {
@@ -198,7 +198,7 @@ sketch.draw( async() => {
   ];
   const cacheKey = cacheComponent.join( "+" );
 
-  const alphaPoints = await createGridAlphaPoints(
+  const alphaPoints = createGridAlphaPoints(
     gridOptions,
     textPointsMatrix,
     cacheKey

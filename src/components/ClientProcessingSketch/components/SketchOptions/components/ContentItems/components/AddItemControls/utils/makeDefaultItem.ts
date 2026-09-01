@@ -14,7 +14,7 @@ import {
   SpecsItemSchema,
   TextItemSchema,
   ContentItem,
-  VisualItemSchema,
+  SketchLayerItemSchema,
   QrCodeItemSchema,
   TitleItemSchema
 } from "@/types/sketch.types";
@@ -109,8 +109,11 @@ export default function makeDefaultItem(
         ...seed,
         type
       } );
-    case "visual":
-      return VisualItemSchema.parse( {
+    // The picker seeds `sketch` (the catalogue path) and `settings` (that
+    // sketch's own formValues) — a sketch layer with neither renders nothing,
+    // which is why the palette tile opens the picker instead of adding blind.
+    case "sketch":
+      return SketchLayerItemSchema.parse( {
         ...seed,
         type
       } );

@@ -36,7 +36,7 @@ const resolveEasing = ( name ) => EASING_FUNCTIONS[ name ] ?? easing.easeOutBoun
 
 sketch.setup( () => {} );
 
-sketch.draw( async() => {
+sketch.draw( () => {
   const p = getP5();
 
   const bg = options.sketch.backgroundColor ?? [

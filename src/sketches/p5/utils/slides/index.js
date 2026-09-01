@@ -6,7 +6,6 @@ import sketch, {
   getContainer, getP5
 } from "../sketch.js";
 
-import drawSlideVisual from "./common/drawSlideVisual.js";
 import drawSlideMeta from "./common/drawSlideMeta.js";
 import drawSlideSpecs from "./common/drawSlideSpecs.js";
 import drawHudElement from "./common/drawHudElement.js";
@@ -16,6 +15,7 @@ import drawSlideImage from "./common/drawSlideImage.js";
 import drawSlideImages from "./common/drawSlideImages.js";
 import drawSlideBackground from "./common/drawSlideBackground.js";
 import drawSlideImagesStack from "./common/drawSlideImagesStack.js";
+import drawSlideSketch from "./common/drawSlideSketch.js";
 import drawSlideQrCode from "./common/drawSlideQrCode.js";
 import drawSlideBreakdown from "./common/drawSlideBreakdown.js";
 
@@ -38,7 +38,8 @@ import {
 
 import {
   beginItemBounds,
-  endItemBounds
+  endItemBounds,
+  itemBoundsKey
 } from "./common/itemBoundsRegistry.js";
 
 import {
@@ -304,10 +305,17 @@ const slides = {
             source
           );
           break;
-        case "visual":
-          drawSlideVisual(
+        // An embedded sketch keeps one graphics buffer per layer, so its
+        // renderer needs the layer's address — the same (scope, index) key the
+        // bounds registry brackets it with.
+        case "sketch":
+          drawSlideSketch(
             item,
-            source
+            source,
+            itemBoundsKey(
+              scope,
+              index
+            )
           );
           break;
         case "qrcode":

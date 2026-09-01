@@ -26,7 +26,7 @@ sketch.setup( () => {
   );
 } );
 
-sketch.draw( async(
+sketch.draw( (
   time, center, favoriteColor
 ) => {
   const p = getP5();
@@ -66,7 +66,7 @@ sketch.draw( async(
 
   const {
     cells: gridCells
-  } = await grid.create( gridOptions );
+  } = grid.create( gridOptions );
 
   const images = imageUtils.getImages();
   const imageFingerprints = images.reduce(

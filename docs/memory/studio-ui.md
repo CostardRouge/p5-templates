@@ -200,3 +200,58 @@ The floating inspector and the Interactive mixer used to swap `w-80` ↔ `w-fit`
 ## Numeric fields: no native spinners, and size them for the signed value
 
 2026-08-31 — Chrome reserves ~13px inside an `input[type=number]` for its spin buttons whether or not they are visible, which is what clipped the vector2d pad's x/y fields to "-0." (48px box, 46px of text room for 59px of glyphs). Any compact numeric field in the panels therefore drops them — `[appearance:textfield]` plus the two `::-webkit-*-spin-button` variants; stepping stays on the arrow keys, which is where it was usable at a 0.01 step anyway — and is sized for the **widest** value it can hold (sign, both decimals), not the default one. The pad's column went 100px → 140px for that, and the square follows the same width, so the drag target grew with it.
+
+## An embedded sketch is picked by thumbnail, and edited with its own form
+
+2026-08-31 — The `sketch` content item lands in the palette's "Content" group like any other kind, but two things about its UI are decided rather than incidental (the runtime side is in `architecture.md`):
+
+- **Its palette tile picks before it adds.** A sketch layer with no sketch chosen renders nothing, so the tile closes the popover and opens `SketchPickerDialog` — a searchable grid of the catalogue's own thumbnails, grouped by category — and only then appends the layer, seeded with the chosen path *and* that sketch's `formValues`. `ItemPalette`'s `onAdd` grew a `seed` argument for it (`AddItemHandler`), which both hosts (`LayerGroup`, `OptionsPanel`'s band `+`) pass through. A dropdown of 298 names was never on the table: a sketch is a look.
+- **The same dialog changes an existing layer**, from the inspector's `sketch-picker` field. Picking writes **two** fields — the path and `settings` reset to the new sketch's defaults — and that pairing is why it is one control: every sketch declares a different parameter shape, so carrying settings across a change leaves controls bound to keys the running sketch ignores.
+- **The layer's inspector is the layer's attributes, then the sketch's own form.** `EmbeddedSketchFields` renders the embedded sketch's `formConfiguration` through the same `GenericObjectForm` the sketch's own page uses, bound to `<layer>.settings` — same components, same ranges, same bands — under a hairline + eyebrow naming the sketch and counting its options. `settings` is therefore the one schema field with **no** entry in `field-config`'s `formConfig`, and `GenericItemForm` skips it explicitly; the drift test (`src/types/__tests__/sketchLayerItem.test.ts`) encodes that exception so nobody "fixes" it by inventing a static config.
+- **The form config comes over the wire** (`/api/sketches/form`, cached per sketch in `@/lib/sketchLayerCatalogue`). It cannot be bundled: `options.ts` modules are `server-only` because some read the filesystem at import time. The *catalogue* costs nothing — `@/engines/metadata` already reads `metadata.json` in the browser bundle for `P5Engine`'s path resolution.
+
+## The `visual` content item is gone; sketch layers replaced it
+
+2026-09-01 — The `visual` item offered four options of which three never drew
+anything (`neon-line` threw on a `getP5` its file never imported, `neon-dot` and
+`churros-snake` were invoked without the `vectors`/`position` they need, the
+latter having no `visualsMap` entry at all), and the one that worked —
+`neon-graffiti` — already exists as a real sketch alongside the whole
+`neon/neon-v0…v6` family. Once any sketch could be a layer, a bespoke
+half-working visual layer earned nothing, so the type was removed everywhere a
+content item lives (schema + union, field-config, palette kinds/meta,
+makeDefaultItem, describeContentItem, freeLayout, contentDrag).
+
+**The drawing functions were kept** in `src/sketches/p5/utils/visuals/`, now
+referenced by nothing, to be migrated one at a time into real sketches — the
+file says so itself so a dead-code sweep does not take them. `neonLine.js`'s
+missing import was fixed on the way out, so whoever migrates it starts from
+working code.
+
+**No migration was written, deliberately.** Dropping stored `visual` items
+before the parse was proposed and declined: the item was barely used and the
+maintainer took the risk. Know the shape of that risk — `content` is a strictly
+parsed discriminated union, so a saved deck still carrying one fails the array
+and `initOptions`' top-level `.catch` resets **that deck's whole options** to
+defaults, not just the offending layer. If a report ever arrives that "a deck
+came back empty", this is the first thing to check.
+
+## A layer row shows its whole action set at rest
+
+2026-09-01 — The layers list used to fade its action cluster in on hover
+(`md:opacity-0 md:group-hover:opacity-100`), and the eye inside it was reported
+as **missing** — it had been present and working the whole time, just invisible
+until the row was hovered. Eye, duplicate and delete are now all visible at
+rest. They stay their own buttons outside the row button, so pressing one acts
+on the layer instead of selecting it; that separation was the half of the old
+rationale worth keeping. The other half — "so a mis-aimed tap does not delete"
+— never applied to what changed, because the reveal was `md:`-gated and touch
+always saw the cluster.
+
+**How to apply**: reserve a hover reveal for controls that sit **on top of
+artwork** (`SlideThumbnail`, `RecordingThumbnail`, `RecordingCard` keep theirs,
+so a thumbnail is not permanently covered by its own buttons). In a text row
+whose icons sit beside the content, hiding them buys nothing and costs
+discoverability. Note the first fix here was too narrow — only the eye was
+pulled out — so if a report says an icon is missing, check the whole cluster
+before concluding.

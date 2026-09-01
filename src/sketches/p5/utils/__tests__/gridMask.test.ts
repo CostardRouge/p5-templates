@@ -270,7 +270,7 @@ describe(
 
     test.each( cases )(
       "matches the naive reduction for $name",
-      async( testCase ) => {
+      ( testCase ) => {
         mockState.width = testCase.width;
         mockState.height = testCase.height;
 
@@ -283,7 +283,7 @@ describe(
           testCase.height
         );
 
-        ( grid.create as jest.Mock ).mockResolvedValue( {
+        ( grid.create as jest.Mock ).mockReturnValue( {
           cells
         } );
 
@@ -315,7 +315,7 @@ describe(
           columns
         };
 
-        const field = await gridMask.field( {
+        const field = gridMask.field( {
           gridOptions,
           points,
           signature: testCase.name,

@@ -37,6 +37,8 @@ import ControlledMidiInputDeviceSelect
   from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/ControlledMidiInputDeviceSelect";
 import ControlledJoypadDeviceSelect
   from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/ControlledJoypadDeviceSelect";
+import ControlledSketchPicker
+  from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/SketchLayerPicker/ControlledSketchPicker";
 import CollapsibleItem from "@/components/CollapsibleItem";
 import RandomizeSettingsButton from "@/components/RandomizeSettingsButton";
 import ApplyToAllSlidesButton from "@/components/ApplyToAllSlidesButton";
@@ -615,6 +617,18 @@ export default function FieldRenderer( {
 
       case "hidden":
         return <input type="hidden" { ...register( registeredName ) } />;
+
+      // The layer's own `sketch` field. It takes the item path as well as the
+      // field path, because picking a sketch also has to reset the sibling
+      // `settings` to that sketch's defaults — see ControlledSketchPicker.
+      case "sketch-picker":
+        return (
+          <ControlledSketchPicker
+            name={ registeredName }
+            itemPath={ fieldBasePath }
+            label={ inlineLabel }
+          />
+        );
 
       case "json":
         return (

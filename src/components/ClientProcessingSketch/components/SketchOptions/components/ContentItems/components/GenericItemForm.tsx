@@ -12,6 +12,7 @@ import {
   formConfig
 } from "../constants/field-config";
 import FieldRenderer from "../../FieldRenderer";
+import EmbeddedSketchFields from "./SketchLayerPicker/EmbeddedSketchFields";
 
 type GenericItemFormProps = {
   baseFieldName: "content" | `slides.${ number }.content`;
@@ -52,11 +53,21 @@ export default function GenericItemForm( {
   // Get the list of fields from the Zod schema's shape
   const fieldNames = Object.keys( itemSchema.shape );
 
+  const itemPath = `${ baseFieldName }.${ index }`;
+
   return (
     <div className="flex flex-col gap-2">
       {fieldNames.map( ( fieldName ) => {
         // Don't render a field for the 'type' discriminator itself
         if ( fieldName === "type" ) {
+          return null;
+        }
+
+        // An embedded sketch's own parameters have no fixed shape — they come
+        // from whichever sketch the layer runs — so `settings` has no entry in
+        // the static config table and is rendered below, from that sketch's
+        // own formConfiguration.
+        if ( itemType === "sketch" && fieldName === "settings" ) {
           return null;
         }
 
@@ -71,12 +82,16 @@ export default function GenericItemForm( {
         return (
           <FieldRenderer
             key={ fieldName }
-            fieldBasePath={ `${ baseFieldName }.${ index }` }
+            fieldBasePath={ itemPath }
             fieldName={ fieldName }
             config={ fieldConfig }
           />
         );
       } )}
+
+      {itemType === "sketch" && (
+        <EmbeddedSketchFields itemPath={ itemPath } />
+      )}
     </div>
   );
 }

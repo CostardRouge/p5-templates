@@ -50,7 +50,7 @@ sketch.setup(
 
 const borderSize = 0;
 
-sketch.draw( async(
+sketch.draw( (
   time, center, favoriteColor
 ) => {
   const p = getP5();
@@ -179,7 +179,7 @@ sketch.draw( async(
 
   const {
     cells
-  } = await grid.create( gridOptions );
+  } = grid.create( gridOptions );
   const images = getImages();
   const imagePaths = images.map( ( {
     path
