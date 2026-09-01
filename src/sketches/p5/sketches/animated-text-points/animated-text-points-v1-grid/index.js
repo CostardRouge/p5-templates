@@ -16,7 +16,7 @@ sketch.setup(
   }
 );
 
-sketch.draw( async() => {
+sketch.draw( () => {
   const p = getP5();
 
   p.clear();
@@ -96,7 +96,7 @@ sketch.draw( async() => {
   // Per-cell alpha field computed once (spatial-hash accelerated) and cached
   // per letter via the shared gridMask utility. Pixel-space falloff, identical
   // to the previous inline reduction.
-  const field = await gridMask.field( {
+  const field = gridMask.field( {
     gridOptions,
     points,
     signature: string.textPointsSignature( {

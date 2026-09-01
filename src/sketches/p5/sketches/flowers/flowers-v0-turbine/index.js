@@ -29,7 +29,7 @@ const easingFunctions = Object.entries( easing );
 
 sketch.setup( () => {} );
 
-sketch.draw( async() => {
+sketch.draw( () => {
   const p = getP5();
 
   p.clear();
@@ -63,7 +63,7 @@ sketch.draw( async() => {
     const bgBorderWidth = options.sketch.background?.borderWidth ?? 2;
     const bgSize = options.sketch.background?.size ?? 25;
 
-    await grid.draw(
+    grid.draw(
       {
         topLeft: p.createVector(
           0,

@@ -28,7 +28,7 @@ sketch.setup(
   {}
 );
 
-sketch.draw( async(
+sketch.draw( (
   time, center
 ) => {
   const p = getP5();
@@ -163,7 +163,7 @@ sketch.draw( async(
 
     const {
       cells
-    } = await grid.create( gridOptions );
+    } = grid.create( gridOptions );
 
     cells.forEach( (
       {

@@ -26,7 +26,7 @@ const resolvePalette = ( name ) => PALETTES[ name ] ?? colors.rainbow;
 
 sketch.setup( () => {} );
 
-sketch.draw( async() => {
+sketch.draw( () => {
   const p = getP5();
 
   p.clear();
@@ -60,7 +60,7 @@ sketch.draw( async() => {
       cellW / 2,
       cellH / 2
     );
-    await grid.draw(
+    grid.draw(
       {
         topLeft: p.createVector(
           0,

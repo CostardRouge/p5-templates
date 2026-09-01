@@ -22,7 +22,7 @@ const resolvePalette = ( name ) => PALETTES[ name ] ?? colors.rainbow;
 
 sketch.setup( () => {} );
 
-sketch.draw( async() => {
+sketch.draw( () => {
   const p = getP5();
 
   p.clear();
@@ -87,7 +87,7 @@ sketch.draw( async() => {
   const opacityEasingFn = easing?.[ options.sketch.colors?.opacityEasing ] ?? easing.linear;
   const hueIndexEasingFn = easing?.[ options.sketch.colors?.hueIndexEasing ] ?? easing.linear;
 
-  await grid.draw(
+  grid.draw(
     gridOptions,
     (
       position, {

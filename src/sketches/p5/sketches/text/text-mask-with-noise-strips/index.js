@@ -34,7 +34,7 @@ sketch.setup( () => {
   p.background( ...getBg() );
 } );
 
-sketch.draw( async( time ) => {
+sketch.draw( ( time ) => {
   const p = getP5();
 
   p.clear();
@@ -160,7 +160,7 @@ sketch.draw( async( time ) => {
     );
   }
 
-  await grid.draw(
+  grid.draw(
     gridOptions,
     (
       cellVector, {

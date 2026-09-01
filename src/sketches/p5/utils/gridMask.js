@@ -47,7 +47,7 @@ const gridMask = {
     );
   },
 
-  field: async( {
+  field: ( {
     gridOptions,
     points,
     signature,
@@ -86,7 +86,7 @@ const gridMask = {
 
     const {
       cells
-    } = await grid.create( gridOptions );
+    } = grid.create( gridOptions );
 
     // Normalised space maps x/y independently over width/height (anisotropic),
     // exactly like the original getAlphaFromMask implementations.

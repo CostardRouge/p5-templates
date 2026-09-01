@@ -22,7 +22,7 @@ sketch.setup( () => {
   sketchState.yOff = 0;
 } );
 
-sketch.draw( async() => {
+sketch.draw( () => {
   const p = getP5();
 
   p.clear();
@@ -114,7 +114,7 @@ sketch.draw( async() => {
 
   p.noFill();
 
-  await grid.draw(
+  grid.draw(
     gridOptions,
     (
       position, {
