@@ -13,6 +13,9 @@ import {
   CONTROL_CARD_HEADER_CLASS,
   CONTROL_RESET_BUTTON_CLASS
 } from "../constants/control-bar";
+import {
+  HIDDEN_FILE_INPUT_CLASS
+} from "@/components/hiddenFileInput";
 
 type ControlledJsonInputProps = {
   name: string;
@@ -170,7 +173,7 @@ export default function ControlledJsonInput( {
                   ref={ fileInputRef }
                   type="file"
                   accept={ config.accept ?? "application/json,.json" }
-                  className="hidden"
+                  className={ HIDDEN_FILE_INPUT_CLASS }
                   onChange={ ( e ) => {
                     const file = e.target.files?.[ 0 ];
 

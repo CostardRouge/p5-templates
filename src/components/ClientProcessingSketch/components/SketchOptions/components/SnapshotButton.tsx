@@ -20,8 +20,10 @@ type SnapshotState = "idle" | "saving" | "done" | "error";
 
 /**
  * The still-image half of the transport: click saves the current frame as a
- * PNG, and in development a double-click sends it to the dev thumbnail route
- * instead, which writes the sketch's catalogue thumbnail at 1x and 2x.
+ * PNG — through the OS share sheet where there is one, which on iOS is the
+ * only route to Photos — and in development a double-click sends it to the dev
+ * thumbnail route instead, which writes the sketch's catalogue thumbnail at 1x
+ * and 2x.
  *
  * It used to live in the engine-controls island, next to a second play/pause
  * and a second scrubber. Playback and capture both belong to the transport
@@ -30,7 +32,11 @@ type SnapshotState = "idle" | "saving" | "done" | "error";
  *
  * The single click is deferred by 250ms in development so a double-click can
  * cancel it; outside development there is nothing to disambiguate and the
- * download fires immediately.
+ * save fires immediately — which also keeps the user gesture intact, since a
+ * share sheet may only be opened from one.
+ *
+ * A capture that produces nothing now says so on the button. It used to fail
+ * silently, which is exactly how the mobile data-URL bug went unnoticed.
  */
 export default function SnapshotButton() {
   const [
@@ -56,10 +62,25 @@ export default function SnapshotButton() {
   } = useDevActions();
   const singleClickTimerRef = useRef<ReturnType<typeof setTimeout> | null>( null );
 
-  const downloadCanvasAsPng = () => downloadCanvasPng(
-    engine,
-    name
-  );
+  const downloadCanvasAsPng = async() => {
+    try {
+      const outcome = await downloadCanvasPng(
+        engine,
+        name
+      );
+
+      if ( outcome === null ) {
+        throw new Error( "No frame to capture" );
+      }
+    } catch( error ) {
+      setErrorMessage( error instanceof Error ? error.message : String( error ) );
+      setState( "error" );
+      setTimeout(
+        () => setState( "idle" ),
+        3000
+      );
+    }
+  };
 
   const handleClick = () => {
     if ( state === "saving" ) {
@@ -67,7 +88,9 @@ export default function SnapshotButton() {
     }
 
     if ( !devActionsVisible ) {
-      downloadCanvasAsPng();
+      // Not awaited on purpose: the click handler must return synchronously so
+      // the gesture is still live when the share sheet is asked to open.
+      void downloadCanvasAsPng();
 
       return;
     }
@@ -79,7 +102,7 @@ export default function SnapshotButton() {
     singleClickTimerRef.current = setTimeout(
       () => {
         singleClickTimerRef.current = null;
-        downloadCanvasAsPng();
+        void downloadCanvasAsPng();
       },
       250
     );

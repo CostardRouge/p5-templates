@@ -57,6 +57,9 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 - No export loop may `await` a bare `requestAnimationFrame`: a frame that never comes hangs the run rather than slowing it → `recording.md`.
 - Every positioned content item is grabbable on canvas, and that takes three aligned edits (type set, anchor resolution, renderer-reported bounds) — not just a schema → `canvas-interaction.md`.
 - The home page documents the editor surface by surface with real screenshots of it, as a server component slotted into the client page → `home-and-seo.md`.
+- An asset path is minted from the file's name, and a name is not an identity — every iOS camera-roll pick is `image.jpg` → `assets.md`.
+- A script-opened file input must be rendered (`HIDDEN_FILE_INPUT_CLASS`, never `hidden`) and its trigger must be a real control — iOS Safari ignores both otherwise, silently → `assets.md`.
+- Pixels that become a file travel as a Blob; a data URL is a mobile-Safari dead end → `assets.md`, `recording.md`.
 
 ## Open items (dated; remove when done)
 
@@ -73,6 +76,7 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 | `docs/memory/architecture.md` | The engine abstraction, feature flags, `next.config.ts`, bundling, the Prisma models |
 | `docs/memory/sketches.md` | Adding, renaming or editing a sketch; the generated catalogue; sketch routes |
 | `docs/memory/recording.md` | Capture, the BullMQ queue, Playwright/FFmpeg, multi-slide output |
+| `docs/memory/assets.md` | Uploading a file, asset paths, the blob registry, the p5 image cache |
 | `docs/memory/tooling.md` | TypeScript, ESLint, git hooks, merge drivers, `.gitignore` traps |
 | `docs/memory/testing-and-ci.md` | Tests, Jest config, CI workflows, what gates a merge |
 | `docs/memory/deployment.md` | Docker, GHCR, Watchtower, the NAS, `docker-compose.yml` |

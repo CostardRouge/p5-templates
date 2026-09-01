@@ -11,6 +11,9 @@ import {
 } from "@/types/sketch.types";
 import Toast from "@/components/Toast";
 import clsx from "clsx";
+import {
+  HIDDEN_FILE_INPUT_CLASS
+} from "@/components/hiddenFileInput";
 
 type OptionsMenuProps = {
   options: SketchOptionInput;
@@ -165,7 +168,7 @@ export default function OptionsImportExport( {
         type="file"
         accept=".json"
         onChange={ handleFileChange }
-        className="hidden"
+        className={ HIDDEN_FILE_INPUT_CLASS }
       />
 
       <div className="flex gap-1">

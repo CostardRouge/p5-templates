@@ -48,7 +48,19 @@ jest.mock(
 jest.mock(
   "@/lib/canvasSnapshot",
   () => ( {
-    captureFreshPng: async() => "data:image/png;base64,AAAA"
+    captureFreshPngBlob: async() => new Blob(
+      [
+        new Uint8Array( [
+          137,
+          80,
+          78,
+          71
+        ] )
+      ],
+      {
+        type: "image/png"
+      }
+    )
   } )
 );
 
