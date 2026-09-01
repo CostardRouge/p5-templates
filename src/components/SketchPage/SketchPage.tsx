@@ -461,7 +461,10 @@ export default function SketchPage() {
           onInteractionStart={ handleInteractionStart }
           onInteractionEnd={ handleInteractionEnd }
         >
-          {sketchLoaded && !capturing && !hideInterface && (
+          {/* Docked: the top bar already names the engine/category/sketch and
+              hosts the fps readout beside the zoom controls, so this overlay
+              would just repeat both over the canvas. */}
+          {sketchLoaded && !capturing && !hideInterface && !dockedDesktop && (
             <div
               onClick={ ( e ) => e.stopPropagation() }
               className="flex justify-between font-mono text-sm mt-2"
@@ -510,6 +513,8 @@ export default function SketchPage() {
             <DockedTopBar
               zoomSlotRef={ setZoomSlot }
               actionsSlotRef={ setActionsSlot }
+              targetFps={ effectiveSettings.animation?.framerate ?? 60 }
+              interactionMode={ interactionMode }
             />
           ) : (
             <EngineControls />
