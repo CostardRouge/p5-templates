@@ -54,14 +54,12 @@ type SketchSettingsProps = {
   onSketchSectionToggle?: ( expanded: boolean ) => void;
 };
 
-// The transport bar is the floor of every layout: the docked rail stops on it,
-// the floating card clears it by the usual island margin. Both read the height
-// back from the variable SketchOptions publishes rather than repeating 3rem.
+// The transport bar is the floor of the docked layout: the rail stops on it.
+// Read back from the variable SketchOptions publishes rather than repeating
+// 3rem. (The floating card's own bottom offset is computed by the caller —
+// see the "Unpositioned on purpose" note below.)
 const RAIL_BOTTOM = {
   bottom: `var(${ STUDIO_TRANSPORT_HEIGHT_VAR }, 0px)`
-};
-const ISLAND_BOTTOM = {
-  bottom: `calc(var(${ STUDIO_TRANSPORT_HEIGHT_VAR }, 0px) + 1rem)`
 };
 
 const HEADER_ACTION_CLASS =
@@ -305,10 +303,15 @@ export default function SketchSettings( {
   // compact stack of headers. That also removes the width/radius swap
   // (w-80 <-> w-fit, rounded-2xl <-> rounded-full) that made the card morph
   // into a pill mid-animation — neither is interpolatable.
+  //
+  // Unpositioned on purpose: the caller (SketchOptions.tsx) owns a shared,
+  // bottom-anchored flex column stacking the Interactive mixer directly above
+  // this card, and stretches this card to the column's own width — plain
+  // flow, so the mixer clears this card's actual rendered height with no
+  // measurement code, however tall its expanded sections make it.
   return (
     <div
-      className="absolute z-50 left-4 w-80 max-h-[calc(80svh-5rem)] flex flex-col glass shadow-lg rounded-2xl border border-theme overflow-hidden"
-      style={ ISLAND_BOTTOM }
+      className="max-h-[calc(80svh-5rem)] flex flex-col glass shadow-lg rounded-2xl border border-theme overflow-hidden"
     >
       <div className="flex items-center gap-1.5 px-3 py-2 text-xs text-foreground border-b border-theme">
         {headerLabel}

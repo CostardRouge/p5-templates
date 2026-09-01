@@ -34,8 +34,13 @@ type Props = {
    *  "slides.N.sketch") — mirrors the SketchSettings form's base path. */
   basePath: string;
   /** Bottom offset override so the mixer clears the slide filmstrip (a CSS
-   *  length; defaults to the plain bottom-4 float). */
+   *  length; defaults to the plain bottom-4 float). Ignored when `stacked`. */
   bottomOffset?: string;
+  /** Render as a plain flow child instead of self-positioning — the floating
+   *  layout stacks the mixer directly above the Controls card in one shared,
+   *  bottom-anchored flex column (see SketchOptions.tsx), so the column owns
+   *  placement and width and this component only supplies its own chrome. */
+  stacked?: boolean;
 };
 
 /**
@@ -52,7 +57,8 @@ type Props = {
  */
 export default function InteractivePanel( {
   basePath,
-  bottomOffset
+  bottomOffset,
+  stacked = false
 }: Props ) {
   const {
     setValue, getValues
@@ -185,17 +191,20 @@ export default function InteractivePanel( {
         // w-80 <-> w-fit and rounded-2xl <-> rounded-full is not animatable
         // and snapped the panel into a pill while its height was still
         // interpolating. Only the height animates now.
-        "absolute left-1/2 z-50 flex w-80 max-w-[calc(100vw-1rem)] -translate-x-1/2 flex-col glass border border-theme shadow-lg overflow-hidden rounded-2xl",
-        !bottomOffset && "bottom-4"
+        "flex max-w-[calc(100vw-1rem)] flex-col glass border border-theme shadow-lg overflow-hidden rounded-2xl text-xs",
+        stacked
+          ? "w-full"
+          : "absolute left-1/2 z-50 w-80 -translate-x-1/2",
+        !stacked && !bottomOffset && "bottom-4"
       ) }
-      style={ bottomOffset ? {
+      style={ !stacked && bottomOffset ? {
         bottom: bottomOffset
       } : undefined }
     >
       <button
         type="button"
         onClick={ () => setExpanded( ( v ) => !v ) }
-        className="flex items-center gap-2 px-3 py-2 text-xs text-foreground"
+        className="flex items-center gap-2 px-3 py-2 text-foreground"
         aria-label={ expanded ? "Collapse interactive mixer" : "Expand interactive mixer" }
       >
         <Activity className="h-3.5 w-3.5" />

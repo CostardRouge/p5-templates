@@ -733,24 +733,61 @@ export default function SketchOptions( {
                     </div>
 
                     {/* Inspector (left): canvas & animation + the sketch's own
-                    parameters, one panel. */}
-                    <SketchAssetsProvider scope="global" assetsName="assets" jobId={ jobId }>
-                      <SketchSettings
-                        activeSlideIndex={ activeSlideIndex }
-                        activeSlideId={ activeSlideId }
-                        docked={ dockedDesktop }
-                        rootSettingsExpanded={ collapsibleStates.rootSettings }
-                        onRootSettingsToggle={ ( expanded ) => setSection(
-                          "rootSettings",
-                          expanded
-                        ) }
-                        sketchSectionExpanded={ collapsibleStates.sketchSection }
-                        onSketchSectionToggle={ ( expanded ) => setSection(
-                          "sketchSection",
-                          expanded
-                        ) }
-                      />
-                    </SketchAssetsProvider>
+                    parameters, one panel. Floating: the Interactive mixer
+                    stacks directly above it in one bottom-anchored column
+                    (mirrors the right rail's banner+OptionsPanel+filmstrip
+                    stack below) — plain flow, so it clears Controls' actual
+                    rendered height with no measurement code, however tall
+                    Controls' expanded sections make it on a given sketch.
+                    Docked: Controls is a full-height rail with no room to
+                    stack above, so the mixer stays a standalone centered
+                    float (see the bottom of this fragment). */}
+                    {dockedDesktop ? (
+                      <SketchAssetsProvider scope="global" assetsName="assets" jobId={ jobId }>
+                        <SketchSettings
+                          activeSlideIndex={ activeSlideIndex }
+                          activeSlideId={ activeSlideId }
+                          docked={ dockedDesktop }
+                          rootSettingsExpanded={ collapsibleStates.rootSettings }
+                          onRootSettingsToggle={ ( expanded ) => setSection(
+                            "rootSettings",
+                            expanded
+                          ) }
+                          sketchSectionExpanded={ collapsibleStates.sketchSection }
+                          onSketchSectionToggle={ ( expanded ) => setSection(
+                            "sketchSection",
+                            expanded
+                          ) }
+                        />
+                      </SketchAssetsProvider>
+                    ) : (
+                      <div
+                        className="absolute z-50 left-4 flex w-80 max-w-[calc(100vw-1rem)] flex-col gap-2"
+                        style={ {
+                          bottom: `calc(${ transportHeight } + 1rem)`
+                        } }
+                      >
+                        <InteractivePanel basePath={ sketchBasePath } stacked />
+
+                        <SketchAssetsProvider scope="global" assetsName="assets" jobId={ jobId }>
+                          <SketchSettings
+                            activeSlideIndex={ activeSlideIndex }
+                            activeSlideId={ activeSlideId }
+                            docked={ dockedDesktop }
+                            rootSettingsExpanded={ collapsibleStates.rootSettings }
+                            onRootSettingsToggle={ ( expanded ) => setSection(
+                              "rootSettings",
+                              expanded
+                            ) }
+                            sketchSectionExpanded={ collapsibleStates.sketchSection }
+                            onSketchSectionToggle={ ( expanded ) => setSection(
+                              "sketchSection",
+                              expanded
+                            ) }
+                          />
+                        </SketchAssetsProvider>
+                      </div>
+                    )}
 
                     {/* Slide filmstrip: the deck in the page body. Docked: a band
                     between the rails, above the viewport's bottom edge (the
@@ -840,12 +877,13 @@ export default function SketchOptions( {
                 </div>
 
                 {/* The central Interactive mixer — one overview of every binding, with
-              per-layer solo / mute / weight. Floats bottom-center (desktop only,
-              where it doesn't collide with the mobile drawer); hidden unless the
-              plugin is on and the scope has bindings. Lifted above the slide
-              filmstrip, which now owns the bottom-center. */}
-                {isDesktop && (
-
+              per-layer solo / mute / weight. Docked only here: Controls is a
+              full-height rail with no room to stack above, so the mixer stays
+              a standalone float, centered bottom and lifted above the slide
+              filmstrip. Floating stacks it above Controls instead (see the
+              Inspector block above) — hidden unless the plugin is on and the
+              scope has bindings, either way. */}
+                {dockedDesktop && (
                   <InteractivePanel
                     basePath={ sketchBasePath }
                     bottomOffset={ mixerBottom }
