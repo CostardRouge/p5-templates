@@ -14,8 +14,12 @@ import {
   BarLabelSegment
 } from "../ControlChrome";
 import {
-  collectBranchPaths, flattenKeys, groupKeyPaths
+  collectBranchPaths, groupKeyPaths
 } from "@/p5/utils/hud/keyPaths";
+import {
+  collectAnimatableKeyPaths
+} from "@/p5/utils/slides/breakdown/deriveSteps";
+import useSketch from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
 
 type Props = {
   name: string;
@@ -27,12 +31,19 @@ type Props = {
 
 /**
  * Parameter-key picker for the breakdown's `snapKeys` / `excludeKeys` lists.
- * Same derivation as `ControlledSourceSelect` — the key-paths that exist in the
- * sketch settings the form already holds — with two differences: no live
- * built-in sources (a key list addresses sketch parameters only), and **whole
- * groups are selectable**. Picking "colors" covers every leaf under it;
- * `matchesKeyList` (src/sketches/p5/utils/slides/keyMatch.js) applies the
- * ancestor rule at runtime.
+ * The options are the key-paths of the sketch settings the form holds, minus
+ * the live built-in sources of `ControlledSourceSelect` (a key list addresses
+ * sketch parameters only) and plus a **whole groups** optgroup: picking
+ * "colors" covers every leaf under it, `matchesKeyList`
+ * (src/sketches/p5/utils/slides/keyMatch.js) applying the ancestor rule at
+ * runtime.
+ *
+ * The paths come from `collectAnimatableKeyPaths` — the breakdown's OWN walk —
+ * not from the HUD's `flattenKeys`, so the list is exactly the set of keys the
+ * runtime can act on: colours and vectors (numeric arrays) are offered, a
+ * sketch parameter named `title` is offered, and the `interaction` / `bindings`
+ * blocks the derivation skips are not (they alone were 130 dead options on the
+ * hand-capture sketches, burying the sketch's own parameters).
  */
 export default function ControlledKeySelect( {
   name,
@@ -56,7 +67,20 @@ export default function ControlledKeySelect( {
     name: "sketch"
   } );
 
-  const keys = flattenKeys( sketch ?? {} );
+  // The root sketch settings, not the active slide's: the shape is the same
+  // and the root is the defaults holder. It is empty only before the form has
+  // any sketch block at all — the sketch's stock defaults describe the same
+  // tree, so the picker still lists the real parameters rather than nothing.
+  const [
+    {
+      sketchFormValues
+    }
+  ] = useSketch();
+
+  const settings =
+    sketch && Object.keys( sketch ).length > 0 ? sketch : sketchFormValues;
+
+  const keys = collectAnimatableKeyPaths( settings ?? {} );
   const branches = collectBranchPaths( keys );
   const {
     rootOptions, groups

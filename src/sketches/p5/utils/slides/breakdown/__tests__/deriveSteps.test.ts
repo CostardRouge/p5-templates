@@ -11,6 +11,7 @@
 import deriveBreakdownSteps, {
   MAX_ANIM_STEPS,
   classifyLeaf,
+  collectAnimatableKeyPaths,
   differs,
   formConfigAt,
   matchesKeyList
@@ -426,6 +427,68 @@ describe(
         expect( steps.filter( ( s: any ) => s.overflow ) ).toHaveLength( 5 );
         expect( steps[ MAX_ANIM_STEPS - 1 ].overflow ).toBe( false );
         expect( steps[ MAX_ANIM_STEPS ].overflow ).toBe( true );
+      }
+    );
+  }
+);
+
+describe(
+  "collectAnimatableKeyPaths",
+  () => {
+    it(
+      "lists exactly the paths the step derivation walks",
+      () => {
+        expect( collectAnimatableKeyPaths( sketch ) ).toEqual( [
+          "seed",
+          "animated",
+          "strokeColor",
+          "grid.columns",
+          "grid.offset",
+          "noise.scale",
+          "noise.octaves"
+        ] );
+      }
+    );
+
+    it(
+      "keeps numeric arrays whole and drops what the derivation drops",
+      () => {
+        expect( collectAnimatableKeyPaths( {
+          // A sketch parameter named "title" is a parameter like any other —
+          // the HUD's flattenKeys skips it as overlay config.
+          title: "HELLO",
+          backgroundColor: [
+            0,
+            0,
+            0,
+            255
+          ],
+          bindings: {
+            magnitude: "mic"
+          },
+          interaction: {
+            vision: {
+              enabled: true
+            }
+          },
+          callback: () => 1,
+          empty: null,
+          mixed: [
+            1,
+            "two"
+          ]
+        } ) ).toEqual( [
+          "title",
+          "backgroundColor"
+        ] );
+      }
+    );
+
+    it(
+      "returns nothing for a settings tree that is not an object",
+      () => {
+        expect( collectAnimatableKeyPaths( undefined ) ).toEqual( [] );
+        expect( collectAnimatableKeyPaths( {} ) ).toEqual( [] );
       }
     );
   }
