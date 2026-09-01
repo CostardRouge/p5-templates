@@ -6,14 +6,18 @@ import {
 import {
   EngineControls
 } from "@/components/SketchPage/EngineControls";
+import {
+  getEngineLabel
+} from "@/engines/engineCatalog";
+import useSketch from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
 
 /**
  * The docked workspace's top rail. A full-width, squared bar flush to the top
  * edge that frames the viewport together with the left/right rails. It hosts
- * the global menu (relocated here through {@link MenuBarSlot}), the engine
- * playback controls, and — via `zoomSlotRef` — the viewport's zoom controls,
- * each rendered flat and separated by full-height dividers instead of as
- * floating islands.
+ * the global menu (relocated here through {@link MenuBarSlot}), the engine +
+ * sketch name, the engine playback controls, and — via `zoomSlotRef` — the
+ * viewport's zoom controls, each rendered flat and separated by full-height
+ * dividers instead of as floating islands.
  *
  * Desktop-only; rendered by {@link SketchPage} only in the docked
  * layout. `items-stretch` + `h-full` cells make every divider span the whole
@@ -25,14 +29,28 @@ export default function DockedTopBar( {
 }: {
   /** Portal target for the ScalableViewport's zoom controls. */
   zoomSlotRef: ( el: HTMLDivElement | null ) => void;
-  /** Portal target for the options form's bar actions (undo/redo + export).
-   *  Filled by SketchOptions, which owns the form context they need. */
+  /** Portal target for the options form's bar actions (undo/redo). Filled by
+   *  SketchOptions, which owns the form context they need. */
   actionsSlotRef?: ( el: HTMLDivElement | null ) => void;
 } ) {
+  const [
+    {
+      engineId, name
+    }
+  ] = useSketch();
+
   return (
     <div className="absolute top-0 left-0 right-0 h-12 z-50 flex items-stretch glass border-b border-theme">
       <div className="flex items-center px-2">
         <MenuBarSlot />
+      </div>
+
+      <Divider />
+
+      <div className="flex items-center gap-1.5 px-3 text-sm truncate">
+        <span className="text-foreground/60">{getEngineLabel( engineId )}</span>
+        <span className="text-foreground/30">/</span>
+        <span className="font-medium truncate">{name}</span>
       </div>
 
       <Divider />

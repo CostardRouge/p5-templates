@@ -1,8 +1,5 @@
 import dynamic from "next/dynamic";
 import clsx from "clsx";
-import {
-  Download
-} from "lucide-react";
 import type React from "react";
 import {
   useCallback, useEffect, useRef, useState
@@ -768,29 +765,15 @@ export default function SketchOptions( {
                     )}
 
                     {/* Docked top bar actions — rendered through a portal because
-                    the bar belongs to SketchPage while undo/redo and the
-                    Export button need this form context. Export opens the very
-                    same dialog as the record dot: two triggers, one surface. */}
+                    the bar belongs to SketchPage while undo/redo needs this
+                    form context. Export lives in the transport bar only, so
+                    the top bar doesn't duplicate that trigger. */}
                     {dockedDesktop &&
                   topBarActionsContainer &&
                   createPortal(
                     <div className="flex h-full items-stretch">
                       <div className="flex items-center px-2">
                         <UndoRedo />
-                      </div>
-
-                      <div className="w-px bg-border" />
-
-                      <div className="flex items-center px-2">
-                        <button
-                          type="button"
-                          onClick={ openCapture }
-                          title="Recording, export and options import/export"
-                          className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-foreground px-3 text-xs font-medium text-background transition-opacity hover:opacity-85"
-                        >
-                          <Download className="h-3.5 w-3.5" />
-                          Export
-                        </button>
                       </div>
                     </div>,
                     topBarActionsContainer
