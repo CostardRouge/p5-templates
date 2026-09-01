@@ -4,6 +4,9 @@ import {
 import {
   trackPendingMedia
 } from "../../pendingMedia";
+import {
+  reportAssetLoading
+} from "../../loadingProgress";
 import type {
   AssetInstance
 } from "../../types";
@@ -243,6 +246,13 @@ export function loadVideoAsset(
     // iOS ignores `preload="auto"` in several situations (Low Power Mode,
     // cellular); an explicit load() reliably kicks off the metadata fetch.
     element.load();
+
+    // Surface the metadata load as a reported step (and a capture gate).
+    reportAssetLoading(
+      "video",
+      currentPath.split( "/" ).pop() ?? currentPath,
+      ready
+    );
 
     // Surface load failures without leaving an unhandled rejection.
     ready.catch( ( error ) => {

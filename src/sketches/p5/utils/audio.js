@@ -4,6 +4,9 @@ import {
 import {
   scheduleClick
 } from "@/lib/clickSynth";
+import {
+  reportAssetLoading
+} from "@/lib/assets/loadingProgress";
 import time from "./time.js";
 import {
   isAudioPath
@@ -945,17 +948,21 @@ const audio = {
     if ( !_samplePromises.has( url ) ) {
       _samplePromises.set(
         url,
-        fetch( url )
-          .then( ( response ) => {
-            // A 404 hands back an HTML body, which decodeAudioData rejects with
-            // a message that says nothing about the real problem. Name it here.
-            if ( !response.ok ) {
-              throw new Error( `HTTP ${ response.status } fetching ${ url }` );
-            }
+        reportAssetLoading(
+          "audio",
+          name ?? url,
+          fetch( url )
+            .then( ( response ) => {
+              // A 404 hands back an HTML body, which decodeAudioData rejects with
+              // a message that says nothing about the real problem. Name it here.
+              if ( !response.ok ) {
+                throw new Error( `HTTP ${ response.status } fetching ${ url }` );
+              }
 
-            return response.arrayBuffer();
-          } )
-          .then( ( bytes ) => ctx.decodeAudioData( bytes ) )
+              return response.arrayBuffer();
+            } )
+            .then( ( bytes ) => ctx.decodeAudioData( bytes ) )
+        )
       );
     }
 

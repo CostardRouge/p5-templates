@@ -5,6 +5,9 @@ import type {
   CaptureSource,
   RecorderCapabilities
 } from "@/engines/recording/types";
+import type {
+  LoadingProgressSnapshot
+} from "@/lib/assets/loadingProgress";
 
 /* ------------------------------------------------------------------ */
 /*  Engine event system                                                */
@@ -19,6 +22,12 @@ export type EngineEventMap = {
   complete: void;
   /** Fired on any unrecoverable engine error. */
   error: Error;
+  /**
+   * Fired whenever an asset-loading step opens or settles (images, fonts,
+   * audio, video, sketch modules). The payload is the full progress
+   * snapshot, so consumers can render per-step state or just a counter.
+   */
+  loading: LoadingProgressSnapshot;
   /** Periodic runtime performance sample for UI overlays/diagnostics. */
   performance: EnginePerformanceSample;
 };

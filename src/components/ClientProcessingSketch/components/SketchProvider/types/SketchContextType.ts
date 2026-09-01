@@ -10,6 +10,9 @@ import {
 import type {
   SketchEngine
 } from "@/engines/types";
+import type {
+  LoadingProgressSnapshot
+} from "@/lib/assets/loadingProgress";
 
 export type SketchState = {
   name: string;
@@ -31,6 +34,12 @@ export type SketchState = {
    */
   optionsChangedPaths?: string[];
   engine: SketchEngine | null;
+  /**
+   * Live asset-loading progress re-emitted from the engine's `loading`
+   * event (per-step images/fonts/audio/video/module state). `null` until
+   * the engine reports its first step.
+   */
+  loadingProgress: LoadingProgressSnapshot | null;
   /** Whether the engine draw-loop is currently running. */
   looping: boolean;
   /**
@@ -59,6 +68,10 @@ export type SketchAction =
   | {
     type: "SET_ENGINE";
     payload: SketchEngine | null
+  }
+  | {
+    type: "SET_LOADING_PROGRESS";
+    payload: LoadingProgressSnapshot | null
   }
   | {
     type: "SET_LOOPING";
