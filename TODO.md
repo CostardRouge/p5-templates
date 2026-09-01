@@ -1,7 +1,8 @@
 # TODO — sketchbook
 
-> Last cleaned: 2026-08-31 — items checked off against the current source, not
-> from memory; each newly ticked line names what closed it.
+> Last cleaned: 2026-09-01, against `main` at 0e2fbce — items checked off
+> against the current source, not from memory; each newly ticked line names
+> what closed it.
 
 ---
 
@@ -51,7 +52,7 @@ What's left requires actions only the repo owner can take, in this order:
   - [x] Display other slides as page indicators or a static thumbnail strip
 - [x] **Revamp slide carousel** — show current slide large in viewport, others as a horizontal strip of static thumbnails; non-active slides must not run the sketch
 - [x] **Drag items on canvas** — pick up content items by position and update their x/y in form values in real time (decision: P5 events vs React overlay — see bug B4)
-- [ ] **Copy / paste items** — Ctrl+C / Ctrl+V to deep-clone a selected item and append it to the slide's content array
+- [ ] **Copy / paste items** — duplicating *within* a slide is done (`duplicateItem` in `LayerGroup`: deep clone, `id` dropped, inserted right after the source, exposed as the layer row's Copy button; Delete/Backspace removes the open layer). What is missing is a real clipboard — Ctrl+C / Ctrl+V carrying an item **across slides and across sketches**, which needs a serialized payload and a paste-time check that the target sketch can host the item's type
 - [ ] **Resize guide** — alignment snap lines / rulers overlay when resizing or moving items, implemented as a second canvas layer
 - [ ] **Crop and rotate images on the fly** — in-canvas transform controls for image items; store params in item options, apply during render and frame capture
 
@@ -64,7 +65,7 @@ What's left requires actions only the repo owner can take, in this order:
 - [ ] **Migrate old sketches** — audit legacy sketch files (pre-refactor, `canvasdefault0` refs, old option schemas) and port them to the current template format
 - [x] **Enhance current sketch settings** — better grouping, collapsible sections, field tooltips, validation feedback (umbrella — file sub-tasks per specific UI issue)
 - [x] **Component split — `CaptureActions`, `SketchSettings`** — both are folders now, split the TemplateOptions way: `CaptureActions/` has `hooks/useBrowserRecorder`, `useBrowserRecordingSupported`, `utils/`, and one component per job state (`NoJobActions`, `DraftActions`, `RecordingActions`, `CompletedActions`, `FailedActions`, `OptionsImportExport`); `SketchSettings/` sits at 327 lines beside `GenerateThumbnailButton`, `GeneratePreviewButton`, `SaveDefaultsButton`, `UiSoundSettingsButton` and `utils/createSketchFormConfigFromDefaults`
-- [ ] **Component split, round 2** — the two named above are done, but the studio grew new heavyweights. Current >800-line non-generated files, in order: `ContentItems/constants/field-config.ts` (1871), `types/sketch.types.ts` (1666), `BindingAffordance.tsx` (1157), `SketchesList.tsx` (1074), `SlideTransitionSettings.tsx` (978), `SketchOptions.tsx` (885), `FieldRenderer.tsx` (871), `FormUndoRedo.tsx` (842), `CaptureActions/CaptureActions.tsx` (764 — the shell kept the orchestration). Same rule: hooks + small UI, no behaviour change per commit
+- [ ] **Component split, round 2** — the two named above are done, but the studio grew new heavyweights. Current >750-line non-generated files, at 0e2fbce: `ContentItems/constants/field-config.ts` (1918), `types/sketch.types.ts` (1693), `BindingAffordance.tsx` (1342), `gsap/utils/runtime.tsx` (1274), `SketchesList.tsx` (1077), `SlideTransitionSettings.tsx` (978), `SketchOptions.tsx` (917), `FieldRenderer.tsx` (906), `FormUndoRedo.tsx` (842), `CaptureActions/CaptureActions.tsx` (764 — the shell kept the orchestration). Same rule: hooks + small UI, no behaviour change per commit. They are still growing — `BindingAffordance.tsx` alone put on 185 lines between 6f4a204 and 0e2fbce
   - [ ] Drop the 7-line `components/CaptureActions.tsx` re-export shim: it duplicates `CaptureActions/index.ts`, and `CaptureDialog` already `dynamic()`-imports the folder
 - [ ] **Unit tests** — cover form utilities, slide management logic, recording step calculations, thumbnail utils, and API route handlers; start with pure functions then hooks
 
@@ -84,17 +85,17 @@ What's left requires actions only the repo owner can take, in this order:
   - [x] Easing — `ControlledEasingInput`, `easing` field type
   - [x] Vector (2D) — `ControlledVector2DInput` + `Vector2DPad`, `vector2d` field type (a 3D variant is still open, file it when a sketch needs one)
   - [ ] Camera — rotation and translate controls
-  - [ ] Global animation curve — waveform picker (sine, square, linear, triangle) + multiplier + speed
+  - [ ] Global animation curve — waveform picker (sine, square, linear, triangle) + multiplier + speed. Interaction bindings already give any *single* sketch parameter a generator with a wave, speed and curve (`docs/memory/interaction-bindings.md`), so what is left here is the **global** one — one curve several fields follow — not a per-field wave
   - [x] Webcam picker — dropdown of available `videoDeviceId`s
   - [x] Joypad picker — list connected gamepads
   - [x] MIDI device picker — list connected MIDI inputs
   - [x] Audio source picker — microphone / line-in selector
   - [x] Reset / Random button — inline button per field to reset or randomize its value
-  - [ ] Animation value visualizer — small sparkline showing an animated value over time
+  - [ ] Animation value visualizer — small sparkline showing an animated value over time. The drawing exists as the `hud-sparkline` content item, but it renders **on canvas**; this asks for the same trace inside the control, next to the field a binding is driving
 - [ ] **Readonly mode** — `readOnly` prop on `TemplateOptions` that disables all fields; useful for share/embed views
 - [ ] **Tags** — free-form labels on sketches and recordings; stored in DB, displayed as pills, filterable on recordings page
 - [x] **Same line design** — `layout: "inline"` hint in field config so label and input render on the same row
-- [ ] **Collapsible groups without schema** — make collapsible sections work in sketch settings (which have no explicit schema) via heuristic grouping or a lightweight auto-generated schema
+- [x] **Collapsible groups without schema** — `SketchSettings/utils/createSketchFormConfigFromDefaults.ts` derives a `FieldConfig` tree from the sketch's plain defaults object (with optional per-path hints), and `GenericObjectForm` renders its nested groups as collapsible bands inside a `PanelSection` — the "lightweight auto-generated schema" route, not heuristic grouping
 
 ---
 
@@ -187,7 +188,7 @@ What's left requires actions only the repo owner can take, in this order:
 - [x] **LocalStorage drift** — UI state (collapsed sections, view mode) stored in `localStorage` can fall out of sync with DB state; audit and add reconciliation on load — answered for the options panel by only persisting schema-shaped keys (`docs/memory/studio-ui.md`); content-shaped ones (`conditional-<path>`, which addresses an item by index) are never stored, so there is nothing to reconcile
 - [x] **Keep sketch options open with same collapsibles** — collapsible sections reset to default on navigation; persist open/closed state per-sketch in `localStorage` or URL hash
 - [x] **Drag items — decision pending** — item drag on canvas is partially implemented but inconsistent; must decide between P5 events vs React overlay before more work
-- [ ] **useAudio / MIDI not working** — audio and MIDI hooks are wired but non-functional; likely async init order issue or missing user-gesture unlock for Web Audio / WebMidi
+- [ ] **useAudio / MIDI not working — re-test, the surface moved** — the `useAudio` / `useMidi` hooks this was filed against no longer exist. Audio and MIDI now arrive as interaction channels (`audio.level` plus the six bands off `getAudio().bands`, `midi.cc`, …) consumed by bindings and by `@/p5/utils/interaction`. Re-test *there*, behind `INTERACTION_BINDINGS=true`, and re-file against the channel if the signal is dead; the original suspicion (missing user-gesture unlock for Web Audio / WebMidi) is still the first thing to check
 - [x] **Apply sketch options to other slides** — "apply to all slides" action shallow-copies nested objects and drops nested keys; fix the deep-merge logic
 - [ ] **Fix clone features — assets ignored** — cloning a recording does not copy uploaded assets to the new job; new job silently uses stale/inaccessible paths
 - [ ] **Prevent too much image fetch** — thumbnails and asset images are re-fetched on every render in some cases; add caching headers and/or a client-side URL cache
