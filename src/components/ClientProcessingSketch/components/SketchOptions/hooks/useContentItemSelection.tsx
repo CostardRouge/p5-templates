@@ -11,9 +11,6 @@ import {
   type ReactNode
 } from "react";
 
-import {
-  useCollapsibleContext
-} from "./useCollapsibleStates";
 import type {
   CollapsibleSection
 } from "./useCollapsibleStates";
@@ -23,10 +20,9 @@ import {
 
 /**
  * Bridges an on-canvas content-item press (dispatched by contentDrag.js as the
- * `CONTENT_ITEM_SELECT_EVENT` window event) to the options panel: it opens the
- * item's zone (global content, or the right slide), opens the item's form
- * section, and publishes the item's path so the rendered ItemFormWrapper can
- * scroll to and pulse itself.
+ * `CONTENT_ITEM_SELECT_EVENT` window event) to the options panel: it switches
+ * to the owning slide, opens the content section, and publishes the item's
+ * path — which the layers panel reads to open that layer's inspector.
  *
  * Two moving parts:
  *  - the CONTEXT holds the currently-selected item path + a monotonically
@@ -46,7 +42,7 @@ function scopeToBase( scope: string ): {
   if ( scope === "global" ) {
     return {
       base: "content",
-      section: "globalContent"
+      section: "content"
     };
   }
 
@@ -60,7 +56,7 @@ function scopeToBase( scope: string ): {
 
   return {
     base: `slides.${ slideIndex }.content`,
-    section: "slides",
+    section: "content",
     slideIndex
   };
 }
@@ -72,7 +68,7 @@ type Selection = {
 
 type ContentSelectionValue = {
   selection: Selection | null;
-  selectPath: ( path: string ) => void;
+  selectPath: ( path: string | null ) => void;
 };
 
 const ContentSelectionContext = createContext<ContentSelectionValue | null>( null );
@@ -90,7 +86,13 @@ export function ContentSelectionProvider( {
   const nonceRef = useRef( 0 );
 
   const selectPath = useCallback(
-    ( path: string ) => {
+    ( path: string | null ) => {
+      if ( path === null ) {
+        setSelection( null );
+
+        return;
+      }
+
       nonceRef.current += 1;
       setSelection( {
         path,
@@ -123,6 +125,19 @@ export function useContentSelection(): Selection | null {
   return useContext( ContentSelectionContext )?.selection ?? null;
 }
 
+/**
+ * Select a layer, or clear the selection with `null`.
+ *
+ * The same channel serves the canvas (through the window event below) and the
+ * layers list, so pressing an object on the sketch and pressing its row open
+ * the very same inspector.
+ */
+export function useSelectContentPath(): ( path: string | null ) => void {
+  const context = useContext( ContentSelectionContext );
+
+  return context?.selectPath ?? ( () => {} );
+}
+
 type ListenerOptions = {
   setSection: ( section: CollapsibleSection, expanded: boolean ) => void;
   onSelectSlide: ( index: number | undefined ) => void;
@@ -138,9 +153,6 @@ export function useContentSelectionListener( {
   onSelectSlide,
   activeSlideIndex
 }: ListenerOptions ) {
-  const {
-    setExpanded
-  } = useCollapsibleContext();
   const context = useContext( ContentSelectionContext );
   const selectPath = context?.selectPath;
 
@@ -150,7 +162,6 @@ export function useContentSelectionListener( {
     setSection,
     onSelectSlide,
     activeSlideIndex,
-    setExpanded,
     selectPath
   } );
 
@@ -158,7 +169,6 @@ export function useContentSelectionListener( {
     setSection,
     onSelectSlide,
     activeSlideIndex,
-    setExpanded,
     selectPath
   };
 
@@ -168,7 +178,6 @@ export function useContentSelectionListener( {
         const detail = ( event as CustomEvent ).detail as {
           scope?: string;
           index?: number | string;
-          part?: string | null;
         } | undefined;
 
         if ( !detail?.scope ) {
@@ -205,23 +214,7 @@ export function useContentSelectionListener( {
           return;
         }
 
-        const itemPath = `${ base }.${ detail.index }`;
-
-        api.setExpanded(
-          `item-${ itemPath }`,
-          true
-        );
-
-        // A HUD sub-widget lives in a nested-object section of the item form;
-        // open it too so its fields are visible once the item is revealed.
-        if ( detail.part ) {
-          api.setExpanded(
-            `nested-${ itemPath }.${ detail.part }`,
-            true
-          );
-        }
-
-        api.selectPath?.( itemPath );
+        api.selectPath?.( `${ base }.${ detail.index }` );
       };
 
       window.addEventListener(

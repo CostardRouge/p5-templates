@@ -1,5 +1,5 @@
 import {
-  getScopeAssetPath, normalizeImageFile, registerBlob, revokeBlob
+  getScopeAssetPath, normalizeImageFile, registerBlobUnique, revokeBlob
 } from "@/lib/assets";
 
 import {
@@ -59,18 +59,25 @@ export default function useAssetDrop() {
         }
       }
 
-      const registeredBlobName = getScopeAssetPath(
-        processed.name,
-        type,
-        scope
-      );
-
-      registerBlob(
-        registeredBlobName,
+      // The path the file's own name asks for, and the one it actually gets:
+      // a phone hands every camera-roll pick over as `image.jpg`, so the name
+      // alone is not an identity (see `registerBlobUnique`).
+      const registeredBlobName = registerBlobUnique(
+        getScopeAssetPath(
+          processed.name,
+          type,
+          scope
+        ),
         processed
       );
+
       registeredBlobNames.push( registeredBlobName );
-      targetArray.push( registeredBlobName );
+
+      // Re-adding a file that is already in the pool keeps its path, and the
+      // pool is a set: a duplicate entry would render twice and delete once.
+      if ( !targetArray.includes( registeredBlobName ) ) {
+        targetArray.push( registeredBlobName );
+      }
     }
 
     setSketchOptions(

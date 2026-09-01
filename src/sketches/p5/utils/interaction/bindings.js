@@ -133,6 +133,20 @@ export function isGenerator( source ) {
   return GENERATOR_SOURCES.has( source );
 }
 
+// Whether any binding in the list is bound to a live "input" channel — as
+// opposed to a generator, which computes standalone from the sketch's own
+// progression and needs no `interaction` block at all. Shared by the
+// server-side seed (getSketchOptions.getSketchMeta, for sketches that ship
+// default input-sourced bindings) and the client binding UI
+// (BindingAffordance / GenericObjectForm), so a sketch only carries — and
+// only shows the settings panel for — the shared Interaction block while it
+// actually has a binding that needs it.
+export function needsInteractionBlock( bindings ) {
+  const list = Array.isArray( bindings ) ? bindings : [];
+
+  return list.some( ( binding ) => binding && binding.source && !isGenerator( binding.source ) );
+}
+
 function frac( x ) {
   return x - Math.floor( x );
 }

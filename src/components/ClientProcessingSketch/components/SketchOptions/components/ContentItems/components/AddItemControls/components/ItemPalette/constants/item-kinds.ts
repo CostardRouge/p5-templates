@@ -8,11 +8,18 @@ import {
   Sparkles as VisualIcon,
   Terminal as SpecsIcon,
   QrCode as QrCodeIcon,
-  Gauge as HudIcon,
-  ListOrdered as BreakdownIcon
+  ListOrdered as BreakdownIcon,
+  Tag as BadgeIcon,
+  Gauge as GaugeIcon,
+  Activity as SparklineIcon,
+  Hash as CounterIcon,
+  Crosshair as CrosshairsIcon,
+  Palette as SwatchIcon,
+  Scan as BoundingBoxIcon
 } from "lucide-react";
 import {
   ItemKind,
+  ItemKindGroup,
   ItemKindMeta
 } from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/AddItemControls/components/ItemPalette/types/item-kinds";
 
@@ -25,9 +32,47 @@ export const ITEM_ORDER: ItemKind[] = [
   "meta",
   "specs",
   "breakdown",
-  "hud",
   "background",
-  "qrcode"
+  "qrcode",
+  "hud-badge",
+  "hud-gauge",
+  "hud-sparkline",
+  "hud-counter",
+  "hud-crosshairs",
+  "hud-swatch",
+  "hud-bounding-box"
+];
+
+// Palette sections: 17 flat tiles read as a wall, so the popover groups the
+// telemetry family under its own eyebrow.
+export const ITEM_GROUPS: ItemKindGroup[] = [
+  {
+    label: "Content",
+    kinds: [
+      "visual",
+      "text",
+      "title",
+      "image",
+      "images-stack",
+      "meta",
+      "specs",
+      "breakdown",
+      "background",
+      "qrcode"
+    ]
+  },
+  {
+    label: "HUD / telemetry",
+    kinds: [
+      "hud-badge",
+      "hud-gauge",
+      "hud-sparkline",
+      "hud-counter",
+      "hud-crosshairs",
+      "hud-swatch",
+      "hud-bounding-box"
+    ]
+  }
 ];
 
 export const ITEM_META: Record<ItemKind, ItemKindMeta> = {
@@ -56,10 +101,40 @@ export const ITEM_META: Record<ItemKind, ItemKindMeta> = {
     Icon: BreakdownIcon,
     description: "Step-by-step diff: the sketch stabilizes while each changed parameter is narrated"
   },
-  hud: {
-    label: "HUD",
-    Icon: HudIcon,
-    description: "Telemetry widgets (gauge, sparkline, badge…)"
+  "hud-badge": {
+    label: "Badge",
+    Icon: BadgeIcon,
+    description: "Text line of live values (sketch identity, resolution, fps…)"
+  },
+  "hud-gauge": {
+    label: "Gauge",
+    Icon: GaugeIcon,
+    description: "Bar readout bound to a live source"
+  },
+  "hud-sparkline": {
+    label: "Sparkline",
+    Icon: SparklineIcon,
+    description: "Rolling mini-plot of a live source"
+  },
+  "hud-counter": {
+    label: "Counter",
+    Icon: CounterIcon,
+    description: "Big numeric readout bound to a live source"
+  },
+  "hud-crosshairs": {
+    label: "Crosshairs",
+    Icon: CrosshairsIcon,
+    description: "Guide lines through a tracked point"
+  },
+  "hud-swatch": {
+    label: "Swatch",
+    Icon: SwatchIcon,
+    description: "Live colour chip bound to a colour source"
+  },
+  "hud-bounding-box": {
+    label: "Bounding box",
+    Icon: BoundingBoxIcon,
+    description: "Labelled region-of-interest frame"
   },
   image: {
     label: "Image",

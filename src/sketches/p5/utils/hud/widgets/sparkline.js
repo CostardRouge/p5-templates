@@ -22,7 +22,7 @@ import {
  * buffer it feeds itself) as a polyline, with the label + current value above.
  */
 export default function sparkline(
-  cfg, style, part
+  cfg, style
 ) {
   withHudTransform( ( p ) => {
     const meta = resolveMeta( cfg.source );
@@ -53,7 +53,6 @@ export default function sparkline(
 
     // Report the visible rectangle so the on-canvas drag can grab this sparkline.
     reportWidgetBounds(
-      part,
       blockX,
       blockY,
       boxW,

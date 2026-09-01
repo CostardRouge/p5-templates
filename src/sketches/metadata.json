@@ -3730,5 +3730,53 @@
     "hiddenFromGallery": false,
     "mtime": "2026-08-08T11:51:07.033Z",
     "ctime": "2026-08-08T11:50:37.437Z"
+  },
+  {
+    "name": "rings-v9-flick-reveal",
+    "engine": "p5",
+    "category": "rings",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "mtime": "2026-08-09T21:03:52.084Z",
+    "ctime": "2026-08-09T21:00:07.104Z"
+  },
+  {
+    "name": "photo-trail-effect-v2-echo",
+    "engine": "p5",
+    "category": "photo-trail-effect",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "mtime": "2026-08-09T21:04:41.741Z",
+    "ctime": "2026-08-09T21:03:57.429Z"
+  },
+  {
+    "name": "rings-v10-magnetic-flyby",
+    "engine": "p5",
+    "category": "rings",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "mtime": "2026-08-14T13:44:00.678Z",
+    "ctime": "2026-08-14T13:39:38.290Z"
+  },
+  {
+    "name": "photo-stamp-collage",
+    "engine": "p5",
+    "category": "photo",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "mtime": "2026-08-24T23:30:46.893Z",
+    "ctime": "2026-08-24T23:30:32.505Z"
   }
 ]

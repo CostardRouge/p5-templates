@@ -41,6 +41,9 @@ import {
 import {
   AssetsOption
 } from "@/types/sketch.types";
+import {
+  HIDDEN_FILE_INPUT_CLASS
+} from "@/components/hiddenFileInput";
 
 export default function ImageAssets( {
   assets,
@@ -193,7 +196,7 @@ export default function ImageAssets( {
 
             e.target.value = "";
           } }
-          className="hidden"
+          className={ HIDDEN_FILE_INPUT_CLASS }
         />
       </div>
     </DndContext>

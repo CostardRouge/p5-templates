@@ -2,12 +2,12 @@ import React, {
   useState, useEffect, useRef
 } from "react";
 import {
-  Copy, Trash2, Edit2, Check
+  Copy, Trash2, Check
 } from "lucide-react";
 import clsx from "clsx";
 import {
   DragBinder
-} from "./ContentItems/ContentItems";
+} from "./SortableRow";
 import {
   useLiveThumbnail
 } from "../utils/useLiveThumbnail";
@@ -96,8 +96,7 @@ export default function SlideThumbnail( {
       ref={ dragBinder?.setHandleRef }
       { ...( dragBinder?.handleProps ?? {} ) }
       className={ clsx(
-        "group relative flex flex-col gap-1",
-        "cursor-pointer",
+        "group relative cursor-pointer",
         {
           "opacity-50": dragBinder?.isDragging
         }
@@ -109,7 +108,11 @@ export default function SlideThumbnail( {
         className={ clsx(
           "relative w-full overflow-hidden rounded-lg transition-all",
           {
-            "outline outline-2 outline-offset-1 outline-primary": isActive,
+            // "primary" was never a defined Tailwind color (no --primary token
+            // in globals.css / tailwind.config.ts) — the active ring silently
+            // rendered as nothing. "focus" is the token globals.css itself
+            // documents as the ring/outline color.
+            "outline outline-2 outline-offset-1 outline-focus": isActive,
             "outline outline-2 outline-offset-1 outline-transparent hover:outline-theme":
               !isActive
           }
@@ -143,8 +146,8 @@ export default function SlideThumbnail( {
               />
             )}
             {!isActive && !thumbnailUrl && (
-              <div className="absolute inset-0 w-full h-full bg-secondary/20 flex items-center justify-center p-2 text-center">
-                <span className="text-xs text-muted-foreground font-medium truncate w-full">
+              <div className="absolute inset-0 w-full h-full bg-hover flex items-center justify-center p-2 text-center">
+                <span className="text-xs text-label font-medium truncate w-full">
                   {name}
                 </span>
               </div>
@@ -165,42 +168,20 @@ export default function SlideThumbnail( {
             draggable={ false }
           />
         ) : (
-          <div className="w-full h-full bg-secondary/20 flex items-center justify-center p-2 text-center">
-            <span className="text-xs text-muted-foreground font-medium truncate w-full">
+          <div className="w-full h-full bg-hover flex items-center justify-center p-2 text-center">
+            <span className="text-xs text-label font-medium truncate w-full">
               {name}
             </span>
           </div>
         )}
 
-        {/* Overlay Actions */}
-        <div className="absolute top-1 right-1 flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-          <button
-            type="button"
-            onClick={ ( e ) => {
-              e.stopPropagation();
-              onDuplicate();
-            } }
-            className="p-1 bg-background/80 backdrop-blur-sm rounded-md hover:bg-background text-foreground shadow-sm"
-            title="Duplicate"
-          >
-            <Copy className="w-3 h-3" />
-          </button>
-          <button
-            type="button"
-            onClick={ ( e ) => {
-              e.stopPropagation();
-              onDelete();
-            } }
-            className="p-1 bg-background/80 backdrop-blur-sm rounded-md hover:bg-red-100 text-red-500 shadow-sm"
-            title="Delete"
-          >
-            <Trash2 className="w-3 h-3" />
-          </button>
-        </div>
-      </div>
-
-      {/* Name / Rename Input */}
-      <div className="h-4 flex items-center justify-center px-1">
+        {/* Name badge — the slide is named *inside* its own tile, so the cell
+            stays a plain rectangle. That is what lets the strip use one
+            uniform padding and keep the tile's radius concentric with the
+            filmstrip card's; a name line under the thumbnail forced 6px above
+            it against 26px below and made the radii impossible to reconcile.
+            Clicking the badge renames — the hover toolbar stays at two
+            buttons, since a third would be wider than the tile itself. */}
         {isEditing ? (
           <input
             ref={ inputRef }
@@ -214,32 +195,57 @@ export default function SlideThumbnail( {
             onTouchStart={ ( e ) => e.stopPropagation() }
             onDragStart={ ( e ) => e.preventDefault() }
             onClick={ ( e ) => e.stopPropagation() }
-            className="w-full text-xs text-center bg-background border border-theme rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-primary cursor-text"
+            className="absolute top-1 left-1 right-1 z-10 text-xs bg-background border border-theme rounded-md px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-focus cursor-text"
             autoFocus
           />
         ) : (
-          <div
-            className="flex items-center gap-1 max-w-full group/name"
-            onDoubleClick={ ( e ) => {
+          <button
+            type="button"
+            onClick={ ( e ) => {
               e.stopPropagation();
               setIsEditing( true );
             } }
+            onPointerDown={ ( e ) => e.stopPropagation() }
+            className="glass absolute top-1 left-1 z-10 max-w-[calc(100%-0.5rem)] truncate rounded-md px-1.5 py-0.5 text-[11px] font-medium leading-tight text-foreground hover:bg-hover"
+            title="Rename slide"
           >
-            <span className="text-xs text-foreground truncate font-medium">
-              {name}
-            </span>
+            {name}
+          </button>
+        )}
+
+        {/* Overlay Actions — one toolbar on a bottom scrim, not two icons
+            pinned on the artwork. Always visible on touch (no hover state to
+            reveal it), fades in on desktop hover/focus like the old corner
+            icons did. */}
+        <div className="absolute inset-x-0 bottom-0 flex justify-center pb-1.5 pt-6 bg-gradient-to-t from-black/45 to-transparent opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity">
+          {/* rounded-lg, not a pill: the block echoes the tile's own radius so
+              it reads as part of the thumbnail rather than a badge dropped on
+              it. Buttons are rounded-md so they nest inside it correctly. */}
+          <div className="glass flex gap-0.5 rounded-lg p-0.5 shadow-sm">
             <button
               type="button"
               onClick={ ( e ) => {
                 e.stopPropagation();
-                setIsEditing( true );
+                onDuplicate();
               } }
-              className="p-0 text-muted-foreground hover:text-foreground"
+              className="flex items-center justify-center w-7 h-7 rounded-md text-foreground hover:bg-hover"
+              title="Duplicate"
             >
-              <Edit2 className="w-2.5 h-2.5" />
+              <Copy className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={ ( e ) => {
+                e.stopPropagation();
+                onDelete();
+              } }
+              className="flex items-center justify-center w-7 h-7 rounded-md text-foreground hover:bg-red-500/15 hover:text-red-500"
+              title="Delete"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
             </button>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

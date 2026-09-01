@@ -104,10 +104,10 @@
     @apply outline-theme;
 }
 
-/* Bare fullscreen is canvas-only — drop the hover affordance so nothing frames
-   the sketch while it fills the screen. */
-.fullscreen-bare .sketch-canvas-container canvas:hover,
-.fullscreen-bare .sketch-canvas-container .sketch-surface:hover {
+/* A presentation with the interface hidden is canvas-only — drop the hover
+   affordance so nothing frames the sketch while it fills the screen. */
+.presentation-bare .sketch-canvas-container canvas:hover,
+.presentation-bare .sketch-canvas-container .sketch-surface:hover {
     outline: none;
 }
 
@@ -428,4 +428,13 @@
     *[class*="hover:-translate"] {
         transform: none !important;
     }
+}
+
+/* Pinterest's browser extension draws its hover "Save" badge by listening for
+   mouseover on the <img> itself and ignores its own data-pin-nopin /
+   data-pin-no-hover attributes for that badge (pinterest/widgets#104, #85).
+   Making cover images inert to the pointer removes the badge's target; clicks
+   fall through to the parent link/button, so cards stay clickable. */
+img[data-pin-nopin] {
+    pointer-events: none;
 }

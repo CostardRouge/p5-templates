@@ -1,5 +1,5 @@
 export {
-  registerBlob, getBlobURL, revokeBlob
+  registerBlob, registerBlobUnique, getBlobURL, revokeBlob
 } from "./blobMap";
 export {
   resolveAssetURL

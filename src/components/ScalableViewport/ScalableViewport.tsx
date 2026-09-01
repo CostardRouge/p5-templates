@@ -7,9 +7,6 @@ import {
   createPortal
 } from "react-dom";
 import ZoomControls from "@/components/ScalableViewport/components/ZoomControls";
-import type {
-  FullscreenControls
-} from "@/components/ScalableViewport/components/ZoomControls";
 import {
   useTransformState
 } from "./hooks/useTransformState";
@@ -34,7 +31,7 @@ export default function ScalableViewport( {
   lockInteractions = false,
   docked = false,
   zoomControlsContainer = null,
-  fullscreen,
+  showPresentation = true,
   actualPixels = false,
   fitMarginFactor,
   onInteractionStart,
@@ -45,11 +42,11 @@ export default function ScalableViewport( {
   resolutionKey?: string;
   showZoomControls?: boolean;
   disable?: boolean;
-  // Fullscreen options in the zoom controls — owned by the page, which holds
-  // the fullscreen state and the element that goes fullscreen.
-  fullscreen?: FullscreenControls;
-  // Auto-layout at 1:1 (actual pixels) instead of the padded fit — used in bare
-  // fullscreen so a screen-sized canvas fills the display exactly.
+  // Offer the presentation modes in the zoom controls' hover menu. Off for
+  // hosts where they make no sense (an embed inside someone else's page).
+  showPresentation?: boolean;
+  // Auto-layout at 1:1 (actual pixels) instead of the padded fit — used while
+  // the canvas is stretched, so a surface-sized canvas fills it exactly.
   actualPixels?: boolean;
   // Fraction of the viewport a "fit" fills. Defaults to the studio's padded
   // 0.9; pass 1 for a flush, gutter-free fit (embeds without a margin).
@@ -225,7 +222,7 @@ export default function ScalableViewport( {
       onMinus={ zoomOut }
       onFit={ () => fitToViewport( true ) }
       onReset={ () => resetToActualPixels( true ) }
-      fullscreen={ fullscreen }
+      showPresentation={ showPresentation }
       disabled={ lockInteractions }
       variant={ docked ? "bar" : "floating" }
     />

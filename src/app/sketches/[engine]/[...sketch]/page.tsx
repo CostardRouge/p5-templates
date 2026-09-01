@@ -33,6 +33,7 @@ import {
   OptionsSchema
 } from "@/types/sketch.types";
 import getCaptureOptions from "@/utils/getCaptureOptions";
+import migrateLegacyHudItems from "@/utils/migrateLegacyHudItems";
 import {
   getJSONSketchOptions,
   getSketchMeta
@@ -254,6 +255,14 @@ export default async function StudioPage( {
     }
   }
 
+  /* ---- legacy-shape migration ------------------------------------
+     The provider seeds the engine's option store from this object directly —
+     initOptions only runs later, in the form layer — so persisted jobs and
+     sketch JSON carrying the legacy single "hud" content item must be
+     expanded here or the engine (and headless recording, which drives this
+     same page) would silently skip them. */
+  const migratedSketchOptions = migrateLegacyHudItems( sketchOptions );
+
   /* ---- breadcrumb items ------------------------------------------ */
   const sketchTitle = formatSketchTitle( sketchName );
   const breadcrumbItems = [
@@ -295,14 +304,14 @@ export default async function StudioPage( {
         name={ sketchName }
         engineId={ engineId }
         category={ sketchMeta.category }
-        options={ sketchOptions }
+        options={ migratedSketchOptions }
         persistedJob={ persistedJob }
         sketchFormValues={ formValues }
         sketchFormConfiguration={ formConfiguration }
         capturing={ resolvedSearchParams.capturing === "" }
         backendRecording={ process.env.BACKEND_RECORDING === "true" }
         activeSlideIndex={
-          sketchOptions.slides?.length > 0 ? 0 : undefined
+          migratedSketchOptions.slides?.length > 0 ? 0 : undefined
         }
       >
         <SketchPage />

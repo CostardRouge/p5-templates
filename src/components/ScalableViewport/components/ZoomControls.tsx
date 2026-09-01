@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  Expand, Maximize, Minimize, Minus, Plus, Scan
+  Check, Expand, Maximize, Minus, MonitorPlay, Plus, Scan, SquareDashed
 } from "lucide-react";
 import type {
   LucideIcon
@@ -10,40 +10,141 @@ import clsx from "clsx";
 import {
   useState
 } from "react";
+import usePresentationMode from "@/hooks/usePresentationMode";
+import {
+  applyPresentationPreset,
+  togglePresentationAxis
+} from "@/lib/presentation/presentationMode";
 import type {
-  FullscreenMode
-} from "@/lib/fullscreen/constants";
+  PresentationAxis, PresentationPreset
+} from "@/lib/presentation/presentationMode";
 
 const buttonClassName = "h-full px-3 hover:bg-hover transition-colors group inline-flex items-center justify-center";
 const iconClassName = "w-4 h-4 text-foreground/70 group-hover:text-foreground transition-colors";
 
-export type FullscreenControls = {
-  // Desktop with a supported Fullscreen API — otherwise the menu is not shown.
-  available: boolean;
-  isFullscreen: boolean;
-  onEnter: ( mode: FullscreenMode ) => void;
-  onExit: () => void;
-};
+// The presets are the cells of the matrix worth naming; the toggles below them
+// reach the rest. Ordered most-committed first, so "Present" — the shop/expo
+// mode — is the one under the pointer when the menu opens.
+//
+// Two of them set a single axis and so duplicate a toggle six rows down
+// ("Focus" = Fullscreen, "Clean preview" = Hide interface). That is deliberate:
+// a named row reaches someone who would not think to reason in axes. What they
+// must NOT carry is that toggle's shortcut hint — a preset sets all three axes
+// at once while the key flips one, so from anywhere but idle they part ways
+// (from "Present", F un-fullscreens and leaves hide+stretch on; it does not
+// apply "Focus"). The hint belongs to the toggle; only "Present" keeps a key,
+// because nothing else claims P.
+const PRESETS: {
+  preset: PresentationPreset;
+  icon: LucideIcon;
+  label: string;
+  hint: string;
+  /** Needs the Fullscreen API, so desktop-only. */
+  needsFullscreen: boolean;
+}[] = [
+  {
+    preset: "present",
+    icon: MonitorPlay,
+    label: "Present",
+    hint: "P",
+    needsFullscreen: true
+  },
+  {
+    preset: "presentSketchRatio",
+    icon: MonitorPlay,
+    label: "Present (sketch ratio)",
+    hint: "",
+    needsFullscreen: true
+  },
+  {
+    preset: "focus",
+    icon: Maximize,
+    label: "Focus",
+    hint: "",
+    needsFullscreen: true
+  },
+  {
+    preset: "fillPage",
+    icon: Expand,
+    label: "Fill the page",
+    hint: "",
+    needsFullscreen: false
+  },
+  {
+    preset: "cleanPreview",
+    icon: SquareDashed,
+    label: "Clean preview",
+    hint: "",
+    needsFullscreen: false
+  }
+];
+
+const AXES: {
+  axis: PresentationAxis;
+  label: string;
+  hint: string;
+  needsFullscreen: boolean;
+}[] = [
+  {
+    axis: "fullscreen",
+    label: "Fullscreen",
+    hint: "F",
+    needsFullscreen: true
+  },
+  {
+    axis: "hideInterface",
+    label: "Hide interface",
+    hint: "H",
+    needsFullscreen: false
+  },
+  {
+    axis: "stretchCanvas",
+    label: "Stretch canvas",
+    hint: "L",
+    needsFullscreen: false
+  }
+];
 
 const MenuItem = ( {
   icon: Icon,
+  checked,
   label,
   hint,
   onClick
 }: {
-  icon: LucideIcon;
+  icon?: LucideIcon;
+  // Omitted for the presets (plain commands); a boolean turns the row into a
+  // checkbox showing whether that axis is currently on.
+  checked?: boolean;
   label: string;
   hint: string;
   onClick: () => void;
 } ) => (
   <button
     type="button"
-    role="menuitem"
+    role={ checked === undefined ? "menuitem" : "menuitemcheckbox" }
+    aria-checked={ checked }
     onClick={ onClick }
     className="flex w-full items-center gap-2.5 px-3 py-2 text-left hover:bg-hover transition-colors group"
   >
-    <Icon className="w-4 h-4 shrink-0 text-foreground/70 group-hover:text-foreground transition-colors" />
-    <span className="flex-1 text-sm text-foreground/90 group-hover:text-foreground">{label}</span>
+    {checked === undefined
+      ? Icon && <Icon className="w-4 h-4 shrink-0 text-foreground/70 group-hover:text-foreground transition-colors" />
+      : (
+        <Check
+          className={ clsx(
+            "w-4 h-4 shrink-0 transition-colors",
+            checked ? "text-foreground" : "text-transparent"
+          ) }
+        />
+      )}
+    <span
+      className={ clsx(
+        "flex-1 text-sm group-hover:text-foreground",
+        checked ? "text-foreground" : "text-foreground/90"
+      ) }
+    >
+      {label}
+    </span>
     <span className="text-[0.65rem] uppercase tracking-wide text-foreground/40">{hint}</span>
   </button>
 );
@@ -54,7 +155,7 @@ const ZoomControls = ( {
   onMinus,
   onFit,
   onReset,
-  fullscreen,
+  showPresentation = true,
   disabled = false,
   variant = "floating"
 }: {
@@ -63,8 +164,8 @@ const ZoomControls = ( {
   onMinus: () => void;
   onReset: () => void;
   onFit: () => void;
-  // Fullscreen options, revealed by hovering the "fit to viewport" button.
-  fullscreen?: FullscreenControls;
+  // Presentation options, revealed by hovering the "fit to viewport" button.
+  showPresentation?: boolean;
   // Recording owns the engine clock — surface the controls as inert so a
   // stray zoom can't disturb an in-flight capture.
   disabled?: boolean;
@@ -77,7 +178,12 @@ const ZoomControls = ( {
     setMenuOpen
   ] = useState( false );
 
-  const showMenu = Boolean( fullscreen?.available ) && !disabled;
+  const presentation = usePresentationMode();
+
+  // Fullscreen is the only axis the platform can refuse; hiding the interface
+  // and stretching the canvas work everywhere, so the menu is worth showing
+  // even where the Fullscreen API is not.
+  const showMenu = showPresentation && !disabled;
   const closeMenu = () => setMenuOpen( false );
   const openMenu = () => {
     if ( showMenu ) {
@@ -133,7 +239,7 @@ const ZoomControls = ( {
         <Plus className={ iconClassName } />
       </button>
 
-      {/* Fit to viewport — hovering (or focusing) it reveals the fullscreen
+      {/* Fit to viewport — hovering (or focusing) it reveals the presentation
           menu; a plain click still fits. */}
       <button
         onClick={ onFit }
@@ -141,7 +247,7 @@ const ZoomControls = ( {
         onFocus={ openMenu }
         disabled={ disabled }
         className={ buttonClassName }
-        title={ showMenu ? "Fit to viewport — hover for fullscreen" : "Fit to viewport" }
+        title={ showMenu ? "Fit to viewport — hover for presentation modes" : "Fit to viewport" }
         aria-label="Fit to viewport"
         aria-haspopup={ showMenu ? "menu" : undefined }
         aria-expanded={ showMenu ? menuOpen : undefined }
@@ -157,40 +263,39 @@ const ZoomControls = ( {
     // and the menu closes before the pointer can reach it.
     <div
       role="menu"
-      className="absolute right-0 top-full z-[60] min-w-[13rem] overflow-hidden rounded-xl border border-border bg-background/95 backdrop-blur-xl shadow-lg"
+      className="absolute right-0 top-full z-[60] min-w-[15rem] overflow-hidden rounded-xl border border-border bg-background/95 backdrop-blur-xl shadow-lg"
     >
-      {fullscreen!.isFullscreen ? (
-        <MenuItem
-          icon={ Minimize }
-          label="Exit fullscreen"
-          hint="Esc"
-          onClick={ () => {
-            fullscreen!.onExit();
-            closeMenu();
-          } }
-        />
-      ) : (
-        <>
+      {/* Named cells of the matrix. */}
+      {PRESETS
+        .filter( ( entry ) => presentation.isFullscreenSupported || !entry.needsFullscreen )
+        .map( ( entry ) => (
           <MenuItem
-            icon={ Maximize }
-            label="Fullscreen"
-            hint="keep UI"
+            key={ entry.preset }
+            icon={ entry.icon }
+            label={ entry.label }
+            hint={ entry.hint }
             onClick={ () => {
-              fullscreen!.onEnter( "hud" );
+              applyPresentationPreset( entry.preset );
               closeMenu();
             } }
           />
+        ) )}
+
+      <div className="h-px bg-border" />
+
+      {/* The three axes themselves — every other combination lives here. The
+          menu stays open: setting a mode usually means setting two of them. */}
+      {AXES
+        .filter( ( entry ) => presentation.isFullscreenSupported || !entry.needsFullscreen )
+        .map( ( entry ) => (
           <MenuItem
-            icon={ Expand }
-            label="Fill screen"
-            hint="canvas only"
-            onClick={ () => {
-              fullscreen!.onEnter( "bare" );
-              closeMenu();
-            } }
+            key={ entry.axis }
+            checked={ presentation[ entry.axis ] }
+            label={ entry.label }
+            hint={ entry.hint }
+            onClick={ () => togglePresentationAxis( entry.axis ) }
           />
-        </>
-      )}
+        ) )}
     </div>
   ) : null;
 

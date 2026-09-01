@@ -4,9 +4,7 @@ import options from "../../options.js";
 import {
   getP5
 } from "../../sketch";
-import {
-  reportItemBounds
-} from "./itemBoundsRegistry.js";
+import reportTextItemBounds from "./textItemBounds.js";
 
 const parseFloatDefault = (
   value, _default = 0.015
@@ -51,6 +49,7 @@ export default function drawSlideTitle( titleOption ) {
   }
 
   const p = getP5();
+  const font = getFont( titleOption.font );
   const horizontalMargin = parseFloatDefault( titleOption.margin?.horizontal );
   const verticalMargin = parseFloatDefault( titleOption.margin?.vertical );
 
@@ -62,13 +61,13 @@ export default function drawSlideTitle( titleOption ) {
   const horizontalAlign = titleOption.alignment?.horizontal ?? "center";
   const verticalAlign = titleOption.alignment?.vertical ?? "center";
 
-  string.write(
+  const box = string.write(
     text,
     x,
     y,
     {
       size,
-      font: getFont( titleOption.font ),
+      font,
       textAlign: [
         horizontalAlign,
         verticalAlign
@@ -83,11 +82,30 @@ export default function drawSlideTitle( titleOption ) {
     }
   );
 
-  // Report an approximate glyph rectangle so the item can be grabbed on canvas.
-  reportItemBounds(
+  // Report the visible glyph rectangle so the title can be grabbed on canvas by
+  // its letters. The default title is the sketch name broken on hyphens, so it
+  // is routinely multi-line — hand the helper a per-line measure rather than let
+  // it read a single-run measurement of the whole block.
+  reportTextItemBounds( {
+    text,
+    box,
     x,
     y,
-    textWidth,
-    textHeight
-  );
+    layoutWidth: textWidth,
+    layoutHeight: textHeight,
+    size,
+    horizontalAlign,
+    verticalAlign,
+    measureLine: ( line ) => {
+      p.push();
+      p.textFont( font );
+      p.textSize( size );
+
+      const width = p.textWidth( line );
+
+      p.pop();
+
+      return width;
+    }
+  } );
 }

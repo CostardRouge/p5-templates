@@ -1,4 +1,4 @@
-import HardLink from "@/components/HardLink";
+import Link from "next/link";
 import CompactProgressBar from "@/components/CompactProgressBar";
 import {
   getRecordingSteps
@@ -111,7 +111,7 @@ export default function RecordingCard( {
       <div className="p-2 sm:p-4 space-y-2 sm:space-y-3">
         {/* Sketch & ID */}
         <div className="space-y-1 sm:space-y-1.5">
-          <HardLink
+          <Link
             href={ `/${ job.sketch }` }
             className="block text-xs sm:text-sm font-semibold text-foreground hover:text-foreground/70 transition-colors truncate group/link"
           >
@@ -119,9 +119,9 @@ export default function RecordingCard( {
             <span className="inline-block ml-1 opacity-0 group-hover/link:opacity-100 transition-opacity">
               →
             </span>
-          </HardLink>
+          </Link>
 
-          <HardLink
+          <Link
             href={ `/${ job.sketch }?id=${ job.id }` }
             className="block text-[10px] sm:text-xs font-mono text-foreground/60 hover:text-foreground/80 transition-colors group/link"
           >
@@ -140,7 +140,7 @@ export default function RecordingCard( {
             <span className="inline-block ml-1 opacity-0 group-hover/link:opacity-100 transition-opacity">
               →
             </span>
-          </HardLink>
+          </Link>
         </div>
 
         {/* Metadata */}

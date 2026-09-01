@@ -8,7 +8,7 @@ import sketch, {
 } from "@/p5/utils/sketch.js";
 import events from "@/p5/utils/events.js";
 import animation from "@/p5/utils/animation.js";
-import imageUtils from "@/p5/utils/imageUtils.js";
+import * as common from "@/p5/utils/common.js";
 
 // seam-hugging default swap-zone position per collage direction
 const SEAM_DEFAULTS = {
@@ -23,8 +23,50 @@ const SEAM_DEFAULTS = {
 };
 
 const sketchState = {
-  lastDirection: null
+  lastDirection: null,
+  // which entry of the photo list owns the zone currently on screen, so a
+  // click writes onto the pair the user is actually looking at
+  activeIndex: 0
 };
+
+function isPoint( value ) {
+  return Boolean( value ) && typeof value.x === "number" && typeof value.y === "number";
+}
+
+// The photo list. Each entry carries its own swap-zone position, so the value a
+// click stores travels with the photo when the list is reordered.
+function getItems() {
+  return Array.isArray( options.sketch.items ) ? options.sketch.items : [];
+}
+
+// Rewrite one entry of the list. The whole array goes back through the option
+// sync (it replaces arrays wholesale rather than merging them element by
+// element), so the other entries are passed through untouched.
+function setItemPosition(
+  index, position
+) {
+  const items = getItems();
+
+  if ( !items[ index ] ) {
+    return;
+  }
+
+  setSketchOptions(
+    {
+      sketch: {
+        items: items.map( (
+          item, itemIndex
+        ) => ( itemIndex === index
+          ? {
+            ...item,
+            position
+          }
+          : item ) )
+      }
+    },
+    "p5"
+  );
+}
 
 // object-fit: cover via the 9-arg p5 image() — the crop happens at the
 // source rect, so a zoomed background never bleeds outside its half.
@@ -219,20 +261,17 @@ function handleCanvasClick( event ) {
     position = mirrorPosition( position );
   }
 
-  setSketchOptions(
-    {
-      sketch: {
-        swapZone: {
-          position
-        }
-      }
-    },
-    "p5"
+  // the zone belongs to the pair on screen, and the pair is named by its first
+  // photo — the one whose entry the form shows the position on
+  setItemPosition(
+    sketchState.activeIndex,
+    position
   );
 }
 
-// when the direction flips and the position is still the previous direction's
-// untouched seam default, follow the new seam; custom positions are kept
+// when the direction flips, every photo still sitting on the previous
+// direction's untouched seam default follows the new seam; positions that were
+// actually placed are kept
 function syncSeamDefaultOnDirectionChange( direction ) {
   if ( sketchState.lastDirection === null || sketchState.lastDirection === direction ) {
     sketchState.lastDirection = direction;
@@ -240,24 +279,33 @@ function syncSeamDefaultOnDirectionChange( direction ) {
   }
 
   const previousDefault = SEAM_DEFAULTS[ sketchState.lastDirection ];
-  const position = options.sketch.swapZone?.position;
-
-  if ( position?.x === previousDefault.x && position?.y === previousDefault.y ) {
-    setSketchOptions(
-      {
-        sketch: {
-          swapZone: {
-            position: {
-              ...SEAM_DEFAULTS[ direction ]
-            }
-          }
-        }
-      },
-      "p5"
-    );
-  }
+  const nextDefault = SEAM_DEFAULTS[ direction ];
+  const items = getItems();
+  const stale = items.some( ( item ) =>
+    item?.position?.x === previousDefault.x && item?.position?.y === previousDefault.y );
 
   sketchState.lastDirection = direction;
+
+  if ( !stale ) {
+    return;
+  }
+
+  setSketchOptions(
+    {
+      sketch: {
+        items: items.map( ( item ) =>
+          ( item?.position?.x === previousDefault.x && item?.position?.y === previousDefault.y
+            ? {
+              ...item,
+              position: {
+                ...nextDefault
+              }
+            }
+            : item ) )
+      }
+    },
+    "p5"
+  );
 }
 
 sketch.setup( () => {
@@ -282,9 +330,9 @@ sketch.draw( () => {
 
   syncSeamDefaultOnDirectionChange( direction );
 
-  const images = imageUtils.getImages();
+  const items = getItems();
 
-  if ( images.length < 2 ) {
+  if ( items.length < 2 ) {
     return;
   }
 
@@ -292,7 +340,7 @@ sketch.draw( () => {
   // statically, extra pairs share the loop; an odd leftover image is ignored
   const pairCount = Math.max(
     1,
-    Math.floor( images.length / 2 )
+    Math.floor( items.length / 2 )
   );
   const pairPosition = animation.progression * pairCount;
   const pairIndex = Math.min(
@@ -301,12 +349,17 @@ sketch.draw( () => {
   );
   const pairProgression = pairPosition - Math.floor( pairPosition );
 
-  const firstImage = images[ pairIndex * 2 ]?.img;
-  const secondImage = images[ pairIndex * 2 + 1 ]?.img;
+  const firstItem = items[ pairIndex * 2 ];
+  const firstImage = common.getAsset( firstItem?.photo )?.img;
+  const secondImage = common.getAsset( items[ pairIndex * 2 + 1 ]?.photo )?.img;
 
   if ( !firstImage || !secondImage ) {
+    // an asset still loading, or a row with no photo picked yet
     return;
   }
+
+  // a click writes onto the photo that owns this pair's zone
+  sketchState.activeIndex = pairIndex * 2;
 
   const [
     halfA,
@@ -332,7 +385,9 @@ sketch.draw( () => {
   // (drawn on half B) that rect B covers, and vice versa — a true swap
   const rectWidth = o.swapZone.width * p.width;
   const rectHeight = o.swapZone.height * p.height;
-  const positionA = o.swapZone.position ?? SEAM_DEFAULTS[ direction ];
+  const positionA = isPoint( firstItem.position )
+    ? firstItem.position
+    : SEAM_DEFAULTS[ direction ];
   const positionB = mirrorPosition( positionA );
   const cropContent = ( o.swapZone.content ?? "crop" ) === "crop";
 

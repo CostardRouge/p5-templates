@@ -307,6 +307,22 @@ export function toSketchRelativePath( registeredName: string ): string | null {
   return String( registeredName ).slice( scope.length + 1 );
 }
 
+/**
+ * The `interactive` namespace scope paired with a sketch-settings scope —
+ * where the binding system stores its data (`bindings`, and the plugin-managed
+ * `interaction` block), OUTSIDE the sketch's own parameters:
+ *   "sketch"          → "interactive"
+ *   "slides.2.sketch" → "slides.2.interactive"
+ */
+export function interactiveScopeFor( sketchScope: string ): string {
+  return sketchScope === "sketch"
+    ? "interactive"
+    : sketchScope.replace(
+      /\.sketch$/,
+      ".interactive"
+    );
+}
+
 // ── Default binding factory ─────────────────────────────────────────────────
 
 function makeId(): string {
@@ -324,11 +340,20 @@ function makeId(): string {
  * Build a sensible default binding for a field, pre-filling the mapping range
  * from the field's configured min/max so the modulation lands in a useful
  * range out of the box.
+ *
+ * A continuous target starts on the OSCILLATOR, not an input channel: a
+ * generator computes from the sketch's own progression, so creating a binding
+ * needs no interaction block, asks for no camera/mic, and stays deterministic
+ * under recording — the parameter simply starts animating. Reaching for a live
+ * input is then an explicit choice in the source selector (which seeds the
+ * interaction block at that point — see enableSourceInputs).
+ *
+ * A vector2d target has no generator family (mapVector reads a channel), so it
+ * starts on the first input source instead.
  */
 export function makeDefaultBinding(
   target: string,
   kind: BindingKind,
-  source: SourceOption,
   config: FieldConfig
 ): Binding {
   const anyConfig = config as any;
@@ -336,6 +361,7 @@ export function makeDefaultBinding(
   if ( kind === "vector2d" ) {
     const min = anyConfig.min ?? 0;
     const max = anyConfig.max ?? 1;
+    const source = channelSourceOptions( kind )[ 0 ];
 
     return {
       id: makeId(),
@@ -361,10 +387,12 @@ export function makeDefaultBinding(
 
   return {
     id: makeId(),
-    source: source.source,
-    project: source.project,
+    source: "oscillator",
     target,
     kind: "continuous",
+    oscillator: {
+      ...DEFAULT_OSCILLATOR
+    },
     mapping: {
       min: anyConfig.min ?? 0,
       max: anyConfig.max ?? 1,

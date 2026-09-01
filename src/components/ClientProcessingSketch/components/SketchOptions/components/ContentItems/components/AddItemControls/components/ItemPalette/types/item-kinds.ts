@@ -5,11 +5,22 @@ export type ItemKind =
   | "meta"
   | "specs"
   | "breakdown"
-  | "hud"
+  | "hud-badge"
+  | "hud-gauge"
+  | "hud-sparkline"
+  | "hud-counter"
+  | "hud-crosshairs"
+  | "hud-swatch"
+  | "hud-bounding-box"
   | "image"
   | "images-stack"
   | "background"
   | "qrcode";
+
+export type ItemKindGroup = {
+  label: string;
+  kinds: ItemKind[];
+};
 
 export type ItemKindMeta = {
   label: string;

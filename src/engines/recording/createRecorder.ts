@@ -27,6 +27,15 @@ export type CreateRecorderOptions = {
   host: RecorderHost;
   format: RecordingFormat;
   mode: RecordingMode;
+  /**
+   * Mux the sketch's audio when a bridge is registered. Defaults to `true`.
+   *
+   * Set `false` for a capture that stitches several slides into one clip: the
+   * audio engine logs events against the sketch's *deterministic* time, which
+   * restarts at zero on every slide, so a single offline render would stack
+   * every slide's audio on top of the first slide's span.
+   */
+  audio?: boolean;
 };
 
 /**
@@ -42,7 +51,7 @@ export type CreateRecorderOptions = {
  */
 export function createRecorder( opts: CreateRecorderOptions ): Recorder {
   const {
-    host, format, mode
+    host, format, mode, audio = true
   } = opts;
 
   if ( format === "gif" && mode !== "async-loop" ) {
@@ -76,7 +85,7 @@ export function createRecorder( opts: CreateRecorderOptions ): Recorder {
     // buffer once the frame loop ends. Video-only sketches register no
     // bridge — no audio track is added and the output is identical to
     // before.
-    const audioOpts = getAudioBridge()
+    const audioOpts = audio && getAudioBridge()
       ? {
         sampleRate: DEFAULT_AUDIO_SAMPLE_RATE,
         numberOfChannels: DEFAULT_AUDIO_CHANNELS

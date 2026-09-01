@@ -20,15 +20,22 @@ import {
 import ControlledSliderInput
   from "../ContentItems/components/ControlledSliderInput/ControlledSliderInput";
 import {
+  needsInteractionBlock
+} from "@/p5/utils/interaction/bindings.js";
+import {
   type Binding,
   bindingSourceLabel,
-  humanizeTarget
+  humanizeTarget,
+  interactiveScopeFor
 } from "../ContentItems/components/BindingAffordance/bindingUtils";
 
 type Props = {
   /** The sketch-settings scope whose bindings this manages ("sketch" or
    *  "slides.N.sketch") — mirrors the SketchSettings form's base path. */
   basePath: string;
+  /** Bottom offset override so the mixer clears the slide filmstrip (a CSS
+   *  length; defaults to the plain bottom-4 float). */
+  bottomOffset?: string;
 };
 
 /**
@@ -44,16 +51,21 @@ type Props = {
  * hidden entirely when the scope has no bindings.
  */
 export default function InteractivePanel( {
-  basePath
+  basePath,
+  bottomOffset
 }: Props ) {
   const {
-    setValue
+    setValue, getValues
   } = useFormContext();
   const [
     expanded,
     setExpanded
   ] = useState( false );
-  const bindingsPath = `${ basePath }.bindings`;
+  // Binding data lives in the `interactive` namespace paired with the scope's
+  // sketch settings ("sketch" → "interactive", "slides.N.sketch" →
+  // "slides.N.interactive") — never inside the sketch parameters.
+  const interactiveScope = interactiveScopeFor( basePath );
+  const bindingsPath = `${ interactiveScope }.bindings`;
   const bindings = useWatch( {
     name: bindingsPath
   } ) as Binding[] | undefined;
@@ -123,15 +135,34 @@ export default function InteractivePanel( {
   };
 
   const removeAt = ( index: number ) => {
+    const next = list.filter( (
+      _, j
+    ) => j !== index );
+
     setValue(
       bindingsPath,
-      list.filter( (
-        _, j
-      ) => j !== index ),
+      next,
       {
         shouldDirty: true
       }
     );
+
+    // Mirrors BindingAffordance.pruneInteractionIfUnused: the mixer can also
+    // remove the scope's last binding that needed the interaction block. Only
+    // the plugin-managed block in the `interactive` namespace is pruned — a
+    // sketch-declared `sketch.interaction` is a real parameter and stays.
+    if (
+      !needsInteractionBlock( next ) &&
+      getValues( `${ interactiveScope }.interaction` ) !== undefined
+    ) {
+      setValue(
+        `${ interactiveScope }.interaction`,
+        undefined,
+        {
+          shouldDirty: true
+        }
+      );
+    }
   };
 
   const clearSolos = () => {
@@ -150,11 +181,16 @@ export default function InteractivePanel( {
   return (
     <div
       className={ clsx(
-        "absolute bottom-4 left-1/2 z-50 flex -translate-x-1/2 flex-col glass border border-theme shadow-lg overflow-hidden",
-        expanded
-          ? "w-80 max-w-[calc(100vw-1rem)] rounded-2xl"
-          : "rounded-full"
+        // Constant width and radius across expanded/collapsed: switching
+        // w-80 <-> w-fit and rounded-2xl <-> rounded-full is not animatable
+        // and snapped the panel into a pill while its height was still
+        // interpolating. Only the height animates now.
+        "absolute left-1/2 z-50 flex w-80 max-w-[calc(100vw-1rem)] -translate-x-1/2 flex-col glass border border-theme shadow-lg overflow-hidden rounded-2xl",
+        !bottomOffset && "bottom-4"
       ) }
+      style={ bottomOffset ? {
+        bottom: bottomOffset
+      } : undefined }
     >
       <button
         type="button"

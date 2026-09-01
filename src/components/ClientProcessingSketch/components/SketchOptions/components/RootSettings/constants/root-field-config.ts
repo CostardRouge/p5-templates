@@ -2,9 +2,6 @@ import {
   FieldConfig,
   SelectOption
 } from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/constants/field-config";
-import {
-  FULLSCREEN_PRESETS
-} from "@/lib/fullscreen/constants";
 
 const createFormatOption = (
   width: number,
@@ -17,15 +14,11 @@ const createFormatOption = (
   group
 } );
 
+// Real canvas resolutions only. Fullscreen used to smuggle two sentinel
+// entries in here, which forced every other consumer (the export size cell,
+// the embed dialog) to filter them back out — it is a presentation mode, not a
+// size, and lives in the zoom controls' menu now.
 export const formatOptions: SelectOption[] = [
-  // Desktop-only fullscreen modes. Not fixed W×H — the size select recognises
-  // these sentinels and drives the browser Fullscreen API instead (rendered
-  // only where supported). See ControlledFormatSelect / fullscreenViewport.
-  ...FULLSCREEN_PRESETS.map( ( preset ) => ( {
-    label: preset.label,
-    value: preset.value
-  } ) ),
-
   // square
   createFormatOption(
     768,

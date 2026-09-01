@@ -982,6 +982,11 @@ function _collectMouse(
     return;
   }
 
+  // Lazily wire the raw pointer listeners, like _initGyro: the engine only
+  // boots initInteraction() at setup when a source is already enabled, so a
+  // mouse source toggled on at runtime must arm tracking itself (idempotent).
+  ensurePointerTracking();
+
   // `offset` is the vector2d pad value; offsetX/offsetY are kept as a fallback
   // for options saved before the two sliders were merged into one pad.
   const ox = mouse.offset?.x ?? mouse.offsetX ?? 0;
@@ -1047,6 +1052,10 @@ function _collectTouch(
   if ( !touch?.enabled ) {
     return;
   }
+
+  // Same runtime-toggle story as _collectMouse: without the setup boot, the
+  // touch listeners must be armed from the collector (idempotent).
+  ensurePointerTracking();
 
   const rawTouches = getRawTouches();
   const maxTouches = touch.maxTouches ?? 5;

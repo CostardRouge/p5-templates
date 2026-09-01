@@ -13,7 +13,7 @@ import {
   Trash2,
   X
 } from "lucide-react";
-import HardLink from "@/components/HardLink";
+import NextLink from "next/link";
 import fetchDownload from "@/utils/fetchDownload";
 import DownloadMenuItems from "./DownloadMenuItems";
 import type {
@@ -23,6 +23,9 @@ import React, {
   useRef
 } from "react";
 import Toast from "@/components/Toast";
+import {
+  HIDDEN_FILE_INPUT_CLASS
+} from "@/components/hiddenFileInput";
 
 interface ActionsMenuProps {
   job: JobModel;
@@ -209,7 +212,7 @@ export default function ActionsMenu( {
             {( {
               focus
             } ) => (
-              <HardLink
+              <NextLink
                 href={ `/${ job.sketch }?id=${ job.id }` }
                 className={ `${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors` }
               >
@@ -223,14 +226,14 @@ export default function ActionsMenu( {
                     )}
                   </p>
                 </div>
-              </HardLink>
+              </NextLink>
             )}
           </MenuItem>
           <MenuItem>
             {( {
               focus
             } ) => (
-              <HardLink
+              <NextLink
                 href={ `/${ job.sketch }` }
                 className={ `${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors` }
               >
@@ -241,7 +244,7 @@ export default function ActionsMenu( {
                     {job.sketch}
                   </p>
                 </div>
-              </HardLink>
+              </NextLink>
             )}
           </MenuItem>
 
@@ -287,7 +290,7 @@ export default function ActionsMenu( {
                 type="file"
                 accept=".json"
                 onChange={ handleFileChange }
-                className="hidden"
+                className={ HIDDEN_FILE_INPUT_CLASS }
               />
               <MenuItem>
                 {( {

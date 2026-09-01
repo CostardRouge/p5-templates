@@ -1,16 +1,20 @@
 import {
-  HudBadgeSchema, HudItemSchema, BADGE_SEGMENTS
+  HudBadgeItemSchema, BADGE_SEGMENTS
 } from "@/types/sketch.types";
 
 describe(
-  "HUD badge revamp",
+  "HUD badge element schema",
   () => {
     it(
-      "defaults to the sketch identity segments, off, no override",
+      "defaults to the sketch identity segments, enabled, no override",
       () => {
-        const badge = HudBadgeSchema.parse( {} );
+        const badge = HudBadgeItemSchema.parse( {
+          type: "hud-badge"
+        } );
 
-        expect( badge.enabled ).toBe( false );
+        // Standalone elements default to enabled: a layer added from the
+        // palette must show up (the legacy container slot defaulted off).
+        expect( badge.enabled ).toBe( true );
         expect( badge.segments ).toEqual( [
           "engine",
           "category",
@@ -21,16 +25,25 @@ describe(
     );
 
     it(
-      "is reachable through a fresh HUD item",
+      "carries its own full style with the old container defaults",
       () => {
-        const hud = HudItemSchema.parse( {
-          type: "hud"
+        const badge = HudBadgeItemSchema.parse( {
+          type: "hud-badge"
         } );
 
-        expect( hud.badge.segments ).toEqual( [
-          "engine",
-          "category",
-          "name"
+        expect( badge.fill ).toEqual( [
+          0,
+          255,
+          120,
+          255
+        ] );
+        expect( badge.font ).toBe( "spaceMonoRegular" );
+        expect( badge.blend ).toBe( "source-over" );
+        expect( badge.backgroundColor ).toEqual( [
+          0,
+          0,
+          0,
+          0
         ] );
       }
     );
@@ -38,7 +51,8 @@ describe(
     it(
       "keeps a user-picked order and preserves duplicates",
       () => {
-        const badge = HudBadgeSchema.parse( {
+        const badge = HudBadgeItemSchema.parse( {
+          type: "hud-badge",
           segments: [
             "name",
             "fps",
@@ -59,7 +73,8 @@ describe(
     it(
       "heals a stale/unknown token instead of throwing",
       () => {
-        const badge = HudBadgeSchema.parse( {
+        const badge = HudBadgeItemSchema.parse( {
+          type: "hud-badge",
           segments: [
             "engine",
             "bogus",

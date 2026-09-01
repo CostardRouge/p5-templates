@@ -16,9 +16,17 @@ import addScreenPositionFunction from "@/utils/addScreenPositionFunction.js";
 
 const interactive = {
   currentTimeValue: 0,
-  graphics: null,
   position: null,
   image: null
+};
+
+// The boxes live in their own WEBGL buffer instead of on the main canvas: the
+// cursor artwork is a flat 2D overlay, and drawing it inside the 3D scene made
+// it share the depth buffer and the scene's rotation, so it sank into (and got
+// clipped by) the boxes. Same split the other interactive sketches use
+// (36days-4/5/7, rings-v8/v9): 3D offscreen, cursor on a plain 2D canvas on top.
+const shape = {
+  graphics: null
 };
 
 events.register(
@@ -26,29 +34,24 @@ events.register(
   () => {
     const p = getP5();
 
-    interactive.image = p.loadImage( "/assets/images/handpointing.png" );
+    interactive.image = p.loadImage( "/assets/images/cursors/handpointing.png" );
   }
 );
 
-sketch.setup(
-  async( {
-    canvas
-  } ) => {
-    const p = getP5();
+sketch.setup( async() => {
+  const p = getP5();
 
-    interactive.graphics = p.createGraphics(
-      p.width,
-      p.height
-    );
+  shape.graphics = p.createGraphics(
+    p.width,
+    p.height,
+    "webgl"
+  );
 
-    p.background( ...getBackgroundColor() );
+  p.background( ...getBackgroundColor() );
 
-    await addScreenPositionFunction( p );
-  },
-  {
-    type: "webgl"
-  }
-);
+  // screenPosition has to read the 3D buffer's matrices, not the 2D canvas'.
+  await addScreenPositionFunction( shape.graphics );
+} );
 
 // Multi-layer boolean mask delegated to the shared gridMask utility. Each font
 // layer's per-cell field is computed once (spatial-hash accelerated) and
@@ -108,8 +111,22 @@ const getBackgroundColor = () =>
 sketch.draw( async() => {
   const p = getP5();
 
+  if ( !shape.graphics ) {
+    return;
+  }
+
+  const g = shape.graphics;
+
+  if ( g.width !== p.width || g.height !== p.height ) {
+    g.resizeCanvas(
+      p.width,
+      p.height
+    );
+  }
+
   p.clear();
   p.background( ...getBackgroundColor() );
+  g.clear();
 
   const size = options.sketch?.shape?.size * p.width ?? p.width;
   const sampleFactor = options.sketch?.shape?.sampleFactor ?? 0.1;
@@ -187,6 +204,27 @@ sketch.draw( async() => {
     cacheKey
   );
 
+  // Resolved before the boxes are drawn so the field they react to and the
+  // cursor drawn on top belong to the same frame (they used to be one frame
+  // apart, which showed as lag during capture).
+  if ( options.sketch.interactive.enabled ) {
+    interactive.position = options.sketch.interactive.mouse
+      ? p.createVector(
+        p.mouseX - p.width / 2,
+        p.mouseY - p.height / 2
+      )
+      : p.createVector(
+        p.sin( animation.angle * options.sketch.interactive.sinMultiplier ) *
+          ( -p.width / 2 ) *
+          0.8,
+        p.cos( animation.angle * options.sketch.interactive.cosMultiplier ) *
+          ( -p.height / 2 ) *
+          0.8
+      );
+  } else {
+    interactive.position = null;
+  }
+
   if ( options.sketch?.animation?.rotate ?? true ) {
     const rotationMax = p.PI * ( options.sketch?.animation?.rotationCount ?? 2 );
 
@@ -215,8 +253,8 @@ sketch.draw( async() => {
       // easingFn: easing.easeInOutCirc,
     } );
 
-    p.rotateX( rX );
-    p.rotateY( rY );
+    g.rotateX( rX );
+    g.rotateY( rY );
   }
 
   alphaPoints.forEach( (
@@ -285,20 +323,20 @@ sketch.draw( async() => {
       ]
     } = tint;
 
-    p.push();
+    g.push();
 
     const w = cellSize; // -2
     const h = cellSize; // -2
     const d = cellSize * ( options.sketch?.shape?.depth ?? 20 );
 
-    p.translate( position );
+    g.translate( position );
 
     const fillAlphaStart = options.sketch?.color?.fillAlphaStart ?? 240;
     const fillAlphaEnd = options.sketch?.color?.fillAlphaEnd ?? 0;
     const strokeAlpha = options.sketch?.color?.strokeAlpha ?? 200;
 
     if ( options.sketch.interactive.enabled && interactive.position ) {
-      const screenPos = p.screenPosition(
+      const screenPos = g.screenPosition(
         0,
         0,
         0
@@ -342,54 +380,51 @@ sketch.draw( async() => {
       easingFn: easing.easeInOutExpo
     } );
 
-    p.fill(
+    g.fill(
       red,
       green,
       blue,
       fillAlpha
     );
-    p.stroke(
+    g.stroke(
       red,
       green,
       blue,
       strokeAlpha
     );
-    p.box(
+    g.box(
       w,
       h,
       -d
     );
 
-    p.pop();
+    g.pop();
   } );
 
-  if ( options.sketch.interactive.enabled ) {
-    if ( options.sketch.interactive.mouse ) {
-      interactive.position = p.createVector(
-        p.mouseX - p.width / 2,
-        p.mouseY - p.height / 2
-      );
-    } else {
-      interactive.position = p.createVector(
-        p.sin( animation.angle * options.sketch.interactive.sinMultiplier ) *
-          ( -p.width / 2 ) *
-          0.8,
-        p.cos( animation.angle * options.sketch.interactive.cosMultiplier ) *
-          ( -p.height / 2 ) *
-          0.8
-      );
+  // Flatten the 3D scene onto the 2D canvas…
+  p.image(
+    g,
+    0,
+    0
+  );
 
-      interactive.graphics.clear();
-      interactive.graphics.image(
-        interactive.image,
-        interactive.position.x,
-        interactive.position.y
-      );
-      p.image(
-        interactive.graphics,
-        0,
-        0
-      );
-    }
+  // …then the cursor on top of it, in plain 2D pixels: no depth buffer, no
+  // scene rotation, nothing left to intersect the boxes.
+  const drawCursor =
+    options.sketch.interactive.enabled &&
+    !options.sketch.interactive.mouse &&
+    interactive.position &&
+    interactive.image;
+
+  if ( drawCursor ) {
+    p.push();
+    p.imageMode( p.CORNER );
+    p.noStroke();
+    p.image(
+      interactive.image,
+      interactive.position.x + p.width / 2,
+      interactive.position.y + p.height / 2
+    );
+    p.pop();
   }
 } );

@@ -1,5 +1,5 @@
 import {
-  deepMerge, structuredClone
+  mergeChangedInPlace
 } from "./utils.js";
 
 export const EVENT = "sketch-options";
@@ -11,28 +11,16 @@ let current = globalThis.sketchOptions;
 export function setSketchOptions(
   update, origin = "react"
 ) {
-  const sourceClone = structuredClone( update );
-
-  const merged = deepMerge(
-    structuredClone( current ),
-    sourceClone
-  );
-
-  if ( JSON.stringify( merged ) === JSON.stringify( current ) ) {
+  // Mutate the store in place so existing references stay live, writing (and
+  // cloning) only the values that actually changed — no full-tree clones or
+  // JSON round-trips per update; this runs at pointer-drag frequency.
+  if ( !mergeChangedInPlace(
+    current,
+    update
+  ) ) {
     return;
   }
 
-  // Mutate in place so existing references stay live
-  for ( const key of Object.keys( current ) ) {
-    if ( !( key in merged ) ) {
-      delete current[ key ];
-    }
-  }
-
-  Object.assign(
-    current,
-    merged
-  );
   globalThis.sketchOptions = current;
 
   window.dispatchEvent( new CustomEvent(

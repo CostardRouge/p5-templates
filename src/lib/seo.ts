@@ -8,6 +8,7 @@ import {
 // Re-export all site constants so existing imports keep working
 export {
   APP_FEATURE_LIST,
+  HOME_DESCRIPTION,
   OG_IMAGE,
   SITE_AUTHOR,
   SITE_CATEGORY,
@@ -91,6 +92,21 @@ export function buildSketchKeywords(
     "creative coding",
     ...sketchName.split( "-" )
   ];
+}
+
+// ─── Share / embed page utilities ─────────────────────────────────────────────
+
+/** Page title for a shared sketch link: "Photo Balloons — Shared Sketch". */
+export function buildShareTitle( sketchTitle: string ): string {
+  return `${ sketchTitle } — Shared Sketch`;
+}
+
+/** Meta description for a shared sketch link (the /embed view). */
+export function buildShareDescription(
+  sketchTitle: string,
+  engineLabel: string
+): string {
+  return `${ sketchTitle } — a creative-coding sketch shared from ${ SITE_NAME }. Watch it render live in your browser, powered by ${ engineLabel }.`;
 }
 
 // ─── JSON-LD generators ───────────────────────────────────────────────────────

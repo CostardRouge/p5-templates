@@ -16,7 +16,7 @@ import type {
   SketchItem
 } from "@/app/sketches/getSketchesData";
 
-import Link from "@/components/HardLink";
+import Link from "next/link";
 import AnimatedPreview from "@/components/AnimatedPreview";
 import AnimationsToggle from "@/components/AnimationsToggle";
 import Toast from "@/components/Toast";
@@ -44,6 +44,9 @@ import {
 import {
   writePendingImport
 } from "@/lib/pendingImportOptions";
+import {
+  HIDDEN_FILE_INPUT_CLASS
+} from "@/components/hiddenFileInput";
 
 const OTHER_SECTION = "__other__";
 const GRID_CLASS =
@@ -547,7 +550,7 @@ export default function SketchesList( {
             type="file"
             accept=".json"
             onChange={ handleImportFileChange }
-            className="hidden"
+            className={ HIDDEN_FILE_INPUT_CLASS }
           />
           <button
             type="button"
@@ -1059,6 +1062,7 @@ function Thumbnail( {
 
   return (
     <img
+      data-pin-nopin="true"
       alt={ alt }
       src={ src }
       srcSet={ `${ src } 1x, ${ src2x } 2x` }

@@ -4,17 +4,14 @@ import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
 import string from "@/p5/utils/string.js";
-import imageUtils from "@/p5/utils/imageUtils.js";
 import * as common from "@/p5/utils/common.js";
-import animation from "@/p5/utils/animation.js";
 import easing from "@/p5/utils/easing.js";
-import mediapipe, {
-  init as mediapipeInit,
-  interact
+import {
+  init as mediapipeInit
 } from "@/p5/utils/mediapipe/mediapipe.js";
 import {
-  drawSegmentationMask
-} from "@/p5/utils/segmentation.js";
+  createMultiMaskSegmenter
+} from "@/p5/utils/multiSegmentation.js";
 import {
   setSketchOptions,
   subscribeSketchOptions
@@ -23,6 +20,27 @@ import {
   createDraggable,
   nearestTargetIndex
 } from "@/p5/utils/interaction/draggable.js";
+import {
+  clamp,
+  clamp01,
+  wrapAngle,
+  isPoint,
+  sanitizePoint,
+  resolveImagePath,
+  toPx,
+  mirrorPoint,
+  ensureLayerGraphics,
+  getInternalCanvasPoint,
+  createFocusPointStore,
+  createSubjectBuilder,
+  drawPhotoLayer,
+  drawBackdrop,
+  drawSubjectLayer,
+  drawMarkersLayer,
+  buildAngleSpine,
+  buildSplineSpine,
+  applyWave
+} from "../_shared.js";
 
 /* ------------------------------------------------------------------ */
 /*  photo-trail-effect-v1                                              */
@@ -34,8 +52,11 @@ import {
 /*                                                                     */
 /*    1. the full photo (original / blur / dim / color backdrop),      */
 /*    2. the trails,                                                   */
-/*    3. the subject cut out with MediaPipe's interactive segmenter    */
-/*       (click the canvas to pick the subject — an animal, a person). */
+/*    3. the subject cut out with MediaPipe's interactive segmenter.   */
+/*       Click the photo to pick a subject (an animal, a person, …) —  */
+/*       every click adds a focus point with its own mask, the cut-out */
+/*       is their union, and clicking a focus marker (the circle with  */
+/*       the minus) unpicks that zone again.                           */
 /*                                                                     */
 /*  Every trail is defined by draggable, persisted handles             */
 /*  (normalized 0..1 so they survive resizes and exports):             */
@@ -46,13 +67,15 @@ import {
 /*    - guide 1/2 (spline direction mode): control points that steer   */
 /*      the ribbon toward the canvas edge, rounded with the same       */
 /*      Chaikin corner-cutting as the splines category.                */
+/*                                                                     */
+/*  The photo stack, segmentation pipeline and spine geometry live in  */
+/*  ../_shared.js — this file owns what makes v1 v1: the pixel strips  */
+/*  sampled across the band and the ribbon slicing that stretches them */
+/*  along the spine.                                                   */
 /* ------------------------------------------------------------------ */
 
 // Slices overlap a hair so the ribbon has no seams on tight curves.
 const SLICE_OVERLAP = 1.5;
-// The wave offset eases in over this fraction of the ribbon so the root
-// stays glued to the band.
-const WAVE_RAMP = 0.18;
 const MAX_TRAILS = 12;
 
 /* ------------------------------------------------------------------ */
@@ -63,26 +86,16 @@ const state = {
   // Path of the photo currently driving the segmenter.
   imagePath: null,
 
-  // Last focus point sent to the segmenter, normalized (0-1) image space.
-  roi: {
-    x: 0.5,
-    y: 0.5
-  },
-
-  // Raw category mask from MediaPipe: { data, width, height } at image
-  // resolution.
-  rawMask: null,
-  lastResultAt: null,
-
-  // Finished cut-out (photo with the feathered mask applied).
+  // Finished cut-out (photo with the feathered union mask applied).
   subject: null,
   builtWith: {
     inverse: null,
     softness: null,
     expand: null
   },
+  // Segmenter mask-set version the cached subject was built from.
+  builtVersion: -1,
   maskDirty: false,
-  pendingSegment: false,
 
   // Where the photo sits on the canvas — used both to map clicks onto the
   // image and to detect layout changes that invalidate the pixel samples.
@@ -119,8 +132,6 @@ const state = {
   sampleG: null, // density-1 copy of the photo layer for pixel sampling
   trailsG: null, // the composited trail layer
   scratchG: null, // one trail at a time, composited with its opacity
-  binaryMaskG: null,
-  softMaskG: null,
 
   unregisterClick: null,
   unsubscribe: null
@@ -128,185 +139,19 @@ const state = {
 
 const draggable = createDraggable();
 
-/* ------------------------------------------------------------------ */
-/*  Small helpers                                                      */
-/* ------------------------------------------------------------------ */
+// One inference per focus point, run sequentially; masks cached per point.
+const segmenter = createMultiMaskSegmenter();
 
-function clamp(
-  value, min, max
-) {
-  return value < min ? min : value > max ? max : value;
-}
-
-function clamp01( value ) {
-  return clamp(
-    value,
-    0,
-    1
-  );
-}
-
-function smoothstep( t ) {
-  const c = clamp01( t );
-
-  return c * c * ( 3 - 2 * c );
-}
-
-// Shortest signed angular difference, in [-PI, PI].
-function wrapAngle( delta ) {
-  return ( ( delta + Math.PI ) % ( Math.PI * 2 ) + Math.PI * 2 ) % ( Math.PI * 2 ) - Math.PI;
-}
-
-// The `image` option is a plain path, but the asset picker may persist it as
-// a single-element array — accept either.
-function resolveImagePath( value ) {
-  if ( Array.isArray( value ) ) {
-    return value.find( Boolean ) ?? null;
-  }
-
-  return value || null;
-}
-
-function currentRoi() {
-  const roi = options.sketch?.segmentation?.roi;
-
-  if ( roi && typeof roi.x === "number" && typeof roi.y === "number" ) {
-    return {
-      x: clamp01( roi.x ),
-      y: clamp01( roi.y )
-    };
-  }
-
-  return {
-    x: 0.5,
-    y: 0.5
-  };
-}
-
-function photoSettings() {
-  const photo = options.sketch?.photo ?? {};
-
-  return {
-    margin: photo.margin ?? 0,
-    scale: photo.scale ?? 1,
-    center: photo.center ?? true,
-    clip: photo.clip ?? false,
-    fill: photo.fill ?? false
-  };
-}
-
-function toPx(
-  point, p
-) {
-  return {
-    x: point.x * p.width,
-    y: point.y * p.height
-  };
-}
+// Click-to-pick focus points + the feathered cut-out, shared with v2.
+const focus = createFocusPointStore( segmenter );
+const subjectBuilder = createSubjectBuilder();
 
 /* ------------------------------------------------------------------ */
-/*  Graphics buffers                                                   */
+/*  Clicks & subject                                                   */
 /* ------------------------------------------------------------------ */
 
-function ensureCanvasGraphics( p ) {
-  for ( const key of [
-    "photoG",
-    "bgG",
-    "trailsG",
-    "scratchG",
-    "sampleG"
-  ] ) {
-    let g = state[ key ];
-
-    if ( !g ) {
-      g = p.createGraphics(
-        p.width,
-        p.height
-      );
-      state[ key ] = g;
-
-      if ( key === "sampleG" ) {
-        // The sampling buffer is read back pixel by pixel — keep it 1:1.
-        g.pixelDensity( 1 );
-      }
-    } else if ( g.width !== p.width || g.height !== p.height ) {
-      g.resizeCanvas(
-        p.width,
-        p.height
-      );
-
-      if ( key === "sampleG" ) {
-        g.pixelDensity( 1 );
-      }
-
-      state.sampleDirty = true;
-      state.trailsDirty = true;
-    }
-  }
-}
-
-function ensureMaskGraphics(
-  key, width, height
-) {
-  const p = getP5();
-  let g = state[ key ];
-
-  if ( !g ) {
-    g = p.createGraphics(
-      width,
-      height
-    );
-    state[ key ] = g;
-  } else if ( g.width !== width || g.height !== height ) {
-    g.resizeCanvas(
-      width,
-      height
-    );
-  }
-
-  g.pixelDensity( 1 );
-
-  return g;
-}
-
-/* ------------------------------------------------------------------ */
-/*  Click → image-point mapping                                        */
-/* ------------------------------------------------------------------ */
-
-function getInternalCanvasPoint( event ) {
-  const p = getP5();
-  const canvasElement = sketch.engine?.getCanvasElement?.();
-
-  if ( !canvasElement ) {
-    return null;
-  }
-
-  const rect = canvasElement.getBoundingClientRect();
-  const clientX =
-    event.touches?.[ 0 ]?.clientX ??
-    event.changedTouches?.[ 0 ]?.clientX ??
-    event.clientX;
-  const clientY =
-    event.touches?.[ 0 ]?.clientY ??
-    event.changedTouches?.[ 0 ]?.clientY ??
-    event.clientY;
-
-  if ( typeof clientX !== "number" || typeof clientY !== "number" ) {
-    return null;
-  }
-
-  if ( rect.width === 0 || rect.height === 0 ) {
-    return null;
-  }
-
-  return {
-    x: ( ( clientX - rect.left ) / rect.width ) * p.width,
-    y: ( ( clientY - rect.top ) / rect.height ) * p.height
-  };
-}
-
-// Map a canvas click onto the photo and re-run the segmenter there — unless
-// the click landed on (or just released) a trail handle.
+// Route a canvas click: a trail handle wins (the drag layer owns it), then
+// the focus store picks / unpicks a zone.
 function handleCanvasClick( event ) {
   const point = getInternalCanvasPoint( event );
 
@@ -326,393 +171,64 @@ function handleCanvasClick( event ) {
     return;
   }
 
-  const {
-    x, y, w, h
-  } = state.photoRect;
-
-  if ( w <= 0 || h <= 0 ) {
-    return;
-  }
-
-  if ( point.x < x || point.x > x + w || point.y < y || point.y > y + h ) {
-    return;
-  }
-
-  const roi = {
-    x: clamp01( ( point.x - x ) / w ),
-    y: clamp01( ( point.y - y ) / h )
-  };
-
-  state.roi = roi;
-
-  // Persist as a sketch-origin change so the 2D pad reflects it without the
-  // subscribe handler bouncing it back through the segmenter again.
-  setSketchOptions(
-    {
-      sketch: {
-        segmentation: {
-          roi
-        }
-      }
-    },
-    "p5"
+  const result = focus.handleClick(
+    point,
+    state.photoRect,
+    options.sketch?.marker ?? {}
   );
 
-  triggerSegmentation();
-}
-
-/* ------------------------------------------------------------------ */
-/*  Segmentation (same pipeline as photo-segmentation)                 */
-/* ------------------------------------------------------------------ */
-
-function triggerSegmentation() {
-  const photo = common.getAsset( state.imagePath );
-
-  if ( !photo?.img?.width || !mediapipe.processor.ready ) {
-    state.pendingSegment = true;
-
-    return;
+  if ( result === "removed" ) {
+    state.maskDirty = true;
   }
-
-  const roi = currentRoi();
-  const imageElement = photo.img.canvas || photo.img.elt || photo.img;
-
-  interact(
-    roi.x * photo.img.width,
-    roi.y * photo.img.height,
-    imageElement
-  );
 }
 
-// Build the cut-out from the latest raw mask using the current edge
-// settings: blur the binary mask, then remap its alpha through a smoothstep
-// whose centre shifts the edge (expand) and whose width sets the softness.
 function rebuildSubject() {
   const photo = common.getAsset( state.imagePath );
-  const raw = state.rawMask;
-
-  if ( !photo?.img?.width || !raw?.data ) {
-    return;
-  }
-
-  const {
-    data, width, height
-  } = raw;
   const seg = options.sketch?.segmentation ?? {};
-  const inverse = seg.inverse ?? true;
-  const softness = clamp01( seg.edgeSoftness ?? 0 );
-  const expand = clamp(
-    seg.edgeExpand ?? 0,
-    -1,
-    1
+  const built = subjectBuilder.build(
+    photo,
+    segmenter,
+    seg
   );
 
-  const binary = ensureMaskGraphics(
-    "binaryMaskG",
-    width,
-    height
-  );
+  state.subject = built?.image ?? null;
 
-  drawSegmentationMask(
-    binary,
-    data,
-    [
-      255,
-      255,
-      255,
-      255
-    ],
-    inverse
-  );
-
-  let mask = binary;
-  const minDimension = Math.min(
-    width,
-    height
-  );
-  const radius = Math.round( 0.05 * minDimension * Math.max(
-    softness,
-    Math.abs( expand )
-  ) );
-
-  if ( radius > 0 ) {
-    const soft = ensureMaskGraphics(
-      "softMaskG",
-      width,
-      height
-    );
-
-    soft.clear();
-    soft.drawingContext.filter = `blur(${ radius }px)`;
-    soft.image(
-      binary,
-      0,
-      0
-    );
-    soft.drawingContext.filter = "none";
-
-    const centre = clamp(
-      0.5 - expand * 0.5,
-      0.02,
-      0.98
-    );
-    const half = Math.max(
-      softness * 0.5,
-      0.03
-    );
-    const lo = clamp01( centre - half );
-    const hi = clamp01( centre + half );
-    const span = Math.max(
-      hi - lo,
-      1e-4
-    );
-
-    soft.loadPixels();
-    const pixels = soft.pixels;
-
-    for ( let i = 3; i < pixels.length; i += 4 ) {
-      pixels[ i ] = smoothstep( ( pixels[ i ] / 255 - lo ) / span ) * 255;
-    }
-
-    soft.updatePixels();
-    mask = soft;
+  if ( built ) {
+    state.builtWith = built.builtWith;
   }
-
-  const subject = photo.img.get();
-
-  subject.mask( mask );
-
-  state.subject = subject;
-  state.builtWith = {
-    inverse,
-    softness,
-    expand
-  };
 }
-
-/* ------------------------------------------------------------------ */
-/*  Photo layers                                                       */
-/* ------------------------------------------------------------------ */
 
 // Draw the full photo into the offscreen buffer, record where it landed and
 // invalidate the pixel samples when the layout moved.
-function drawPhotoLayer( photo ) {
-  const p = getP5();
-  const {
-    margin, scale, center, clip, fill
-  } = photoSettings();
-  const g = state.photoG;
-
-  g.clear();
-  imageUtils.marginImage( {
-    img: photo.img,
-    graphics: g,
-    position: p.createVector(
-      p.width / 2,
-      p.height / 2
-    ),
-    margin: p.width * margin,
-    scale,
-    center,
-    clip,
-    fill,
-    callback: (
-      cx, cy, w, h
-    ) => {
-      const rect = {
-        x: center ? cx - w / 2 : cx,
-        y: center ? cy - h / 2 : cy,
-        w,
-        h
-      };
-      const previous = state.photoRect;
-
-      if (
-        rect.x !== previous.x ||
-        rect.y !== previous.y ||
-        rect.w !== previous.w ||
-        rect.h !== previous.h
-      ) {
-        state.sampleDirty = true;
-        state.stripsDirty = true;
-        state.trailsDirty = true;
-      }
-
-      state.photoRect = rect;
-    }
-  } );
-}
-
-function drawBackground(
-  p, photo
-) {
-  const bg = options.sketch?.background ?? {};
-  const mode = bg.mode ?? "transparent";
-
-  if ( mode === "transparent" ) {
-    return;
-  }
-
-  if ( mode === "color" ) {
-    p.push();
-    p.noStroke();
-    p.fill( ...( bg.color ?? [
-      0,
-      0,
-      0
-    ] ) );
-    p.rect(
-      0,
-      0,
-      p.width,
-      p.height
-    );
-    p.pop();
-
-    return;
-  }
-
-  if ( mode === "original" ) {
-    p.image(
-      state.photoG,
-      0,
-      0
-    );
-
-    return;
-  }
-
-  // blur / dim: a full-bleed copy of the photo behind everything.
-  const g = state.bgG;
-
-  g.clear();
-
-  if ( mode === "blur" ) {
-    g.drawingContext.filter = `blur(${ bg.blur ?? 0 }px)`;
-  }
-
-  imageUtils.marginImage( {
-    img: photo.img,
-    graphics: g,
-    position: p.createVector(
-      p.width / 2,
-      p.height / 2
-    ),
-    margin: 0,
-    scale: 1,
-    center: true,
-    fill: true
-  } );
-
-  g.drawingContext.filter = "none";
-
-  p.image(
-    g,
-    0,
-    0,
-    p.width,
-    p.height
+function updatePhotoLayer( photo ) {
+  const rect = drawPhotoLayer(
+    state.photoG,
+    photo
   );
 
-  if ( mode === "dim" ) {
-    p.push();
-    p.noStroke();
-    p.fill(
-      0,
-      0,
-      0,
-      clamp01( bg.dim ?? 0 ) * 255
-    );
-    p.rect(
-      0,
-      0,
-      p.width,
-      p.height
-    );
-    p.pop();
-  }
-}
-
-function drawSubject( p ) {
-  if ( !state.subject ) {
+  if ( !rect ) {
     return;
   }
 
-  const {
-    margin, scale, center, fill
-  } = photoSettings();
-  const subjectScale = options.sketch?.subject?.scale ?? 1;
-  const shadow = options.sketch?.subject?.shadow ?? {};
+  const previous = state.photoRect;
 
-  p.push();
-
-  if ( shadow.enabled ) {
-    const [
-      r = 0,
-      g = 0,
-      b = 0,
-      a = 255
-    ] = shadow.color ?? [];
-
-    p.drawingContext.shadowColor = `rgba(${ r }, ${ g }, ${ b }, ${ a / 255 })`;
-    p.drawingContext.shadowBlur = shadow.blur ?? 0;
-    p.drawingContext.shadowOffsetX = shadow.offsetX ?? 0;
-    p.drawingContext.shadowOffsetY = shadow.offsetY ?? 0;
+  if (
+    rect.x !== previous.x ||
+    rect.y !== previous.y ||
+    rect.w !== previous.w ||
+    rect.h !== previous.h
+  ) {
+    state.sampleDirty = true;
+    state.stripsDirty = true;
+    state.trailsDirty = true;
   }
 
-  imageUtils.marginImage( {
-    img: state.subject,
-    position: p.createVector(
-      p.width / 2,
-      p.height / 2
-    ),
-    margin: p.width * margin,
-    scale: scale * subjectScale,
-    center,
-    clip: false,
-    fill
-  } );
-
-  p.pop();
-}
-
-function drawMarker( p ) {
-  const marker = options.sketch?.marker ?? {};
-
-  if ( !marker.show ) {
-    return;
-  }
-
-  const roi = currentRoi();
-  const {
-    x, y, w, h
-  } = state.photoRect;
-
-  if ( w <= 0 || h <= 0 ) {
-    return;
-  }
-
-  p.push();
-  p.noFill();
-  p.stroke( ...( marker.color ?? [
-    255
-  ] ) );
-  p.strokeWeight( marker.weight ?? 3 );
-  p.circle(
-    x + roi.x * w,
-    y + roi.y * h,
-    ( marker.radius ?? 16 ) * 2
-  );
-  p.pop();
+  state.photoRect = rect;
 }
 
 /* ------------------------------------------------------------------ */
 /*  Trail list sync (count-driven, handles persisted like splines-v2)  */
 /* ------------------------------------------------------------------ */
-
-function isPoint( value ) {
-  return !!value && typeof value.x === "number" && typeof value.y === "number";
-}
 
 // A pleasant default for trail `index`: a vertical band around the canvas
 // centre, launched toward alternating sides.
@@ -743,21 +259,6 @@ function defaultTrail( index ) {
     },
     flip: side < 0,
     phase: ( index * 0.27 ) % 1
-  };
-}
-
-function sanitizePoint(
-  value, fallback
-) {
-  if ( !isPoint( value ) ) {
-    return {
-      ...fallback
-    };
-  }
-
-  return {
-    x: clamp01( value.x ),
-    y: clamp01( value.y )
   };
 }
 
@@ -878,100 +379,6 @@ function syncTrails( cfg ) {
 /*  Spine geometry                                                     */
 /* ------------------------------------------------------------------ */
 
-// Chaikin corner-cutting on an open polyline of plain {x, y} points (same
-// algorithm as the splines category, without the p5.Vector churn).
-function chaikinOpen(
-  points, iterations
-) {
-  let result = points;
-
-  for ( let i = 0; i < iterations; i++ ) {
-    const count = result.length;
-    const out = [
-      {
-        ...result[ 0 ]
-      }
-    ];
-
-    for ( let j = 0; j < count - 1; j++ ) {
-      const a = result[ j ];
-      const b = result[ j + 1 ];
-
-      out.push( {
-        x: 0.75 * a.x + 0.25 * b.x,
-        y: 0.75 * a.y + 0.25 * b.y
-      } );
-      out.push( {
-        x: 0.25 * a.x + 0.75 * b.x,
-        y: 0.25 * a.y + 0.75 * b.y
-      } );
-    }
-
-    out.push( {
-      ...result[ count - 1 ]
-    } );
-    result = out;
-  }
-
-  return result;
-}
-
-// Resample a polyline at a fixed step so every ribbon slice has the same
-// length (even slice spacing = no visible density changes on curves).
-function resamplePolyline(
-  points, step
-) {
-  if ( points.length < 2 ) {
-    return points;
-  }
-
-  const out = [
-    {
-      ...points[ 0 ]
-    }
-  ];
-  let prev = points[ 0 ];
-  let need = step;
-
-  for ( let i = 1; i < points.length; i++ ) {
-    const curr = points[ i ];
-    let segLen = Math.hypot(
-      curr.x - prev.x,
-      curr.y - prev.y
-    );
-
-    while ( segLen >= need ) {
-      const t = need / segLen;
-      const next = {
-        x: prev.x + ( curr.x - prev.x ) * t,
-        y: prev.y + ( curr.y - prev.y ) * t
-      };
-
-      out.push( next );
-      prev = next;
-      segLen -= need;
-      need = step;
-    }
-
-    need -= segLen;
-    prev = curr;
-  }
-
-  const last = points[ points.length - 1 ];
-  const tail = out[ out.length - 1 ];
-
-  if ( Math.hypot(
-    last.x - tail.x,
-    last.y - tail.y
-  ) > step * 0.25 ) {
-    out.push( {
-      ...last
-    } );
-  }
-
-  return out;
-}
-
 // Build one trail's spine: an even polyline starting at the band centre and
 // running off the canvas. `reverse` mirrors it for the bidirectional mode.
 //
@@ -1015,42 +422,24 @@ function buildSpine(
     );
 
     if ( reverse ) {
-      g1 = {
-        x: 2 * mid.x - g1.x,
-        y: 2 * mid.y - g1.y
-      };
-      g2 = {
-        x: 2 * mid.x - g2.x,
-        y: 2 * mid.y - g2.y
-      };
+      g1 = mirrorPoint(
+        g1,
+        mid
+      );
+      g2 = mirrorPoint(
+        g2,
+        mid
+      );
     }
 
-    const exitAngle = Math.atan2(
-      g2.y - g1.y,
-      g2.x - g1.x
-    );
-    const exit = {
-      x: g2.x + Math.cos( exitAngle ) * length * 0.6,
-      y: g2.y + Math.sin( exitAngle ) * length * 0.6
-    };
-    const dense = chaikinOpen(
-      [
-        mid,
-        g1,
-        g2,
-        exit
-      ],
-      clamp(
-        Math.round( direction.iterations ?? 4 ),
-        0,
-        6
-      )
-    );
-
-    return resamplePolyline(
-      dense,
+    return buildSplineSpine( {
+      start: mid,
+      g1,
+      g2,
+      length,
+      iterations: direction.iterations,
       step
-    );
+    } );
   }
 
   const bandAngle = Math.atan2(
@@ -1067,93 +456,14 @@ function buildSpine(
     ( reverse ? Math.PI : 0 ) +
     ( ( direction.startAngle ?? 0 ) * Math.PI / 180 ) * sign;
   const bend = ( ( direction.bend ?? 0 ) * Math.PI / 180 ) * sign;
-  const easeFn = easing[ direction.easing ] ?? easing.linear;
-  const steps = Math.max(
-    2,
-    Math.ceil( length / step )
-  );
-  const ds = length / steps;
-  const spine = [
-    {
-      ...mid
-    }
-  ];
-  let x = mid.x;
-  let y = mid.y;
 
-  for ( let i = 1; i <= steps; i++ ) {
-    const heading = launch + bend * easeFn( i / steps );
-
-    x += Math.cos( heading ) * ds;
-    y += Math.sin( heading ) * ds;
-    spine.push( {
-      x,
-      y
-    } );
-  }
-
-  return spine;
-}
-
-// Push the spine sideways on a sine wave: `twists` full oscillations along
-// the ribbon, `warp` bunches them toward the start (>1) or the end (<1),
-// `speed` (whole loops per animation cycle) keeps exports seamless.
-function applyWave(
-  spine, wave, trail, p
-) {
-  const amplitude = ( wave.amplitude ?? 0 ) * Math.min(
-    p.width,
-    p.height
-  );
-
-  if ( amplitude === 0 || spine.length < 3 ) {
-    return spine;
-  }
-
-  const twists = wave.twists ?? 1;
-  const warp = Math.max(
-    0.1,
-    wave.warp ?? 1
-  );
-  const speed = Math.round( wave.speed ?? 0 );
-  const animPhase = animation.angle * speed;
-  const basePhase = trail.phase * Math.PI * 2;
-  const total = spine.length - 1;
-
-  return spine.map( (
-    point, index
-  ) => {
-    const t = index / total;
-    const prev = spine[ Math.max(
-      0,
-      index - 1
-    ) ];
-    const next = spine[ Math.min(
-      total,
-      index + 1
-    ) ];
-    const tx = next.x - prev.x;
-    const ty = next.y - prev.y;
-    const len = Math.hypot(
-      tx,
-      ty
-    ) || 1;
-    const ramp = smoothstep( Math.min(
-      1,
-      t / WAVE_RAMP
-    ) );
-    const offset =
-      Math.sin( Math.PI * 2 * twists * Math.pow(
-        t,
-        warp
-      ) + basePhase + animPhase ) *
-      amplitude *
-      ramp;
-
-    return {
-      x: point.x - ( ty / len ) * offset,
-      y: point.y + ( tx / len ) * offset
-    };
+  return buildAngleSpine( {
+    start: mid,
+    launch,
+    bend,
+    easingName: direction.easing,
+    length,
+    step
   } );
 }
 
@@ -1164,27 +474,11 @@ function applyWave(
 // Redraw the photo into the density-1 sampling buffer and read its pixels
 // back once. Only runs when the photo or its layout actually changed.
 function rebuildSample( photo ) {
-  const p = getP5();
-  const {
-    margin, scale, center, clip, fill
-  } = photoSettings();
-  const g = state.sampleG;
-
-  g.clear();
-  imageUtils.marginImage( {
-    img: photo.img,
-    graphics: g,
-    position: p.createVector(
-      p.width / 2,
-      p.height / 2
-    ),
-    margin: p.width * margin,
-    scale,
-    center,
-    clip,
-    fill
-  } );
-  g.loadPixels();
+  drawPhotoLayer(
+    state.sampleG,
+    photo
+  );
+  state.sampleG.loadPixels();
   state.samplePixelsReady = true;
 }
 
@@ -1460,7 +754,7 @@ function renderTrails(
       applyWave(
         spine,
         wave,
-        trail,
+        trail.phase,
         p
       ),
       strip,
@@ -1733,7 +1027,6 @@ sketch.setup( () => {
   p.background( ...options.sketch.backgroundColor );
 
   state.imagePath = resolveImagePath( options.sketch?.photo?.image );
-  state.roi = currentRoi();
 
   // Every buffer belongs to the previous p5 instance after a sketch reset —
   // drop them so they are recreated lazily against the fresh one.
@@ -1742,8 +1035,6 @@ sketch.setup( () => {
   state.sampleG = null;
   state.trailsG = null;
   state.scratchG = null;
-  state.binaryMaskG = null;
-  state.softMaskG = null;
   state.strips = [];
   state.trails = [];
   state.trailsSyncHash = null;
@@ -1753,9 +1044,15 @@ sketch.setup( () => {
   state.samplePixelsReady = false;
   state.handleTargets = [];
   state.handleMeta = [];
-  state.rawMask = null;
   state.subject = null;
-  state.lastResultAt = null;
+  state.builtVersion = -1;
+  state.maskDirty = false;
+
+  subjectBuilder.reset();
+  segmenter.reset();
+  segmenter.setImage( state.imagePath );
+  focus.reset();
+  focus.sync();
 
   // Re-arm the listeners (the engine's registries are cleared on reset).
   draggable.attach();
@@ -1784,24 +1081,14 @@ sketch.setup( () => {
 
     if ( nextImage !== state.imagePath ) {
       state.imagePath = nextImage;
-      state.rawMask = null;
       state.subject = null;
-      state.lastResultAt = null;
-      state.pendingSegment = true;
       state.sampleDirty = true;
+      segmenter.setImage( nextImage );
 
       return;
     }
 
-    const roi = sk.segmentation?.roi;
-
-    if ( roi && ( roi.x !== state.roi.x || roi.y !== state.roi.y ) ) {
-      state.roi = {
-        x: roi.x,
-        y: roi.y
-      };
-      triggerSegmentation();
-    }
+    // Point-list edits are adopted from the draw loop via focus.sync().
 
     const seg = sk.segmentation ?? {};
 
@@ -1814,11 +1101,9 @@ sketch.setup( () => {
     }
   } );
 
-  // Segment the default focus point as soon as the photo + processor are
-  // ready. Fire-and-forget: awaiting init would block the first draw on the
-  // ~4s model load, so the photo and trails render right away instead.
-  state.pendingSegment = true;
-
+  // Fire-and-forget: awaiting init would block the first draw on the ~4s
+  // model load, so the photo and trails render right away and the draw loop
+  // segments each focus point as soon as the processor is ready.
   mediapipeInit( {
     enableIdle: false,
     worker: false,
@@ -1867,36 +1152,45 @@ sketch.draw( () => {
   }
 
   p.frameRate( options.animation.framerate );
-  ensureCanvasGraphics( p );
+  ensureLayerGraphics(
+    state,
+    [
+      "photoG",
+      "bgG",
+      "trailsG",
+      "scratchG",
+      "sampleG"
+    ],
+    {
+      density1: [
+        "sampleG"
+      ],
+      onResize: () => {
+        state.sampleDirty = true;
+        state.trailsDirty = true;
+      }
+    }
+  );
 
-  // Kick off a deferred segmentation once everything it needs is available.
-  if (
-    state.pendingSegment &&
-    mediapipe.processor.ready &&
-    !mediapipe.processor.busy
-  ) {
-    state.pendingSegment = false;
-    triggerSegmentation();
-  }
+  // Adopt external point edits, then let the segmenter pump one inference
+  // per focus point that is still missing its mask.
+  focus.sync();
+  segmenter.update( photo );
 
-  // A fresh inference landed → cache it and flag a rebuild.
-  const result = mediapipe.tasks.interactive;
-
-  if ( result?.result && result.updatedAt !== state.lastResultAt ) {
-    state.lastResultAt = result.updatedAt;
-    state.rawMask = result.result;
-    state.maskDirty = true;
-  }
-
-  if ( state.maskDirty && state.rawMask ) {
+  if ( state.maskDirty || state.builtVersion !== segmenter.version ) {
     state.maskDirty = false;
+    state.builtVersion = segmenter.version;
     rebuildSubject();
   }
 
-  drawPhotoLayer( photo );
-  drawBackground(
+  updatePhotoLayer( photo );
+  drawBackdrop(
     p,
-    photo
+    photo,
+    {
+      photoG: state.photoG,
+      bgG: state.bgG
+    }
   );
 
   // Re-sync the trail list from the store only when nothing is being
@@ -1978,7 +1272,10 @@ sketch.draw( () => {
   );
 
   // Layer 3: the segmented subject on top, so the ribbons pass behind it.
-  drawSubject( p );
+  drawSubjectLayer(
+    p,
+    state.subject
+  );
 
   if ( showHandles ) {
     drawHandles(
@@ -1989,5 +1286,9 @@ sketch.draw( () => {
     );
   }
 
-  drawMarker( p );
+  drawMarkersLayer(
+    p,
+    focus.points,
+    state.photoRect
+  );
 } );

@@ -21,6 +21,8 @@ import ControlledFormatSelect
   from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/ControlledFormatSelect/ControlledFormatSelect";
 import ControlledSourceSelect
   from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/ControlledSourceSelect/ControlledSourceSelect";
+import ControlledKeySelect
+  from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/ControlledKeySelect/ControlledKeySelect";
 import ControlledEasingInput
   from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/ControlledEasingInput/ControlledEasingInput";
 import ControlledVector2DInput
@@ -44,6 +46,15 @@ import FieldContextMenu, {
 import {
   applyToAllSlides, canApplyToAllSlides
 } from "../utils/applyToAllSlides";
+import {
+  applyToAllHudLayers, canApplyToAllHudLayers
+} from "../utils/applyToAllHudLayers";
+import {
+  addHudElementForControl, hudQuickAddKinds
+} from "../utils/hudQuickAdd";
+import {
+  ITEM_META
+} from "./ContentItems/components/AddItemControls/components/ItemPalette/constants/item-kinds";
 import BindingAffordance
   from "./ContentItems/components/BindingAffordance/BindingAffordance";
 import {
@@ -77,13 +88,23 @@ type FieldRendererProps = {
   fieldName: string;
   config: FieldConfig;
   hideLabel?: boolean;
+  /** Nesting level of this field inside its panel section. Top-level groups
+   *  (0) render as banded sub-sections with their own hairlines; deeper ones
+   *  fall back to an indent guide so depth stays readable without stacking
+   *  boxes inside boxes. */
+  depth?: number;
+  /** Horizontal padding a band applies to its own header and leaf children,
+   *  so the band itself can stay full-bleed. */
+  leafPaddingClassName?: string;
 };
 
 export default function FieldRenderer( {
   fieldBasePath,
   fieldName,
   config,
-  hideLabel = false
+  hideLabel = false,
+  depth = 0,
+  leafPaddingClassName = "px-3"
 }: FieldRendererProps ) {
   const {
     register,
@@ -156,11 +177,25 @@ export default function FieldRenderer( {
     registeredName
   );
 
-  // Whether this field should host the "apply to all slides" affordances:
-  // a multi-slide context, and not over an editable input (whose native menu
-  // and pointer behaviour we leave alone).
+  // HUD layers additionally offer "apply to all HUD layers" on their style
+  // fields, so the split of the shared HUD style stays one right-click away.
+  const canApplyHud = canApplyToAllHudLayers(
+    getValues,
+    registeredName
+  );
+
+  // Sketch parameter controls offer "add a HUD element for this control" —
+  // the new layer arrives with its source already bound to this key-path.
+  const quickAddKinds = hudQuickAddKinds(
+    registeredName,
+    config
+  );
+
+  // Whether this field should host a context-menu affordance: at least one
+  // entry applies, and not over an editable input (whose native menu and
+  // pointer behaviour we leave alone).
   const canContextApply = ( target: EventTarget | null ): boolean => {
-    if ( !canApply ) {
+    if ( !canApply && !canApplyHud && quickAddKinds.length === 0 ) {
       return false;
     }
 
@@ -402,6 +437,39 @@ export default function FieldRenderer( {
           config.initialExpanded ?? false
         );
 
+        // Depth 0 — a group directly under a panel section — reads as a
+        // sub-band: full-bleed hairline above it, no box. Deeper groups keep
+        // a left indent guide instead, so nesting is legible without a stack
+        // of nested borders.
+        const isBand = depth === 0;
+        const groupActions = (
+          <div
+            className="flex items-center gap-0.5"
+            onClick={ ( e ) => e.stopPropagation() }
+          >
+            {isModified && (
+              <button
+                type="button"
+                onClick={ handleReset }
+                tabIndex={ -1 }
+                title="Reset to saved value"
+                className="p-2 md:p-1 text-label hover:text-foreground hover:bg-hover rounded-md transition-colors"
+              >
+                <RotateCcw className="w-4 h-4 md:w-3 md:h-3" />
+              </button>
+            )}
+            <RandomizeSettingsButton
+              config={ config.fields }
+              basePath={ registeredName }
+              className="text-label hover:text-foreground p-2 md:p-1 hover:bg-hover rounded-md transition-colors"
+            />
+            <ApplyToAllSlidesButton
+              basePath={ registeredName }
+              className="text-label hover:text-foreground p-2 md:p-1 hover:bg-hover rounded-md transition-colors"
+            />
+          </div>
+        );
+
         return (
           <CollapsibleItem
             expanded={ expanded }
@@ -411,12 +479,20 @@ export default function FieldRenderer( {
             ) }
             header={ ( expanded ) => (
               <div
-                className="text-gray-500 cursor-pointer select-none flex items-center justify-between w-full min-h-[2.5rem] md:min-h-0"
+                className={ clsx(
+                  "cursor-pointer select-none flex items-center justify-between w-full gap-2 min-h-[2.5rem] md:min-h-0",
+                  isBand
+                    ? clsx(
+                      "py-2 md:py-1.5",
+                      leafPaddingClassName
+                    )
+                    : "py-1.5 md:py-1 text-label"
+                ) }
                 title="Click to expand/collapse"
               >
-                <div className="flex min-w-0 items-center gap-1">
+                <div className="flex min-w-0 items-center gap-1.5">
                   <ChevronDown
-                    className="w-4 h-4 md:w-3 md:h-3 shrink-0 transition-transform"
+                    className={ clsx( "w-4 h-4 md:w-3 md:h-3 shrink-0 text-label transition-transform" ) }
                     style={ {
                       transform: expanded ? "rotate(0deg)" : "rotate(-90deg)"
                     } }
@@ -424,41 +500,28 @@ export default function FieldRenderer( {
                   <span
                     className={ clsx(
                       "truncate",
-                      isModified && "font-medium text-foreground"
+                      isBand && "text-xs",
+                      isModified ? "font-medium text-foreground" : "text-label"
                     ) }
                   >
                     {config.label}
                   </span>
                 </div>
-                <div
-                  className="flex items-center gap-0.5"
-                  onClick={ ( e ) => e.stopPropagation() }
-                >
-                  {isModified && (
-                    <button
-                      type="button"
-                      onClick={ handleReset }
-                      tabIndex={ -1 }
-                      title="Reset to saved value"
-                      className="p-2 md:p-0.5 hover:bg-theme/20 rounded-md transition-colors"
-                    >
-                      <RotateCcw className="w-4 h-4 md:w-3.5 md:h-3.5" />
-                    </button>
-                  )}
-                  <RandomizeSettingsButton
-                    config={ config.fields }
-                    basePath={ registeredName }
-                    className="text-foreground p-2 md:p-0.5 hover:bg-theme/20 rounded-md transition-colors"
-                  />
-                  <ApplyToAllSlidesButton
-                    basePath={ registeredName }
-                    className="text-foreground p-2 md:p-0.5 hover:bg-theme/20 rounded-md transition-colors"
-                  />
-                </div>
+                {groupActions}
               </div>
             ) }
           >
-            <div className="p-1 border border-theme rounded-xl space-y-1 bg-background/50 ml-2">
+            <div
+              className={ clsx(
+                "flex flex-col gap-1.5",
+                isBand
+                  ? clsx(
+                    "pb-2 pt-0.5",
+                    leafPaddingClassName
+                  )
+                  : "ml-1.5 border-l border-theme pl-2.5 pb-1"
+              ) }
+            >
               {Object.entries( config.fields ).map( ( [
                 subFieldName,
                 subConfig
@@ -468,6 +531,7 @@ export default function FieldRenderer( {
                   fieldBasePath={ registeredName }
                   fieldName={ subFieldName }
                   config={ subConfig }
+                  depth={ depth + 1 }
                 />
               ) )}
             </div>
@@ -562,7 +626,14 @@ export default function FieldRenderer( {
         );
 
       case "item-list":
-        return <ItemListRenderer name={ registeredName } config={ config } />;
+        return (
+          <ItemListRenderer
+            name={ registeredName }
+            config={ config }
+            depth={ depth }
+            leafPaddingClassName={ leafPaddingClassName }
+          />
+        );
 
       case "easing":
         return (
@@ -587,6 +658,17 @@ export default function FieldRenderer( {
           <ControlledSourceSelect
             name={ registeredName }
             label={ inlineLabel }
+            isModified={ isModified }
+            onReset={ handleReset }
+          />
+        );
+
+      case "key-select":
+        return (
+          <ControlledKeySelect
+            name={ registeredName }
+            label={ inlineLabel }
+            placeholder={ config.placeholder }
             isModified={ isModified }
             onReset={ handleReset }
           />
@@ -698,13 +780,45 @@ export default function FieldRenderer( {
           position={ contextMenu.position }
           onClose={ contextMenu.close }
           items={ [
-            {
+            ...( canApply
+              ? [
+                {
+                  label: config.label
+                    ? `Apply "${ config.label }" to all slides`
+                    : "Apply to all slides",
+                  icon: CopyPlus,
+                  onClick: handleApplyToAllSlides
+                }
+              ]
+              : [] ),
+            ...( canApplyHud
+              ? [
+                {
+                  label: config.label
+                    ? `Apply "${ config.label }" to all HUD layers`
+                    : "Apply to all HUD layers",
+                  icon: CopyPlus,
+                  onClick: () => applyToAllHudLayers(
+                    getValues,
+                    setValue,
+                    registeredName
+                  )
+                }
+              ]
+              : [] ),
+            ...quickAddKinds.map( ( kind ) => ( {
               label: config.label
-                ? `Apply "${ config.label }" to all slides`
-                : "Apply to all slides",
-              icon: CopyPlus,
-              onClick: handleApplyToAllSlides
-            }
+                ? `Add a ${ ITEM_META[ kind ].label.toLowerCase() } for "${ config.label }"`
+                : `Add a ${ ITEM_META[ kind ].label.toLowerCase() } for this control`,
+              icon: ITEM_META[ kind ].Icon,
+              onClick: () => addHudElementForControl(
+                getValues,
+                setValue,
+                registeredName,
+                config,
+                kind
+              )
+            } ) )
           ] }
         />
       )}

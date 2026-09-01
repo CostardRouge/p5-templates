@@ -119,6 +119,105 @@ export function getByPath(
 }
 
 /**
+ * @typedef { { value: string, label: string } } KeyPathOption
+ * @typedef { { label: string, options: KeyPathOption[] } } KeyPathGroup
+ */
+
+/**
+ * Split a flat list of dotted key-paths into `<optgroup>`-shaped buckets: one
+ * group per parent path ("colors.text" → group "colors", option "text"), with
+ * the top-level scalars kept aside so the caller can list them on their own.
+ *
+ * Values stay the full key-path — only the presentation is grouped. Insertion
+ * order is preserved, so the dropdown follows the settings tree.
+ *
+ * @param { string[] } keys
+ * @returns { { rootOptions: KeyPathOption[], groups: KeyPathGroup[] } }
+ */
+export function groupKeyPaths( keys ) {
+  /** @type { KeyPathOption[] } */
+  const rootOptions = [];
+  /** @type { Map< string, KeyPathGroup > } */
+  const groupsByLabel = new Map();
+
+  for ( const key of keys ) {
+    const separatorIndex = String( key ).lastIndexOf( "." );
+
+    if ( separatorIndex === -1 ) {
+      rootOptions.push( {
+        value: key,
+        label: key
+      } );
+      continue;
+    }
+
+    const groupLabel = key.slice(
+      0,
+      separatorIndex
+    );
+    const option = {
+      value: key,
+      label: key.slice( separatorIndex + 1 )
+    };
+
+    const existing = groupsByLabel.get( groupLabel );
+
+    if ( existing ) {
+      existing.options.push( option );
+    } else {
+      groupsByLabel.set(
+        groupLabel,
+        {
+          label: groupLabel,
+          options: [
+            option
+          ]
+        }
+      );
+    }
+  }
+
+  return {
+    rootOptions,
+    groups: Array.from( groupsByLabel.values() )
+  };
+}
+
+/**
+ * Every distinct ancestor path of a flat key-path list, outermost first
+ * ("grid.cell.size" → "grid", "grid.cell").
+ *
+ * Used by the breakdown's key picker, where a whole group is a legitimate
+ * entry: `matchesKeyList` treats an ancestor path as covering its subtree.
+ *
+ * @param { string[] } keys
+ * @returns { string[] }
+ */
+export function collectBranchPaths( keys ) {
+  /** @type { string[] } */
+  const branches = [];
+  const seen = new Set();
+
+  for ( const key of keys ) {
+    const segments = String( key ).split( "." );
+
+    for ( let i = 1; i < segments.length; i++ ) {
+      const branch = segments.slice(
+        0,
+        i
+      ).join( "." );
+
+      if ( !seen.has( branch ) ) {
+        seen.add( branch );
+        branches.push( branch );
+      }
+    }
+  }
+
+  return branches;
+}
+
+/**
  * Flatten a sketch-settings object into the list of leaf key-paths whose values
  * are scalars (number/string/boolean) — the bindable sources for HUD widgets.
  */

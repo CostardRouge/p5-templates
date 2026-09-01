@@ -4,54 +4,48 @@ import React from "react";
 import rootFormConfig from "./constants/root-field-config";
 
 import GenericObjectForm from "./components/GenericObjectForm/GenericObjectForm";
-import {
-  ListCollapse
-} from "lucide-react";
-import CollapsibleItem from "@/components/CollapsibleItem";
+import PanelSection from "../PanelSection";
 
 type RootSettingsProps = {
   activeSlideIndex?: number;
   expanded?: boolean;
   onToggle?: ( expanded: boolean ) => void;
+  /** Horizontal padding of the section, matched to the host panel (the mobile
+   *  drawer already pads its own body). */
+  paddingClassName?: string;
 };
 
+/**
+ * "Canvas" section of the inspector: canvas size, duration and framerate.
+ * Sits in the same panel as the sketch's own parameters so one surface carries
+ * every knob for what is on screen. Edits the root blocks (`format` /
+ * `animation`), or the active slide's overrides (`slides.N.*`) when a slide is
+ * selected — the same contextual targeting as the sketch form, so the two
+ * never disagree about which object is being edited.
+ */
 export default function RootSettings( {
   activeSlideIndex,
   expanded,
-  onToggle
+  onToggle,
+  paddingClassName
 }: RootSettingsProps ) {
   const isSlideContext = activeSlideIndex !== undefined;
   const basePath = isSlideContext ? `slides.${ activeSlideIndex }` : "";
-  const label = isSlideContext
-    ? `slide ${ activeSlideIndex + 1 } settings`
-    : "general settings";
 
   return (
-    <CollapsibleItem
+    <PanelSection
       key={ basePath }
-      expanded={ expanded ?? isSlideContext }
+      label="canvas & animation"
+      expanded={ expanded ?? true }
       onToggle={ onToggle }
-      className={ `p-1 border rounded-lg text-foreground bg-background overflow-y-auto ${
-        isSlideContext
-          ? "border-blue-400/60 ring-1 ring-blue-400/30"
-          : "border-theme"
-      }` }
-      header={ ( expanded ) => (
-        <button
-          className="flex w-full items-center gap-1.5 text-left text-foreground text-xs min-h-[2.5rem] md:min-h-[1.75rem]"
-          aria-label={ expanded ? "Collapse controls" : "Expand controls" }
-        >
-          <ListCollapse
-            className="shrink-0 text-foreground h-4 w-4 md:h-3 md:w-3"
-            style={ {
-              rotate: expanded ? "180deg" : "0deg"
-            } }
-          />
-          <span className="truncate">{label}</span>
-        </button>
-      ) }
+      paddingClassName={ paddingClassName }
+      bodyPaddingClassName="px-0 pt-0.5"
     >
-      <GenericObjectForm basePath={ basePath } config={ rootFormConfig } />
-    </CollapsibleItem>
+      <GenericObjectForm
+        basePath={ basePath }
+        config={ rootFormConfig }
+        leafPaddingClassName={ paddingClassName ?? "px-3" }
+      />
+    </PanelSection>
   );
 }

@@ -43,6 +43,11 @@ export class GsapEngine implements SketchEngine {
   readonly engineId = "gsap";
 
   private _isReady = false;
+  // Set by destroy(). init() re-checks it after every await — see the note in
+  // P5Engine: a strict-mode double-mount would otherwise resume a destroyed
+  // engine's pending init alongside the replacement's and start the shared
+  // runtime twice (two stacked stages).
+  private destroyed = false;
   private container: HTMLElement | null = null;
   private runtime: GsapRuntime | null = null;
   private listeners = new Map<string, Set<( payload: any ) => void>>();
@@ -79,6 +84,10 @@ export class GsapEngine implements SketchEngine {
       setSketchOptions
     } = await import( "@/lib/syncSketchOptions" );
 
+    if ( this.destroyed ) {
+      return;
+    }
+
     setSketchOptions(
       options,
       "react"
@@ -90,6 +99,10 @@ export class GsapEngine implements SketchEngine {
     );
 
     const runtimeModule = await import( "@/gsap/utils/runtime" );
+
+    if ( this.destroyed ) {
+      return;
+    }
 
     this.runtime = runtimeModule.default;
 
@@ -117,10 +130,19 @@ export class GsapEngine implements SketchEngine {
 
     const component = ( templateModule.default ?? templateModule ) as TemplateComponent;
 
+    // destroy() may have run while awaiting the dynamic imports.
+    if ( this.destroyed || !this.runtime ) {
+      return;
+    }
+
     await this.runtime.start(
       container,
       component
     );
+
+    if ( this.destroyed ) {
+      return;
+    }
 
     this._isReady = true;
 
@@ -147,6 +169,9 @@ export class GsapEngine implements SketchEngine {
   }
 
   destroy(): void {
+    // Cancel any still-pending init (see the field's note).
+    this.destroyed = true;
+
     this.stopPerformanceLoop();
     unregisterServerCaptureController();
 

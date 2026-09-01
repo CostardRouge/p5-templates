@@ -3,7 +3,7 @@
 import {
   useRef
 } from "react";
-import HardLink from "@/components/HardLink";
+import Link from "next/link";
 import ProgressBar from "@/components/ProgressBar";
 import {
   JobModel
@@ -77,12 +77,12 @@ export default function ActiveRecordingBanner( {
                   </p>
                 </div>
               </div>
-              <HardLink
+              <Link
                 href={ `/${ job.sketch }?id=${ job.id }` }
                 className="text-xs text-blue-500 hover:text-blue-600 font-medium transition-colors"
               >
                 View Details →
-              </HardLink>
+              </Link>
             </div>
 
             {/* Detailed Progress Bar with Steps - Click to expand */}

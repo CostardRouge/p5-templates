@@ -5,32 +5,28 @@ import {
 } from "./constants/item-kinds";
 
 import {
-  ItemKind
+  ItemKind, ItemKindGroup
 } from "./types/item-kinds";
 import clsx from "clsx";
 
 type Props = {
   onAdd: ( kind: ItemKind ) => void;
   kinds?: ItemKind[];
+  /** Labelled sections (Content / HUD…) — takes precedence over `kinds`. */
+  groups?: ItemKindGroup[];
   className?: string;
 };
 
-/**
- * The palette of content-item types. Each type is a labeled tile (icon + name)
- * laid out three per row, so kinds that share a family of icons (specs, hud,
- * meta…) stay easy to tell apart at a glance.
- */
-export default function ItemPalette( {
-  onAdd,
-  kinds = ITEM_ORDER,
-  className = ""
-}: Props ) {
+function PaletteGrid( {
+  kinds,
+  onAdd
+}: {
+  kinds: ItemKind[];
+  onAdd: ( kind: ItemKind ) => void;
+} ) {
   return (
     <div
-      className={ clsx(
-        "grid grid-cols-3 gap-1",
-        className
-      ) }
+      className="grid grid-cols-3 gap-1"
       role="list"
       aria-label="Add item palette"
     >
@@ -61,6 +57,45 @@ export default function ItemPalette( {
           </button>
         );
       } )}
+    </div>
+  );
+}
+
+/**
+ * The palette of content-item types. Each type is a labeled tile (icon + name)
+ * laid out three per row, so kinds that share a family of icons (specs, the
+ * HUD widgets, meta…) stay easy to tell apart at a glance. With `groups`, the
+ * tiles split into labelled sections — seventeen flat tiles read as a wall.
+ */
+export default function ItemPalette( {
+  onAdd,
+  kinds = ITEM_ORDER,
+  groups,
+  className = ""
+}: Props ) {
+  if ( groups ) {
+    return (
+      <div
+        className={ clsx(
+          "flex flex-col gap-2",
+          className
+        ) }
+      >
+        {groups.map( ( group ) => (
+          <div key={ group.label } className="flex flex-col gap-1">
+            <span className="px-0.5 text-[0.6875rem] uppercase tracking-[0.08em] text-label/70">
+              {group.label}
+            </span>
+            <PaletteGrid kinds={ group.kinds } onAdd={ onAdd } />
+          </div>
+        ) )}
+      </div>
+    );
+  }
+
+  return (
+    <div className={ className }>
+      <PaletteGrid kinds={ kinds } onAdd={ onAdd } />
     </div>
   );
 }

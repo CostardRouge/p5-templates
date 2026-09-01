@@ -14,7 +14,7 @@ import {
   BarLabelSegment
 } from "../ControlChrome";
 import {
-  BUILTIN_SOURCES, flattenKeys
+  BUILTIN_SOURCES, flattenKeys, groupKeyPaths
 } from "@/p5/utils/hud/keyPaths";
 
 type Props = {
@@ -55,6 +55,9 @@ export default function ControlledSourceSelect( {
   } );
 
   const keys = flattenKeys( sketch ?? {} );
+  const {
+    rootOptions, groups
+  } = groupKeyPaths( keys );
   const currentValue = typeof field.value === "string" ? field.value : "";
   const builtin = BUILTIN_SOURCES.find( ( source ) => source.value === currentValue );
   const displayLabel = builtin?.label ?? ( currentValue || "—" );
@@ -95,15 +98,25 @@ export default function ControlledSourceSelect( {
           </option>
         )}
 
-        {keys.length > 0 && (
+        {rootOptions.length > 0 && (
           <optgroup label="Sketch parameters">
-            {keys.map( ( key ) => (
-              <option key={ key } value={ key }>
-                {key}
+            {rootOptions.map( ( option ) => (
+              <option key={ option.value } value={ option.value }>
+                {option.label}
               </option>
             ) )}
           </optgroup>
         )}
+
+        {groups.map( ( group ) => (
+          <optgroup key={ group.label } label={ group.label }>
+            {group.options.map( ( option ) => (
+              <option key={ option.value } value={ option.value }>
+                {option.label}
+              </option>
+            ) )}
+          </optgroup>
+        ) )}
       </select>
     </div>
   );

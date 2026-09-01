@@ -1,15 +1,15 @@
+import animation from "../../animation.js";
 import {
   getAsset
 } from "../../common.js";
 import imageUtils from "../../imageUtils.js";
 import mappers from "../../mappers.js";
-import animation from "../../animation.js";
-import {
-  reportItemBounds
-} from "./itemBoundsRegistry.js";
 import {
   getP5
 } from "../../sketch.js";
+import {
+  reportItemBounds
+} from "./itemBoundsRegistry.js";
 
 export default function drawSlideImage(
   imageOption, slideOptions
@@ -39,14 +39,14 @@ export default function drawSlideImage(
         mappers.fn(
           Math.sin( imageAngle ),
           0,
-          TAU,
+          p.TAU,
           0,
           imageOption.animation.amplitude
         ),
         mappers.fn(
           Math.cos( imageAngle ),
           0,
-          TAU,
+          p.TAU,
           0,
           imageOption.animation.amplitude
         )

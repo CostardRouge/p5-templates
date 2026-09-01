@@ -5,12 +5,13 @@ import {
 } from "lucide-react";
 import clsx from "clsx";
 import {
-  useEffect, useMemo, useState
+  useCallback, useEffect, useMemo, useState
 } from "react";
 import {
   createPortal
 } from "react-dom";
 import useSketch from "../ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
+import useGlobalHotkey from "@/hooks/useGlobalHotkey";
 import {
   buildEmbedHash, diffSketchOptions, EMBED_SIZE_FILL, parseEmbedSize
 } from "@/lib/embedOptions";
@@ -23,9 +24,6 @@ import {
 import {
   formatOptions
 } from "@/components/ClientProcessingSketch/components/SketchOptions/components/RootSettings/constants/root-field-config";
-import {
-  isFullscreenFormatValue
-} from "@/lib/fullscreen/constants";
 
 type ControlsMode = "none" | "all" | "custom";
 
@@ -94,6 +92,18 @@ export default function SketchShareDialog() {
     []
   );
 
+  // "S" opens this dialog from anywhere on the page — same trigger as the
+  // engine-controls share button.
+  const openShare = useCallback(
+    () => setOpen( true ),
+    []
+  );
+
+  useGlobalHotkey( {
+    code: "KeyS",
+    onTrigger: openShare
+  } );
+
   // Close on Escape while the dialog is open.
   useEffect(
     () => {
@@ -161,8 +171,7 @@ export default function SketchShareDialog() {
     ]
   );
 
-  // Resolution presets, minus the fullscreen sentinels the canvas-size select
-  // uses — those drive the Fullscreen API, which means nothing inside a frame.
+  // Resolution presets, straight from the canvas-size select's own list.
   const sizePresets = useMemo(
     () => {
       const groups = new Map<string, {
@@ -171,10 +180,6 @@ export default function SketchShareDialog() {
       }[]>();
 
       for ( const option of formatOptions ) {
-        if ( isFullscreenFormatValue( option.value ) ) {
-          continue;
-        }
-
         const group = option.group ?? "Other";
 
         if ( !groups.has( group ) ) {
@@ -526,10 +531,13 @@ export default function SketchShareDialog() {
     <>
       <button
         type="button"
-        onClick={ () => setOpen( true ) }
+        onClick={ openShare }
         title="Share / embed"
         aria-label="Share or embed this sketch"
-        className="inline-flex h-full items-center justify-center border-r border-border px-3 transition-colors hover:bg-hover group"
+        // No trailing divider: this is the last control in the engine-controls
+        // island now that playback and capture live in the transport bar, and
+        // a border-r would leave a rule hanging off the end of the row.
+        className="inline-flex h-full items-center justify-center px-3 transition-colors hover:bg-hover group"
       >
         <Share2 className="h-4 w-4 text-foreground/70 transition-colors group-hover:text-foreground" />
       </button>

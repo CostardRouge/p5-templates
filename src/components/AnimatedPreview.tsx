@@ -12,6 +12,13 @@ interface AnimatedPreviewProps {
   previewUrlDesktop?: string;
   thumbnailUrl: string;
   name: string;
+  /**
+   * Alt text for the still. Defaults to `name`, but a card that already prints
+   * the sketch's name next to the picture should pass `""`: the image is
+   * decorative there, and repeating the name makes a screen reader say it
+   * twice for one link (axe `image-redundant-alt`).
+   */
+  alt?: string;
   imgClassName?: string;
   eager?: boolean;
   // When defined, overrides the OS `prefers-reduced-motion` setting:
@@ -42,6 +49,7 @@ export default function AnimatedPreview( {
   previewUrlDesktop,
   thumbnailUrl,
   name,
+  alt,
   imgClassName = "",
   eager = false,
   animationsEnabled
@@ -262,7 +270,8 @@ export default function AnimatedPreview( {
       { ...hoverHandlers }
     >
       <img
-        alt={ name }
+        data-pin-nopin="true"
+        alt={ alt ?? name }
         src={ thumbnailUrl }
         srcSet={ `${ thumbnailUrl } 1x, ${ thumbnailUrl.replace(
           /\.webp$/,

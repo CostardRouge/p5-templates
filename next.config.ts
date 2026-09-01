@@ -30,8 +30,17 @@ const nextConfig: NextConfig = {
     "web-push"
   ],
 
+  // Dev-only: which hosts may pull /_next resources. "*" is NOT a wildcard —
+  // Next matches entries as hostnames, so an unlisted host still gets a 403 on
+  // every chunk and renders a blank page with the reason only in the server
+  // log. The loopback pair is listed explicitly because that is what a headless
+  // browser (and anything embedding the /embed route from another local port)
+  // asks for; the LAN addresses are there so sketches open on a phone or tablet
+  // — orientation, touch and gyroscope cannot be tested any other way.
   allowedDevOrigins: [
     "*",
+    "localhost",
+    "127.0.0.1",
     "192.168.1.161",
     "192.168.1.119",
     "172.20.10.2",

@@ -1,10 +1,12 @@
+
+
 # Sketchbook
 
 A Next.js app for building and exporting visuals from creative-coding sketches. Sketches run on multiple engines (p5.js, GSAP, Three.js); configure them through a UI, then render and export them as images or videos — either in-browser or via a headless Playwright backend.
 
 ## Stack
 
-- **Next.js 15** (App Router) · **TypeScript** · **Tailwind CSS**
+- **Next.js 16** (App Router) · **TypeScript** · **Tailwind CSS**
 - **p5.js**, **GSAP**, and **Three.js** rendering engines
 - **Prisma + PostgreSQL** for persistence
 - **BullMQ + Redis** for background job processing

@@ -26,6 +26,15 @@ interface BaseConfig {
    * falls back to a sensible zero value.
    */
   default?: unknown;
+  /**
+   * Marks a field injected by the platform rather than declared by the
+   * sketch's own options.ts. Today only the interaction-bindings plugin's
+   * shared Interaction panel sets it: the form renders a managed interaction
+   * field against the top-level `interactive` namespace (and only while a
+   * binding needs it), where a sketch-declared one edits the sketch scope
+   * unconditionally.
+   */
+  managed?: boolean;
 }
 
 // Step 2: Define the config shape for each component type
@@ -209,6 +218,13 @@ interface SourceSelectConfig extends BaseConfig {
   component: "source-select";
 }
 
+// Parameter-key picker for key lists (breakdown snap / exclude): the sketch's
+// key-paths plus their groups, derived at render time (see ControlledKeySelect).
+interface KeySelectConfig extends BaseConfig {
+  component: "key-select";
+  placeholder?: string;
+}
+
 interface AssetInputConfig extends BaseConfig {
   component: "asset";
   /** Asset kind id, e.g. "images", "videos". */
@@ -273,6 +289,7 @@ export type FieldConfig =
   | EasingConfig
   | Vector2DConfig
   | SourceSelectConfig
+  | KeySelectConfig
   | AssetInputConfig
   | AssetStackConfig
   | WebcamDeviceSelectConfig
@@ -458,6 +475,33 @@ const hudRangeFields: Record<string, FieldConfig> = {
   max: {
     label: "Max",
     component: "number"
+  }
+};
+
+// Style every standalone HUD element carries. The boxed elements (badge,
+// gauge, sparkline, counter, swatch) add the background-panel trio; the
+// full-canvas overlays (crosshairs, bounding box) draw no panel.
+const hudElementStyleFields: Record<string, FieldConfig> = {
+  fill: hudFillField,
+  font: hudFontField,
+  blend: hudBlendField
+};
+
+const hudBoxStyleFields: Record<string, FieldConfig> = {
+  backgroundColor: {
+    label: "Background",
+    component: "color"
+  },
+  backgroundStroke: {
+    label: "Background stroke",
+    component: "color"
+  },
+  backgroundRadius: {
+    label: "Background radius",
+    component: "slider",
+    min: 0,
+    max: 200,
+    step: 1
   }
 };
 
@@ -910,8 +954,8 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
           component: "item-list",
           itemConfig: {
             label: "Key",
-            component: "text",
-            placeholder: "e.g. seed or sites.seed"
+            component: "key-select",
+            placeholder: "Pick a key or group…"
           }
         },
         excludeKeys: {
@@ -919,8 +963,8 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
           component: "item-list",
           itemConfig: {
             label: "Key",
-            component: "text",
-            placeholder: "e.g. backgroundColor"
+            component: "key-select",
+            placeholder: "Pick a key or group…"
           }
         }
       }
@@ -1176,195 +1220,140 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
     },
     sound: soundOnChangeField
   },
-  hud: {
-    fill: {
-      label: "Default fill",
-      component: "color"
+  "hud-badge": {
+    enabled: hudEnabledField,
+    // Drag-reorderable list of text values. Each item is a picker over the
+    // available tokens; the element prints them in order, "·"-separated.
+    segments: {
+      label: "Segments",
+      component: "item-list",
+      itemConfig: {
+        label: "Value",
+        component: "select",
+        options: badgeSegmentOptions
+      }
     },
-    backgroundColor: {
-      label: "Background",
-      component: "color"
+    override: {
+      label: "Override text",
+      component: "text",
+      placeholder: "Replaces the whole badge when set"
     },
-    backgroundStroke: {
-      label: "Background stroke",
-      component: "color"
+    anchor: hudAnchorField,
+    offset: hudOffsetField,
+    size: hudSizeField(),
+    ...hudElementStyleFields,
+    ...hudBoxStyleFields
+  },
+  "hud-gauge": {
+    enabled: hudEnabledField,
+    source: hudSourceField,
+    anchor: hudAnchorField,
+    offset: hudOffsetField,
+    size: hudSizeField( 48 ),
+    ...hudRangeFields,
+    label: hudLabelField,
+    unit: hudUnitField,
+    decimals: hudDecimalsField,
+    easingFn: {
+      label: "Fill easing",
+      component: "easing"
     },
-    backgroundRadius: {
-      label: "Background radius",
+    ...hudWindowFields,
+    ...hudElementStyleFields,
+    ...hudBoxStyleFields
+  },
+  "hud-sparkline": {
+    enabled: hudEnabledField,
+    source: hudSourceField,
+    anchor: hudAnchorField,
+    offset: hudOffsetField,
+    size: hudSizeField( 48 ),
+    ...hudRangeFields,
+    historySize: {
+      label: "History points",
       component: "slider",
-      min: 0,
-      max: 200,
+      min: 8,
+      max: 180,
       step: 1
     },
-    font: hudFontField,
-    blend: hudBlendField,
-    badge: {
-      label: "Badge",
+    decimals: hudDecimalsField,
+    unit: hudUnitField,
+    ...hudWindowFields,
+    ...hudElementStyleFields,
+    ...hudBoxStyleFields
+  },
+  "hud-counter": {
+    enabled: hudEnabledField,
+    source: hudSourceField,
+    anchor: hudAnchorField,
+    offset: hudOffsetField,
+    size: hudSizeField( 160 ),
+    label: hudLabelField,
+    unit: hudUnitField,
+    decimals: hudDecimalsField,
+    ...hudWindowFields,
+    ...hudElementStyleFields,
+    ...hudBoxStyleFields
+  },
+  "hud-crosshairs": {
+    enabled: hudEnabledField,
+    source: hudSourceField,
+    size: hudSizeField( 48 ),
+    ...hudWindowFields,
+    ...hudElementStyleFields
+  },
+  "hud-swatch": {
+    enabled: hudEnabledField,
+    source: hudSourceField,
+    anchor: hudAnchorField,
+    offset: hudOffsetField,
+    size: hudSizeField( 48 ),
+    label: hudLabelField,
+    ...hudWindowFields,
+    ...hudElementStyleFields,
+    ...hudBoxStyleFields
+  },
+  "hud-bounding-box": {
+    enabled: hudEnabledField,
+    source: hudSourceField,
+    size: hudSizeField( 48 ),
+    region: {
+      label: "Region (0-1)",
       component: "nested-object",
       fields: {
-        enabled: hudEnabledField,
-        // Drag-reorderable list of text values. Each item is a picker over the
-        // available tokens; the widget prints them in order, "·"-separated.
-        segments: {
-          label: "Segments",
-          component: "item-list",
-          itemConfig: {
-            label: "Value",
-            component: "select",
-            options: badgeSegmentOptions
-          }
-        },
-        override: {
-          label: "Override text",
-          component: "text",
-          placeholder: "Replaces the whole badge when set"
-        },
-        anchor: hudAnchorField,
-        offset: hudOffsetField,
-        size: hudSizeField(),
-        fill: hudFillField,
-        font: hudFontField,
-        blend: hudBlendField
-      }
-    },
-    gauge: {
-      label: "Gauge",
-      component: "nested-object",
-      fields: {
-        enabled: hudEnabledField,
-        source: hudSourceField,
-        anchor: hudAnchorField,
-        offset: hudOffsetField,
-        size: hudSizeField( 48 ),
-        ...hudRangeFields,
-        label: hudLabelField,
-        unit: hudUnitField,
-        decimals: hudDecimalsField,
-        easingFn: {
-          label: "Fill easing",
-          component: "easing"
-        },
-        fill: hudFillField,
-        blend: hudBlendField,
-        ...hudWindowFields
-      }
-    },
-    sparkline: {
-      label: "Sparkline",
-      component: "nested-object",
-      fields: {
-        enabled: hudEnabledField,
-        source: hudSourceField,
-        anchor: hudAnchorField,
-        offset: hudOffsetField,
-        size: hudSizeField( 48 ),
-        ...hudRangeFields,
-        historySize: {
-          label: "History points",
+        x: {
+          label: "x",
           component: "slider",
-          min: 8,
-          max: 180,
-          step: 1
+          min: 0,
+          max: 1,
+          step: 0.01
         },
-        decimals: hudDecimalsField,
-        unit: hudUnitField,
-        fill: hudFillField,
-        blend: hudBlendField,
-        ...hudWindowFields
-      }
-    },
-    counter: {
-      label: "Counter",
-      component: "nested-object",
-      fields: {
-        enabled: hudEnabledField,
-        source: hudSourceField,
-        anchor: hudAnchorField,
-        offset: hudOffsetField,
-        size: hudSizeField( 160 ),
-        label: hudLabelField,
-        unit: hudUnitField,
-        decimals: hudDecimalsField,
-        fill: hudFillField,
-        blend: hudBlendField,
-        ...hudWindowFields
-      }
-    },
-    crosshairs: {
-      label: "Crosshairs",
-      component: "nested-object",
-      fields: {
-        enabled: hudEnabledField,
-        source: hudSourceField,
-        size: hudSizeField( 48 ),
-        fill: hudFillField,
-        blend: hudBlendField,
-        ...hudWindowFields
-      }
-    },
-    swatch: {
-      label: "Color swatch",
-      component: "nested-object",
-      fields: {
-        enabled: hudEnabledField,
-        source: hudSourceField,
-        anchor: hudAnchorField,
-        offset: hudOffsetField,
-        size: hudSizeField( 48 ),
-        label: hudLabelField,
-        fill: hudFillField,
-        font: hudFontField,
-        blend: hudBlendField,
-        ...hudWindowFields
-      }
-    },
-    boundingBox: {
-      label: "Bounding box",
-      component: "nested-object",
-      fields: {
-        enabled: hudEnabledField,
-        source: hudSourceField,
-        size: hudSizeField( 48 ),
-        region: {
-          label: "Region (0-1)",
-          component: "nested-object",
-          fields: {
-            x: {
-              label: "x",
-              component: "slider",
-              min: 0,
-              max: 1,
-              step: 0.01
-            },
-            y: {
-              label: "y",
-              component: "slider",
-              min: 0,
-              max: 1,
-              step: 0.01
-            },
-            w: {
-              label: "w",
-              component: "slider",
-              min: 0,
-              max: 1,
-              step: 0.01
-            },
-            h: {
-              label: "h",
-              component: "slider",
-              min: 0,
-              max: 1,
-              step: 0.01
-            }
-          }
+        y: {
+          label: "y",
+          component: "slider",
+          min: 0,
+          max: 1,
+          step: 0.01
         },
-        label: hudLabelField,
-        fill: hudFillField,
-        blend: hudBlendField,
-        ...hudWindowFields
+        w: {
+          label: "w",
+          component: "slider",
+          min: 0,
+          max: 1,
+          step: 0.01
+        },
+        h: {
+          label: "h",
+          component: "slider",
+          min: 0,
+          max: 1,
+          step: 0.01
+        }
       }
-    }
+    },
+    label: hudLabelField,
+    ...hudWindowFields,
+    ...hudElementStyleFields
   },
   text: {
     content: {

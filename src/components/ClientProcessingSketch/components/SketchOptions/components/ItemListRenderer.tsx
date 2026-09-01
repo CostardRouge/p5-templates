@@ -53,6 +53,14 @@ type ItemListRendererProps = {
     locked?: boolean;
     label?: string;
   };
+  /** Nesting level, threaded from FieldRenderer — see its own doc comment.
+   *  Depth 0 renders the header as a full-bleed band, exactly like a
+   *  nested-object group at the same depth, so a section's fields read as one
+   *  family regardless of which component backs each one. */
+  depth?: number;
+  /** Horizontal padding a depth-0 band applies to its own header, so the band
+   *  itself can stay full-bleed. */
+  leafPaddingClassName?: string;
 };
 
 type SortableItemProps = {
@@ -61,6 +69,9 @@ type SortableItemProps = {
   itemConfig: FieldConfig;
   onRemove: () => void;
   locked?: boolean;
+  /** Nesting level for the item's own field, threaded from ItemListRenderer's
+   *  own depth + 1 (see the comment on the FieldRenderer call below). */
+  depth: number;
 };
 
 function createId() {
@@ -95,7 +106,8 @@ function SortableItem( {
   fieldPath,
   itemConfig,
   onRemove,
-  locked
+  locked,
+  depth
 }: SortableItemProps ) {
   const {
     attributes,
@@ -118,8 +130,20 @@ function SortableItem( {
     <div
       ref={ setNodeRef }
       style={ style }
+      // A border, not just the space-y gap between rows: bg-background on a
+      // bg-background/50 parent (see the box below) painted the same color as
+      // the parent it sits in, so items had no visible edge of their own —
+      // exactly what the parent's own "Add Item" row already avoids with this
+      // same border.
+      //
+      // items-start, not items-center: itemConfig can be a "nested-object"
+      // that expands into a tall form (this list's own "Photo"), and a
+      // vertically centred drag handle / delete then floats at the middle of
+      // the whole card instead of sitting beside its header row. Both action
+      // buttons are sized to that header's own row height (see their classes
+      // below) so they land beside it, not merely "near the top".
       className={ clsx(
-        "relative flex items-center gap-1 p-1 rounded-lg bg-background",
+        "relative flex items-start gap-1 p-1 rounded-lg border border-theme bg-background",
         "data-[dragging=true]:opacity-70"
       ) }
       data-dragging={ isDragging ? "true" : "false" }
@@ -129,18 +153,27 @@ function SortableItem( {
         ref={ setActivatorNodeRef }
         { ...attributes }
         { ...listeners }
-        className="cursor-grab active:cursor-grabbing"
+        className="flex shrink-0 cursor-grab items-center justify-center rounded-md p-2 text-label transition-colors hover:bg-hover hover:text-foreground active:cursor-grabbing md:p-1.5"
         aria-label="Drag to reorder"
       >
-        <GripVertical className="h-4 w-3.5 text-foreground" />
+        <GripVertical className="h-4 w-3.5" />
       </button>
 
-      <div className="flex-1">
+      <div className="min-w-0 flex-1">
+        {/* depth + 1, never the default 0: itemConfig can itself be a
+            nested-object (this list's "Photo"), and depth 0 gives a
+            nested-object the full band treatment meant for a direct child of
+            a PanelSection — its own "py-2 md:py-1.5" plus a self-applied
+            leafPaddingClassName — doubled on top of this row's own border and
+            p-1. One level down uses the lighter indent-guide treatment
+            instead, sized for sitting inside something that already has its
+            own chrome. */}
         <FieldRenderer
           fieldBasePath={ fieldPath }
           fieldName=""
           config={ itemConfig }
           hideLabel={ true }
+          depth={ depth + 1 }
         />
       </div>
 
@@ -148,7 +181,7 @@ function SortableItem( {
         <button
           type="button"
           onClick={ onRemove }
-          className="text-red-500 hover:text-red-700"
+          className="flex shrink-0 items-center justify-center rounded-md p-2 text-red-500 transition-colors hover:bg-hover hover:text-red-700 md:p-1.5"
           aria-label="Remove item"
         >
           <Trash2 className="h-4 w-4" />
@@ -160,8 +193,12 @@ function SortableItem( {
 
 export default function ItemListRenderer( {
   name,
-  config
+  config,
+  depth = 0,
+  leafPaddingClassName = "px-3"
 }: ItemListRendererProps ) {
+  const isBand = depth === 0;
+
   const {
     control, getValues, setValue
   } = useFormContext();
@@ -379,62 +416,97 @@ export default function ItemListRenderer( {
         header={ (
           expanded, title
         ) => (
+          // Same header shape as a nested-object group at this depth (see
+          // FieldRenderer) — chevron size/color, text color and vertical
+          // rhythm all matched, so this list reads as one more field in the
+          // section rather than a visually distinct component.
           <div
-            className="text-gray-500 cursor-pointer select-none flex items-center gap-1"
+            className={ clsx(
+              "cursor-pointer select-none flex items-center justify-between w-full gap-2 min-h-[2.5rem] md:min-h-0",
+              isBand
+                ? clsx(
+                  "py-2 md:py-1.5",
+                  leafPaddingClassName
+                )
+                : "py-1.5 md:py-1 text-label"
+            ) }
             title={ title }
           >
-            <ChevronDown
-              className="w-3 h-3 transition-transform"
-              style={ {
-                transform: expanded ? "rotate(0deg)" : "rotate(-90deg)"
-              } }
-            />
-            <span>
-              {config.label ?? "Items"} ({values.length} items)
-            </span>
+            <div className="flex min-w-0 items-center gap-1.5">
+              <ChevronDown
+                className="w-4 h-4 md:w-3 md:h-3 shrink-0 text-label transition-transform"
+                style={ {
+                  transform: expanded ? "rotate(0deg)" : "rotate(-90deg)"
+                } }
+              />
+              <span
+                className={ clsx(
+                  "truncate text-label",
+                  isBand && "text-xs"
+                ) }
+              >
+                {config.label ?? "Items"} ({values.length} items)
+              </span>
+            </div>
           </div>
         ) }
       >
-        <div className="space-y-1 p-1 border border-theme rounded-xl bg-background/50">
-          <DndContext
-            sensors={ sensors }
-            collisionDetection={ closestCenter }
-            onDragEnd={ handleDragEnd }
-            modifiers={ [
-              restrictToVerticalAxis,
-              restrictToParentElement
-            ] }
-          >
-            <SortableContext
-              items={ itemIds }
-              strategy={ verticalListSortingStrategy }
+        {/* Same outer treatment as a nested-object body at this depth: a
+            band pads its own bottom/horizontal space (leafPaddingClassName),
+            a deeper list falls back to the indent guide. The bordered box
+            below it is specific to this component — item rows are draggable
+            and benefit from a visible drop zone that nested-object's flat
+            field list doesn't need. */}
+        <div
+          className={ clsx( isBand
+            ? clsx(
+              "pb-2 pt-0.5",
+              leafPaddingClassName
+            )
+            : "ml-1.5 border-l border-theme pl-2.5 pb-1" ) }
+        >
+          <div className="space-y-1 p-1 border border-theme rounded-xl bg-background/50">
+            <DndContext
+              sensors={ sensors }
+              collisionDetection={ closestCenter }
+              onDragEnd={ handleDragEnd }
+              modifiers={ [
+                restrictToVerticalAxis,
+                restrictToParentElement
+              ] }
             >
-              {itemIds.map( (
-                id, index
-              ) => (
-                <SortableItem
-                  key={ id }
-                  id={ id }
-                  fieldPath={ `${ name }.${ index }` }
-                  itemConfig={ config.itemConfig }
-                  onRemove={ () => handleRemove( index ) }
-                  locked={ config.locked }
-                />
-              ) )}
-            </SortableContext>
-          </DndContext>
+              <SortableContext
+                items={ itemIds }
+                strategy={ verticalListSortingStrategy }
+              >
+                {itemIds.map( (
+                  id, index
+                ) => (
+                  <SortableItem
+                    key={ id }
+                    id={ id }
+                    fieldPath={ `${ name }.${ index }` }
+                    itemConfig={ config.itemConfig }
+                    onRemove={ () => handleRemove( index ) }
+                    locked={ config.locked }
+                    depth={ depth }
+                  />
+                ) )}
+              </SortableContext>
+            </DndContext>
 
-          {!config.locked &&
-            ( !config.maxItems || values.length < config.maxItems ) && (
-            <button
-              type="button"
-              onClick={ handleAdd }
-              className="w-full flex items-center gap-1 px-1 py-1 border border-theme rounded-lg bg-background hover:bg-theme/10"
-            >
-              <Plus className="h-4 w-4" />
-              Add Item
-            </button>
-          )}
+            {!config.locked &&
+              ( !config.maxItems || values.length < config.maxItems ) && (
+              <button
+                type="button"
+                onClick={ handleAdd }
+                className="w-full flex items-center gap-1 px-1 py-1 border border-theme rounded-lg bg-background hover:bg-theme/10"
+              >
+                <Plus className="h-4 w-4" />
+                Add Item
+              </button>
+            )}
+          </div>
         </div>
       </CollapsibleItem>
     </div>
@@ -462,6 +534,19 @@ function getDefaultValueForConfig( config: FieldConfig ): any {
       ];
     case "select": {
       return config.options[ 0 ]?.value ?? "";
+    }
+    // The pad edits an { x, y } pair in place: without a shaped default a new
+    // row starts as "" and the pad has nothing to bind to. Centre of the range
+    // is the neutral choice — the middle of the pad, whatever its bounds.
+    case "vector2d": {
+      const min = config.min ?? ( config.allowNegative === false ? 0 : -1 );
+      const max = config.max ?? 1;
+      const center = ( min + max ) / 2;
+
+      return {
+        x: center,
+        y: center
+      };
     }
     case "nested-object": {
       const obj: Record<string, any> = {};

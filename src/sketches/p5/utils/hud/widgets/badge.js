@@ -45,7 +45,7 @@ function segmentText( token ) {
  * "·" separator; `override` replaces the whole text when set.
  */
 export default function badge(
-  cfg, style, part
+  cfg, style
 ) {
   withHudTransform( ( p ) => {
     const {
@@ -99,7 +99,6 @@ export default function badge(
     );
 
     reportWidgetBounds(
-      part,
       rect.x,
       rect.y,
       rect.w,

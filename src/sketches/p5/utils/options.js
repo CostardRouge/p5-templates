@@ -15,7 +15,9 @@ import {
 } from "../shared/syncSketchOptions.js";
 
 import {
-  resolveAssetURL
+  resolveAssetURL,
+  structuredClone,
+  valuesEqual
 } from "../shared/utils.js";
 
 import {
@@ -109,6 +111,19 @@ function collectImagePathsDeep(
 }
 
 async function _refreshAssets() {
+  // The 80ms debounce above outlives the sketch: leaving a sketch page fires
+  // `sketch.destroy()` (which does `setP5( null )`) while a refresh is still
+  // pending, and `getP5().loadImage()` below then throws on null. Bail out
+  // instead — there is no sketch left to load assets into. Returning before
+  // touching the cache matters: a half-filled `imagesMap` would memoise
+  // `img: null` entries that the `if ( !obj )` check never retries.
+  //
+  // This only trips when no sketch is alive. `refreshAssets` is registered on
+  // `engine-window-preload`, which always runs after the instance exists.
+  if ( !getP5() ) {
+    return;
+  }
+
   const opts = getSketchOptions();
   const globalImages = opts.assets?.images ?? [];
   // Also pick up images stored directly in sketch form fields (e.g. images-stack
@@ -160,16 +175,26 @@ async function _refreshAssets() {
   const newMap = new Map();
 
   for ( const path of allPaths ) {
+    const url = resolveAssetURL(
+      path,
+      opts.id
+    );
+
     let obj = prevMap.get( path );
 
-    if ( !obj ) {
-      const url = resolveAssetURL(
-        path,
-        opts.id
-      );
+    // Keyed on the RESOLVED URL, not on the path: a path can be re-pointed at
+    // a different file (a fresh upload re-registering its blob, a job id
+    // arriving) and memoising on the path alone leaves the old pixels on
+    // screen with nothing short of a page reload to shift them.
+    if ( obj && obj.url !== url ) {
+      obj.img?.remove?.();
+      obj = undefined;
+    }
 
+    if ( !obj ) {
       obj = {
         path,
+        url,
         filename: path.split( "/" ).pop(),
         img: null,
         exif: undefined
@@ -283,25 +308,6 @@ let previousOptions = {
 let unsubscribe = null;
 
 /**
- * Compare two objects for deep equality
- */
-function isEqual(
-  a, b
-) {
-  if ( a === b ) {
-    return true;
-  }
-  if ( !a || !b ) {
-    return false;
-  }
-  if ( typeof a !== "object" || typeof b !== "object" ) {
-    return false;
-  }
-
-  return JSON.stringify( a ) === JSON.stringify( b );
-}
-
-/**
  * Resolve the effective size/animation for the current slide.
  * Per-slide overrides win; otherwise global values are used.
  *
@@ -347,7 +353,7 @@ function handleOptionsChange(
   } = getEffective( newOptions );
 
   // Check for effective size changes (slide override or global)
-  if ( effectiveSize && !isEqual(
+  if ( effectiveSize && !valuesEqual(
     effectiveSize,
     previousOptions.effectiveSize
   ) ) {
@@ -382,7 +388,7 @@ function handleOptionsChange(
   // duration change even when the framerate is untouched (or missing from
   // a partial per-slide override), so the sketchOptions update is never
   // gated behind framerate validity.
-  if ( effectiveAnimation && !isEqual(
+  if ( effectiveAnimation && !valuesEqual(
     effectiveAnimation,
     previousOptions.effectiveAnimation
   ) ) {
@@ -422,17 +428,29 @@ function handleOptionsChange(
     ...newOptions.animation
   } : null;
 
-  // Refresh assets if there were any changes or if assets changed
-  if ( hasChanges || !isEqual(
-    newOptions?.assets,
-    previousOptions.assets
-  ) || !isEqual(
-    newOptions?.slides,
-    previousOptions.slides
-  ) ) {
+  // Refresh assets if there were any changes or if assets/slides changed.
+  // The event payload is the live store, mutated in place — object identities
+  // survive value changes, so previous values must be kept as *snapshots*
+  // (clones) and compared by value; holding references would make every
+  // comparison an a === b hit and asset edits would never refresh.
+  const assetsChanged = !valuesEqual(
+    newOptions?.assets ?? null,
+    previousOptions.assets ?? null
+  );
+  const slidesChanged = !valuesEqual(
+    newOptions?.slides ?? null,
+    previousOptions.slides ?? null
+  );
+
+  if ( hasChanges || assetsChanged || slidesChanged ) {
     refreshAssets();
-    previousOptions.assets = newOptions?.assets;
-    previousOptions.slides = newOptions?.slides;
+
+    if ( assetsChanged ) {
+      previousOptions.assets = structuredClone( newOptions?.assets ?? null );
+    }
+    if ( slidesChanged ) {
+      previousOptions.slides = structuredClone( newOptions?.slides ?? null );
+    }
   }
 }
 
@@ -478,8 +496,9 @@ function initializeOptionsSubscription() {
     effectiveAnimation: initialEffectiveAnimation ? {
       ...initialEffectiveAnimation
     } : null,
-    assets: initialOptions?.assets,
-    slides: initialOptions?.slides
+    // Snapshots, not references — the store mutates these in place.
+    assets: structuredClone( initialOptions?.assets ?? null ),
+    slides: structuredClone( initialOptions?.slides ?? null )
   };
 
   // Subscribe to future changes
@@ -521,6 +540,26 @@ export function registerEvents() {
 // dispose-on-reset only loads the (lazy) module when there's something to free.
 let _interactionInited = false;
 
+// The handler-managed source groups, each gated by its own `enabled` flag
+// (`vision` covers all camera trackers). Mirrors the per-source guards the
+// collectors in interaction/index.js check, like interactionEnablePaths in
+// the BindingAffordance does on the form side.
+const INTERACTION_SOURCE_GROUPS = [
+  "mouse",
+  "touch",
+  "vision",
+  "orbit",
+  "perlinNoise",
+  "gyroscope",
+  "midi",
+  "audio",
+  "joypad"
+];
+
+function hasEnabledInteractionSource( interaction ) {
+  return INTERACTION_SOURCE_GROUPS.some( ( source ) => interaction[ source ]?.enabled === true );
+}
+
 // Engine-managed interaction init: when a sketch's options carry an enabled
 // `interaction` block, boot the handler once at setup so its sources (webcam,
 // audio, gyro, touch, …) are available as binding channels with no per-sketch
@@ -528,11 +567,27 @@ let _interactionInited = false;
 // of the core module-eval chain. `initInteraction` is idempotent (re-arms
 // listeners), so it's safe alongside sketches that still call it themselves;
 // fire-and-forget so vision warm-up doesn't block setup.
+//
+// A block with NO enabled source (e.g. the inert one seeded on every sketch
+// when the bindings plugin is on) must not boot: there is nothing to sample,
+// and the baseline mouse binding works without the handler (channels.js keeps
+// its own listener). Sources enabled later at runtime lazy-init from their
+// collectors instead.
 function initInteractionForOptions() {
   try {
-    const interaction = liveSketchBase( getSketchOptions() )?.interaction;
+    const live = getSketchOptions();
+    const {
+      interaction
+    } = effectiveInteractive(
+      live,
+      liveSketchBase( live )
+    );
 
-    if ( interaction && interaction.enabled !== false ) {
+    if (
+      interaction &&
+      interaction.enabled !== false &&
+      hasEnabledInteractionSource( interaction )
+    ) {
       _interactionInited = true;
       import( "./interaction/index.js" )
         .then( ( mod ) => mod.initInteraction( interaction ) )
@@ -558,7 +613,7 @@ export function disposeInteractionOnReset() {
     .catch( () => {} );
 }
 
-// The per-slide-merged sketch settings object the bindings live on.
+// The per-slide-merged sketch settings object binding targets resolve against.
 function liveSketchBase( live ) {
   if ( typeof window !== "undefined" && window.getSketchSettings ) {
     try {
@@ -569,6 +624,42 @@ function liveSketchBase( live ) {
   }
 
   return live.sketch ?? {};
+}
+
+// The active slide (when the slides module is loaded), for resolving the
+// per-slide `interactive` override without re-deriving slide state here.
+function liveCurrentSlide() {
+  if ( typeof window !== "undefined" && window.getCurrentSlide ) {
+    try {
+      return window.getCurrentSlide()?.slide ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  return null;
+}
+
+// The effective interaction-bindings state for the current frame. Bindings and
+// the plugin-managed interaction block live in the top-level `interactive`
+// namespace (root, overridden key-by-key by the active slide's own), NOT
+// inside the sketch parameters. Two deliberate fallbacks:
+//   - bindings: a legacy `bindings` array still sitting on the merged sketch
+//     (pre-migration capture snapshots load without passing through
+//     initOptions) keeps working;
+//   - interaction: a block on the merged sketch WINS — that's a sketch-declared
+//     parameter (hand-tracking, audio, … read it from their own code), and the
+//     binding UI writes source-enable flags into it when it exists.
+function effectiveInteractive(
+  live, base
+) {
+  const root = live?.interactive;
+  const slide = liveCurrentSlide()?.interactive;
+
+  return {
+    bindings: slide?.bindings ?? root?.bindings ?? base?.bindings,
+    interaction: base?.interaction ?? slide?.interaction ?? root?.interaction
+  };
 }
 
 // The generator context: the loop-normalized progression (deterministic during
@@ -598,14 +689,24 @@ function publishChannelsFrame() {
   }
 
   try {
-    const base = liveSketchBase( getSketchOptions() );
-    const channels = sampleChannels( base?.interaction );
+    const live = getSketchOptions();
+    const base = liveSketchBase( live );
+    const {
+      bindings, interaction
+    } = effectiveInteractive(
+      live,
+      base
+    );
+    const channels = sampleChannels( interaction );
 
     publishChannels( channels );
 
-    if ( base && Array.isArray( base.bindings ) && base.bindings.length > 0 ) {
+    if ( Array.isArray( bindings ) && bindings.length > 0 ) {
       publishBindingSignals( computeBindingSignals(
-        base,
+        {
+          ...base,
+          bindings
+        },
         channels,
         bindingContext()
       ) );
@@ -650,26 +751,44 @@ export function syncEffectivePrevious(
 /* ------------------------------------------------------------------ */
 
 // Resolve the per-slide-merged sketch object, then layer interactive bindings
-// over it. `resolveBindings` returns the same object untouched when the sketch
-// declares no bindings, so non-interactive sketches pay nothing.
+// over it. Bindings come from the top-level `interactive` namespace (see
+// effectiveInteractive); with none active the base object is returned
+// untouched, so non-interactive sketches pay nothing — no per-access
+// allocation on this hot path (the proxy runs it on every `.sketch` read).
 function resolveSketch( live ) {
   const base = liveSketchBase( live );
 
-  if (
-    !BINDINGS_ENABLED ||
-    !base ||
-    !Array.isArray( base.bindings ) ||
-    base.bindings.length === 0
-  ) {
+  if ( !BINDINGS_ENABLED || !base ) {
+    return base;
+  }
+
+  const {
+    bindings, interaction
+  } = effectiveInteractive(
+    live,
+    base
+  );
+
+  if ( !Array.isArray( bindings ) || bindings.length === 0 ) {
     return base;
   }
 
   try {
     const context = bindingContext();
 
+    // The shim also grafts the effective interaction onto the resolved clone,
+    // so sketch code reading `options.sketch.interaction` sees the block the
+    // engine actually sampled, wherever it is stored. (resolveBindings
+    // memoizes the clone per frame, so this stays off the per-access path.)
     return resolveBindings(
-      base,
-      sampleChannels( base.interaction ),
+      {
+        ...base,
+        bindings,
+        ...( interaction !== undefined && {
+          interaction
+        } )
+      },
+      sampleChannels( interaction ),
       context.frame,
       context
     );

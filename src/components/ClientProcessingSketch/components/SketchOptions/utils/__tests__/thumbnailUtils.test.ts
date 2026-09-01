@@ -8,6 +8,7 @@ import {
   captureThumbnailFromCanvas,
   getActiveSketchCanvas,
   getCurrentFrameCanvas,
+  getRenderedSlideIndex,
   waitForSlideRendered
 } from "../thumbnailUtils";
 
@@ -110,7 +111,7 @@ describe(
   "waitForSlideRendered",
   () => {
     it(
-      "resolves once a slide-tracked (p5) canvas reports the target slide",
+      "resolves 'matched' once a slide-tracked (p5) canvas reports the target slide",
       async() => {
         const canvas = mountCanvasInContainer( "p5Canvas" );
 
@@ -119,12 +120,12 @@ describe(
         await expect( waitForSlideRendered(
           2,
           1000
-        ) ).resolves.toBeUndefined();
+        ) ).resolves.toBe( "matched" );
       }
     );
 
     it(
-      "resolves for an engine that does not track slides (Three.js) without waiting for the timeout",
+      "resolves 'matched' for an engine that does not track slides (Three.js) without waiting for the timeout",
       async() => {
         mountCanvasInContainer( "threejs-canvas" );
 
@@ -133,7 +134,28 @@ describe(
         await expect( waitForSlideRendered(
           0,
           1000
-        ) ).resolves.toBeUndefined();
+        ) ).resolves.toBe( "matched" );
+      }
+    );
+
+    it(
+      "resolves 'timeout' when the canvas keeps rendering another slide",
+      async() => {
+        // The distinction is what lets a caller refuse to trust the capture:
+        // 'timeout' means the frame about to be read was never confirmed to
+        // belong to the requested slide.
+        const canvas = mountCanvasInContainer( "p5Canvas" );
+
+        canvas.dataset.slide = "0";
+        jest.spyOn(
+          console,
+          "warn"
+        ).mockImplementation( () => undefined );
+
+        await expect( waitForSlideRendered(
+          3,
+          80
+        ) ).resolves.toBe( "timeout" );
       }
     );
 
@@ -174,7 +196,52 @@ describe(
         await expect( waitForSlideRendered(
           1,
           1000
-        ) ).resolves.toBeUndefined();
+        ) ).resolves.toBe( "matched" );
+      }
+    );
+  }
+);
+
+/* ------------------------------------------------------------------ */
+/*  getRenderedSlideIndex                                             */
+/* ------------------------------------------------------------------ */
+
+describe(
+  "getRenderedSlideIndex",
+  () => {
+    it(
+      "reads the slide index from the canvas data-slide attribute",
+      () => {
+        const canvas = mountCanvasInContainer( "p5Canvas" );
+
+        canvas.dataset.slide = "3";
+
+        expect( getRenderedSlideIndex() ).toBe( 3 );
+      }
+    );
+
+    it(
+      "returns undefined for an untracked canvas",
+      () => {
+        mountCanvasInContainer( "threejs-canvas" );
+
+        expect( getRenderedSlideIndex() ).toBeUndefined();
+      }
+    );
+
+    it(
+      "falls back to window.getCurrentSlide when the canvas is untagged",
+      () => {
+        mountCanvasInContainer( "threejs-canvas" );
+        ( window as any ).getCurrentSlide = () => ( {
+          index: 1
+        } );
+
+        try {
+          expect( getRenderedSlideIndex() ).toBe( 1 );
+        } finally {
+          delete ( window as any ).getCurrentSlide;
+        }
       }
     );
   }
@@ -236,19 +303,28 @@ describe(
   () => {
     // jsdom has no real 2D backend, so stub the destination context + encoder
     // to exercise the source-selection + scaling logic deterministically.
-    function stubDestinationCanvas() {
+    // `pixels` feeds the uniformity check; omitted, getImageData is absent and
+    // the capture reports non-uniform (the safe default).
+    function stubDestinationCanvas( pixels?: number[] ) {
       const drawImage = jest.fn();
+      const context: Record<string, unknown> = {
+        imageSmoothingEnabled: false,
+        imageSmoothingQuality: "low",
+        drawImage
+      };
+
+      if ( pixels ) {
+        context.getImageData = jest.fn().mockReturnValue( {
+          data: new Uint8ClampedArray( pixels )
+        } );
+      }
 
       jest
         .spyOn(
           HTMLCanvasElement.prototype,
           "getContext"
         )
-        .mockReturnValue( {
-          imageSmoothingEnabled: false,
-          imageSmoothingQuality: "low",
-          drawImage
-        } as unknown as CanvasRenderingContext2D );
+        .mockReturnValue( context as unknown as CanvasRenderingContext2D );
 
       jest
         .spyOn(
@@ -274,9 +350,9 @@ describe(
         );
         const readFrame = jest.fn().mockResolvedValue( frame );
 
-        const dataUrl = await captureThumbnailFromCanvas( makeEngine( readFrame ) );
+        const capture = await captureThumbnailFromCanvas( makeEngine( readFrame ) );
 
-        expect( dataUrl ).toBe( "data:image/jpeg;base64,STUB" );
+        expect( capture?.dataUrl ).toBe( "data:image/jpeg;base64,STUB" );
         expect( readFrame ).toHaveBeenCalledTimes( 1 );
         // Source frame is the engine's, scaled to a 240px-wide thumbnail.
         expect( drawImage ).toHaveBeenCalledWith(
@@ -299,7 +375,79 @@ describe(
         domCanvas.width = 240;
         domCanvas.height = 240;
 
-        await expect( captureThumbnailFromCanvas() ).resolves.toBe( "data:image/jpeg;base64,STUB" );
+        await expect( captureThumbnailFromCanvas() ).resolves.toMatchObject( {
+          dataUrl: "data:image/jpeg;base64,STUB"
+        } );
+      }
+    );
+
+    it(
+      "flags a capture whose every pixel is identical as uniform",
+      async() => {
+        // A blank WEBGL read flattened onto the opaque destination canvas is
+        // exactly this: a valid-looking JPEG where every pixel is the same.
+        stubDestinationCanvas( [
+          0,
+          0,
+          0,
+          255,
+          0,
+          0,
+          0,
+          255
+        ] );
+
+        const readFrame = jest.fn().mockResolvedValue( makeCanvas(
+          100,
+          100
+        ) );
+
+        await expect( captureThumbnailFromCanvas( makeEngine( readFrame ) ) ).resolves.toMatchObject( {
+          isUniform: true
+        } );
+      }
+    );
+
+    it(
+      "does not flag a capture with any differing pixel as uniform",
+      async() => {
+        stubDestinationCanvas( [
+          0,
+          0,
+          0,
+          255,
+          10,
+          0,
+          0,
+          255
+        ] );
+
+        const readFrame = jest.fn().mockResolvedValue( makeCanvas(
+          100,
+          100
+        ) );
+
+        await expect( captureThumbnailFromCanvas( makeEngine( readFrame ) ) ).resolves.toMatchObject( {
+          isUniform: false
+        } );
+      }
+    );
+
+    it(
+      "reports non-uniform when the environment cannot read pixels back",
+      async() => {
+        // No getImageData on the context (jsdom without a 2D backend): the
+        // check must fail open — "uniform" is what gets a capture discarded.
+        stubDestinationCanvas();
+
+        const readFrame = jest.fn().mockResolvedValue( makeCanvas(
+          100,
+          100
+        ) );
+
+        await expect( captureThumbnailFromCanvas( makeEngine( readFrame ) ) ).resolves.toMatchObject( {
+          isUniform: false
+        } );
       }
     );
 

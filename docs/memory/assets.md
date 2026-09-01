@@ -1,0 +1,28 @@
+# Assets — how an uploaded file becomes pixels on the canvas
+
+Read before touching asset upload, the blob registry, path resolution or the p5 image cache.
+
+## The pipeline, end to end
+
+2026-08-31 — A file the user drops or picks travels: `useAssetDrop.addAssets` (the single funnel — `ImageAssets`, `ControlledAssetInput` and `DropZoneButton` all reach it, the last two through `useAssetsBridge.uploadFiles`) → `registerBlobUnique` puts it in `window.__blobAssetMap` under a `<scope>/<type>/<name>` path → the path is pushed into `assets[type]` and into whatever form field asked for it → `setSketchOptions` → the p5 side's `_refreshAssets` (`src/sketches/p5/utils/options.js`) resolves each path with `resolveAssetURL` and `loadImage`s it into the `imagesMap` cache that `common.getAsset()` reads. On save, `CaptureActions.handleSubmit` re-fetches each path's blob and uploads it to S3 under the same path. **How to apply**: the path string is the identity that ties all five stages together — change how it is minted and you change the S3 layout too, so keep the `<scope>/<type>/<name>` shape.
+
+## A file input that is opened by script must be rendered, and its trigger must be a real control
+
+2026-08-31 — Tapping a photo slot on a phone did nothing at all: no picker, no error, nothing to see in a console. Two independent WebKit rules, both invisible in Chromium (an emulated mobile context opens the picker from a `display: none` input quite happily, and delivers clicks from a bare div):
+
+- **iOS Safari will not open the picker for a scripted `.click()` on a file input that is not rendered.** Every file input in this app was `className="hidden"`. They use `HIDDEN_FILE_INPUT_CLASS` (`src/components/hiddenFileInput.ts`, currently `sr-only`) now — 1×1px, clipped, out of flow, layout-neutral, and real enough for WebKit. Since the input becomes hittable, a trigger that also calls `.click()` must ignore events whose `target` is the input itself, or the picker opens twice.
+- **iOS Safari only synthesises a bubbling click for elements it treats as clickable** — a link/button/input/label, something with `cursor: pointer`, or an inline `onclick`. React listens at the root container, so a click that never bubbles never reaches a React handler. `ControlledAssetInput`'s wrapper was a plain `<div onClick>`, and once a photo is picked its preview covers the drop zone entirely, so that div is the *only* tap target left for replacing the image. It now carries `role="button"`, `tabIndex`, `cursor-pointer` and a keyboard handler.
+
+**How to apply**: a `<div onClick>` is not a button on iOS. Any tap target that is not a real control needs the pointer cursor *and* the button role, and any file input driven by script needs `HIDDEN_FILE_INPUT_CLASS`, never `hidden`. Neither can be caught by driving Chromium — check the computed `display` of the input and whether `document.elementFromPoint` at the target's centre has an interactive ancestor.
+
+## A filename is not an identity — the iOS `image.jpg` trap
+
+2026-08-31 — Paths are minted from `file.name`, and on a phone that name is a constant: every pick from the iOS camera roll arrives as `image.jpg`. Importing a second photo therefore reused the first one's path, `registerBlob` revoked the first blob URL under it, and the sketch — which had already cached an image for that path — went on drawing photo one. Reproduced headlessly (two different files both named `image.jpg` into `photo-stamp-collage`): the canvas was byte-identical before and after the second import, and only a page reload dislodged it. `registerBlobUnique` now owns the decision: the same file re-picked keeps its path (so the pool does not fill with copies of one image), a *different* file with a taken name gets `-2`, `-3` before the extension. **How to apply**: never build an asset path from a raw filename again — go through `registerBlobUnique`, and treat a `-2` suffix as normal, not as a bug. `addAssets` also dedupes its push into the pool: the pool is a set, and a duplicated entry renders twice and deletes once.
+
+## The image cache is keyed on the resolved URL, not the path
+
+2026-08-31 — `_refreshAssets` used to skip any path already in `imagesMap`, which is what made the collision above unrecoverable without a reload: the path had not changed, so nothing reloaded, whatever the blob URL now pointed at. Entries carry their resolved `url` and are dropped when it differs. **How to apply**: a path can legitimately be re-pointed (a fresh upload re-registering its blob, a job `id` arriving and switching resolution to the S3 proxy) — memoise on what `resolveAssetURL` returns, never on the path alone.
+
+## Anything destined for a file is a Blob, never a data URL
+
+2026-08-31 — A 1080×1350 frame is a ~1.5MB `data:` URL. Both still-capture paths carried one — the transport's camera button clicked an `<a href="data:…">` that was never added to the document, and the export panel's still variant `fetch()`ed one back into a Blob. Desktop tolerates both; mobile Safari acts on neither, so the camera button did nothing at all there. `captureFreshPngBlob` (`src/lib/canvasSnapshot.ts`) reads `toBlob` directly and is what both use now; `captureFreshPng` survives only for the dev thumbnail route, which posts base64 as JSON. The camera button then hands the file to `shareFiles`, the same share-sheet-or-download contract as `ExportPreview` (`docs/memory/recording.md`) — on iOS the share sheet is the only route to Photos. **How to apply**: a data URL is for embedding in a document, not for carrying pixels to a file; and a capture that produces nothing must surface it (the button shows an error state) rather than failing silently, which is how this went unnoticed.
