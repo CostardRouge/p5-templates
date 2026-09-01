@@ -10,6 +10,9 @@ import {
 import {
   FieldConfig
 } from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/constants/field-config";
+import {
+  randomizeFields
+} from "@/components/ClientProcessingSketch/components/SketchOptions/utils/randomizeFields";
 
 type RandomizeSettingsButtonProps = {
   config: Record<string, FieldConfig>;
@@ -17,103 +20,30 @@ type RandomizeSettingsButtonProps = {
   className?: string;
 };
 
+/**
+ * Randomizes every field of a form config at once — the inspector's action bar
+ * (whole sketch) and each nested-object group header (that group). A single
+ * field's own button is {@link RandomizeFieldButton}; both walk the same
+ * `randomizeFields`, so a newly randomizable component kind lands in both.
+ */
 export default function RandomizeSettingsButton( {
   config,
   basePath,
   className = "text-foreground hover:bg-theme/20 rounded transition-colors"
 }: RandomizeSettingsButtonProps ) {
   const {
-    setValue
+    getValues, setValue
   } = useFormContext();
-
-  const randomizeConfig = (
-    config: Record<string, FieldConfig>,
-    path: string
-  ) => {
-    for ( const [
-      key,
-      field
-    ] of Object.entries( config ) ) {
-      const fullPath = path ? `${ path }.${ key }` : key;
-
-      switch ( field.component ) {
-        case "number":
-        case "slider":
-          if ( field.min !== undefined && field.max !== undefined ) {
-            const randomValue =
-              Math.random() * ( field.max - field.min ) + field.min;
-
-            setValue(
-              fullPath,
-              field.step
-                ? Math.round( randomValue / field.step ) * field.step
-                : randomValue
-            );
-          }
-          break;
-        case "checkbox":
-          setValue(
-            fullPath,
-            Math.random() > 0.5
-          );
-          break;
-        case "color":
-          // setValue(
-          //   fullPath,
-          //   [
-          //     Math.floor( Math.random() * 255 ),
-          //     Math.floor( Math.random() * 255 ),
-          //     Math.floor( Math.random() * 255 ),
-          //   ]
-          // );
-          break;
-        case "select":
-          if ( field.options && field.options.length > 0 ) {
-            const randomOption =
-              field.options[ Math.floor( Math.random() * field.options.length ) ];
-
-            setValue(
-              fullPath,
-              randomOption.value
-            );
-          }
-          break;
-        case "nested-object":
-          randomizeConfig(
-            field.fields,
-            fullPath
-          );
-          break;
-        case "conditional-group":
-          const types = field.typeSelector.options;
-
-          if ( types && types.length > 0 ) {
-            const randomType = types[ Math.floor( Math.random() * types.length ) ];
-
-            setValue(
-              `${ fullPath }.${ field.conditionalOn }`,
-              randomType.value
-            );
-            const specificConfig = field.configs[ randomType.value ];
-
-            if ( specificConfig ) {
-              randomizeConfig(
-                specificConfig,
-                fullPath
-              );
-            }
-          }
-          break;
-        // Skip other types like text, textarea, image
-      }
-    }
-  };
 
   const handleRandomize = ( event: React.MouseEvent ) => {
     event.stopPropagation();
-    randomizeConfig(
+    randomizeFields(
       config,
-      basePath
+      basePath,
+      {
+        getValues,
+        setValue
+      }
     );
   };
 

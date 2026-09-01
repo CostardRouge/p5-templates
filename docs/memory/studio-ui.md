@@ -203,6 +203,19 @@ The floating inspector and the Interactive mixer used to swap `w-80` ↔ `w-fit`
 
 2026-08-31 — Chrome reserves ~13px inside an `input[type=number]` for its spin buttons whether or not they are visible, which is what clipped the vector2d pad's x/y fields to "-0." (48px box, 46px of text room for 59px of glyphs). Any compact numeric field in the panels therefore drops them — `[appearance:textfield]` plus the two `::-webkit-*-spin-button` variants; stepping stays on the arrow keys, which is where it was usable at a 0.01 step anyway — and is sized for the **widest** value it can hold (sign, both decimals), not the default one. The pad's column went 100px → 140px for that, and the square follows the same width, so the drag target grew with it.
 
+## Randomize draws whole values, not just scalars
+
+2026-09-01 — Randomizing walks a `FieldConfig` tree and assigns per component kind, so a field kind with no case is silently left alone — which is how the vector2d pad sat unrandomized while every slider around it moved. Rules for extending it:
+
+- **The walk is `SketchOptions/utils/randomizeFields.ts`, not a component.** Two hosts call it: `RandomizeSettingsButton` (the inspector's action bar and each group header, whole subtree) and `RandomizeFieldButton` (one field). It moved out of the button when the second host appeared — a kind added in a component is a kind the other host silently lacks — and being a plain function over a `{ getValues, setValue }` pair it is testable without mounting a form.
+- **The per-field button is rendered for `vector2d` only**, in the outer label row beside the modulation pastille, because the pad is the one control whose value is a *shape*: setting it by hand means agreeing on two coordinates at once, so "try another one" is the natural gesture. Every other kind is one drag away from any value it can hold and does not need its own button. It sits in the `needsOuterLabel` row, so an item-list row (which passes `hideLabel`) shows neither it nor the pastille — which is also where the pad has no room for them.
+
+- **A composite field is drawn as one value.** `vector2d` gets a single `setValue` of a whole `{ x, y }`, uniform on each axis independently (the whole square, not its diagonal), snapped to that axis' step via `fractionToValue`. Writing `x` and `y` as two paths would fire two form updates for one field and fight the pad's own merge.
+- **Bounds come from `resolveAxes`, which moved into `utils/vector2dMath.ts`** (re-exported from `Vector2DPad` with `Vector2DInputConfig`/`Vector2DValue`, where every caller already imports them). A vector2d has no bare `min`/`max` to read: the effective range is defaults → `allowNegative` → shared `min`/`max`/`step` → per-axis overrides, and duplicating that ladder at the call site is how a randomizer starts emitting out-of-range values. `ItemListRenderer`'s new-row default still carries its own copy of the first half of it.
+- **`yDown` is not part of the draw.** It only mirrors the pad's rendering; the value space is the same either way.
+- **Preserve sibling keys** (`getValues` then spread): a vector2d field may store its `{ x, y }` inside a larger object, which is why `ControlledVector2DInput` merges rather than replaces.
+- `color` is randomized nowhere — the case is now explicit and empty (a random triplet wrecks a palette; the button is pressed to explore geometry). Text, images and assets are skipped for want of anything to draw from, and `item-list` is not recursed into at all.
+
 ## An embedded sketch is picked by thumbnail, and edited with its own form
 
 2026-08-31 — The `sketch` content item lands in the palette's "Content" group like any other kind, but two things about its UI are decided rather than incidental (the runtime side is in `architecture.md`):

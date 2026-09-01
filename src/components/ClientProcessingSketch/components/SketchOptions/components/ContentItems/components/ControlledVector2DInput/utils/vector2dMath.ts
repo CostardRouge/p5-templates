@@ -14,6 +14,44 @@ export interface AxisRange {
 }
 
 /**
+ * Subset of the field config understood by the pad. Kept independent from
+ * `FieldConfig` so the component stays reusable outside the form renderer
+ * (e.g. the video asset params editor, which drives it from plain state), and
+ * kept here rather than in the component so non-React callers — the settings
+ * randomizer — can resolve the same ranges without importing the pad.
+ */
+export interface Vector2DInputConfig {
+  /**
+   * When false, both axes are constrained to non-negative values ([0, max]) so
+   * the vector can only point up/right — handy for scaling a vector's strength
+   * down to 0 without flipping its direction. Defaults to true, which yields a
+   * centered pad spanning [min, max] on both axes.
+   */
+  allowNegative?: boolean;
+  /** Shared lower bound. Defaults to -1 (or 0 when `allowNegative` is false). */
+  min?: number;
+  /** Shared upper bound. Defaults to 1. */
+  max?: number;
+  /** Shared snapping increment. Defaults to 0.01. */
+  step?: number;
+  /** Per-axis overrides, merged over the shared min/max/step. */
+  xAxis?: Partial<AxisRange>;
+  yAxis?: Partial<AxisRange>;
+  /**
+   * Invert the vertical axis so the top of the pad maps to the *minimum* value.
+   * Use it for screen-space positions (where y grows downward): dragging the
+   * handle up then moves the point toward the top of the canvas. Defaults to
+   * false (top = max), matching the "Y points up" convention used for vectors.
+   */
+  yDown?: boolean;
+}
+
+export type Vector2DValue = {
+  x: number;
+  y: number;
+};
+
+/**
  * Number of decimal places implied by `step`, used to keep snapped values free
  * of floating-point noise (e.g. 0.01 → 2, 1 → 0, 0.5 → 1).
  */
@@ -78,4 +116,57 @@ export function fractionToValue(
     min,
     max
   );
+}
+
+/**
+ * Turns a pad config into the two concrete axis ranges it describes, applying
+ * the shared defaults first and the per-axis overrides on top.
+ */
+export function resolveAxes( config: Vector2DInputConfig ): {
+  xAxis: AxisRange;
+  yAxis: AxisRange;
+} {
+  const allowNegative = config.allowNegative ?? true;
+  const min = config.min ?? ( allowNegative ? -1 : 0 );
+  const max = config.max ?? 1;
+  const step = config.step ?? 0.01;
+
+  return {
+    xAxis: {
+      min: config.xAxis?.min ?? min,
+      max: config.xAxis?.max ?? max,
+      step: config.xAxis?.step ?? step
+    },
+    yAxis: {
+      min: config.yAxis?.min ?? min,
+      max: config.yAxis?.max ?? max,
+      step: config.yAxis?.step ?? step
+    }
+  };
+}
+
+/**
+ * A uniformly random point inside the pad, snapped to each axis' step — what
+ * the randomize action assigns to a vector2d field. The two axes are drawn
+ * independently so the result covers the whole square rather than its
+ * diagonal. `yDown` plays no part here: the draw happens in value space, and
+ * that flag only mirrors the pad's rendering.
+ */
+export function randomVector2D(
+  config: Vector2DInputConfig, random: () => number = Math.random
+): Vector2DValue {
+  const {
+    xAxis, yAxis
+  } = resolveAxes( config );
+
+  return {
+    x: fractionToValue(
+      random(),
+      xAxis
+    ),
+    y: fractionToValue(
+      random(),
+      yAxis
+    )
+  };
 }
