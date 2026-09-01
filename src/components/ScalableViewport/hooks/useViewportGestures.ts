@@ -1,14 +1,29 @@
 import {
+  useRef
+} from "react";
+import {
   useGesture
 } from "@use-gesture/react";
 import type {
   TransformState
 } from "./useTransformState";
 import {
-  calculateZoomTarget,
   MIN_SCALE,
   MAX_SCALE
 } from "../utils/zoomCalculations";
+
+// A trackpad pinch reaches the page as a wheel event with `ctrlKey` set (every
+// browser synthesises it that way); use-gesture's pinch recogniser claims those
+// (`pinchOnWheel`, on by default, keyed on this modifier). A plain two-finger
+// scroll is an unmodified wheel event and must only pan: it used to zoom, which
+// made every trackpad pan zoom as well. Keeping the modifier here lets the wheel
+// handlers below leave pinch events to the pinch recogniser — otherwise the
+// zoom applies twice and the interaction callbacks interleave.
+export const PINCH_WHEEL_MODIFIER = "ctrlKey" as const;
+
+export function isPinchWheelEvent( event: WheelEvent ): boolean {
+  return Boolean( event[ PINCH_WHEEL_MODIFIER ] );
+}
 
 interface UseViewportGesturesProps {
   containerRef: React.RefObject<HTMLDivElement | null>;
@@ -53,6 +68,10 @@ export function useViewportGestures( {
   onInteractionStart,
   onInteractionEnd
 }: UseViewportGesturesProps ) {
+  // True between the first plain wheel event of a scroll and the wheel
+  // recogniser's end; ctrl+wheel (pinch) events never open it.
+  const wheelPanActive = useRef( false );
+
   useGesture(
     {
       onDragStart: ( {
@@ -87,11 +106,17 @@ export function useViewportGestures( {
         onInteractionStart?.( "zooming" );
       },
       onPinchEnd: () => onInteractionEnd?.(),
-      onWheelStart: () => {
-        cancelAnimation();
-        onInteractionStart?.( "zooming" );
+      // The wheel recogniser also sees the pinch's ctrl+wheel events, so the
+      // pan interaction is opened lazily by the first *plain* wheel event in
+      // `onWheel` (below) rather than here, and closed only if it was opened.
+      onWheelEnd: () => {
+        if ( !wheelPanActive.current ) {
+          return;
+        }
+
+        wheelPanActive.current = false;
+        onInteractionEnd?.();
       },
-      onWheelEnd: () => onInteractionEnd?.(),
 
       // One-finger Drag (Pan)
       onDrag: ( {
@@ -197,36 +222,38 @@ export function useViewportGestures( {
         return memo;
       },
 
-      // Wheel / Trackpad Pan
+      // Wheel / two-finger trackpad scroll = Pan. Zoom is the pinch's job
+      // (touch pinch, or ctrl+wheel — what a trackpad pinch and a mouse
+      // ctrl+scroll both arrive as), handled by `onPinch` above.
       onWheel: ( {
         event, delta: [
           deltaX,
           deltaY
         ]
       } ) => {
-        const container = containerRef.current;
-
-        if ( !container ) {
+        if ( isPinchWheelEvent( event ) ) {
           return;
         }
 
-        // Standard Wheel = Zoom
         event.preventDefault();
-        const {
-          scale
-        } = transform.current;
-        const zoomFactor = Math.exp( -deltaY * 0.01 );
-        const rect = container.getBoundingClientRect();
-        const target = calculateZoomTarget(
-          scale * zoomFactor,
-          event.clientX,
-          event.clientY,
-          rect,
-          transform.current
-        );
 
+        if ( !wheelPanActive.current ) {
+          wheelPanActive.current = true;
+          cancelAnimation();
+          onInteractionStart?.( "panning" );
+        }
+
+        const {
+          x, y
+        } = transform.current;
+
+        // Natural scrolling: the content follows the fingers, so a positive
+        // delta (scroll down / right) moves it up / left.
         setTransform(
-          target,
+          {
+            x: x - deltaX,
+            y: y - deltaY
+          },
           contentRef.current
         );
       }
@@ -248,6 +275,9 @@ export function useViewportGestures( {
           min: MIN_SCALE,
           max: MAX_SCALE
         },
+        // Explicit so a wheel-driven pinch is keyed on the same modifier the
+        // wheel handler filters on.
+        modifierKey: PINCH_WHEEL_MODIFIER,
         from: () => [
           transform.current.scale,
           0
