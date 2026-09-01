@@ -28,23 +28,111 @@ export const IMAGE_INPUT_ACCEPT = `image/*,${ EXOTIC_IMAGE_EXTENSIONS.join( "," 
 
 const HEIF_JPEG_QUALITY = 0.92;
 
-async function decodeHeifToJpeg( file: Blob ): Promise<Uint8Array> {
-  // libheif (via heic2any) is ~1MB of WASM — loaded lazily, and only in
-  // sessions where a HEIF file is actually dropped.
-  const {
-    default: heic2any
-  } = await import( "heic2any" );
-
-  const result = await heic2any( {
-    blob: file,
-    toType: "image/jpeg",
-    quality: HEIF_JPEG_QUALITY
+function canvasToJpeg( canvas: HTMLCanvasElement ): Promise<Uint8Array> {
+  return new Promise( (
+    resolve, reject
+  ) => {
+    canvas.toBlob(
+      async( blob ) => {
+        if ( !blob ) {
+          reject( new Error( "JPEG encoding failed" ) );
+          return;
+        }
+        resolve( new Uint8Array( await blob.arrayBuffer() ) );
+      },
+      "image/jpeg",
+      HEIF_JPEG_QUALITY
+    );
   } );
-  // Multi-image HEIC (bursts, live photos) yields an array — take the
-  // primary image.
-  const blob = Array.isArray( result ) ? result[ 0 ] : result;
+}
 
-  return new Uint8Array( await blob.arrayBuffer() );
+/**
+ * Fast path: Safari decodes HEIC natively (and correctly, 10-bit HDR
+ * included), so no WASM round-trip is needed there. Returns `null` when
+ * the browser cannot decode the file itself.
+ */
+async function decodeHeifNatively( file: Blob ): Promise<Uint8Array | null> {
+  if ( typeof createImageBitmap !== "function" ) {
+    return null;
+  }
+
+  try {
+    const bitmap = await createImageBitmap( file );
+    const canvas = document.createElement( "canvas" );
+
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    canvas.getContext( "2d" )!.drawImage(
+      bitmap,
+      0,
+      0
+    );
+    bitmap.close();
+    return await canvasToJpeg( canvas );
+  } catch {
+    return null;
+  }
+}
+
+async function decodeHeifToJpeg( file: Blob ): Promise<Uint8Array> {
+  const native = await decodeHeifNatively( file );
+
+  if ( native ) {
+    return native;
+  }
+
+  // libheif is ~1MB of WASM — loaded lazily, and only in sessions where a
+  // HEIF file is actually dropped in a browser that cannot decode it.
+  // libheif-js tracks a current libheif (1.19); the older heic2any wrapper
+  // bundles a 2021 libheif that garbles 10-bit files (iPhone HDR .heic,
+  // Sony .hif) into green-striped noise.
+  const libheifModule = await import( "libheif-js/wasm-bundle" );
+  const libheif = libheifModule.default ?? libheifModule;
+
+  const decoder = new libheif.HeifDecoder();
+  const images = decoder.decode( await file.arrayBuffer() );
+
+  if ( !images.length ) {
+    throw new Error( "No image in HEIF container" );
+  }
+
+  // Multi-image HEIC (bursts, live photos): the primary image comes first.
+  const image = images[ 0 ];
+  const width = image.get_width();
+  const height = image.get_height();
+
+  const imageData = await new Promise<ImageData>( (
+    resolve, reject
+  ) => {
+    image.display(
+      new ImageData(
+        width,
+        height
+      ),
+      ( result ) => {
+        if ( result ) {
+          resolve( result as ImageData );
+        } else {
+          reject( new Error( "HEIF decoding failed" ) );
+        }
+      }
+    );
+  } );
+
+  for ( const img of images ) {
+    img.free();
+  }
+
+  const canvas = document.createElement( "canvas" );
+
+  canvas.width = width;
+  canvas.height = height;
+  canvas.getContext( "2d" )!.putImageData(
+    imageData,
+    0,
+    0
+  );
+  return canvasToJpeg( canvas );
 }
 
 async function readExifTiff( buffer: ArrayBuffer ): Promise<Uint8Array | null> {
