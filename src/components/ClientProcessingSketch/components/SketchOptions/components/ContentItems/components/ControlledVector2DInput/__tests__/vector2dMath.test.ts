@@ -1,5 +1,10 @@
 import {
-  fractionToValue, stepDecimals, valueToFraction, type AxisRange
+  fractionToValue,
+  randomVector2D,
+  resolveAxes,
+  stepDecimals,
+  valueToFraction,
+  type AxisRange
 } from "../utils/vector2dMath";
 
 const signed: AxisRange = {
@@ -157,6 +162,149 @@ describe(
           ),
           signed
         ) ).toBe( value );
+      }
+    );
+  }
+);
+
+describe(
+  "resolveAxes",
+  () => {
+    it(
+      "spans [-1, 1] on both axes by default",
+      () => {
+        expect( resolveAxes( {} ) ).toEqual( {
+          xAxis: signed,
+          yAxis: signed
+        } );
+      }
+    );
+
+    it(
+      "starts at 0 when negatives are not allowed",
+      () => {
+        expect( resolveAxes( {
+          allowNegative: false
+        } ) ).toEqual( {
+          xAxis: unsigned,
+          yAxis: unsigned
+        } );
+      }
+    );
+
+    it(
+      "layers per-axis overrides over the shared bounds",
+      () => {
+        expect( resolveAxes( {
+          min: 0,
+          max: 10,
+          step: 1,
+          yAxis: {
+            max: 4
+          }
+        } ) ).toEqual( {
+          xAxis: {
+            min: 0,
+            max: 10,
+            step: 1
+          },
+          yAxis: {
+            min: 0,
+            max: 4,
+            step: 1
+          }
+        } );
+      }
+    );
+  }
+);
+
+describe(
+  "randomVector2D",
+  () => {
+    // Successive draws, so a swapped or reused axis shows up as a wrong value.
+    const drawsOf = ( ...fractions: number[] ) => {
+      let index = 0;
+
+      return () => fractions[ index++ ] ?? 0;
+    };
+
+    it(
+      "maps the two draws to x then y, snapped to each axis' step",
+      () => {
+        expect( randomVector2D(
+          {},
+          drawsOf(
+            0.314,
+            0.777
+          )
+        ) ).toEqual( {
+          x: -0.37,
+          y: 0.55
+        } );
+      }
+    );
+
+    it(
+      "honours per-axis bounds and steps",
+      () => {
+        expect( randomVector2D(
+          {
+            allowNegative: false,
+            min: 0,
+            max: 10,
+            step: 1,
+            yAxis: {
+              max: 4
+            }
+          },
+          drawsOf(
+            0.62,
+            0.5
+          )
+        ) ).toEqual( {
+          x: 6,
+          y: 2
+        } );
+      }
+    );
+
+    it(
+      "stays inside the pad for the extreme draws",
+      () => {
+        expect( randomVector2D(
+          {},
+          drawsOf(
+            0,
+            1
+          )
+        ) ).toEqual( {
+          x: -1,
+          y: 1
+        } );
+      }
+    );
+
+    it(
+      "ignores yDown, which only mirrors the pad's rendering",
+      () => {
+        const draws = [
+          0.25,
+          0.25
+        ];
+
+        expect( randomVector2D(
+          {
+            allowNegative: false,
+            yDown: true
+          },
+          drawsOf( ...draws )
+        ) ).toEqual( randomVector2D(
+          {
+            allowNegative: false
+          },
+          drawsOf( ...draws )
+        ) );
       }
     );
   }

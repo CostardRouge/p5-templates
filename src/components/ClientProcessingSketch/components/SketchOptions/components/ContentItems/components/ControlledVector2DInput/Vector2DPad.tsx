@@ -7,46 +7,20 @@ import {
 import clamp from "@/utils/clamp";
 import {
   fractionToValue,
+  resolveAxes,
   stepDecimals,
   valueToFraction,
-  type AxisRange
+  type Vector2DInputConfig,
+  type Vector2DValue
 } from "./utils/vector2dMath";
 
-/**
- * Subset of the field config understood by the pad. Kept independent from
- * `FieldConfig` so the component stays reusable outside the form renderer
- * (e.g. the video asset params editor, which drives it from plain state).
- */
-export interface Vector2DInputConfig {
-  /**
-   * When false, both axes are constrained to non-negative values ([0, max]) so
-   * the vector can only point up/right — handy for scaling a vector's strength
-   * down to 0 without flipping its direction. Defaults to true, which yields a
-   * centered pad spanning [min, max] on both axes.
-   */
-  allowNegative?: boolean;
-  /** Shared lower bound. Defaults to -1 (or 0 when `allowNegative` is false). */
-  min?: number;
-  /** Shared upper bound. Defaults to 1. */
-  max?: number;
-  /** Shared snapping increment. Defaults to 0.01. */
-  step?: number;
-  /** Per-axis overrides, merged over the shared min/max/step. */
-  xAxis?: Partial<AxisRange>;
-  yAxis?: Partial<AxisRange>;
-  /**
-   * Invert the vertical axis so the top of the pad maps to the *minimum* value.
-   * Use it for screen-space positions (where y grows downward): dragging the
-   * handle up then moves the point toward the top of the canvas. Defaults to
-   * false (top = max), matching the "Y points up" convention used for vectors.
-   */
-  yDown?: boolean;
-}
-
-export type Vector2DValue = {
-  x: number;
-  y: number;
-};
+// The pad's config and value shapes live with the maths so non-React callers
+// (the settings randomizer) can resolve the same ranges without importing a
+// client component; they are re-exported here because that is where every
+// existing caller imports them from.
+export type {
+  Vector2DInputConfig, Vector2DValue
+} from "./utils/vector2dMath";
 
 type Props = {
   /**
@@ -62,29 +36,6 @@ type Props = {
   /** Overrides the wrapper sizing. Defaults to a compact 140px-wide column. */
   className?: string;
 };
-
-function resolveAxes( config: Vector2DInputConfig ): {
-  xAxis: AxisRange;
-  yAxis: AxisRange;
-} {
-  const allowNegative = config.allowNegative ?? true;
-  const min = config.min ?? ( allowNegative ? -1 : 0 );
-  const max = config.max ?? 1;
-  const step = config.step ?? 0.01;
-
-  return {
-    xAxis: {
-      min: config.xAxis?.min ?? min,
-      max: config.xAxis?.max ?? max,
-      step: config.xAxis?.step ?? step
-    },
-    yAxis: {
-      min: config.yAxis?.min ?? min,
-      max: config.yAxis?.max ?? max,
-      step: config.yAxis?.step ?? step
-    }
-  };
-}
 
 /**
  * Presentational 2D vector pad: two number inputs plus a draggable square that

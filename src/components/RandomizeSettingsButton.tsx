@@ -10,6 +10,9 @@ import {
 import {
   FieldConfig
 } from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/constants/field-config";
+import {
+  randomVector2D
+} from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/ControlledVector2DInput/utils/vector2dMath";
 
 type RandomizeSettingsButtonProps = {
   config: Record<string, FieldConfig>;
@@ -23,7 +26,7 @@ export default function RandomizeSettingsButton( {
   className = "text-foreground hover:bg-theme/20 rounded transition-colors"
 }: RandomizeSettingsButtonProps ) {
   const {
-    setValue
+    getValues, setValue
   } = useFormContext();
 
   const randomizeConfig = (
@@ -57,6 +60,22 @@ export default function RandomizeSettingsButton( {
             Math.random() > 0.5
           );
           break;
+        // A vector2d is one field holding a pair, so it is randomized as a
+        // pair: a uniform point inside the pad's own bounds, snapped to its
+        // step. Sibling keys are preserved for the same reason the pad
+        // preserves them — the { x, y } can live inside a larger value object.
+        case "vector2d": {
+          const current = getValues( fullPath );
+
+          setValue(
+            fullPath,
+            {
+              ...( current && typeof current === "object" ? current : {} ),
+              ...randomVector2D( field )
+            }
+          );
+          break;
+        }
         case "color":
           // setValue(
           //   fullPath,

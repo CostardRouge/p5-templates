@@ -201,6 +201,16 @@ The floating inspector and the Interactive mixer used to swap `w-80` ↔ `w-fit`
 
 2026-08-31 — Chrome reserves ~13px inside an `input[type=number]` for its spin buttons whether or not they are visible, which is what clipped the vector2d pad's x/y fields to "-0." (48px box, 46px of text room for 59px of glyphs). Any compact numeric field in the panels therefore drops them — `[appearance:textfield]` plus the two `::-webkit-*-spin-button` variants; stepping stays on the arrow keys, which is where it was usable at a 0.01 step anyway — and is sized for the **widest** value it can hold (sign, both decimals), not the default one. The pad's column went 100px → 140px for that, and the square follows the same width, so the drag target grew with it.
 
+## Randomize draws whole values, not just scalars
+
+2026-09-01 — `RandomizeSettingsButton` walks a `FieldConfig` tree and assigns per component kind, so a field kind it has no case for is silently left alone — which is how the vector2d pad sat unrandomized while every slider around it moved. Rules for extending it:
+
+- **A composite field is drawn as one value.** `vector2d` gets a single `setValue` of a whole `{ x, y }`, uniform on each axis independently (the whole square, not its diagonal), snapped to that axis' step via `fractionToValue`. Writing `x` and `y` as two paths would fire two form updates for one field and fight the pad's own merge.
+- **Bounds come from `resolveAxes`, which moved into `utils/vector2dMath.ts`** (re-exported from `Vector2DPad` with `Vector2DInputConfig`/`Vector2DValue`, where every caller already imports them). A vector2d has no bare `min`/`max` to read: the effective range is defaults → `allowNegative` → shared `min`/`max`/`step` → per-axis overrides, and duplicating that ladder at the call site is how a randomizer starts emitting out-of-range values. `ItemListRenderer`'s new-row default still carries its own copy of the first half of it.
+- **`yDown` is not part of the draw.** It only mirrors the pad's rendering; the value space is the same either way.
+- **Preserve sibling keys** (`getValues` then spread): a vector2d field may store its `{ x, y }` inside a larger object, which is why `ControlledVector2DInput` merges rather than replaces.
+- `color` is randomized nowhere — the case exists, commented out, since before the sketch rename. Text, images and assets are skipped on purpose: there is nothing to draw from.
+
 ## An embedded sketch is picked by thumbnail, and edited with its own form
 
 2026-08-31 — The `sketch` content item lands in the palette's "Content" group like any other kind, but two things about its UI are decided rather than incidental (the runtime side is in `architecture.md`):
