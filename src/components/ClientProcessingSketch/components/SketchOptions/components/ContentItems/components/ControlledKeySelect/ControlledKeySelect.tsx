@@ -21,6 +21,20 @@ import {
 } from "@/p5/utils/slides/breakdown/deriveSteps";
 import useSketch from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
 
+/**
+ * The form path of the sketch settings a content-item field belongs to. A
+ * content item is addressed either globally ("content.4.…") or through the
+ * slide that owns it ("slides.2.content.4.…"), and each slide carries its own
+ * `sketch` block — so the item's own path is what says which one the picker
+ * must read. `getSketchScope` (bindingUtils) cannot answer this: it maps a
+ * field that IS a sketch parameter, and a content item never is.
+ */
+function sketchScopeForItemField( fieldName: string ): string {
+  const slide = /^slides\.(\d+)\./.exec( fieldName );
+
+  return slide ? `slides.${ slide[ 1 ] }.sketch` : "sketch";
+}
+
 type Props = {
   name: string;
   label?: string;
@@ -44,6 +58,10 @@ type Props = {
  * sketch parameter named `title` is offered, and the `interaction` / `bindings`
  * blocks the derivation skips are not (they alone were 130 dead options on the
  * hand-capture sketches, burying the sketch's own parameters).
+ *
+ * They are read from the sketch's stock defaults unioned with the settings of
+ * the scope the item lives in, so no stored block — pruned, or predating a
+ * parameter the sketch has since gained — can hide a real parameter.
  */
 export default function ControlledKeySelect( {
   name,
@@ -62,25 +80,33 @@ export default function ControlledKeySelect( {
     control
   } );
 
+  // The sketch-settings scope this item actually animates: a breakdown living
+  // in a slide narrates THAT slide's parameters ("slides.2.content.4.…"), a
+  // shared one the root block.
   const sketch = useWatch( {
     control,
-    name: "sketch"
+    name: sketchScopeForItemField( name )
   } );
 
-  // The root sketch settings, not the active slide's: the shape is the same
-  // and the root is the defaults holder. It is empty only before the form has
-  // any sketch block at all — the sketch's stock defaults describe the same
-  // tree, so the picker still lists the real parameters rather than nothing.
+  // Two sources, unioned, because neither alone is the parameter space:
+  // the stock defaults are what the sketch DECLARES (authoritative, complete,
+  // and in declaration order), while the form's own block is what this
+  // document STORES — which can be pruned or predate a parameter the sketch
+  // has since gained. Taking only the stored block is how a real parameter
+  // goes missing from the list; taking only the defaults would hide a key a
+  // stored tree carries beyond them.
   const [
     {
       sketchFormValues
     }
   ] = useSketch();
 
-  const settings =
-    sketch && Object.keys( sketch ).length > 0 ? sketch : sketchFormValues;
-
-  const keys = collectAnimatableKeyPaths( settings ?? {} );
+  const keys = [
+    ...new Set( [
+      ...collectAnimatableKeyPaths( sketchFormValues ?? {} ),
+      ...collectAnimatableKeyPaths( sketch ?? {} )
+    ] )
+  ];
   const branches = collectBranchPaths( keys );
   const {
     rootOptions, groups
