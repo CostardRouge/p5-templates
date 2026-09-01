@@ -234,6 +234,34 @@ function collectLeaves(
   }
 }
 
+/**
+ * Every parameter path this sketch's settings expose to the breakdown, in
+ * walk order — the option list of the `snapKeys` / `excludeKeys` pickers.
+ *
+ * Deliberately the SAME walk as the step derivation (`collectLeaves`), so the
+ * two never drift: the reserved runtime blocks (`bindings`, `interaction`) are
+ * out, and a fully-numeric array — every colour and every vector — is a leaf,
+ * not a container to descend into. The HUD's `flattenKeys` cannot stand in for
+ * it: it drops arrays and skips a top-level `title`, both of which are real
+ * breakdown steps.
+ *
+ * @param { unknown } sketchSettings — anything but a plain object yields [].
+ * @returns { string[] }
+ */
+export function collectAnimatableKeyPaths( sketchSettings ) {
+  const leaves = [];
+
+  collectLeaves(
+    sketchSettings,
+    "",
+    [],
+    undefined,
+    leaves
+  );
+
+  return leaves.map( ( leaf ) => leaf.path );
+}
+
 // The class a group of leaves reads as: its majority class (first wins ties).
 function majorityClass( leaves ) {
   const counts = new Map();
