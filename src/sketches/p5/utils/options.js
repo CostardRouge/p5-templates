@@ -142,16 +142,26 @@ async function _refreshAssets() {
   );
 
   for ( const path of allPaths ) {
+    const url = resolveAssetURL(
+      path,
+      opts.id
+    );
+
     let obj = prevMap.get( path );
 
-    if ( !obj ) {
-      const url = resolveAssetURL(
-        path,
-        opts.id
-      );
+    // Keyed on the RESOLVED URL, not on the path: a path can be re-pointed at
+    // a different file (a fresh upload re-registering its blob, a job id
+    // arriving) and memoising on the path alone leaves the old pixels on
+    // screen with nothing short of a page reload to shift them.
+    if ( obj && obj.url !== url ) {
+      obj.img?.remove?.();
+      obj = undefined;
+    }
 
+    if ( !obj ) {
       obj = {
         path,
+        url,
         filename: path.split( "/" ).pop(),
         img: null,
         // Resolves once the image is decoded — awaitable by sketches, and

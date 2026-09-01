@@ -44,6 +44,9 @@ import {
 import {
   writePendingImport
 } from "@/lib/pendingImportOptions";
+import {
+  HIDDEN_FILE_INPUT_CLASS
+} from "@/components/hiddenFileInput";
 
 const OTHER_SECTION = "__other__";
 const GRID_CLASS =
@@ -547,7 +550,7 @@ export default function SketchesList( {
             type="file"
             accept=".json"
             onChange={ handleImportFileChange }
-            className="hidden"
+            className={ HIDDEN_FILE_INPUT_CLASS }
           />
           <button
             type="button"

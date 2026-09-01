@@ -23,6 +23,9 @@ import React, {
   useRef
 } from "react";
 import Toast from "@/components/Toast";
+import {
+  HIDDEN_FILE_INPUT_CLASS
+} from "@/components/hiddenFileInput";
 
 interface ActionsMenuProps {
   job: JobModel;
@@ -287,7 +290,7 @@ export default function ActionsMenu( {
                 type="file"
                 accept=".json"
                 onChange={ handleFileChange }
-                className="hidden"
+                className={ HIDDEN_FILE_INPUT_CLASS }
               />
               <MenuItem>
                 {( {

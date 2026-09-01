@@ -1,5 +1,5 @@
 export {
-  registerBlob, getBlobURL, revokeBlob
+  registerBlob, registerBlobUnique, getBlobURL, revokeBlob
 } from "./blobMap";
 export {
   resolveAssetURL
@@ -57,6 +57,9 @@ export {
 } from "./pendingMedia";
 
 export {
+  IMAGE_INPUT_ACCEPT, normalizeImageFile
+} from "./exotic";
+export {
   beginLoadingStep,
   reportAssetLoading,
   planLoadingSteps,
@@ -77,3 +80,4 @@ export type {
 export {
   isImagePath, collectImagePathsDeep, collectSketchImagePaths
 } from "./collectAssetPaths";
+

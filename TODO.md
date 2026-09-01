@@ -113,6 +113,12 @@ What's left requires actions only the repo owner can take, in this order:
   - [ ] `useAudio` — Web Audio API analyser data
   - [ ] `useOrbit` — 3D orbit camera controls
   - [ ] `usePerlinNoise` — seeded Perlin/Simplex noise with optional animated offset
+- [ ] **Bind the exotic value types** — modulation covers number, 2D pad, boolean, select and colour (see `docs/memory/interaction-bindings.md`); the rest still has no `kind`
+  - [ ] **Generators for the 2D pad** — it can only follow a live vector2d channel today (Orbit and Perlin noise animate without a device; everything else needs one). One generator per axis on a shared clock, with a phase offset, would give circles / figure-eights / drifts
+  - [ ] **Easing** — an ordered list of easing keys, so it maps like the enum family
+  - [ ] **Asset / image** — cycle a stack of assets; the value is a path, so the enum fold rule applies once the list is on the binding
+  - [ ] **Text** — a list of strings to step through; decide first whether that is modulation or a content feature
+  - [ ] **Widen the targets, not just the kinds** — bindings only address paths under `sketch` (`getSketchScope`), so a content item's position and the canvas/animation settings carry no pastille. Deliberate for now: capture determinism for size/framerate, and per-item scoping for content
 - [ ] **Fake mouse pointer** — custom cursor overlay on the canvas (circle or crosshair) that follows pointer; useful when the system cursor isn't visible in recordings
 - [ ] **Switch webcam ID** — re-initialize `getUserMedia` with new `deviceId` without reloading the sketch when the user changes webcam in the picker
 
@@ -175,8 +181,8 @@ What's left requires actions only the repo owner can take, in this order:
 ## 🐛 Bugs
 
 - [ ] **Save draft removes capture actions** — capture actions panel disappears or resets after saving a draft; should persist with its current state
-- [ ] **LocalStorage drift** — UI state (collapsed sections, view mode) stored in `localStorage` can fall out of sync with DB state; audit and add reconciliation on load
-- [ ] **Keep sketch options open with same collapsibles** — collapsible sections reset to default on navigation; persist open/closed state per-sketch in `localStorage` or URL hash
+- [x] **LocalStorage drift** — UI state (collapsed sections, view mode) stored in `localStorage` can fall out of sync with DB state; audit and add reconciliation on load — answered for the options panel by only persisting schema-shaped keys (`docs/memory/studio-ui.md`); content-shaped ones (`conditional-<path>`, which addresses an item by index) are never stored, so there is nothing to reconcile
+- [x] **Keep sketch options open with same collapsibles** — collapsible sections reset to default on navigation; persist open/closed state per-sketch in `localStorage` or URL hash
 - [x] **Drag items — decision pending** — item drag on canvas is partially implemented but inconsistent; must decide between P5 events vs React overlay before more work
 - [ ] **useAudio / MIDI not working** — audio and MIDI hooks are wired but non-functional; likely async init order issue or missing user-gesture unlock for Web Audio / WebMidi
 - [x] **Apply sketch options to other slides** — "apply to all slides" action shallow-copies nested objects and drops nested keys; fix the deep-merge logic

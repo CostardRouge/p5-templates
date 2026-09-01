@@ -2,15 +2,19 @@
  * Unit tests for the interactive-bindings mapping pipeline.
  *
  * These cover the PURE resolver (`bindings.js`) in isolation — channel
- * projection, curve shaping, the continuous + vector2d mapping families, the
- * dotted-path writer, and the top-level `resolveBindings` (clone, multi-binding,
- * graceful handling of missing channels / no bindings).
+ * projection, curve shaping, all five mapping families (continuous, vector2d,
+ * boolean, enum, color), the dotted-path writer, and the top-level
+ * `resolveBindings` (clone, multi-binding, layering, graceful handling of
+ * missing channels / no bindings).
  */
 import {
   projectChannel,
   applyCurve,
   mapContinuous,
   mapVector,
+  mapBoolean,
+  mapEnum,
+  mapColor,
   setPath,
   resolveBindings,
   waveValue,
@@ -1334,6 +1338,546 @@ describe(
             progression: 0.5
           }
         ) as any ).radius ).toBeCloseTo( 90 );
+      }
+    );
+  }
+);
+
+describe(
+  "boolean mapping",
+  () => {
+    it(
+      "gates on the threshold",
+      () => {
+        const binding = {
+          id: "gate-plain",
+          target: "visible",
+          kind: "boolean",
+          mapping: {
+            threshold: 0.5,
+            hysteresis: 0
+          }
+        };
+
+        expect( mapBoolean(
+          0.2,
+          binding
+        ) ).toBe( false );
+        expect( mapBoolean(
+          0.5,
+          binding
+        ) ).toBe( true );
+        expect( mapBoolean(
+          0.49,
+          binding
+        ) ).toBe( false );
+      }
+    );
+
+    it(
+      "holds through a dip smaller than the hysteresis",
+      () => {
+        const binding = {
+          id: "gate-hysteresis",
+          target: "visible",
+          kind: "boolean",
+          mapping: {
+            threshold: 0.5,
+            hysteresis: 0.1
+          }
+        };
+
+        expect( mapBoolean(
+          0.6,
+          binding
+        ) ).toBe( true );
+
+        // Below the threshold, but inside the hysteresis band: still high.
+        expect( mapBoolean(
+          0.45,
+          binding
+        ) ).toBe( true );
+
+        // Past the lower edge: it finally falls.
+        expect( mapBoolean(
+          0.39,
+          binding
+        ) ).toBe( false );
+      }
+    );
+
+    it(
+      "flips once per rising edge in toggle mode",
+      () => {
+        const binding = {
+          id: "gate-toggle",
+          target: "visible",
+          kind: "boolean",
+          mapping: {
+            threshold: 0.5,
+            hysteresis: 0,
+            mode: "toggle"
+          }
+        };
+
+        // A rise flips it on and it stays on while the signal stays high…
+        expect( mapBoolean(
+          0.9,
+          binding
+        ) ).toBe( true );
+        expect( mapBoolean(
+          0.8,
+          binding
+        ) ).toBe( true );
+
+        // …a fall alone changes nothing…
+        expect( mapBoolean(
+          0.1,
+          binding
+        ) ).toBe( true );
+
+        // …and the next rise flips it back off.
+        expect( mapBoolean(
+          0.9,
+          binding
+        ) ).toBe( false );
+      }
+    );
+  }
+);
+
+describe(
+  "enum mapping",
+  () => {
+    const binding = {
+      id: "enum-basic",
+      target: "mode",
+      kind: "enum",
+      mapping: {
+        values: [
+          "a",
+          "b",
+          "c"
+        ]
+      }
+    };
+
+    it(
+      "quantizes the signal across the value list",
+      () => {
+        expect( mapEnum(
+          0,
+          binding
+        ) ).toBe( "a" );
+        expect( mapEnum(
+          0.5,
+          binding
+        ) ).toBe( "b" );
+        expect( mapEnum(
+          0.99,
+          binding
+        ) ).toBe( "c" );
+      }
+    );
+
+    it(
+      "keeps the last value at a saturated signal",
+      () => {
+        expect( mapEnum(
+          1,
+          binding
+        ) ).toBe( "c" );
+        expect( mapEnum(
+          5,
+          binding
+        ) ).toBe( "c" );
+      }
+    );
+
+    it(
+      "is a no-op with nothing to choose from",
+      () => {
+        expect( mapEnum(
+          0.5,
+          {
+            id: "enum-empty",
+            target: "mode",
+            kind: "enum",
+            mapping: {
+              values: []
+            }
+          }
+        ) ).toBeNull();
+      }
+    );
+  }
+);
+
+describe(
+  "color mapping",
+  () => {
+    const binding = {
+      id: "color-basic",
+      target: "fill",
+      kind: "color",
+      mapping: {
+        from: [
+          0,
+          0,
+          0,
+          255
+        ],
+        to: [
+          255,
+          100,
+          0,
+          0
+        ]
+      }
+    };
+
+    it(
+      "crossfades both stops component by component, alpha included",
+      () => {
+        expect( mapColor(
+          0,
+          binding
+        ) ).toEqual( [
+          0,
+          0,
+          0,
+          255
+        ] );
+        expect( mapColor(
+          1,
+          binding
+        ) ).toEqual( [
+          255,
+          100,
+          0,
+          0
+        ] );
+        expect( mapColor(
+          0.5,
+          binding
+        ) ).toEqual( [
+          128,
+          50,
+          0,
+          128
+        ] );
+      }
+    );
+
+    it(
+      "falls back to an opaque black → white ramp",
+      () => {
+        expect( mapColor(
+          1,
+          {
+            id: "color-default",
+            target: "fill",
+            kind: "color"
+          }
+        ) ).toEqual( [
+          255,
+          255,
+          255,
+          255
+        ] );
+      }
+    );
+  }
+);
+
+describe(
+  "resolveBindings — the scalar-driven families",
+  () => {
+    it(
+      "writes a real boolean from a square-wave oscillator",
+      () => {
+        const base = {
+          visible: false,
+          bindings: [
+            {
+              id: "resolve-boolean",
+              source: "oscillator",
+              target: "visible",
+              kind: "boolean",
+              oscillator: {
+                wave: "square",
+                cycles: 1,
+                phase: 0
+              },
+              mapping: {
+                threshold: 0.5,
+                hysteresis: 0
+              }
+            }
+          ]
+        };
+
+        // First half of the loop the square wave is low, second half high.
+        expect( ( resolveBindings(
+          base,
+          {},
+          1,
+          {
+            progression: 0.2
+          }
+        ) as any ).visible ).toBe( false );
+
+        expect( ( resolveBindings(
+          base,
+          {},
+          2,
+          {
+            progression: 0.75
+          }
+        ) as any ).visible ).toBe( true );
+      }
+    );
+
+    it(
+      "walks a select's options in order from a sawtooth",
+      () => {
+        const base = {
+          mode: "a",
+          bindings: [
+            {
+              id: "resolve-enum",
+              source: "oscillator",
+              target: "mode",
+              kind: "enum",
+              oscillator: {
+                wave: "sawtooth",
+                cycles: 1,
+                phase: 0
+              },
+              mapping: {
+                values: [
+                  "a",
+                  "b",
+                  "c"
+                ]
+              }
+            }
+          ]
+        };
+
+        expect( ( resolveBindings(
+          base,
+          {},
+          3,
+          {
+            progression: 0.1
+          }
+        ) as any ).mode ).toBe( "a" );
+
+        expect( ( resolveBindings(
+          base,
+          {},
+          4,
+          {
+            progression: 0.9
+          }
+        ) as any ).mode ).toBe( "c" );
+      }
+    );
+
+    it(
+      "writes an [r, g, b, a] tuple for a colour target",
+      () => {
+        const base = {
+          fill: [
+            0,
+            0,
+            0,
+            255
+          ],
+          bindings: [
+            {
+              id: "resolve-color",
+              source: "mouse",
+              project: "x",
+              target: "fill",
+              kind: "color",
+              mapping: {
+                from: [
+                  0,
+                  0,
+                  0,
+                  255
+                ],
+                to: [
+                  200,
+                  100,
+                  50,
+                  255
+                ]
+              }
+            }
+          ]
+        };
+
+        expect( ( resolveBindings(
+          base,
+          {
+            mouse: vec(
+              1,
+              0.5
+            )
+          },
+          5,
+          {}
+        ) as any ).fill ).toEqual( [
+          200,
+          100,
+          50,
+          255
+        ] );
+      }
+    );
+
+    it(
+      "layers booleans logically — max is OR",
+      () => {
+        // The two layers read the same channel, the second one inverted, so
+        // exactly one of them is high at any mouse position.
+        const layer = (
+          id: string, invert: boolean
+        ) => ( {
+          id,
+          source: "mouse",
+          project: "x",
+          target: "visible",
+          kind: "boolean",
+          blend: "max",
+          mapping: {
+            threshold: 0.5,
+            hysteresis: 0,
+            invert
+          }
+        } );
+
+        const base = {
+          visible: false,
+          bindings: [
+            layer(
+              "or-a",
+              false
+            ),
+            layer(
+              "or-b",
+              true
+            )
+          ]
+        };
+
+        // Mouse hard right: the first layer is high, the inverted one is low —
+        // OR keeps it on.
+        expect( ( resolveBindings(
+          base,
+          {
+            mouse: vec(
+              1,
+              0.5
+            )
+          },
+          6,
+          {}
+        ) as any ).visible ).toBe( true );
+
+        // Mouse hard left: the inverted layer is the high one now, and OR still
+        // keeps it on.
+        expect( ( resolveBindings(
+          base,
+          {
+            mouse: vec(
+              0,
+              0.5
+            )
+          },
+          7,
+          {}
+        ) as any ).visible ).toBe( true );
+      }
+    );
+
+    it(
+      "layers colours per component — multiply darkens",
+      () => {
+        const base = {
+          fill: [
+            255,
+            255,
+            255,
+            255
+          ],
+          bindings: [
+            {
+              id: "color-layer-a",
+              source: "mouse",
+              project: "x",
+              target: "fill",
+              kind: "color",
+              mapping: {
+                from: [
+                  255,
+                  255,
+                  255,
+                  255
+                ],
+                to: [
+                  255,
+                  255,
+                  255,
+                  255
+                ]
+              }
+            },
+            {
+              id: "color-layer-b",
+              source: "mouse",
+              project: "x",
+              target: "fill",
+              kind: "color",
+              blend: "multiply",
+              mapping: {
+                from: [
+                  0,
+                  0,
+                  0,
+                  1
+                ],
+                to: [
+                  0,
+                  0,
+                  0,
+                  1
+                ]
+              }
+            }
+          ]
+        };
+
+        // White × black = black; the alpha multiplies the same way (255 × 1).
+        expect( ( resolveBindings(
+          base,
+          {
+            mouse: vec(
+              1,
+              0.5
+            )
+          },
+          8,
+          {}
+        ) as any ).fill ).toEqual( [
+          0,
+          0,
+          0,
+          255
+        ] );
       }
     );
   }
