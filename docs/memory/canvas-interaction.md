@@ -1,6 +1,15 @@
-# On-canvas interaction — grabbing and moving content items
+# On-canvas interaction — grabbing and moving content items, panning and zooming the viewport
 
-Read before touching `src/sketches/p5/utils/slides/contentDrag.js`, the item-bounds registry, or any `drawSlide*` renderer's grab surface. The studio-side half of the same channel (the layers list, the inspector it opens) is in `studio-ui.md`.
+Read before touching `src/sketches/p5/utils/slides/contentDrag.js`, the item-bounds registry, any `drawSlide*` renderer's grab surface, or the viewport's gesture recognisers (`src/components/ScalableViewport/hooks/useViewportGestures.ts`). The studio-side half of the same channel (the layers list, the inspector it opens) is in `studio-ui.md`.
+
+## The wheel pans; only a pinch zooms (2026-09-01)
+
+Decided with the maintainer: a two-finger trackpad scroll must pan the viewport, never zoom it, and zoom belongs to pinching alone (fingers on a touchscreen, or the trackpad pinch). Mouse users zoom with ctrl+scroll, the same gesture browsers report a trackpad pinch as. Mechanics that make it hold, all in `useViewportGestures.ts`:
+
+- Browsers deliver a trackpad pinch as a **wheel event with `ctrlKey`**; `@use-gesture`'s pinch recogniser claims those (`pinchOnWheel`, default on, keyed on `modifierKey`, set explicitly to `PINCH_WHEEL_MODIFIER`). Its **wheel recogniser still receives every wheel event**, modifier or not — so the wheel handlers must skip `isPinchWheelEvent( event )` themselves, or the ctrl+wheel zoom is applied twice and the pause/resume interaction callbacks of both recognisers interleave.
+- Because the wheel recogniser's start/end fire for the pinch's events too, the "panning" interaction is opened by the first *plain* wheel event inside `onWheel` (a `wheelPanActive` ref), not in `onWheelStart`, and `onWheelEnd` only closes it when it was opened. Otherwise a pinch would pause and resume the engine through the wheel path as well.
+- Pan direction follows natural scrolling: the content moves with the fingers (`x - deltaX`, `y - deltaY`); use-gesture already normalises line/page `deltaMode`.
+- Guarded by `hooks/__tests__/useViewportGestures.test.tsx` (jsdom wheel events with and without `ctrlKey`, fake timers for the recognisers' settle timeout). The pinch handler stores its memo on its first event and writes the transform from the second, so a wheel-pinch test needs two events.
 
 ## There is no pluggable "layout mode" — never re-add one without checking here first (2026-09-01)
 
