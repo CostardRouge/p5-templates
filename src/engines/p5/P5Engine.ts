@@ -39,8 +39,13 @@ import {
 import {
   resetLoadingProgress,
   subscribeLoadingProgress,
-  reportAssetLoading
+  reportAssetLoading,
+  planLoadingSteps,
+  finishLoadingProgress
 } from "@/lib/assets/loadingProgress";
+import {
+  collectSketchImagePaths
+} from "@/lib/assets/collectAssetPaths";
 
 type P5SketchRuntime = {
   start: ( container: HTMLElement ) => Promise<any>;
@@ -110,6 +115,23 @@ export class P5Engine implements SketchEngine {
     // `loading` event so the UI can show per-asset progress while `init()`
     // is still in flight.
     resetLoadingProgress();
+
+    // Declare the expected total before anything opens a step, so the very
+    // first snapshot the UI sees carries the real figure instead of a count
+    // that climbs as each loader starts. Two modules always load (the sketch
+    // module and the p5 library); the images are whatever the options ask for.
+    //
+    // Fonts, audio and video are deliberately NOT planned: font fields hold
+    // font keys rather than file paths and never cover the fonts a sketch
+    // hardcodes in its own code, video instances come from a sketch-supplied
+    // callback, and audio assets are not wired into the options at all. A
+    // partial plan would trade an unknown total for a wrong one — the
+    // monotonic clamp in the registry already absorbs their late arrival.
+    planLoadingSteps( {
+      module: 2,
+      image: collectSketchImagePaths( options ).length
+    } );
+
     this.unsubscribeLoading?.();
     this.unsubscribeLoading = subscribeLoadingProgress( ( snapshot ) => {
       this.emit(
@@ -270,6 +292,11 @@ export class P5Engine implements SketchEngine {
         this.sketchRuntime?.getP5()?.redraw();
       }
     } );
+
+    // A plan can overshoot — images still warm in the module-level cache open
+    // no step — so pin the bar to 100% rather than letting the loading screen
+    // vanish while it reads part-way.
+    finishLoadingProgress();
 
     this.emit(
       "ready",

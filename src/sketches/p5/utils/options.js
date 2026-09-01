@@ -25,6 +25,14 @@ import {
 } from "./assetLoaders.js";
 
 import {
+  collectSketchImagePaths
+} from "@/lib/assets/collectAssetPaths";
+
+import {
+  planLoadingSteps
+} from "@/lib/assets/loadingProgress";
+
+import {
   coerceFramerate
 } from "./framerate.js";
 
@@ -71,49 +79,6 @@ function refreshAssets() {
   );
 }
 
-const IMAGE_PATH_RE = /\.(png|jpe?g|webp|gif|svg|avif|bmp|arw)(\?|#|$)/i;
-
-function isImagePath( value ) {
-  if ( typeof value !== "string" || !value ) {
-    return false;
-  }
-  if ( value.startsWith( "blob:" ) ) {
-    return true;
-  }
-  return IMAGE_PATH_RE.test( value );
-}
-
-function collectImagePathsDeep(
-  node, acc
-) {
-  if ( !node ) {
-    return;
-  }
-  if ( typeof node === "string" ) {
-    if ( isImagePath( node ) ) {
-      acc.push( node );
-    }
-    return;
-  }
-  if ( Array.isArray( node ) ) {
-    for ( const v of node ) {
-      collectImagePathsDeep(
-        v,
-        acc
-      );
-    }
-    return;
-  }
-  if ( typeof node === "object" ) {
-    for ( const k of Object.keys( node ) ) {
-      collectImagePathsDeep(
-        node[ k ],
-        acc
-      );
-    }
-  }
-}
-
 async function _refreshAssets() {
   // The 80ms debounce above outlives the sketch: leaving a sketch page fires
   // `sketch.destroy()` (which does `setP5( null )`) while a refresh is still
@@ -129,37 +94,21 @@ async function _refreshAssets() {
   }
 
   const opts = getSketchOptions();
-  const globalImages = opts.assets?.images ?? [];
-  // Also pick up images stored directly in sketch form fields (e.g. images-stack
-  // arrays at sketch.images, and single `image` component values nested anywhere
-  // under sketch.* such as sketch.photo or sketch.photo.image).
-  const sketchImages = [];
 
-  collectImagePathsDeep(
-    opts.sketch,
-    sketchImages
-  );
-  const slideImages = ( opts.slides ?? [] ).flatMap( ( slide ) => {
-    const fromSlide = [
-      ...( slide?.assets?.images ?? [] )
-    ];
-
-    collectImagePathsDeep(
-      slide?.sketch,
-      fromSlide
-    );
-    return fromSlide;
-  } );
-
-  const allPaths = [
-    ...new Set( [
-      ...globalImages,
-      ...sketchImages,
-      ...slideImages
-    ] )
-  ];
+  // The same collector the engine's loading planner uses, so the declared
+  // total and the steps actually opened below can never disagree about what
+  // counts as an image.
+  const allPaths = collectSketchImagePaths( opts );
 
   if ( allPaths.length === 0 ) {
+    planLoadingSteps(
+      {
+        image: 0
+      },
+      {
+        exact: true
+      }
+    );
     cache.set(
       "imagesMap",
       new Map()
@@ -177,6 +126,20 @@ async function _refreshAssets() {
 
   const prevMap = cache.get( "imagesMap" ) ?? new Map();
   const newMap = new Map();
+
+  // Correct the engine's optimistic plan now that the cache is in view. This
+  // is load-bearing: `cache` is a module singleton that is never cleared, so
+  // revisiting a sketch whose images are still warm opens NO step for them —
+  // a plan counting every requested path would then overshoot and strand the
+  // progress bar part-way. Only this function knows which paths are cached.
+  planLoadingSteps(
+    {
+      image: allPaths.filter( ( path ) => !prevMap.get( path ) ).length
+    },
+    {
+      exact: true
+    }
+  );
 
   for ( const path of allPaths ) {
     let obj = prevMap.get( path );

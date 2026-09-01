@@ -59,14 +59,21 @@ export {
 export {
   beginLoadingStep,
   reportAssetLoading,
+  planLoadingSteps,
+  finishLoadingProgress,
   subscribeLoadingProgress,
   getLoadingProgressSnapshot,
   resetLoadingProgress
 } from "./loadingProgress";
 export type {
   LoadingAssetKind,
+  LoadingPlan,
   LoadingStep,
   LoadingStepStatus,
   LoadingStepHandle,
   LoadingProgressSnapshot
 } from "./loadingProgress";
+
+export {
+  isImagePath, collectImagePathsDeep, collectSketchImagePaths
+} from "./collectAssetPaths";

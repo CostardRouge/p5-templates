@@ -28,8 +28,17 @@ function labelFromURL( url ) {
     return "blob";
   }
 
-  return url.split( "/" ).pop()
+  const file = url.split( "/" ).pop()
     ?.split( "?" )[ 0 ] || url;
+
+  // Asset paths are URL-encoded, and these labels are read by humans on the
+  // loading screen: "DSC02023%20Medium.jpeg" should show as a real filename.
+  try {
+    return decodeURIComponent( file );
+  } catch {
+    // A stray "%" makes decodeURIComponent throw — the raw name still reads.
+    return file;
+  }
 }
 
 /**

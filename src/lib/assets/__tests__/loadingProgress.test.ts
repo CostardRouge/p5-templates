@@ -9,7 +9,9 @@ import {
   reportAssetLoading,
   subscribeLoadingProgress,
   getLoadingProgressSnapshot,
-  resetLoadingProgress
+  resetLoadingProgress,
+  planLoadingSteps,
+  finishLoadingProgress
 } from "../loadingProgress";
 import {
   awaitPendingMedia
@@ -221,6 +223,253 @@ describe(
         handle.loaded();
         await draining;
         expect( drained ).toBe( true );
+      }
+    );
+  }
+);
+
+describe(
+  "planLoadingSteps",
+  () => {
+    it(
+      "reports a total before any step opens",
+      () => {
+        planLoadingSteps( {
+          module: 2,
+          image: 3
+        } );
+
+        const snapshot = getLoadingProgressSnapshot();
+
+        expect( snapshot.planned ).toBe( 5 );
+        expect( snapshot.total ).toBe( 5 );
+        expect( snapshot.steps ).toHaveLength( 0 );
+        expect( snapshot.progress ).toBe( 0 );
+      }
+    );
+
+    it(
+      "widens by default and only shrinks when told to be exact",
+      () => {
+        planLoadingSteps( {
+          image: 4
+        } );
+        planLoadingSteps( {
+          image: 1
+        } );
+
+        expect( getLoadingProgressSnapshot().planned ).toBe( 4 );
+
+        planLoadingSteps(
+          {
+            image: 1
+          },
+          {
+            exact: true
+          }
+        );
+
+        expect( getLoadingProgressSnapshot().planned ).toBe( 1 );
+      }
+    );
+
+    it(
+      "never lets the total fall below the steps actually opened",
+      () => {
+        beginLoadingStep(
+          "image",
+          "a.png"
+        );
+        beginLoadingStep(
+          "image",
+          "b.png"
+        );
+
+        planLoadingSteps(
+          {
+            image: 0
+          },
+          {
+            exact: true
+          }
+        );
+
+        expect( getLoadingProgressSnapshot().total ).toBe( 2 );
+      }
+    );
+  }
+);
+
+describe(
+  "progress",
+  () => {
+    it(
+      "measures settled steps against the planned total",
+      async() => {
+        planLoadingSteps( {
+          image: 4
+        } );
+
+        const first = beginLoadingStep(
+          "image",
+          "a.png"
+        );
+        const second = beginLoadingStep(
+          "image",
+          "b.png"
+        );
+
+        first.loaded();
+        second.loaded();
+        await Promise.all( [
+          first.promise,
+          second.promise
+        ] );
+
+        expect( getLoadingProgressSnapshot().progress ).toBeCloseTo(
+          0.5,
+          5
+        );
+      }
+    );
+
+    it(
+      "stays below 1 while any step is still pending",
+      async() => {
+        const done = beginLoadingStep(
+          "module",
+          "p5"
+        );
+        const stuck = beginLoadingStep(
+          "image",
+          "slow.png"
+        );
+
+        done.loaded();
+        await done.promise;
+
+        expect( getLoadingProgressSnapshot().progress ).toBeLessThanOrEqual( 0.95 );
+        expect( stuck ).toBeDefined();
+      }
+    );
+
+    it(
+      "counts a failed step as settled, so one dead asset cannot stall the bar",
+      async() => {
+        planLoadingSteps( {
+          image: 2
+        } );
+
+        const ok = beginLoadingStep(
+          "image",
+          "a.png"
+        );
+        const broken = beginLoadingStep(
+          "image",
+          "gone.png"
+        );
+
+        ok.loaded();
+        broken.failed( new Error( "404" ) );
+        await Promise.all( [
+          ok.promise,
+          broken.promise
+        ] );
+
+        expect( getLoadingProgressSnapshot().progress ).toBe( 1 );
+      }
+    );
+
+    it(
+      "never decreases when an unplanned step widens the total",
+      async() => {
+        // The real case: images are planned, then a font opens mid-draw.
+        planLoadingSteps( {
+          image: 2
+        } );
+
+        const a = beginLoadingStep(
+          "image",
+          "a.png"
+        );
+        const b = beginLoadingStep(
+          "image",
+          "b.png"
+        );
+
+        a.loaded();
+        b.loaded();
+        await Promise.all( [
+          a.promise,
+          b.promise
+        ] );
+
+        const before = getLoadingProgressSnapshot().progress;
+
+        expect( before ).toBe( 1 );
+
+        const font = beginLoadingStep(
+          "font",
+          "serif"
+        );
+        const after = getLoadingProgressSnapshot();
+
+        expect( after.total ).toBe( 3 );
+        expect( after.progress ).toBeGreaterThanOrEqual( before );
+
+        font.loaded();
+        await font.promise;
+      }
+    );
+
+    it(
+      "is forced to 1 by finishLoadingProgress, covering a plan that overshot",
+      async() => {
+        // Warm image cache: 4 images planned, but only the modules open steps.
+        planLoadingSteps( {
+          module: 2,
+          image: 4
+        } );
+
+        const first = beginLoadingStep(
+          "module",
+          "sketch"
+        );
+        const second = beginLoadingStep(
+          "module",
+          "p5"
+        );
+
+        first.loaded();
+        second.loaded();
+        await Promise.all( [
+          first.promise,
+          second.promise
+        ] );
+
+        expect( getLoadingProgressSnapshot().progress ).toBeLessThan( 1 );
+
+        finishLoadingProgress();
+
+        expect( getLoadingProgressSnapshot().progress ).toBe( 1 );
+      }
+    );
+
+    it(
+      "is cleared along with the plan on reset",
+      () => {
+        planLoadingSteps( {
+          image: 3
+        } );
+        finishLoadingProgress();
+
+        resetLoadingProgress();
+
+        const snapshot = getLoadingProgressSnapshot();
+
+        expect( snapshot.planned ).toBe( 0 );
+        expect( snapshot.total ).toBe( 0 );
+        expect( snapshot.progress ).toBe( 0 );
       }
     );
   }

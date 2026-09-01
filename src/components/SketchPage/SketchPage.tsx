@@ -40,6 +40,8 @@ import {
 import useGlobalHotkey from "@/hooks/useGlobalHotkey";
 import DockedTopBar from "@/components/SketchPage/DockedTopBar";
 import getSketchThumbnailURL from "@/utils/getSketchThumbnailURL";
+import SketchLoadingPlaceholder from "@/components/SketchPage/SketchLoadingPlaceholder";
+import useDelayedFlag from "@/hooks/useDelayedFlag";
 import {
   STUDIO_DRAWER_HEIGHT_VAR,
   STUDIO_FILMSTRIP_HEIGHT_VAR,
@@ -294,6 +296,11 @@ export default function SketchPage() {
     engine: engineId
   } );
 
+  // Below ~150ms the loading screen reads as a flicker rather than as
+  // feedback, so a sketch with no assets — or one whose images are still warm
+  // in the cache — never mounts it at all.
+  const showLoadingScreen = useDelayedFlag( !sketchLoaded );
+
   useSketchDevWatch(
     name,
     engineId,
@@ -372,61 +379,19 @@ export default function SketchPage() {
 
   return (
     <>
-      {/* Loading placeholder */}
-      {!sketchLoaded && (
-        <div className="flex items-center justify-center absolute h-full w-full">
-          <div className="flex flex-col items-center gap-4">
-            <img
-              data-pin-nopin="true"
-              src={ thumbnailUrl }
-              alt={ `${ name } thumbnail` }
-              className="w-60 h-auto rounded-lg shadow-lg"
-              onError={ ( e ) => {
-                const fallback = getSketchThumbnailURL(
-                  engineId,
-                  name
-                );
-
-                if ( e.currentTarget.src !== window.location.origin + fallback ) {
-                  e.currentTarget.src = fallback;
-                }
-              } }
-            />
-
-            <p className="text-foreground">
-              {" → loading "}
-              <span className="font-bold">{name}</span> ({engineId})
-            </p>
-
-            {/* Fine-grained loading steps from the engine's `loading` event:
-                overall counter plus the labels currently in flight. */}
-            {loadingProgress && loadingProgress.total > 0 && (
-              <div className="text-xs text-muted-foreground text-center">
-                <p>
-                  {loadingProgress.total - loadingProgress.pending}
-                  {" / "}
-                  {loadingProgress.total}
-                  {" assets"}
-                  {loadingProgress.failed > 0 && (
-                    <span> · {loadingProgress.failed} failed</span>
-                  )}
-                </p>
-                {loadingProgress.pending > 0 && (
-                  <p className="max-w-60 truncate">
-                    {loadingProgress.steps
-                      .filter( ( step ) => step.status === "pending" )
-                      .slice(
-                        0,
-                        3
-                      )
-                      .map( ( step ) => `${ step.kind }: ${ step.label }` )
-                      .join( " · " )}
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
+      {/* Loading placeholder — mounted only once loading has actually
+          outlasted the anti-flash delay, so an asset-free or fully cached
+          sketch appears instantly instead of flashing a poster. Purely
+          visual: `data-engine-ready` and every other gate below still read
+          the raw `sketchLoaded`, so the recording pipeline is unaffected. */}
+      {showLoadingScreen && (
+        <SketchLoadingPlaceholder
+          thumbnailUrl={ thumbnailUrl }
+          name={ name }
+          engineId={ engineId }
+          progress={ loadingProgress }
+          size={ effectiveSettings.size }
+        />
       )}
 
       {/* Sketch viewport — shrinks above the open mobile drawer so
