@@ -209,3 +209,41 @@ The floating inspector and the Interactive mixer used to swap `w-80` ↔ `w-fit`
 - **The same dialog changes an existing layer**, from the inspector's `sketch-picker` field. Picking writes **two** fields — the path and `settings` reset to the new sketch's defaults — and that pairing is why it is one control: every sketch declares a different parameter shape, so carrying settings across a change leaves controls bound to keys the running sketch ignores.
 - **The layer's inspector is the layer's attributes, then the sketch's own form.** `EmbeddedSketchFields` renders the embedded sketch's `formConfiguration` through the same `GenericObjectForm` the sketch's own page uses, bound to `<layer>.settings` — same components, same ranges, same bands — under a hairline + eyebrow naming the sketch and counting its options. `settings` is therefore the one schema field with **no** entry in `field-config`'s `formConfig`, and `GenericItemForm` skips it explicitly; the drift test (`src/types/__tests__/sketchLayerItem.test.ts`) encodes that exception so nobody "fixes" it by inventing a static config.
 - **The form config comes over the wire** (`/api/sketches/form`, cached per sketch in `@/lib/sketchLayerCatalogue`). It cannot be bundled: `options.ts` modules are `server-only` because some read the filesystem at import time. The *catalogue* costs nothing — `@/engines/metadata` already reads `metadata.json` in the browser bundle for `P5Engine`'s path resolution.
+
+## The `visual` content item is gone; sketch layers replaced it
+
+2026-09-01 — The `visual` item offered four options of which three never drew
+anything (`neon-line` threw on a `getP5` its file never imported, `neon-dot` and
+`churros-snake` were invoked without the `vectors`/`position` they need, the
+latter having no `visualsMap` entry at all), and the one that worked —
+`neon-graffiti` — already exists as a real sketch alongside the whole
+`neon/neon-v0…v6` family. Once any sketch could be a layer, a bespoke
+half-working visual layer earned nothing, so the type was removed everywhere a
+content item lives (schema + union, field-config, palette kinds/meta,
+makeDefaultItem, describeContentItem, freeLayout, contentDrag).
+
+**The drawing functions were kept** in `src/sketches/p5/utils/visuals/`, now
+referenced by nothing, to be migrated one at a time into real sketches — the
+file says so itself so a dead-code sweep does not take them. `neonLine.js`'s
+missing import was fixed on the way out, so whoever migrates it starts from
+working code.
+
+**No migration was written, deliberately.** Dropping stored `visual` items
+before the parse was proposed and declined: the item was barely used and the
+maintainer took the risk. Know the shape of that risk — `content` is a strictly
+parsed discriminated union, so a saved deck still carrying one fails the array
+and `initOptions`' top-level `.catch` resets **that deck's whole options** to
+defaults, not just the offending layer. If a report ever arrives that "a deck
+came back empty", this is the first thing to check.
+
+## A reversible toggle belongs on the row, not behind hover
+
+2026-09-01 — The layers list hides its action cluster until hover
+(`md:opacity-0 md:group-hover:opacity-100`) so a mis-aimed tap cannot hit
+duplicate or delete. The eye was in that cluster and was reported as *missing* —
+it was present and working the whole time, just invisible. It now renders
+outside the cluster in both states, which is the rule the file had already
+half-adopted for hidden layers ("spottable without hovering"). **How to apply**:
+hide an action behind hover only when a mis-click is destructive; a toggle you
+can undo by clicking again is not.
+

@@ -1,4 +1,3 @@
-import drawSlideVisual from "../common/drawSlideVisual.js";
 import drawSlideMeta from "../common/drawSlideMeta.js";
 import drawSlideSpecs from "../common/drawSlideSpecs.js";
 import drawHudElement from "../common/drawHudElement.js";
@@ -88,12 +87,6 @@ export default function freeLayout(
         break;
       case "images-stack":
         drawSlideImagesStack(
-          item,
-          options
-        );
-        break;
-      case "visual":
-        drawSlideVisual(
           item,
           options
         );

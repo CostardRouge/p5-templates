@@ -1,5 +1,4 @@
 export type ItemKind =
-  | "visual"
   | "sketch"
   | "text"
   | "title"

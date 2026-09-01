@@ -98,12 +98,6 @@ export default function describeContentItem( item: unknown ): ContentItemDescrip
           : `${ sources.length } images`;
       }
 
-      case "visual": {
-        const visual = record.visual as Record<string, unknown> | undefined;
-
-        return firstNonEmpty( visual?.name );
-      }
-
       case "sketch": {
         // The embedded sketch is stored as its catalogue path
         // ("category/name"); the row shows the name, which is what the picker,

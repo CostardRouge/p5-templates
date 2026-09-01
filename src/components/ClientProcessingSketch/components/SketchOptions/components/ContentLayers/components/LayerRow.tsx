@@ -138,19 +138,26 @@ export default function LayerRow( {
         )}
       </button>
 
-      {/* A hidden layer must be spottable without hovering, so its eye stays
-          visible while the rest of the cluster keeps the hover reveal. */}
-      {canToggleVisibility && hidden && (
+      {/* The eye sits OUTSIDE the hover cluster, in both states. Hiding it
+          until hover made it unfindable — the control reads as missing, which
+          is exactly how it was reported. The cluster's hover reveal exists to
+          keep a mis-aimed tap off duplicate/delete; that reasoning does not
+          apply to a reversible toggle, and a hidden layer already had to opt
+          out of the reveal to stay spottable. */}
+      {canToggleVisibility && (
         <button
           type="button"
           onClick={ toggleVisibility }
-          aria-label="Show layer"
+          aria-label={ hidden ? "Show layer" : "Hide layer" }
           className={ clsx(
             ROW_ACTION_CLASS,
-            "shrink-0"
+            "shrink-0",
+            hidden ? "text-label/60" : "text-label"
           ) }
         >
-          <EyeOff className="h-4 w-4 md:h-3.5 md:w-3.5" />
+          {hidden
+            ? <EyeOff className="h-4 w-4 md:h-3.5 md:w-3.5" />
+            : <Eye className="h-4 w-4 md:h-3.5 md:w-3.5" />}
         </button>
       )}
 
@@ -158,16 +165,6 @@ export default function LayerRow( {
           instead of deleting it; revealed on hover, always reachable by
           keyboard. */}
       <div className="flex shrink-0 items-center gap-0.5 transition-opacity focus-within:opacity-100 md:opacity-0 md:group-hover:opacity-100">
-        {canToggleVisibility && !hidden && (
-          <button
-            type="button"
-            onClick={ toggleVisibility }
-            aria-label="Hide layer"
-            className={ ROW_ACTION_CLASS }
-          >
-            <Eye className="h-4 w-4 md:h-3.5 md:w-3.5" />
-          </button>
-        )}
         <button
           type="button"
           onClick={ ( event ) => {

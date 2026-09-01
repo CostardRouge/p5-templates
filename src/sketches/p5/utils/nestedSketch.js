@@ -1,8 +1,8 @@
 // ── Running another sketch as a layer ──────────────────────────────────────
 //
 // The "sketch" content item (SketchLayerItemSchema) embeds a whole other p5
-// sketch in the host sketch, the way a "visual" or an "image" item embeds a
-// drawing. This module owns everything that makes that possible; the renderer
+// sketch in the host sketch, the way an "image" item embeds a picture. This
+// module owns everything that makes that possible; the renderer
 // (slides/common/drawSlideSketch.js) only asks it for a buffer and blits it.
 //
 // Three problems had to be solved, and each is solved by one swap rather than

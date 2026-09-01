@@ -12,8 +12,7 @@ import {
   SpecsHighlightSchema,
   SpecsSoundRepeatSchema,
   SpecsVisibilitySchema,
-  VerticalAlign,
-  VisualOptions
+  VerticalAlign
 } from "@/types/sketch.types";
 
 // Step 1: Define a common base for all config types
@@ -513,29 +512,6 @@ const hudBoxStyleFields: Record<string, FieldConfig> = {
   }
 };
 
-const visualSelectOptions = [
-  {
-    label: "Neon graffiti",
-    value: "neon-graffiti",
-    config: {}
-  },
-  {
-    label: "Neon line",
-    value: "neon-line",
-    config: {}
-  },
-  {
-    label: "Neon dot",
-    value: "neon-dot",
-    config: {}
-  },
-  {
-    label: "Churros snake",
-    value: "churros-snake",
-    config: {}
-  }
-];
-
 const gridPatternFields: ItemFormConfig = {
   columns: {
     label: "Columns",
@@ -712,7 +688,7 @@ const soundOnChangeField: FieldConfig = {
         }
       },
 
-      // @ts-expect-error schema carries a .default() wrapper, like VisualOptions
+      // @ts-expect-error schema carries a .default() wrapper
       schema: SpecsSoundRepeatSchema
     }
   }
@@ -1108,7 +1084,7 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
         permanent: {}
       },
 
-      // @ts-expect-error schema carries a .default() wrapper, like VisualOptions
+      // @ts-expect-error schema carries a .default() wrapper
       schema: SpecsVisibilitySchema
     },
     highlight: {
@@ -1223,7 +1199,7 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
         }
       },
 
-      // @ts-expect-error schema carries a .default() wrapper, like VisualOptions
+      // @ts-expect-error schema carries a .default() wrapper
       schema: SpecsHighlightSchema
     },
     sound: soundOnChangeField
@@ -1739,56 +1715,6 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
       },
 
       schema: ImagesStackAnimations
-    }
-  },
-  visual: {
-    position: {
-      label: "Position",
-      component: "vector2d",
-      allowNegative: false,
-      min: 0,
-      max: 1,
-      step: 0.01,
-      yDown: true
-    },
-    scale: {
-      label: "Scale",
-      component: "slider",
-      min: -10,
-      max: 10,
-      step: 0.01
-    },
-    rotation: {
-      label: "Rotation",
-      component: "slider",
-      min: 0,
-      max: Math.PI * 2,
-      step: 0.001
-    },
-    visual: {
-      component: "conditional-group",
-      conditionalOn: "name",
-      typeSelector: {
-        options: visualSelectOptions.map( ( {
-          value, label
-        } ) => ( {
-          value,
-          label
-        } ) )
-      },
-      configs: visualSelectOptions.reduce(
-        (
-          finalConfigs, visualSelectOption
-        ) => {
-          finalConfigs[ visualSelectOption.value ] = visualSelectOption.config;
-
-          return finalConfigs;
-        },
-        {} as ConditionalGroupConfig[ "configs" ]
-      ),
-
-      // @ts-expect-error
-      schema: VisualOptions
     }
   },
   // The embedded-sketch layer. `settings` is deliberately absent from this

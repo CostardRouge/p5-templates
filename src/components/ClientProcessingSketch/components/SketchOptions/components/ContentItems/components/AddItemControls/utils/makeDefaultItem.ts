@@ -15,7 +15,6 @@ import {
   TextItemSchema,
   ContentItem,
   SketchLayerItemSchema,
-  VisualItemSchema,
   QrCodeItemSchema,
   TitleItemSchema
 } from "@/types/sketch.types";
@@ -107,11 +106,6 @@ export default function makeDefaultItem(
       } );
     case "background":
       return BackgroundItemSchema.parse( {
-        ...seed,
-        type
-      } );
-    case "visual":
-      return VisualItemSchema.parse( {
         ...seed,
         type
       } );

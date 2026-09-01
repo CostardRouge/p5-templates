@@ -788,49 +788,6 @@ export const ImagesStackItemSchema = z.object( {
   animation: ImagesStackAnimations.optional()
 } );
 
-// Visual items
-export const neonGraffitiSchema = z.object( {
-  name: z.literal( "neon-graffiti" )
-} );
-
-export const neonLineSchema = z.object( {
-  name: z.literal( "neon-line" )
-} );
-
-export const neonDotSchema = z.object( {
-  name: z.literal( "neon-dot" )
-} );
-
-export const churrosSnakeSchema = z.object( {
-  name: z.literal( "churros-snake" )
-} );
-
-export const VisualOptions = z
-  .discriminatedUnion(
-    "name",
-    [
-      neonGraffitiSchema,
-      neonLineSchema,
-      neonDotSchema,
-      churrosSnakeSchema
-    ]
-  )
-  .default( {
-    name: "neon-graffiti"
-  } );
-
-export const VisualItemSchema = z.object( {
-  type: z.literal( "visual" ),
-  visual: VisualOptions.optional(),
-
-  position: Vec2.default( {
-    x: 0,
-    y: 0
-  } ),
-  scale: z.number().default( 1 ),
-  rotation: z.number().default( 0 )
-} );
-
 /* ---------------- embedded-sketch content item ------------------- */
 // A whole other sketch, composited as a layer. It runs in its own p5 graphics
 // buffer (see src/sketches/p5/utils/nestedSketch.js), so its `background()`
@@ -1351,7 +1308,6 @@ export const ContentItemSchema = z.discriminatedUnion(
     TitleItemSchema,
     ImagesStackItemSchema,
     ImageItemSchema,
-    VisualItemSchema,
     SketchLayerItemSchema,
     QrCodeItemSchema,
     HudBadgeItemSchema,

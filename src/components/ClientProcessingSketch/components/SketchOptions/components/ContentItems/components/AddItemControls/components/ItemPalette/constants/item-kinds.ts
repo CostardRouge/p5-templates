@@ -5,7 +5,6 @@ import {
   Image as ImageIcon,
   Layers as StackIcon,
   PaintBucket as BgIcon,
-  Sparkles as VisualIcon,
   Blocks as SketchIcon,
   Terminal as SpecsIcon,
   QrCode as QrCodeIcon,
@@ -25,7 +24,6 @@ import {
 } from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/AddItemControls/components/ItemPalette/types/item-kinds";
 
 export const ITEM_ORDER: ItemKind[] = [
-  "visual",
   "sketch",
   "text",
   "title",
@@ -51,7 +49,6 @@ export const ITEM_GROUPS: ItemKindGroup[] = [
   {
     label: "Content",
     kinds: [
-      "visual",
       "sketch",
       "text",
       "title",
@@ -153,11 +150,6 @@ export const ITEM_META: Record<ItemKind, ItemKindMeta> = {
     label: "Background",
     Icon: BgIcon,
     description: "Backdrop / fill"
-  },
-  visual: {
-    label: "Visual",
-    Icon: VisualIcon,
-    description: "2D/3D visual"
   },
   sketch: {
     label: "Sketch",
