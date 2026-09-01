@@ -19,10 +19,39 @@ import {
   channelVarName
 } from "@/lib/channelBridge";
 import type {
-  FieldConfig
+  FieldConfig, SelectOption
 } from "../../constants/field-config";
 
-export type BindingKind = "continuous" | "vector2d";
+export type BindingKind =
+  | "continuous"
+  | "vector2d"
+  | "boolean"
+  | "enum"
+  | "color";
+
+/**
+ * The binding family a form control belongs to. Every kind but `vector2d` is
+ * driven by the same 0..1 scalar signal — they differ only in what the mapping
+ * turns it into (see `bindings.js`), which is why the source picker, the
+ * generators and the meters are shared across all of them.
+ */
+export function bindingKindFor( component: FieldConfig[ "component" ] ): BindingKind | null {
+  switch ( component ) {
+    case "slider":
+    case "number":
+      return "continuous";
+    case "vector2d":
+      return "vector2d";
+    case "checkbox":
+      return "boolean";
+    case "select":
+      return "enum";
+    case "color":
+      return "color";
+    default:
+      return null;
+  }
+}
 
 export type BlendMode =
   | "replace"
@@ -140,9 +169,10 @@ export function decodeSource( value: string ): {
 
 /**
  * The channel sources a target of the given kind can bind to.
- *  - continuous target: every scalar channel, plus each vector2d channel
- *    expanded into its x / y / magnitude / angle projections.
  *  - vector2d target: every vector2d channel, whole (passthrough).
+ *  - every other kind (continuous, boolean, enum, color) is driven by a single
+ *    0..1 signal, so it gets every scalar channel plus each vector2d channel
+ *    expanded into its x / y / magnitude / angle projections.
  */
 export function channelSourceOptions( kind: BindingKind ): SourceOption[] {
   const options: SourceOption[] = [];
@@ -336,6 +366,98 @@ function makeId(): string {
   return `b_${ Math.round( performance.now() ) }`;
 }
 
+// ── Defaults for the scalar-driven families ─────────────────────────────────
+
+/** Rise at the middle of the signal, with a little slack before falling back. */
+export const DEFAULT_BOOLEAN_MAPPING = {
+  threshold: 0.5,
+  hysteresis: 0.05,
+  mode: "gate",
+  curve: "linear"
+};
+
+export const BOOLEAN_MODE_OPTIONS = [
+  {
+    value: "gate",
+    label: "Gate (follows the signal)"
+  },
+  {
+    value: "toggle",
+    label: "Toggle (flips on each rise)"
+  }
+];
+
+const DEFAULT_COLOR_FROM = [
+  0,
+  0,
+  0,
+  255
+];
+
+/**
+ * The option values an enum binding cycles through, in the field's own order.
+ * They are copied ONTO the binding because the resolver runs in the engine,
+ * where the form config does not exist.
+ */
+export function enumMappingValues( config: FieldConfig ): Array<string | number> {
+  const anyConfig = config as any;
+  const options: SelectOption[] = Array.isArray( anyConfig.options )
+    ? anyConfig.options
+    : [];
+
+  return options.map( ( option ) =>
+    ( anyConfig.asNumber ? Number( option.value ) : option.value ) );
+}
+
+/** A `[r, g, b, a]` tuple from a form colour value, component by component. */
+export function asRgba(
+  value: unknown, fallback: number[]
+): number[] {
+  const list = Array.isArray( value ) ? value : [];
+
+  return fallback.map( (
+    component, i
+  ) => ( typeof list[ i ] === "number" ? ( list[ i ] as number ) : component ) );
+}
+
+/**
+ * The far end of a colour ramp seeded from the colour already on the field.
+ * The straight inverse is the obvious choice, but a mid-grey inverts to nearly
+ * itself (128 → 127) and the new binding would look broken, so mid-tones ramp
+ * to the opposite end of the greyscale instead.
+ */
+export function complementRgba( rgba: number[] ): number[] {
+  const [
+    r,
+    g,
+    b,
+    a
+  ] = rgba;
+  const inverse = [
+    255 - r,
+    255 - g,
+    255 - b
+  ];
+  const luminance = ( r + g + b ) / 3;
+  const inverseLuminance = ( inverse[ 0 ] + inverse[ 1 ] + inverse[ 2 ] ) / 3;
+
+  if ( Math.abs( inverseLuminance - luminance ) < 48 ) {
+    const end = luminance < 128 ? 255 : 0;
+
+    return [
+      end,
+      end,
+      end,
+      a
+    ];
+  }
+
+  return [
+    ...inverse,
+    a
+  ];
+}
+
 /**
  * Build a sensible default binding for a field, pre-filling the mapping range
  * from the field's configured min/max so the modulation lands in a useful
@@ -350,13 +472,87 @@ function makeId(): string {
  *
  * A vector2d target has no generator family (mapVector reads a channel), so it
  * starts on the first input source instead.
+ *
+ * The scalar-driven families pick the wave that makes their mapping legible at
+ * a glance: a boolean blinks on a square wave, an enum walks its options in
+ * order on a sawtooth, a colour crossfades on a sine. `currentValue` is the
+ * field's value at bind time — a colour ramp starts from the colour that is
+ * already there rather than from an arbitrary stop.
  */
 export function makeDefaultBinding(
   target: string,
   kind: BindingKind,
-  config: FieldConfig
+  config: FieldConfig,
+  currentValue?: unknown
 ): Binding {
   const anyConfig = config as any;
+
+  if ( kind === "boolean" ) {
+    return {
+      id: makeId(),
+      source: "oscillator",
+      target,
+      kind: "boolean",
+      oscillator: {
+        ...DEFAULT_OSCILLATOR,
+        wave: "square"
+      },
+      mapping: {
+        ...DEFAULT_BOOLEAN_MAPPING
+      },
+      smoothing: 0,
+      enabled: true,
+      weight: 1,
+      blend: "replace"
+    };
+  }
+
+  if ( kind === "enum" ) {
+    return {
+      id: makeId(),
+      source: "oscillator",
+      target,
+      kind: "enum",
+      oscillator: {
+        ...DEFAULT_OSCILLATOR,
+        wave: "sawtooth"
+      },
+      mapping: {
+        values: enumMappingValues( config )
+      },
+      smoothing: 0,
+      enabled: true,
+      weight: 1,
+      blend: "replace"
+    };
+  }
+
+  if ( kind === "color" ) {
+    return {
+      id: makeId(),
+      source: "oscillator",
+      target,
+      kind: "color",
+      oscillator: {
+        ...DEFAULT_OSCILLATOR
+      },
+      mapping: {
+        from: asRgba(
+          currentValue,
+          DEFAULT_COLOR_FROM
+        ),
+        to: complementRgba( asRgba(
+          currentValue,
+          DEFAULT_COLOR_FROM
+        ) ),
+        curve: "linear"
+      },
+      smoothing: 0.2,
+      enabled: true,
+      weight: 1,
+      blend: "replace"
+    };
+  }
 
   if ( kind === "vector2d" ) {
     const min = anyConfig.min ?? 0;
