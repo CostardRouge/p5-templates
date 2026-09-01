@@ -18,7 +18,7 @@ import {
  * boundingBox lowest → badge on top, and its migration inserts the expanded
  * items in that order so existing scenes look identical). Widgets bind to a
  * data source (a built-in live key or a sketch-settings key-path) — see
- * hud/sources.js. Drawn via freeLayout's post-draw pass, so recordings
+ * hud/sources.js. Drawn via slides.render()'s post-draw pass, so recordings
  * capture them.
  */
 

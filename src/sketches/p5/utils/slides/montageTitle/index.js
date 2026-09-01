@@ -482,8 +482,9 @@ export default function drawMontageTitle(
   }
 
   // While the label is being dragged on canvas, follow the live position; the
-  // stored one applies otherwise (the overlay renders outside freeLayout, so it
-  // resolves its own drag override rather than going through resolveDraggedItem).
+  // stored one applies otherwise (the overlay renders outside slides.render()'s
+  // content loop, so it resolves its own drag override rather than going
+  // through resolveDraggedItem).
   const position = resolveMontageTitlePosition(
     slideIndex,
     title.position

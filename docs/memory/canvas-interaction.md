@@ -2,13 +2,17 @@
 
 Read before touching `src/sketches/p5/utils/slides/contentDrag.js`, the item-bounds registry, or any `drawSlide*` renderer's grab surface. The studio-side half of the same channel (the layers list, the inspector it opens) is in `studio-ui.md`.
 
+## There is no pluggable "layout mode" — never re-add one without checking here first (2026-09-01)
+
+`src/sketches/p5/utils/slides/layouts/` used to hold a `_layouts` registry (`auto`, `free`, `full`, `strip`, `split`, `grid2x2`, `polaroid`) meant to be selected per-slide via a `source?.layout` field — but that selector was always commented out in `slides/index.js`, no `layout` field ever existed in `SlideSchema`/`OptionsSchema`, and no UI ever offered a mode picker. Only `free` (i.e. `freeLayout`) ever ran; the other six implementations (`autoLayout` + five `image*Layout.js` files) were unreachable from day one. Removed as dead scaffolding: `freeLayout`'s per-item dispatch loop (the `switch` over content-item types, bracketed by `beginItemBounds`/`endItemBounds`) now lives directly in `slides.render()` in `slides/index.js` — there is no separate "layout" file or concept left, just the one content-render loop. If a future need for multiple slide layouts shows up, design it against real requirements rather than resurrecting this registry; it was cut, not paused.
+
 ## An item is draggable only when three things line up (2026-08-31)
 
 `contentDrag.js` owns raw capture-phase pointer events on `window` and hit-tests every press before the viewport's pan recogniser sees it. For a content item to be grabbable, all three must hold:
 
 1. its `type` is in `DRAGGABLE_TYPES`;
 2. its anchor is resolved the way its renderer resolves it — `positionDefaults( type )` must mirror the schema's own `position` default, and a type whose renderer offsets the anchor by the item's margins must be in `MARGIN_ANCHORED_TYPES` (`text`, `title`: `string.write` draws them at `(margin + position) * size`);
-3. its renderer reports the rectangle it actually drew, through `reportItemBounds` inside `freeLayout`'s `begin/endItemBounds` bracket.
+3. its renderer reports the rectangle it actually drew, through `reportItemBounds` inside `slides.render()`'s (`slides/index.js`) `begin/endItemBounds` bracket.
 
 Miss (1) and the item is inert — that is what kept `title` un-draggable for its whole life even though its renderer already reported bounds. Miss (3) and it falls back to a 44-screen-px disc at its anchor, which is fine for `visual` (nothing measurable to report) and is deliberately kept for every type, because it is also what lets you move an item the current frame does not draw — a `title` outside its `displayFrom..displayTo` window would otherwise be repositionable during only 20% of the loop.
 
