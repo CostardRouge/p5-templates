@@ -8,6 +8,7 @@ import {
 // Re-export all site constants so existing imports keep working
 export {
   APP_FEATURE_LIST,
+  HOME_DESCRIPTION,
   OG_IMAGE,
   SITE_AUTHOR,
   SITE_CATEGORY,
