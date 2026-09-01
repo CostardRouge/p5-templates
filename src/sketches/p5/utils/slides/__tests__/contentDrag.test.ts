@@ -627,7 +627,7 @@ describe(
     } );
 
     // Report each element's drawn rectangle for this frame, the way the real
-    // widget renderers do inside freeLayout's bounds bracket.
+    // widget renderers do inside slides.render()'s bounds bracket.
     function reportHudBounds() {
       // badge drawn top-right, gauge drawn bottom-left — well separated.
       beginItemBounds(
