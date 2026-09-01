@@ -795,17 +795,19 @@ export default function SketchOptions( {
                     island bottom-center. */}
                     {dockedDesktop && (
                       <div
-                        className="absolute left-80 right-72 z-40 glass border-t border-theme"
+                        className="absolute left-80 right-72 z-40 glass border-t border-theme overflow-hidden transition-[height] duration-200 ease-out motion-reduce:transition-none"
                         style={ {
                           bottom: railBottom,
                           height: `var(${ STUDIO_FILMSTRIP_HEIGHT_VAR }, 0px)`
                         } }
                       >
-                        {/* The band is 3rem tall when the deck is empty, so the
-                        add slot shrinks with it rather than overflowing. */}
+                        {/* The band steps between 3rem (empty invite) and 8rem
+                        (thumbnail row) — see the height effect above — on the
+                        same 200ms duration as SlideFilmstrip's own internal
+                        CollapsibleItem transition, so the two move together. */}
                         <SlideFilmstrip
                           { ...filmstripProps }
-                          thumbnailHeight={ hasSlides ? 112 : 32 }
+                          thumbnailHeight={ 112 }
                         />
                       </div>
                     )}
