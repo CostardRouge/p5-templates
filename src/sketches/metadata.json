@@ -4095,6 +4095,18 @@
     "ctime": "2026-08-24T23:30:32.505Z"
   },
   {
+    "name": "hand-clip-studio-v1",
+    "engine": "p5",
+    "category": "hand-capture",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": true,
+    "hiddenFromGallery": false,
+    "mtime": "2026-09-01T20:27:54.241Z",
+    "ctime": "2026-09-01T20:25:21.469Z"
+  },
+  {
     "name": "flip-v1-letter-cycle",
     "engine": "p5",
     "category": "flip",

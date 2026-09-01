@@ -55,6 +55,34 @@ trackers do the work.
   so grab anchors sit slightly along the drag path — real takes hover before
   dragging so it barely matters, and the studio will let markers be nudged.
 
+- 2026-09-01 — **The recorder samples on inference, not on draw**
+  (`handClips/recorder.js`): a sample is pushed only when
+  `mediapipe.tasks.hands.updatedAt` advanced, timestamped with that value
+  (the inference's own completion time), and the take's clock starts on its
+  first tracked hand rather than on the key press — while the max-length
+  cutoff (`elapsed`) runs on the wall clock from `start()`, because a take
+  with no hand yet has no sample clock (found headlessly: with `t0` unset the
+  cutoff fired on the first frame). Polling per draw frame
+  would store each ~30 fps result two or three times and lie about speed.
+  Landmarks are stored normalized with x mirrored when the capture is
+  flipped — the interaction layer's `_normToCanvas` orientation — never in
+  canvas px. MediaPipe's handedness label describes the MIRRORED image, so
+  with a flipped webcam "Right" is the hand you see on the right.
+- 2026-09-01 — **The studio is a sketch** (`hand-capture/hand-clip-studio-v1`,
+  `.hidden-home`), not a React page: the options form, HUD and routing come
+  free, and it stays in the repo's "everything is a sketch" grain. It runs on
+  `deltaTime`, reads the camera and is not capture material. Its
+  review timeline lets the close/open markers be nudged by hand
+  (`[ ] { }`) because auto-detection lands off on ambiguous takes; the
+  calibration readout derives the valid playback hand-scale window from
+  `gapRange` against a target `pinchPx × releaseRatio`.
+- 2026-09-01 — **`POST /api/dev/save-hand-clip`** writes a clip into
+  `shared/handClips/<slug>.json`, dev-only like `save-defaults`; it
+  round-trips the payload through `parseHandClip` so nothing invalid lands
+  in the library. The studio gates the call on
+  `process.env.NODE_ENV === "development"` (Next inlines it client-side, same
+  as `SaveDefaultsButton`).
+
 ## Traps
 
 - 2026-09-01 — A `@returns {object}` JSDoc annotation on a JS function ERASES
@@ -70,10 +98,9 @@ trackers do the work.
 
 ## Still to build (plan of 2026-08-31, agreed direction)
 
-recorder (`updatedAt`-gated sampling) + studio sketch
-(`hand-capture/hand-clip-studio-v1`: on-canvas prompter, draggable A/B
-targets, take scrubber, phase-marker nudge, export + dev write route à la
-`save-defaults`) → player (`sample( clip, u, out )`, zero-alloc reused
-output buffer) + retarget + `createVirtualHandTroupe()` (reuses rings-v8's
-clock-pure scheduling, emits hand groups instead of cursor icons) → demo
-sketch `hand-clip-replay-v1`. `rings-v9` only after the format is proven.
+player (`sample( clip, u, out )`, zero-alloc reused output buffer) +
+retarget + `createVirtualHandTroupe()` (reuses rings-v8's clock-pure
+scheduling, emits hand groups instead of cursor icons) → demo sketch
+`hand-clip-replay-v1`. `rings-v9` only after the format is proven. The
+shared library (`shared/handClips/`) still holds no clip: the maintainer
+records the reference takes in the studio — an agent cannot.
