@@ -41,6 +41,7 @@ import ControlledSketchPicker
   from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/SketchLayerPicker/ControlledSketchPicker";
 import CollapsibleItem from "@/components/CollapsibleItem";
 import RandomizeSettingsButton from "@/components/RandomizeSettingsButton";
+import RandomizeFieldButton from "@/components/RandomizeFieldButton";
 import ApplyToAllSlidesButton from "@/components/ApplyToAllSlidesButton";
 import FieldContextMenu, {
   useFieldContextMenu
@@ -871,7 +872,19 @@ export default function FieldRenderer( {
               </button>
             )}
           </div>
-          {config.component === "vector2d" && bindingAffordance}
+          {/* The pad's per-field actions, as one cluster: redraw the pair,
+              then modulate it. Both are hidden with the label (an item-list
+              row passes hideLabel), which is where the pad has no room for
+              them anyway. */}
+          {config.component === "vector2d" && (
+            <div className="flex shrink-0 items-center gap-1">
+              <RandomizeFieldButton
+                name={ registeredName }
+                config={ config }
+              />
+              {bindingAffordance}
+            </div>
+          )}
         </div>
       )}
 
