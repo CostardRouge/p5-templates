@@ -9,6 +9,7 @@ import {
   useFormContext, useWatch
 } from "react-hook-form";
 
+import useGlobalHotkey from "@/hooks/useGlobalHotkey";
 import GenericItemForm from "../../ContentItems/components/GenericItemForm";
 import {
   ITEM_META
@@ -79,10 +80,30 @@ export default function LayerDetail( {
     onBack();
   };
 
-  const handleRemove = () => {
-    remove( index );
-    onBack();
-  };
+  const handleRemove = React.useCallback(
+    () => {
+      remove( index );
+      onBack();
+    },
+    [
+      remove,
+      index,
+      onBack
+    ]
+  );
+
+  // Delete/Backspace removes the open (highlighted) layer, mirroring the
+  // trash button. Routed through useGlobalHotkey so it shares the one guard
+  // every other studio shortcut backs off for — text entry, buttons/ARIA
+  // controls, open dialogs — instead of a second, narrower check.
+  useGlobalHotkey( {
+    code: "Delete",
+    onTrigger: handleRemove
+  } );
+  useGlobalHotkey( {
+    code: "Backspace",
+    onTrigger: handleRemove
+  } );
 
   // The item can vanish under the detail — deleted from the canvas, or the
   // slide switched while it was open. Falling back to the list beats rendering
