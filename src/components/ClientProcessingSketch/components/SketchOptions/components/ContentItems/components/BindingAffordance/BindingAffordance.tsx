@@ -21,8 +21,13 @@ import ChannelMeter from "./ChannelMeter";
 import ControlledSliderInput from "../ControlledSliderInput/ControlledSliderInput";
 import ControlledEasingInput from "../ControlledEasingInput/ControlledEasingInput";
 import {
-  ToggleSwitch
+  BarLabelSegment, ToggleSwitch
 } from "../ControlChrome";
+import {
+  CONTROL_BAR_CLASS,
+  CONTROL_CHEVRON_CLASS,
+  CONTROL_RESET_BUTTON_CLASS
+} from "../../constants/control-bar";
 import {
   interactionBindingsEnabled
 } from "@/lib/interactionBindings";
@@ -103,6 +108,53 @@ function fieldDomain( config: FieldConfig ) {
     max,
     step
   };
+}
+
+/**
+ * A one-line select sharing the form's own control-bar chrome (see
+ * ControlledFormatSelect / ControlledEasingInput) — a label segment, a
+ * truncated value + chevron, and an invisible native <select> on top, all in
+ * the same rounded-lg / h-10 md:h-7 bar the rest of the panel's sliders and
+ * selects use. Kept local: every use here is a plain flat option list, unlike
+ * the source picker below which needs its own richer closed-state label.
+ */
+function BarSelect( {
+  label,
+  value,
+  onChange,
+  options
+}: {
+  label: string;
+  value: string;
+  onChange: ( value: string ) => void;
+  options: Array<{
+    value: string;
+    label: string;
+  }>;
+} ) {
+  const selectedLabel = options.find( ( option ) => option.value === value )?.label ?? value;
+
+  return (
+    <div className={ CONTROL_BAR_CLASS }>
+      <BarLabelSegment label={ label } />
+      <span className="pointer-events-none flex min-w-0 flex-1 items-center justify-between gap-1 px-2.5">
+        <span className="truncate">{selectedLabel}</span>
+        <ChevronDown className={ CONTROL_CHEVRON_CLASS } />
+      </span>
+      <select
+        aria-label={ label }
+        value={ value }
+        onChange={ ( e ) => onChange( e.target.value ) }
+        className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+      >
+        {options.map( ( option ) => (
+          <option key={ option.value } value={ option.value }>
+            {option.label}
+          </option>
+        ) )}
+      </select>
+    </div>
+  );
 }
 
 /**
@@ -642,7 +694,7 @@ export default function BindingAffordance( {
 
       <PopoverPanel
         anchor="bottom end"
-        className="z-[60] w-72 max-w-[calc(100vw-1rem)] rounded-xl border border-theme bg-background p-3 text-xs shadow-xl [--anchor-gap:0.4rem] [--anchor-padding:0.5rem]"
+        className="z-[60] w-72 max-w-[calc(100vw-1rem)] max-h-[70vh] overflow-y-auto rounded-xl border border-theme bg-background p-3 text-xs shadow-xl [--anchor-gap:0.4rem] [--anchor-padding:0.5rem]"
       >
         {( {
           close
@@ -655,9 +707,9 @@ export default function BindingAffordance( {
                   type="button"
                   title="Reset all modulation settings"
                   onClick={ resetAll }
-                  className="grid h-5 w-5 place-items-center rounded text-label transition-colors hover:bg-hover hover:text-foreground"
+                  className={ CONTROL_RESET_BUTTON_CLASS }
                 >
-                  <RotateCcw className="h-3 w-3" />
+                  <RotateCcw className="h-3.5 w-3.5 md:h-3 md:w-3" />
                 </button>
               </div>
               <label className="flex cursor-pointer items-center gap-2 text-label">
@@ -711,39 +763,33 @@ export default function BindingAffordance( {
                 Input channels are sampled from the world; generators compute
                 from the sketch's animation progression. */}
             <div className="flex flex-col gap-1.5">
-              <span className="text-label">Source</span>
-
               {/* Category selector — every scalar-driven kind can run off a
                   generator; only the vector2d passthrough needs a real
                   channel. */}
               {kind !== "vector2d" && (
-                <select
+                <BarSelect
+                  label="Category"
                   value={ category }
-                  onChange={ ( e ) =>
-                    switchCategory( e.target.value as SourceCategory ) }
-                  className="h-8 w-full rounded-md border border-theme bg-background px-2 text-foreground"
-                >
-                  {SOURCE_CATEGORIES.map( ( option ) => (
-                    <option key={ option.value } value={ option.value }>
-                      {option.label}
-                    </option>
-                  ) )}
-                </select>
+                  onChange={ ( value ) =>
+                    switchCategory( value as SourceCategory ) }
+                  options={ SOURCE_CATEGORIES }
+                />
               )}
 
               {category === "input" && (
-                <div className="relative">
+                <div className={ CONTROL_BAR_CLASS }>
+                  <BarLabelSegment label="Source" />
                   {/* Visible, non-interactive: shows the full "Family · Detail"
                       label so the source's group stays legible once collapsed —
                       the native <select> below would otherwise only echo back
                       the short, group-less option text. */}
-                  <div
+                  <span
                     aria-hidden
-                    className="flex h-8 w-full items-center justify-between gap-1 rounded-md border border-theme bg-background px-2 text-foreground"
+                    className="pointer-events-none flex min-w-0 flex-1 items-center justify-between gap-1 px-2.5"
                   >
                     <span className="truncate">{selectedSourceLabel}</span>
-                    <ChevronDown className="h-3.5 w-3.5 shrink-0 text-label" />
-                  </div>
+                    <ChevronDown className={ CONTROL_CHEVRON_CLASS } />
+                  </span>
                   <select
                     value={ encodeSource(
                       binding.source,
@@ -782,20 +828,15 @@ export default function BindingAffordance( {
 
               {category === "oscillator" && (
                 <>
-                  <select
+                  <BarSelect
+                    label="Wave"
                     value={ binding.oscillator?.wave ?? "sine" }
-                    onChange={ ( e ) => setField(
+                    onChange={ ( value ) => setField(
                       "oscillator.wave",
-                      e.target.value
+                      value
                     ) }
-                    className="h-8 w-full rounded-md border border-theme bg-background px-2 text-foreground"
-                  >
-                    {WAVE_OPTIONS.map( ( option ) => (
-                      <option key={ option.value } value={ option.value }>
-                        {option.label}
-                      </option>
-                    ) )}
-                  </select>
+                    options={ WAVE_OPTIONS }
+                  />
                   <ControlledSliderInput
                     name={ `${ bindingPath }.oscillator.cycles` }
                     label="Cycles"
@@ -931,20 +972,15 @@ export default function BindingAffordance( {
                       0
                     ) }
                   />
-                  <select
+                  <BarSelect
+                    label="Mode"
                     value={ binding.sequence?.mode ?? "step" }
-                    onChange={ ( e ) => setField(
+                    onChange={ ( value ) => setField(
                       "sequence.mode",
-                      e.target.value
+                      value
                     ) }
-                    className="h-8 w-full rounded-md border border-theme bg-background px-2 text-foreground"
-                  >
-                    {SEQUENCE_MODE_OPTIONS.map( ( option ) => (
-                      <option key={ option.value } value={ option.value }>
-                        {option.label}
-                      </option>
-                    ) )}
-                  </select>
+                    options={ SEQUENCE_MODE_OPTIONS }
+                  />
 
                   {/* Smooth mode animates between stops: ease each transition,
                       and dwell on a stop for `hold` before moving on. */}
@@ -1065,20 +1101,15 @@ export default function BindingAffordance( {
                   between two choices to blend or crossfade, so the top layer
                   simply wins and neither control is offered. */}
               {layers.length > 1 && kind !== "enum" && (
-                <select
+                <BarSelect
+                  label="Blend"
                   value={ binding.blend ?? "replace" }
-                  onChange={ ( e ) => setField(
+                  onChange={ ( value ) => setField(
                     "blend",
-                    e.target.value
+                    value
                   ) }
-                  className="h-8 w-full rounded-md border border-theme bg-background px-2 text-foreground"
-                >
-                  {BLEND_OPTIONS.map( ( option ) => (
-                    <option key={ option.value } value={ option.value }>
-                      {option.label}
-                    </option>
-                  ) )}
-                </select>
+                  options={ BLEND_OPTIONS }
+                />
               )}
               {kind !== "enum" && (
                 <ControlledSliderInput
@@ -1183,20 +1214,15 @@ export default function BindingAffordance( {
                 fall before it flips again. */}
             {kind === "boolean" && (
               <div className="flex flex-col gap-1">
-                <select
+                <BarSelect
+                  label="Mode"
                   value={ binding.mapping?.mode ?? DEFAULT_BOOLEAN_MAPPING.mode }
-                  onChange={ ( e ) => setField(
+                  onChange={ ( value ) => setField(
                     "mapping.mode",
-                    e.target.value
+                    value
                   ) }
-                  className="h-8 w-full rounded-md border border-theme bg-background px-2 text-foreground"
-                >
-                  {BOOLEAN_MODE_OPTIONS.map( ( option ) => (
-                    <option key={ option.value } value={ option.value }>
-                      {option.label}
-                    </option>
-                  ) )}
-                </select>
+                  options={ BOOLEAN_MODE_OPTIONS }
+                />
                 <ControlledSliderInput
                   name={ `${ bindingPath }.mapping.threshold` }
                   label="Threshold"

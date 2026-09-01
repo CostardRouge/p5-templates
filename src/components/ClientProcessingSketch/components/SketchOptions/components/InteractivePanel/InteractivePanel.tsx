@@ -34,8 +34,13 @@ type Props = {
    *  "slides.N.sketch") — mirrors the SketchSettings form's base path. */
   basePath: string;
   /** Bottom offset override so the mixer clears the slide filmstrip (a CSS
-   *  length; defaults to the plain bottom-4 float). */
+   *  length; defaults to the plain bottom-4 float). Ignored when `stacked`. */
   bottomOffset?: string;
+  /** Render as a plain flow child instead of self-positioning — the floating
+   *  layout stacks the mixer directly above the Controls card in one shared,
+   *  bottom-anchored flex column (see SketchOptions.tsx), so the column owns
+   *  placement and width and this component only supplies its own chrome. */
+  stacked?: boolean;
 };
 
 /**
@@ -52,7 +57,8 @@ type Props = {
  */
 export default function InteractivePanel( {
   basePath,
-  bottomOffset
+  bottomOffset,
+  stacked = false
 }: Props ) {
   const {
     setValue, getValues
@@ -185,17 +191,20 @@ export default function InteractivePanel( {
         // w-80 <-> w-fit and rounded-2xl <-> rounded-full is not animatable
         // and snapped the panel into a pill while its height was still
         // interpolating. Only the height animates now.
-        "absolute left-1/2 z-50 flex w-80 max-w-[calc(100vw-1rem)] -translate-x-1/2 flex-col glass border border-theme shadow-lg overflow-hidden rounded-2xl",
-        !bottomOffset && "bottom-4"
+        "flex max-w-[calc(100vw-1rem)] flex-col glass border border-theme shadow-lg overflow-hidden rounded-2xl text-xs",
+        stacked
+          ? "w-full"
+          : "absolute left-1/2 z-50 w-80 -translate-x-1/2",
+        !stacked && !bottomOffset && "bottom-4"
       ) }
-      style={ bottomOffset ? {
+      style={ !stacked && bottomOffset ? {
         bottom: bottomOffset
       } : undefined }
     >
       <button
         type="button"
         onClick={ () => setExpanded( ( v ) => !v ) }
-        className="flex items-center gap-2 px-3 py-2 text-xs text-foreground"
+        className="flex items-center gap-2 px-3 py-2 text-foreground"
         aria-label={ expanded ? "Collapse interactive mixer" : "Expand interactive mixer" }
       >
         <Activity className="h-3.5 w-3.5" />
@@ -225,9 +234,14 @@ export default function InteractivePanel( {
 
           {groups.map( ( group ) => (
             <div key={ group.target } className="flex flex-col gap-1">
-              <span className="text-label">
-                {humanizeTarget( group.target )}
-              </span>
+              <div className="flex items-center gap-2 px-1 pb-0.5">
+                <span className="truncate text-[0.6875rem] uppercase tracking-[0.08em] text-label/70">
+                  {humanizeTarget( group.target )}
+                </span>
+                <span className="text-[0.6875rem] tabular-nums text-label/50">
+                  {group.items.length}
+                </span>
+              </div>
 
               {group.items.map( ( {
                 binding, index
@@ -240,81 +254,81 @@ export default function InteractivePanel( {
                   <div
                     key={ binding.id ?? index }
                     className={ clsx(
-                      "flex items-center gap-1.5 rounded-md border border-theme px-2 py-1.5",
+                      "flex flex-col gap-1.5 rounded-lg border border-theme px-2 py-1.5 transition-opacity",
                       dimmed && "opacity-50"
                     ) }
                   >
-                    <span className="relative grid h-6 w-6 shrink-0 place-items-center rounded">
-                      <span
-                        aria-hidden
-                        className="pointer-events-none absolute inset-0 rounded bg-focus/30"
-                        style={ {
-                          opacity: `var(${ meterVar }, 0)`
-                        } }
-                      />
-                      <Activity className="relative h-3 w-3 text-focus" />
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="relative grid h-7 w-7 shrink-0 place-items-center rounded-md border border-theme">
+                        <span
+                          aria-hidden
+                          className="pointer-events-none absolute inset-0 rounded-md bg-focus/30"
+                          style={ {
+                            opacity: `var(${ meterVar }, 0)`
+                          } }
+                        />
+                        <Activity className="relative h-3.5 w-3.5 text-focus" />
+                      </span>
 
-                    <span className="min-w-0 flex-1 truncate">
-                      {bindingSourceLabel( binding )}
-                    </span>
+                      <span className="min-w-0 flex-1 truncate text-foreground">
+                        {bindingSourceLabel( binding )}
+                      </span>
 
-                    <button
-                      type="button"
-                      title="Mute"
-                      onClick={ () => writeAt(
-                        index,
-                        {
-                          enabled: muted
-                        }
-                      ) }
-                      className={ clsx(
-                        "grid h-6 w-6 shrink-0 place-items-center rounded text-[0.65rem] font-bold transition-colors",
-                        muted
-                          ? "bg-hover text-foreground"
-                          : "text-label hover:text-foreground"
-                      ) }
-                    >
-                      M
-                    </button>
+                      <button
+                        type="button"
+                        title="Mute"
+                        onClick={ () => writeAt(
+                          index,
+                          {
+                            enabled: muted
+                          }
+                        ) }
+                        className={ clsx(
+                          "grid h-7 w-7 shrink-0 place-items-center rounded-md text-[0.65rem] font-bold transition-colors",
+                          muted
+                            ? "bg-hover text-foreground"
+                            : "text-label hover:bg-hover hover:text-foreground"
+                        ) }
+                      >
+                        M
+                      </button>
 
-                    <button
-                      type="button"
-                      title="Solo"
-                      onClick={ () => writeAt(
-                        index,
-                        {
-                          solo: !binding.solo
-                        }
-                      ) }
-                      className={ clsx(
-                        "grid h-6 w-6 shrink-0 place-items-center rounded text-[0.65rem] font-bold transition-colors",
-                        binding.solo
-                          ? "bg-amber-400/20 text-amber-400"
-                          : "text-label hover:text-foreground"
-                      ) }
-                    >
-                      S
-                    </button>
+                      <button
+                        type="button"
+                        title="Solo"
+                        onClick={ () => writeAt(
+                          index,
+                          {
+                            solo: !binding.solo
+                          }
+                        ) }
+                        className={ clsx(
+                          "grid h-7 w-7 shrink-0 place-items-center rounded-md text-[0.65rem] font-bold transition-colors",
+                          binding.solo
+                            ? "bg-amber-400/15 text-amber-400"
+                            : "text-label hover:bg-hover hover:text-foreground"
+                        ) }
+                      >
+                        S
+                      </button>
 
-                    <div className="w-16 shrink-0">
-                      <ControlledSliderInput
-                        name={ `${ bindingsPath }.${ index }.weight` }
-                        label=""
-                        min={ 0 }
-                        max={ 1 }
-                        step={ 0.05 }
-                      />
+                      <button
+                        type="button"
+                        title="Remove"
+                        onClick={ () => removeAt( index ) }
+                        className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-label transition-colors hover:bg-hover hover:text-red-500"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
                     </div>
 
-                    <button
-                      type="button"
-                      title="Remove"
-                      onClick={ () => removeAt( index ) }
-                      className="grid h-6 w-6 shrink-0 place-items-center rounded text-label transition-colors hover:text-foreground"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
+                    <ControlledSliderInput
+                      name={ `${ bindingsPath }.${ index }.weight` }
+                      label="Weight"
+                      min={ 0 }
+                      max={ 1 }
+                      step={ 0.05 }
+                    />
                   </div>
                 );
               } )}

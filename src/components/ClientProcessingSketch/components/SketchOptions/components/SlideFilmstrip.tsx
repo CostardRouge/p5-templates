@@ -35,6 +35,7 @@ import {
 import {
   indexToLetters
 } from "@/utils/slideNaming";
+import CollapsibleItem from "@/components/CollapsibleItem";
 import SlideThumbnail from "./SlideThumbnail";
 
 export type SlideFilmstripProps = {
@@ -95,13 +96,50 @@ function AddSlideTile( {
 }
 
 /**
+ * The empty-deck invite: one compact row (icon + a short line), the same
+ * visual weight as the panel's other compact rows (a PanelSection header, the
+ * Interactive mixer's collapsed header) rather than a full-height dashed tile
+ * with a paragraph under it. Adding the first slide promotes the whole
+ * current state (see useSlideManagement), so there is nothing to configure
+ * and nothing to lose — the copy says exactly that in one line.
+ */
+function EmptyDeckRow( {
+  onAdd,
+  disabled
+}: {
+  onAdd: () => void;
+  disabled: boolean;
+} ) {
+  return (
+    <button
+      type="button"
+      onClick={ onAdd }
+      disabled={ disabled }
+      className="flex w-full items-center gap-2 px-3 py-2.5 text-left transition-colors hover:bg-hover disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      <span className="grid h-6 w-6 shrink-0 place-items-center rounded-md border border-dashed border-theme text-label">
+        <Plus className="h-3.5 w-3.5" />
+      </span>
+      <span className="min-w-0 flex-1 truncate text-xs text-label">
+        Add a slide to start a collection
+      </span>
+    </button>
+  );
+}
+
+/**
  * Horizontal strip of slide thumbnails — the deck laid out in the page body,
  * Keynote-style, instead of folded into an options accordion. Slides are a
  * collection of variants (each one on its way to being a preset), not a
  * timeline: the strip deliberately stays separate from the animation
- * progression bar. With no slides it renders a single invite: adding the
- * first slide promotes the whole current state (see useSlideManagement), so
- * there is nothing to configure and nothing to lose.
+ * progression bar.
+ *
+ * The card grows and shrinks between the compact empty invite and the full
+ * thumbnail row: two `CollapsibleItem`s with complementary `expanded` booleans
+ * (no header of their own — the row IS the content), stacked in one column, so
+ * exactly one is at its natural height and the other at zero at a time. That
+ * reuses the same grid-template-rows animation every other expand/collapse in
+ * this app already runs on, rather than a bespoke height transition.
  */
 export default function SlideFilmstrip( {
   slideFields,
@@ -198,115 +236,100 @@ export default function SlideFilmstrip( {
   // is empty (an out-of-range index resolves to the global size).
   const addAspectRatio = aspectRatioFor( activeIndex ?? -1 );
 
-  if ( slideFields.length === 0 ) {
-    // Same box as the populated row — padding included. Without it the tile
-    // set the card's height and its 16px corners read as a pill next to the
-    // other floating panels.
-    return (
-      <div
-        className={ clsx(
-          "flex h-full w-full items-center gap-3 p-2",
-          className
-        ) }
-      >
-        <AddSlideTile
-          onAdd={ onAdd }
-          disabled={ isAdding }
-          height={ thumbnailHeight }
-          aspectRatio={ addAspectRatio }
-          label="Add first slide"
-        />
+  const hasSlides = slideFields.length > 0;
 
-        {/* Desktop-only copy: in the phone's deck card the slot speaks for
-            itself and this sentence only ever truncated. */}
-        <span className="hidden min-w-0 md:block">
-          <span className="line-clamp-2 text-xs text-label">
-            Single view — the first slide starts a collection from what is on
-            screen.
-          </span>
-        </span>
-      </div>
-    );
-  }
-
+  // No header of their own (an empty fragment) — the row itself is the whole
+  // content, and there's nothing to click-toggle: `expanded` is driven purely
+  // by the slide count, never by the user.
   return (
-    <DndContext
-      collisionDetection={ closestCenter }
-      onDragEnd={ handleDragEnd }
-      sensors={ sensors }
-      modifiers={ [
-        restrictToParentElement
-      ] }
-    >
-      <div
-        className={ clsx(
-          // items-center now that a slide is a bare thumbnail: the name moved
-          // inside the tile, so every item in the row — add slot included — is
-          // one rectangle of the same height and they centre cleanly.
-          // The padding is deliberately UNIFORM (p-2 = 8px): the tile's 8px
-          // radius is only concentric with the filmstrip card's 16px one when
-          // the inset is the same on every side (8 = 16 - 8). Splitting it
-          // back into px-3/py-1.5 breaks that on both axes at once.
-          // touch-pan-x: a vertical drag started on a thumbnail must fall
-          // through to the drawer's own scroll instead of being eaten here.
-          "flex h-full w-full items-center gap-2 overflow-x-auto overflow-y-hidden touch-pan-x p-2",
-          className
-        ) }
-      >
-        <SortableContext
-          items={ slideIds }
-          strategy={ horizontalListSortingStrategy }
+    <div className={ clsx(
+      "flex flex-col",
+      className
+    ) }>
+      <CollapsibleItem expanded={ !hasSlides } header={ () => <></> }>
+        <EmptyDeckRow onAdd={ onAdd } disabled={ isAdding } />
+      </CollapsibleItem>
+
+      <CollapsibleItem expanded={ hasSlides } header={ () => <></> }>
+        <DndContext
+          collisionDetection={ closestCenter }
+          onDragEnd={ handleDragEnd }
+          sensors={ sensors }
+          modifiers={ [
+            restrictToParentElement
+          ] }
         >
-          {slideFields.map( (
-            field, index
-          ) => {
-            const slide = slides
-              ? slides[ index ]
-              : ( field.value as SlideOption );
-            const id = field.id;
-            const thumbnail = thumbnails[ id ] || null;
-            const name = slide?.name || indexToLetters( index );
-            const aspectRatio = aspectRatioFor( index );
+          <div
+            // items-center now that a slide is a bare thumbnail: the name
+            // moved inside the tile, so every item in the row — add slot
+            // included — is one rectangle of the same height and they
+            // centre cleanly.
+            // The padding is deliberately UNIFORM (p-2 = 8px): the tile's
+            // 8px radius is only concentric with the filmstrip card's 16px
+            // one when the inset is the same on every side (8 = 16 - 8).
+            // Splitting it back into px-3/py-1.5 breaks that on both axes
+            // at once.
+            // touch-pan-x: a vertical drag started on a thumbnail must fall
+            // through to the drawer's own scroll instead of being eaten
+            // here.
+            className="flex w-full items-center gap-2 overflow-x-auto overflow-y-hidden touch-pan-x p-2"
+          >
+            <SortableContext
+              items={ slideIds }
+              strategy={ horizontalListSortingStrategy }
+            >
+              {slideFields.map( (
+                field, index
+              ) => {
+                const slide = slides
+                  ? slides[ index ]
+                  : ( field.value as SlideOption );
+                const id = field.id;
+                const thumbnail = thumbnails[ id ] || null;
+                const name = slide?.name || indexToLetters( index );
+                const aspectRatio = aspectRatioFor( index );
 
-            return (
-              <SortableRow key={ id } id={ id }>
-                {( dragBinder ) => (
-                  <div
-                    className="shrink-0"
-                    style={ {
-                      width: Math.round( thumbnailHeight * aspectRatio )
-                    } }
-                  >
-                    <SlideThumbnail
-                      id={ id }
-                      name={ name }
-                      isActive={ index === activeIndex }
-                      thumbnailUrl={ thumbnail }
-                      aspectRatio={ aspectRatio }
-                      onSelect={ () => onSelect( index ) }
-                      onRename={ ( newName ) => onRename(
-                        index,
-                        newName
-                      ) }
-                      onDelete={ () => onDelete( index ) }
-                      onDuplicate={ () => onDuplicate( index ) }
-                      dragBinder={ dragBinder }
-                    />
-                  </div>
-                )}
-              </SortableRow>
-            );
-          } )}
-        </SortableContext>
+                return (
+                  <SortableRow key={ id } id={ id }>
+                    {( dragBinder ) => (
+                      <div
+                        className="shrink-0"
+                        style={ {
+                          width: Math.round( thumbnailHeight * aspectRatio )
+                        } }
+                      >
+                        <SlideThumbnail
+                          id={ id }
+                          name={ name }
+                          isActive={ index === activeIndex }
+                          thumbnailUrl={ thumbnail }
+                          aspectRatio={ aspectRatio }
+                          onSelect={ () => onSelect( index ) }
+                          onRename={ ( newName ) => onRename(
+                            index,
+                            newName
+                          ) }
+                          onDelete={ () => onDelete( index ) }
+                          onDuplicate={ () => onDuplicate( index ) }
+                          dragBinder={ dragBinder }
+                        />
+                      </div>
+                    )}
+                  </SortableRow>
+                );
+              } )}
+            </SortableContext>
 
-        <AddSlideTile
-          onAdd={ onAdd }
-          disabled={ isAdding }
-          height={ thumbnailHeight }
-          aspectRatio={ addAspectRatio }
-          label="Add new slide"
-        />
-      </div>
-    </DndContext>
+            <AddSlideTile
+              onAdd={ onAdd }
+              disabled={ isAdding }
+              height={ thumbnailHeight }
+              aspectRatio={ addAspectRatio }
+              label="Add new slide"
+            />
+          </div>
+        </DndContext>
+      </CollapsibleItem>
+    </div>
   );
 }
