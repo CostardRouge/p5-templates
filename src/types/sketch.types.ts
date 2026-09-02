@@ -808,6 +808,12 @@ export const SketchLayerAspectRatio = z.enum( [
   "16:9"
 ] );
 
+/** How a layer's box relates to the canvas the embedded sketch draws for. */
+export const SketchLayerSizing = z.enum( [
+  "reflow",
+  "scale"
+] );
+
 export const SketchLayerItemSchema = z.object( {
   type: z.literal( "sketch" ),
   // Catalogue path of the embedded sketch — "<category>/<name>", or a bare
@@ -833,9 +839,21 @@ export const SketchLayerItemSchema = z.object( {
     .default( 1 ),
   rotation: z.number().default( 0 ),
   aspectRatio: SketchLayerAspectRatio.default( "canvas" ),
-  // Buffer resolution as a fraction of the layer's on-canvas size. Below 1 the
+  // What `scale` does to the embedded sketch. "reflow" hands it the layer's box
+  // as its canvas, so a sketch that lays itself out from p.width/p.height
+  // re-frames itself for the layer — right for a background or a pattern, and
+  // the historical behaviour. "scale" hands it the box it would have at scale 1
+  // and scales the result down, so the sketch keeps the framing it has on its
+  // own page. The second is the only one that works for a sketch drawing at
+  // absolute pixel sizes: shrinking the canvas under `peaks-sphere`, whose
+  // radius is 250px whatever it is given, crops the sphere instead of
+  // shrinking it.
+  sizing: SketchLayerSizing.default( "reflow" ),
+  // Buffer resolution as a fraction of the layer's own canvas. Below 1 the
   // sketch renders into fewer pixels and is scaled back up — the cheapest lever
-  // there is on a heavy embedded sketch, and a look in its own right.
+  // there is on a heavy embedded sketch, and a look in its own right. It is a
+  // pixel density only: the sketch is still told it has the full canvas, so
+  // this never re-lays it out (nestedSketch.bufferPixels).
   resolution: z.number().min( 0.05 )
     .max( 2 )
     .default( 1 ),

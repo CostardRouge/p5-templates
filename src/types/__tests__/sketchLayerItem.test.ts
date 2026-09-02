@@ -36,6 +36,9 @@ describe(
           scale: 1,
           rotation: 0,
           aspectRatio: "canvas",
+          // The historical meaning of `scale`: the layer's box IS the embedded
+          // sketch's canvas, so the sketch re-lays itself out for it.
+          sizing: "reflow",
           resolution: 1,
           framerate: 0,
           opacity: 1,

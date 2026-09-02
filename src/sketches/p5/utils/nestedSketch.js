@@ -273,6 +273,20 @@ function makeSurfaceProxy(
           return NOOP;
         }
 
+        // The size the sketch lays itself out for, which is NOT the buffer's
+        // pixel size: `resolution` renders the same layout into fewer (or more)
+        // pixels, and the draw is pre-scaled by that ratio. Everything a sketch
+        // sizes from — p.width/p.height, sketch.getCanvasCenter(), and
+        // `options.size` through the options override — reads this pair, so a
+        // layer at half resolution is the same composition, not a crop of it.
+        if ( prop === "width" ) {
+          return state.width;
+        }
+
+        if ( prop === "height" ) {
+          return state.height;
+        }
+
         if ( host && HOST_METHODS.has( prop ) && typeof host[ prop ] === "function" ) {
           return host[ prop ].bind( host );
         }
@@ -321,19 +335,22 @@ function disposeInstance( instance ) {
 }
 
 function createBuffer(
-  instance, host, width, height, type
+  instance, host, width, height, pixelWidth, pixelHeight, type
 ) {
   disposeInstance( instance );
 
   const buffer = host.createGraphics(
-    width,
-    height,
+    pixelWidth,
+    pixelHeight,
     type === "webgl" ? host.WEBGL : host.P2D
   );
 
   instance.buffer = buffer;
   instance.state = {
-    suppressBackground: false
+    suppressBackground: false,
+    // What the sketch believes its canvas is (see makeSurfaceProxy).
+    width,
+    height
   };
   instance.proxy = makeSurfaceProxy(
     buffer,
@@ -342,6 +359,8 @@ function createBuffer(
   );
   instance.width = width;
   instance.height = height;
+  instance.pixelWidth = pixelWidth;
+  instance.pixelHeight = pixelHeight;
   instance.type = type;
   instance.ready = false;
   instance.settingUp = false;
@@ -519,14 +538,45 @@ function isRedrawDue(
 /* ------------------------------------------------------------------ */
 
 /**
+ * The buffer's pixel size for a layer laid out at `width` × `height`.
+ *
+ * `resolution` is a pixel density and nothing else: it never reaches the sketch
+ * (the proxy keeps reporting the layout size), so lowering it renders the same
+ * composition into fewer pixels — which is what it has always claimed to do —
+ * rather than handing the sketch a smaller canvas and cropping the ones that
+ * draw at absolute sizes.
+ */
+export function bufferPixels(
+  width, height, resolution
+) {
+  const density = Number.isFinite( resolution ) && resolution > 0 ? resolution : 1;
+
+  return {
+    pixelWidth: Math.max(
+      1,
+      Math.round( width * density )
+    ),
+    pixelHeight: Math.max(
+      1,
+      Math.round( height * density )
+    )
+  };
+}
+
+/**
  * Draw one embedded-sketch layer into its own buffer and hand the buffer back,
  * or null while it is still loading (or has failed). The caller composites it.
+ *
+ * `width` / `height` are the canvas the SKETCH is laid out for; the caller
+ * decides whether that is the layer's box (`sizing: "reflow"`) or the box it
+ * would have at scale 1 (`sizing: "scale"`). `resolution` then only decides how
+ * many pixels that layout is rendered into.
  *
  * `key` addresses the layer the way the item-bounds registry does
  * ("<scope>:<index>"), so each layer keeps its own buffer and its own setup.
  */
 export function renderNestedSketchLayer(
-  key, item, width, height
+  key, item, width, height, resolution = 1
 ) {
   const host = getHostP5();
   const sketchPath = item?.sketch;
@@ -535,7 +585,17 @@ export function renderNestedSketchLayer(
     return null;
   }
 
-  if ( width > MAX_BUFFER_SIDE || height > MAX_BUFFER_SIDE ) {
+  const {
+    pixelWidth, pixelHeight
+  } = bufferPixels(
+    width,
+    height,
+    resolution
+  );
+
+  // The cap is on what is actually allocated, so a supersampled layer is
+  // refused on its texture size rather than on its layout.
+  if ( pixelWidth > MAX_BUFFER_SIDE || pixelHeight > MAX_BUFFER_SIDE ) {
     return null;
   }
 
@@ -558,6 +618,8 @@ export function renderNestedSketchLayer(
       state: null,
       width: 0,
       height: 0,
+      pixelWidth: 0,
+      pixelHeight: 0,
       type: null,
       ready: false,
       settingUp: false,
@@ -608,6 +670,8 @@ export function renderNestedSketchLayer(
     instance.sketchPath !== sketchPath ||
     instance.width !== width ||
     instance.height !== height ||
+    instance.pixelWidth !== pixelWidth ||
+    instance.pixelHeight !== pixelHeight ||
     instance.type !== type
   ) {
     instance.sketchPath = sketchPath;
@@ -617,6 +681,8 @@ export function renderNestedSketchLayer(
       host,
       width,
       height,
+      pixelWidth,
+      pixelHeight,
       type
     );
   }
@@ -681,6 +747,19 @@ export function renderNestedSketchLayer(
     }
 
     buffer.push();
+
+    // The sketch drew for a `width` × `height` canvas; the buffer may hold a
+    // different number of pixels because of `resolution`. One scale reconciles
+    // them, so nothing downstream — not the sketch, not the compositing below
+    // — has to know the two differ. (WEBGL scales about the buffer's centre,
+    // P2D about its top-left; both are that renderer's own origin, so the
+    // mapping is the same either way.)
+    if ( instance.pixelWidth !== instance.width || instance.pixelHeight !== instance.height ) {
+      buffer.scale(
+        instance.pixelWidth / instance.width,
+        instance.pixelHeight / instance.height
+      );
+    }
 
     const result = runEmbedded(
       instance,
