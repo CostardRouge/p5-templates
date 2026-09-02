@@ -2,6 +2,9 @@ import graphics from "./graphics.js";
 import {
   getP5
 } from "./sketch.js";
+import {
+  createKeyedStore
+} from "./instanceState.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared GPU batch for 2D "glow" primitives (capsules / discs), rainbow-shaded
@@ -306,45 +309,57 @@ function drawArraysInstanced(
  * }}
  */
 export default function createGlowBatchRenderer() {
-  const state = {
-    graphics: null,
-    program: null,
-    quadVBO: null,
-    instanceVBO: null,
-    locs: {},
-    ext: null,
-    ctxRef: null,
-    p5Ref: null,
+  // The renderer is created at a module's top level, so one of it serves every
+  // surface that module ever draws on: the page across re-navigations (p5 torn
+  // down and recreated), and every layer embedding the sketch, each with its
+  // own buffer proxy. The GL resources below belong to ONE context, so they
+  // are kept per surface. A single record that switched owners on `p5Ref !==
+  // p` was the bug behind "two layers of neon-graffiti kill the frame rate":
+  // the two surfaces took turns invalidating it, and every frame created a
+  // fresh WebGL buffer and recompiled the program.
+  const store = createKeyedStore(
+    getP5,
+    () => ( {
+      graphics: null,
+      program: null,
+      quadVBO: null,
+      instanceVBO: null,
+      locs: {},
+      ext: null,
+      ctxRef: null,
 
-    // Mode A — per-instance primitives.
-    dataA: new Float32Array( 1024 * FLOATS_A ),
-    capacityA: 1024,
-    countA: 0,
+      // Mode A — per-instance primitives.
+      dataA: new Float32Array( 1024 * FLOATS_A ),
+      capacityA: 1024,
+      countA: 0,
 
-    // Mode B — stroke layers.
-    dataB: new Float32Array( 1024 * FLOATS_B ),
-    capacityB: 1024,
-    countB: 0,
-    groups: [],
-    currentGroup: null
-  };
+      // Mode B — stroke layers.
+      dataB: new Float32Array( 1024 * FLOATS_B ),
+      capacityB: 1024,
+      countB: 0,
+      groups: [],
+      currentGroup: null
+    } )
+  );
+
+  // Rebound at every public entry point to the record of the surface drawing
+  // right now; a batch is opened and closed within one synchronous draw, so
+  // the surface cannot change between `begin()` and `end()`.
+  let state = null;
+
+  function bind() {
+    state = store.current();
+  }
 
   function ensureGraphics() {
-    const p = getP5();
+    if ( !state.graphics ) {
+      const p = getP5();
 
-    // The renderer lives at module scope, so it survives sketch re-navigation
-    // (ES modules are cached and not re-run). When p5 is torn down and recreated
-    // the cached buffer belongs to the old instance/context, so recreate it — and
-    // force the program + VBOs to rebuild against the fresh context.
-    if ( !state.graphics || state.p5Ref !== p ) {
       state.graphics = graphics.createAutoResizableGraphics(
         p.width,
         p.height,
         "webgl"
       );
-      state.p5Ref = p;
-      state.program = null;
-      state.ctxRef = null;
     }
 
     return state.graphics;
@@ -565,6 +580,7 @@ export default function createGlowBatchRenderer() {
    * Start a per-instance batch. Discards primitives left over from a prior frame.
    */
   function begin() {
+    bind();
     state.countA = 0;
   }
 
@@ -575,6 +591,7 @@ export default function createGlowBatchRenderer() {
   function capsule(
     ax, ay, bx, by, halfWidth, hueOffset, hueIndex, opacityFactor
   ) {
+    bind();
     ensureCapacityA( state.countA + 1 );
 
     const base = state.countA * FLOATS_A;
@@ -614,6 +631,8 @@ export default function createGlowBatchRenderer() {
    * Draw every queued per-instance primitive in one instanced call and composite.
    */
   function end() {
+    bind();
+
     if ( state.countA === 0 ) {
       return;
     }
@@ -762,6 +781,7 @@ export default function createGlowBatchRenderer() {
    * Start a stroke-layer batch. Discards strokes left over from a prior frame.
    */
   function beginStrokes() {
+    bind();
     state.countB = 0;
     state.groups = [];
     state.currentGroup = null;
@@ -772,6 +792,7 @@ export default function createGlowBatchRenderer() {
    * before the next spline — so per-spline layer stacking is preserved.
    */
   function openStroke() {
+    bind();
     state.currentGroup = {
       offset: state.countB,
       count: 0
@@ -789,6 +810,8 @@ export default function createGlowBatchRenderer() {
   function strokeSegment(
     ax, ay, bx, by, hueIndex, halfFactor = 1.0
   ) {
+    bind();
+
     if ( !state.currentGroup ) {
       openStroke();
     }
@@ -822,6 +845,8 @@ export default function createGlowBatchRenderer() {
   function drawStrokes( {
     weight, glow, hueOffset = 0
   } ) {
+    bind();
+
     if ( state.countB === 0 ) {
       return;
     }

@@ -65,6 +65,7 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 - A whole sketch can be a layer inside another sketch (`sketch` content item), by overriding module singletons — the surface, the options, the registration, and the loop phase when the layer is frozen or offset — never by special-casing sketches → `architecture.md`, `studio-ui.md`.
 - The `visual` content item was retired once sketch layers superseded it; its drawing functions are kept, unreferenced, to become sketches → `studio-ui.md`.
 - A sketch layer has three distinct sizes — its box, the canvas the sketch lays out for, and the buffer's pixels; conflating them is what made `scale` crop a sketch drawn at absolute pixel sizes → `architecture.md`, `studio-ui.md`.
+- A sketch's mutable module-level state goes through `sketch.state()` (one record per page/layer instance, drift-tested), GPU helpers keep GL resources per surface, and layer imports are serialised because there is one registration capture → `architecture.md`, `sketches.md`.
 
 ## Open items (dated; remove when done)
 

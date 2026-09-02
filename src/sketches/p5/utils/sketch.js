@@ -17,6 +17,9 @@ import {
 } from "./loopControl.js";
 import loadProfiler from "./loadProfiler.js";
 import {
+  createInstanceState
+} from "./instanceState.js";
+import {
   coerceFramerate
 } from "./framerate.js";
 import {
@@ -204,6 +207,21 @@ const sketch = {
 
     sketch._drawFn = drawFunction;
   },
+
+  /**
+   * Per-instance replacement for a module-level state object:
+   *
+   *   const sketchState = sketch.state( () => ( { shapes: [], lastLayout: "" } ) );
+   *
+   * reads and writes exactly like the plain object it replaces, but each place
+   * the sketch runs — the page, and every layer embedding it — gets its own
+   * record. The page's record is held for the module's lifetime, as the plain
+   * object was; a layer's dies with the layer. See instanceState.js for why.
+   */
+  state: ( init ) => createInstanceState(
+    getSurfaceOverride,
+    init
+  ),
 
   // ---- start (called by P5Engine.ts after sketch module import) -------
 
