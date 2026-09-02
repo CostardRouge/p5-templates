@@ -3,6 +3,39 @@ import {
   resolveAnimation, DURATION_DEFAULT
 } from "@/lib/animationConfig";
 
+/* ------------------------------------------------------------------ */
+/*  Loop-phase override (embedded sketches)                            */
+/*                                                                    */
+/*  A "sketch" content item runs another sketch as a layer, and that   */
+/*  layer can sit somewhere else in the loop than the page does —      */
+/*  frozen on one frame, or running with a phase offset. Sketches      */
+/*  reach the loop position through `animation.progression` and the    */
+/*  `draw( time, … )` argument, and BOTH are derived from `phase()`,   */
+/*  so one swap here moves the layer's whole notion of "when" without  */
+/*  any sketch knowing it is embedded — the same lever as getP5()'s    */
+/*  surface override (sketch.js) and `options.sketch`'s (options.js).  */
+/*                                                                    */
+/*  Only the loop phase is overridden. `seconds()` / `milliSeconds()`  */
+/*  stay the host's wall clock: they are what audio seeking and the    */
+/*  debug overlay read, and those are not part of "where this layer is */
+/*  in its animation".                                                 */
+/* ------------------------------------------------------------------ */
+
+let _phaseOverride = null;
+
+/** Returns the previous override, to hand back to popPhaseOverride. */
+export function pushPhaseOverride( phase ) {
+  const previous = _phaseOverride;
+
+  _phaseOverride = Number.isFinite( phase ) ? phase : null;
+
+  return previous;
+}
+
+export function popPhaseOverride( previous ) {
+  _phaseOverride = Number.isFinite( previous ) ? previous : null;
+}
+
 const time = {
   elapsed: 0,
   lastUpdate: 0,
@@ -22,6 +55,12 @@ const time = {
   // deterministic capture `elapsed` is pinned to frame / framerate, so this is
   // exactly frame / totalFrames.
   phase: function() {
+    // An embedded sketch layer can be frozen or offset in its own loop; while
+    // its draw runs, that is the phase every reader below it must see.
+    if ( _phaseOverride !== null ) {
+      return _phaseOverride;
+    }
+
     const {
       duration
     } = resolveAnimation( sketch?.sketchOptions?.animation );

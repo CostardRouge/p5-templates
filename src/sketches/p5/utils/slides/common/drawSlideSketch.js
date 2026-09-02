@@ -28,13 +28,18 @@ const ASPECT_RATIOS = {
  * ratio decides the height — "canvas" scales both axes together, so a layer
  * left at its defaults covers the page exactly and the sketch inside it is
  * framed the way it is on its own page.
+ *
+ * `scaleOverride` asks for the box the layer WOULD occupy at another scale;
+ * `sizing: "scale"` uses it to get the box at 1, which is the canvas the
+ * embedded sketch lays itself out for before being scaled into the real box.
  */
-function layerBox(
-  p, item
+export function layerBox(
+  p, item, scaleOverride
 ) {
-  const width = p.width * ( item.scale ?? 1 );
+  const scale = scaleOverride ?? item.scale ?? 1;
+  const width = p.width * scale;
   const ratio = ASPECT_RATIOS[ item.aspectRatio ];
-  const height = ratio ? width / ratio : p.height * ( item.scale ?? 1 );
+  const height = ratio ? width / ratio : p.height * scale;
 
   return {
     width,
@@ -71,18 +76,36 @@ export default function drawSlideSketch(
     return;
   }
 
-  const resolution = item.resolution ?? 1;
+  // The canvas the embedded sketch is handed. "reflow" (the default) makes it
+  // the layer's own box, so a sketch that lays itself out from p.width/p.height
+  // re-frames itself for the layer. "scale" makes it the box the layer would
+  // occupy at scale 1 — the sketch keeps the framing it has on its own page and
+  // `scale` shrinks the whole render instead of cropping it, which is the only
+  // thing that works for a sketch drawing at absolute pixel sizes (peaks-sphere
+  // draws a 250px-radius sphere whatever canvas it is given).
+  const layout = item.sizing === "scale"
+    ? layerBox(
+      p,
+      item,
+      1
+    )
+    : {
+      width,
+      height
+    };
+
   const buffer = renderNestedSketchLayer(
     key,
     item,
     Math.max(
       1,
-      Math.round( width * resolution )
+      Math.round( layout.width )
     ),
     Math.max(
       1,
-      Math.round( height * resolution )
-    )
+      Math.round( layout.height )
+    ),
+    item.resolution ?? 1
   );
 
   if ( !buffer ) {

@@ -36,10 +36,18 @@ describe(
           scale: 1,
           rotation: 0,
           aspectRatio: "canvas",
+          // The historical meaning of `scale`: the layer's box IS the embedded
+          // sketch's canvas, so the sketch re-lays itself out for it.
+          sizing: "reflow",
           resolution: 1,
           framerate: 0,
           opacity: 1,
           blend: "source-over",
+          // A layer runs in step with the page until it is told otherwise:
+          // freezing and offsetting are both opt-in, and their defaults are
+          // what every layer written before them keeps.
+          play: true,
+          progression: 0,
           // The two that decide whether a layer reads as a layer at all: an
           // embedded sketch must not paint its own background over what is
           // below it, and must start each frame from a clean buffer.

@@ -62,8 +62,9 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 - An asset path is minted from the file's name, and a name is not an identity — every iOS camera-roll pick is `image.jpg` → `assets.md`.
 - A script-opened file input must be rendered (`HIDDEN_FILE_INPUT_CLASS`, never `hidden`) and its trigger must be a real control — iOS Safari ignores both otherwise, silently → `assets.md`.
 - Pixels that become a file travel as a Blob; a data URL is a mobile-Safari dead end → `assets.md`, `recording.md`.
-- A whole sketch can be a layer inside another sketch (`sketch` content item), by overriding three module singletons — the surface, the options and the registration — never by special-casing sketches → `architecture.md`, `studio-ui.md`.
+- A whole sketch can be a layer inside another sketch (`sketch` content item), by overriding module singletons — the surface, the options, the registration, and the loop phase when the layer is frozen or offset — never by special-casing sketches → `architecture.md`, `studio-ui.md`.
 - The `visual` content item was retired once sketch layers superseded it; its drawing functions are kept, unreferenced, to become sketches → `studio-ui.md`.
+- A sketch layer has three distinct sizes — its box, the canvas the sketch lays out for, and the buffer's pixels; conflating them is what made `scale` crop a sketch drawn at absolute pixel sizes → `architecture.md`, `studio-ui.md`.
 
 ## Open items (dated; remove when done)
 

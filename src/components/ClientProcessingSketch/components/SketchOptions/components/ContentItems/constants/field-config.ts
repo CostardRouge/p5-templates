@@ -1788,6 +1788,23 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
         }
       ]
     },
+    // What "Size" does to the sketch inside. The two are genuinely different
+    // looks, not a right and a wrong one — a background reflows into the layer,
+    // a sketch drawn at absolute pixel sizes has to be scaled or it is cropped.
+    sizing: {
+      label: "Size behaviour",
+      component: "select",
+      options: [
+        {
+          value: "reflow",
+          label: "Re-lay out for the layer"
+        },
+        {
+          value: "scale",
+          label: "Scale the whole render"
+        }
+      ]
+    },
     rotation: {
       label: "Rotation",
       component: "slider",
@@ -1820,6 +1837,19 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
       min: 0,
       max: 120,
       step: 1
+    },
+    // Unchecking freezes the layer on the frame `progression` picks; while it
+    // plays, `progression` offsets the layer's loop against the page's.
+    play: {
+      label: "Play the animation",
+      component: "checkbox"
+    },
+    progression: {
+      label: "Progression",
+      component: "slider",
+      min: 0,
+      max: 1,
+      step: 0.001
     },
     drawBackground: {
       label: "Draw its own background",
