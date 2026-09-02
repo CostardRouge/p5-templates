@@ -121,14 +121,14 @@ const SCALES = {
   ]
 };
 
-const state = {
+const state = sketch.state( () => ( {
   configKey: null,
   table: null,
   steps: [],
   lastStep: null,
   flashAt: -1,
   unregisterKeyTyped: null
-};
+} ) );
 
 function midiToFreq( midi ) {
   return 440 * Math.pow(

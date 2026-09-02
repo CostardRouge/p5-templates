@@ -75,10 +75,10 @@ events.register(
   }
 );
 
-const canvases = {
+const canvases = sketch.state( () => ( {
   mask: undefined,
   imageBuffer: undefined
-};
+} ) );
 
 const matter = {
   engine: Engine.create(),

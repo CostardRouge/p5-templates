@@ -24,7 +24,7 @@ import {
 // shared module never touches the MediaPipe singleton. With no handler active
 // the cells fall back to a drifting noise offset.
 
-const buffers = {};
+const buffers = sketch.state( () => ( {} ) );
 let cameraSignature = "";
 let initializing = false;
 

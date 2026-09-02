@@ -7,10 +7,10 @@ import {
   SemaphoreBase, rebuildGrid
 } from "../_shared.js";
 
-const sketchState = {
+const sketchState = sketch.state( () => ( {
   shapes: [],
   lastLayout: ""
-};
+} ) );
 
 class SemaphoreLines extends SemaphoreBase {
   draw(

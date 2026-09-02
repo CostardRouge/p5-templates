@@ -30,13 +30,13 @@ import {
 // Map through a palette or keep it greyscale.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const state = {
+const state = sketch.state( () => ( {
   sites: [],
   sitesKey: "",
   buffer: null,
   bufW: 0,
   bufH: 0
-};
+} ) );
 
 function ensureSites( o ) {
   const p = getP5();

@@ -67,13 +67,13 @@ function setItemValue(
   );
 }
 
-const sketchState = {
+const sketchState = sketch.state( () => ( {
   grainLayer: null,
   grainKey: null,
   // what the last drawn frame put on screen, so a click maps against the
   // pixels the user actually aimed at (zoom included) rather than the defaults
   lastFrame: null
-};
+} ) );
 
 function clamp(
   value, min, max

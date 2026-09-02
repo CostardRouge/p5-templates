@@ -10,10 +10,10 @@ import {
   getP5
 } from "@/p5/utils/sketch.js";
 
-const canvases = {
+const canvases = sketch.state( () => ( {
   mask: undefined,
   imageBuffer: undefined
-};
+} ) );
 
 const getBg = () => options.sketch?.colors?.background ?? [
   255

@@ -146,7 +146,7 @@ class Card {
 }
 
 const cards = [];
-const canvases = {};
+const canvases = sketch.state( () => ( {} ) );
 const cardsLength = options.sketch?.count ?? 200;
 
 // helpers

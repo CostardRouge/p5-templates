@@ -12,9 +12,9 @@ import {
   resolvePalette
 } from "../_shared.js";
 
-const sketchState = {
+const sketchState = sketch.state( () => ( {
   pixilatedCanvas: null
-};
+} ) );
 
 const easingFunctions = Object.entries( easing );
 

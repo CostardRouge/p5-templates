@@ -7,10 +7,10 @@ import {
   SpiralBase, rebuildGrid
 } from "../_shared.js";
 
-const sketchState = {
+const sketchState = sketch.state( () => ( {
   shapes: [],
   lastLayout: ""
-};
+} ) );
 
 function v0(
   p, lerpPosition, xOffset, yOffset, angle

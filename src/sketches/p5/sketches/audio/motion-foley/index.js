@@ -35,11 +35,11 @@ import {
  * gestures answer one another rather than firing all at once.
  */
 
-const state = {
+const state = sketch.state( () => ( {
   // category → { cycle, tNext, rNext } — per-tile playhead bookkeeping so each
   // scheduled tension/release event fires exactly once per loop.
   fire: {}
-};
+} ) );
 
 function clamp01( value ) {
   return Math.max(

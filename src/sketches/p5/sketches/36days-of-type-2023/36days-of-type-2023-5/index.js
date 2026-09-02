@@ -14,7 +14,7 @@ import string from "@/p5/utils/string.js";
 
 import addScreenPositionFunction from "@/utils/addScreenPositionFunction.js";
 
-const sketchState = {
+const sketchState = sketch.state( () => ( {
   interactive: {
     position: null,
     image: null
@@ -22,7 +22,7 @@ const sketchState = {
   shape: {
     graphics: null
   }
-};
+} ) );
 
 events.register(
   "engine-window-preload",

@@ -531,14 +531,14 @@ function getTransition(
 // ring-linked), then one slot per planned add (inactive until its cursor
 // fetches it; a lone floating bead once alive). Rebuilt — i.e. SNAPPED to the
 // beat's word — every time the step or the cycle signature changes.
-const state = {
+const state = sketch.state( () => ( {
   poolKey: null,
   slots: [],
   // Per-slot hue identity AFTER the snap to the next word (null = the point
   // does not survive the conversion). Uploaded ids ease toward these over the
   // morph window so the snap never recolours a capsule — see "Loop safety".
   dstIds: []
-};
+} ) );
 
 const draggable = createDraggable();
 const pinch = createPinchTracker();

@@ -6,10 +6,10 @@ import grid from "@/p5/utils/grid.js";
 import colors from "@/p5/utils/colors.js";
 import animation from "@/p5/utils/animation.js";
 
-const sketchState = {
+const sketchState = sketch.state( () => ( {
   min: Math.PI,
   max: 0
-};
+} ) );
 
 sketch.setup( () => {
   sketchState.min = Math.PI;

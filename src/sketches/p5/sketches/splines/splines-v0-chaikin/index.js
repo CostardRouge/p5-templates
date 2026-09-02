@@ -12,10 +12,10 @@ import {
 
 // Base (un-animated) point layout is only rebuilt when the relevant options or
 // the canvas size change — same trick the neon spirals use with their grid.
-const state = {
+const state = sketch.state( () => ( {
   basePoints: [],
   key: ""
-};
+} ) );
 
 function ensureBasePoints( pointsOptions ) {
   const p = getP5();

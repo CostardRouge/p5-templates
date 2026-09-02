@@ -22,12 +22,12 @@ const SEAM_DEFAULTS = {
   }
 };
 
-const sketchState = {
+const sketchState = sketch.state( () => ( {
   lastDirection: null,
   // which entry of the photo list owns the zone currently on screen, so a
   // click writes onto the pair the user is actually looking at
   activeIndex: 0
-};
+} ) );
 
 function isPoint( value ) {
   return Boolean( value ) && typeof value.x === "number" && typeof value.y === "number";

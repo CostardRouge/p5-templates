@@ -478,12 +478,12 @@ function getWord( cfg ) {
 // 3D once the camera is off-axis), chasing the attraction field through the
 // exponential lag. Plus the hover bookkeeping the icons and the "on over"
 // sound read: which points each attractor currently covers.
-const state = {
+const state = sketch.state( () => ( {
   key: null,
   offsets: [],
   over: new Map(),
   lastNow: null
-};
+} ) );
 
 const overs = createHoverSounds();
 

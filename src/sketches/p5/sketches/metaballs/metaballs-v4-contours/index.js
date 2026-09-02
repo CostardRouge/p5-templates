@@ -30,11 +30,11 @@ import {
 // fast near the centres.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const state = {
+const state = sketch.state( () => ( {
   balls: [],
   ballsKey: "",
   field: null
-};
+} ) );
 
 function ensureBalls( o ) {
   const p = getP5();

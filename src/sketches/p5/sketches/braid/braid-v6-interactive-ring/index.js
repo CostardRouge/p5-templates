@@ -241,7 +241,7 @@ const FRAGMENT = `
 
 const ringRenderer = createNoiseFieldRenderer( FRAGMENT );
 
-const state = {
+const state = sketch.state( () => ( {
   // Working copy of the control points, normalized [0..1] canvas space.
   points: [],
   // `${count}|${seed}` signature: a change means "regenerate the layout".
@@ -249,7 +249,7 @@ const state = {
   // JSON of the items we last took from / wrote to the store, so we can tell an
   // external edit (form, reload) apart from our own drag write.
   syncHash: null
-};
+} ) );
 
 // Shared grab → move → release drag layer (mouse + touch built in, camera
 // pinch pointers fed per frame) + the multi-hand pinch tracker feeding it.

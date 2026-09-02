@@ -11,7 +11,7 @@ import {
   getP5
 } from "@/p5/utils/sketch.js";
 
-const canvases = {};
+const canvases = sketch.state( () => ( {} ) );
 
 const getBg = () => options.sketch?.background ?? [
   0

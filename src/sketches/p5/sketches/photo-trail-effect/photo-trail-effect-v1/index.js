@@ -82,7 +82,7 @@ const MAX_TRAILS = 12;
 /*  Sketch state                                                       */
 /* ------------------------------------------------------------------ */
 
-const state = {
+const state = sketch.state( () => ( {
   // Path of the photo currently driving the segmenter.
   imagePath: null,
 
@@ -135,7 +135,7 @@ const state = {
 
   unregisterClick: null,
   unsubscribe: null
-};
+} ) );
 
 const draggable = createDraggable();
 

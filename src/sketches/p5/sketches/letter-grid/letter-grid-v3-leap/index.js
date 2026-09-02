@@ -44,7 +44,7 @@ const CELL = 100;
 const FLAT_Y = -0.4;
 const SHADOW_Y = -0.8;
 
-const state = {
+const state = sketch.state( () => ( {
   scene: null,
   store: {
     key: "",
@@ -52,7 +52,7 @@ const state = {
     alphabet: LETTERS,
     seed: 1
   }
-};
+} ) );
 
 function drawVignette( {
   amount,

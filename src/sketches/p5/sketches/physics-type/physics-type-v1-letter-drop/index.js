@@ -49,12 +49,12 @@ const DT = 1000 / 60;
 // a big backward scrub); keeps one frame from locking the tab.
 const MAX_STEPS_PER_FRAME = 6000;
 
-const state = {
+const state = sketch.state( () => ( {
   signature: null,
   engine: null,
   letters: [],
   builtSteps: 0
-};
+} ) );
 
 // Small deterministic PRNG (mulberry32) so the layout never touches — or is
 // disturbed by — p5's global random stream.

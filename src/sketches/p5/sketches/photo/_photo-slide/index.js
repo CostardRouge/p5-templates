@@ -10,11 +10,11 @@ import {
   getP5
 } from "@/p5/utils/sketch.js";
 
-const canvases = {
+const canvases = sketch.state( () => ( {
   imageBuffer: undefined,
   maskBuffer: undefined,
   sliderBuffer: undefined
-};
+} ) );
 
 function drawImageWithMask( {
   img, maskDrawer, graphics = getP5()

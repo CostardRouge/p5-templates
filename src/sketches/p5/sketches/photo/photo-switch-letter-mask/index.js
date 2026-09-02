@@ -13,7 +13,7 @@ import {
   getP5
 } from "@/p5/utils/sketch.js";
 
-const canvases = {};
+const canvases = sketch.state( () => ( {} ) );
 
 sketch.setup( () => {
   const p = getP5();

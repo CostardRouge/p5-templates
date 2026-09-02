@@ -7,10 +7,10 @@ import {
   SpiralBase
 } from "../_shared.js";
 
-const sketchState = {
+const sketchState = sketch.state( () => ( {
   shapes: [],
   lastLayout: ""
-};
+} ) );
 
 class Spiral extends SpiralBase {
   draw(

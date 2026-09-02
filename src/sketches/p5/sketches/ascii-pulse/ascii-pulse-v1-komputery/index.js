@@ -105,9 +105,9 @@ const BASS_PATTERN = [
   3
 ];
 
-const state = {
+const state = sketch.state( () => ( {
   lastBeat: -1
-};
+} ) );
 
 sketch.setup(
   () => {},

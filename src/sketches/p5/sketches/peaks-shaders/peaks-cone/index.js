@@ -270,7 +270,7 @@ function buildStaticVBO(
 }
 
 // ─── Sketch state ─────────────────────────────────────────────────────────────
-const sketchState = {
+const sketchState = sketch.state( () => ( {
   threeDimensionGraphics: null,
   gpu: {
     prog: null,
@@ -282,7 +282,7 @@ const sketchState = {
     ext: null, // ANGLE_instanced_arrays (WebGL1) or null (WebGL2)
     ctxRef: null // detect graphics recreation
   }
-};
+} ) );
 
 // ─── GPU initialisation ───────────────────────────────────────────────────────
 function initGPU(

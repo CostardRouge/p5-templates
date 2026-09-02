@@ -8,12 +8,12 @@ import easing from "@/p5/utils/easing.js";
 import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 
-const sketchState = {
+const sketchState = sketch.state( () => ( {
   min: Math.PI,
   max: 0,
   xOff: 0,
   yOff: 0
-};
+} ) );
 
 sketch.setup( () => {
   sketchState.min = Math.PI;

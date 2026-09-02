@@ -10,7 +10,7 @@ import videos from "@/p5/utils/videos.js";
 import animation from "@/p5/utils/animation.js";
 
 let pool;
-const buffers = {};
+const buffers = sketch.state( () => ( {} ) );
 
 // (Re)create a buffer when missing or when the canvas was resized.
 function ensure(

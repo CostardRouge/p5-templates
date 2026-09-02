@@ -425,14 +425,14 @@ function getLetter( cfg ) {
 // reloads, resets), and every release persists — so a sculpt survives reloads
 // and is exported with the template. The signature ties offsets to the glyph
 // build they belong to; any letter/font/detail/handles change resets the relief.
-const state = {
+const state = sketch.state( () => ( {
   // Working copy: one { x, y, z } offset (glyph units) per handle.
   offsets: [],
   // Geometry key the offsets belong to.
   signature: null,
   // JSON of the items last exchanged with the store (detects external edits).
   syncHash: null
-};
+} ) );
 
 const draggable = createDraggable();
 const pinch = createPinchTracker();
