@@ -24,7 +24,31 @@ import {
  * The payload is plain data: `formConfiguration` is a description of controls
  * (component names, labels, ranges, option lists), never functions, so it
  * survives JSON round-tripping unchanged.
+ *
+ * It is also readable cross-origin (`Access-Control-Allow-Origin: *`).
+ * steevepommier.com/motion draws a few of a sketch's parameters as its own
+ * control panel next to the `/embed` frame, and fetches this route from the
+ * browser to know their labels and ranges — deliberately at runtime, so that
+ * site keeps building when this app is down. Nothing here is user data or
+ * credentialed: it is the same description the public `/embed#c=` panel
+ * renders, for a sketch that must already exist in the catalogue.
  */
+
+/** Same headers on the GET and on its preflight. */
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, OPTIONS"
+} as const;
+
+export function OPTIONS() {
+  return new Response(
+    null,
+    {
+      status: 204,
+      headers: CORS_HEADERS
+    }
+  );
+}
 export async function GET( request: Request ) {
   const {
     searchParams
@@ -38,7 +62,8 @@ export async function GET( request: Request ) {
         error: "Missing `sketch` parameter"
       },
       {
-        status: 400
+        status: 400,
+        headers: CORS_HEADERS
       }
     );
   }
@@ -57,7 +82,8 @@ export async function GET( request: Request ) {
         error: `Unknown sketch "${ engineId }:${ sketchName }"`
       },
       {
-        status: 404
+        status: 404,
+        headers: CORS_HEADERS
       }
     );
   }
@@ -75,6 +101,7 @@ export async function GET( request: Request ) {
     },
     {
       headers: {
+        ...CORS_HEADERS,
         // The form of a given sketch only changes when the sketch does, which
         // in a running deployment means never.
         "Cache-Control": "public, max-age=0, s-maxage=3600, stale-while-revalidate=86400"
