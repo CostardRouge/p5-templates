@@ -27,11 +27,11 @@ import {
 // also available to the binding system. The camera is the shared webcam
 // capture util — the same picker as everywhere else in the app.
 
-const state = {
+const state = sketch.state( () => ( {
   sampler: null,
   smoothedLevel: 0,
   rings: []
-};
+} ) );
 
 let camera = null;
 

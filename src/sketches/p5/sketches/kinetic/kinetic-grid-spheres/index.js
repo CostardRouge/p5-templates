@@ -16,11 +16,11 @@ import {
   drawInteractionOverlay
 } from "@/p5/utils/interaction/overlay.js";
 
-const sketchState = {
+const sketchState = sketch.state( () => ( {
   shape: {
     graphics: null
   }
-};
+} ) );
 
 const getBackgroundColor = () =>
   options.sketch?.backgroundColor ?? [

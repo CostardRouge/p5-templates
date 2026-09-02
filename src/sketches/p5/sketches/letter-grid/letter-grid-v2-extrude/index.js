@@ -47,7 +47,7 @@ const CELL = 100;
 const FLAT_Y = -0.4;
 const SHADOW_Y = -0.8;
 
-const state = {
+const state = sketch.state( () => ( {
   scene: null,
   store: {
     key: "",
@@ -55,7 +55,7 @@ const state = {
     alphabet: LETTERS,
     seed: 1
   }
-};
+} ) );
 
 // The cells that rise this frame: elevation = height × multiplier × falloff of the
 // distance from the reading head, scaled by `spread`. spread→0 lifts only the

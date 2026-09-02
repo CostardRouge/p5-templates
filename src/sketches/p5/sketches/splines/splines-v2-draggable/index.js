@@ -38,7 +38,7 @@ import {
 //      multi-touch (one point per finger) and multi-hand (one point per
 //      pinching hand).
 
-const state = {
+const state = sketch.state( () => ( {
   // Working copy of the control points, normalized [0..1].
   points: [],
   // `${count}|${seed}` signature: a change means "regenerate the layout".
@@ -53,7 +53,7 @@ const state = {
   cameraSmooth: new Map(),
   // Per-hand pinch latch (hysteresis) so a borderline gap doesn't flicker.
   pinching: new Map()
-};
+} ) );
 
 // Shared grab → move → release drag layer (mouse + touch built in, camera
 // pointers fed per frame).

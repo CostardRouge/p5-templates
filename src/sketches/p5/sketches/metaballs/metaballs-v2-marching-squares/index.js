@@ -28,11 +28,11 @@ import {
 // sample dots and the source balls to see exactly how the algorithm works.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const state = {
+const state = sketch.state( () => ( {
   balls: [],
   ballsKey: "",
   field: null
-};
+} ) );
 
 function ensureBalls( o ) {
   const p = getP5();

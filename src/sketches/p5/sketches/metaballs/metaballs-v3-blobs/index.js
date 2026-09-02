@@ -28,11 +28,11 @@ import {
 // glowing additive outline, and the classic "lava-lamp" metaball look falls out.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const state = {
+const state = sketch.state( () => ( {
   balls: [],
   ballsKey: "",
   field: null
-};
+} ) );
 
 function ensureBalls( o ) {
   const p = getP5();

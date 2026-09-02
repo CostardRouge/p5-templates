@@ -46,7 +46,7 @@ const FLAT_Y = -0.4;
 const SHADOW_Y = -0.8;
 const MAX_SAMPLES = 360;
 
-const state = {
+const state = sketch.state( () => ( {
   scene: null,
   store: {
     key: "",
@@ -54,7 +54,7 @@ const state = {
     alphabet: LETTERS,
     seed: 1
   }
-};
+} ) );
 
 // Rotate point (px, py, pz) around the horizontal unit axis (ax, 0, az) by
 // `angle` (Rodrigues, specialised to an axis with no Y component). Matches the

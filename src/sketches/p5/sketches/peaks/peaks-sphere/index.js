@@ -10,9 +10,9 @@ import mappers from "@/p5/utils/mappers.js";
 import graphics from "@/p5/utils/graphics.js";
 import animation from "@/p5/utils/animation.js";
 
-const sketchState = {
+const sketchState = sketch.state( () => ( {
   threeDimensionGraphics: null
-};
+} ) );
 
 sketch.setup(
   async() => {

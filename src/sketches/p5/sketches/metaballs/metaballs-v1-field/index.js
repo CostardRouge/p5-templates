@@ -27,13 +27,13 @@ import {
 // This is the "what is a metaball" view that everything else thresholds.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const state = {
+const state = sketch.state( () => ( {
   balls: [],
   ballsKey: "",
   buffer: null,
   bufW: 0,
   bufH: 0
-};
+} ) );
 
 function ensureBalls( o ) {
   const p = getP5();

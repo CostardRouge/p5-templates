@@ -10,7 +10,7 @@ import videos from "@/p5/utils/videos.js";
 import string from "@/p5/utils/string.js";
 
 let pool;
-const buffers = {};
+const buffers = sketch.state( () => ( {} ) );
 
 const getFont = () => {
   const key = options.sketch?.font ?? "martian";

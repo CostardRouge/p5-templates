@@ -4,6 +4,9 @@ import {
   getP5
 } from "./sketch.js";
 import {
+  createKeyedStore
+} from "./instanceState.js";
+import {
   EASINGS_GLSL, easingId
 } from "./easingGlsl.js";
 
@@ -701,16 +704,26 @@ function drawArraysInstanced(
  * @returns {{ render: Function }}
  */
 export default function createNoiseFieldRenderer( fragmentSource ) {
-  const state = {
-    graphics: null,
-    program: null,
-    quadVBO: null,
-    aPosLoc: -1,
-    perlinTexture: null,
-    perlinSeed: null,
-    locs: {},
-    ctxRef: null
-  };
+  // GL resources belong to one context, and one of this renderer serves every
+  // surface its module ever draws on — the page across re-navigations, and
+  // every layer embedding the sketch — so they are kept per surface. See
+  // instanceState.js; glowBatchGpu.js has the full story.
+  const store = createKeyedStore(
+    getP5,
+    () => ( {
+      graphics: null,
+      program: null,
+      quadVBO: null,
+      aPosLoc: -1,
+      perlinTexture: null,
+      perlinSeed: null,
+      locs: {},
+      ctxRef: null
+    } )
+  );
+
+  // Rebound on entry to render(), the one public call.
+  let state = null;
 
   function ensureGraphics() {
     if ( !state.graphics ) {
@@ -834,6 +847,8 @@ export default function createNoiseFieldRenderer( fragmentSource ) {
    *   uniforms are unaffected). 1 = render at full canvas resolution (default).
    */
   function render( params ) {
+    state = store.current();
+
     const {
       seed = 42,
       octaves = 4,
@@ -1179,21 +1194,27 @@ const INSTANCED_FRAG_MAIN = `
 export function createInstancedFieldRenderer( {
   vertexBody, fragmentBody
 } ) {
-  const state = {
-    graphics: null,
-    program: null,
-    quadVBO: null,
-    cellVBO: null,
-    cellCount: 0,
-    gridKey: null,
-    perlinTexture: null,
-    perlinSeed: null,
-    locs: {},
-    ctxRef: null,
-    ext: null,
-    aCornerLoc: -1,
-    aCellLoc: -1
-  };
+  // Per surface, for the same reason as createNoiseFieldRenderer above.
+  const store = createKeyedStore(
+    getP5,
+    () => ( {
+      graphics: null,
+      program: null,
+      quadVBO: null,
+      cellVBO: null,
+      cellCount: 0,
+      gridKey: null,
+      perlinTexture: null,
+      perlinSeed: null,
+      locs: {},
+      ctxRef: null,
+      ext: null,
+      aCornerLoc: -1,
+      aCellLoc: -1
+    } )
+  );
+
+  let state = null;
 
   function ensureGraphics() {
     if ( !state.graphics ) {
@@ -1359,6 +1380,8 @@ export function createInstancedFieldRenderer( {
    *   dots over whatever is already on the main canvas (e.g. a glow underneath).
    */
   function render( params ) {
+    state = store.current();
+
     const {
       seed = 42,
       octaves = 4,

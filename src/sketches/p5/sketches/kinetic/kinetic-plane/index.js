@@ -17,7 +17,7 @@ import {
   drawInteractionOverlay
 } from "@/p5/utils/interaction/overlay.js";
 
-const sketchState = {
+const sketchState = sketch.state( () => ( {
   plane: {
     graphics: null,
     gridData: null
@@ -25,7 +25,7 @@ const sketchState = {
   webcam: {
     graphics: null
   }
-};
+} ) );
 
 sketch.setup( async() => {
   const p = getP5();

@@ -27,14 +27,14 @@ import {
 // rotation is on by default for a slowly shifting stained-glass window.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const state = {
+const state = sketch.state( () => ( {
   sites: [],
   sitesKey: "",
   buffer: null,
   bufW: 0,
   bufH: 0,
   ids: null
-};
+} ) );
 
 function ensureSites( o ) {
   const p = getP5();

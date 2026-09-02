@@ -14,7 +14,7 @@ import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
 
-const sketchState = {
+const sketchState = sketch.state( () => ( {
   photoGraphics: null,
   // Which photo (index into options.sketch.items) is on screen this frame.
   // The click handler needs it so a click lands on the right photo's point.
@@ -33,7 +33,7 @@ const sketchState = {
     y: 0,
     scale: 1
   }
-};
+} ) );
 
 /**
  * Symmetric 0 → 1 → 0 wave. `t` is a phase in loop units; the fractional part

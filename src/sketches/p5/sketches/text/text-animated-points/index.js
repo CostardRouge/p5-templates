@@ -8,11 +8,11 @@ import {
   getP5
 } from "@/p5/utils/sketch.js";
 
-const sketchState = {
+const sketchState = sketch.state( () => ( {
   shape: {
     graphics: null
   }
-};
+} ) );
 
 sketch.setup( ( {
   canvas

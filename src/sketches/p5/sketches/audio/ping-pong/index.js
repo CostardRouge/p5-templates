@@ -31,7 +31,7 @@ import {
  * before until the user opts in.
  */
 
-const state = {
+const state = sketch.state( () => ( {
   bouncesX: null,
   bouncesY: null,
   flashes: [], // { x, y, at } — wall-hit + collision ripples, `at` in sketch seconds
@@ -43,7 +43,7 @@ const state = {
   // Keys of the ball pairs currently overlapping, so a ball-to-ball collision
   // bips once on contact instead of every frame the balls stay overlapped.
   collidingPairs: new Set()
-};
+} ) );
 
 /**
  * Fold a travelled distance into [0, range] with reflections.

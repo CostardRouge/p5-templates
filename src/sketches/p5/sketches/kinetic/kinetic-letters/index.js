@@ -31,9 +31,9 @@ const layers = {
   }
 };
 
-const sketchState = {
+const sketchState = sketch.state( () => ( {
   letters: []
-};
+} ) );
 
 const getBackgroundColor = () =>
   options.sketch.backgroundColor ?? [

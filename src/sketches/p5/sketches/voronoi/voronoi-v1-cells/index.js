@@ -28,14 +28,14 @@ import {
 // shattered-glass look. The distance metric is fully swappable.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const state = {
+const state = sketch.state( () => ( {
   sites: [],
   sitesKey: "",
   buffer: null,
   bufW: 0,
   bufH: 0,
   ids: null
-};
+} ) );
 
 function ensureSites( o ) {
   const p = getP5();

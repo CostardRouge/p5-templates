@@ -34,13 +34,13 @@ const TAU = Math.PI * 2;
 // Per-letter geometry, rebuilt only when the text / font / size / position or
 // the canvas dimensions actually change — measuring glyph advances every frame
 // is wasteful and the layout is otherwise static.
-const state = {
+const state = sketch.state( () => ( {
   key: "",
   letters: [],
   centerY: 0,
   startX: 0,
   endX: 0
-};
+} ) );
 
 /**
  * Decompose `text` into a list of placed glyphs. Each entry carries the glyph's

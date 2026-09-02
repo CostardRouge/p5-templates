@@ -10,7 +10,7 @@ import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
 
-const canvases = {};
+const canvases = sketch.state( () => ( {} ) );
 
 sketch.setup( () => {
   const p = getP5();

@@ -134,6 +134,52 @@ function markUnsupported( sketchPath ) {
   console.warn( `[nested-sketch] "${ sketchPath }" ${ ASYNC_DRAW_REASON }` );
 }
 
+/**
+ * Import one sketch module with the registration capture open around it, and
+ * remember what it registered.
+ */
+async function importCaptured( sketchPath ) {
+  const {
+    loadSketchModule
+  } = await import( "@/generated/sketchModuleRegistry" );
+
+  // The capture is opened around the import ONLY. It is what keeps the host's
+  // own _setupFn/_drawFn intact while the embedded module runs its top level.
+  const capture = beginSketchCapture();
+
+  try {
+    await loadSketchModule(
+      "p5",
+      sketchPath
+    );
+  } finally {
+    endSketchCapture();
+  }
+
+  rememberSketchFns(
+    sketchPath,
+    capture
+  );
+
+  if ( !hasSketchFns( sketchPath ) ) {
+    // The module resolved but registered nothing. Either it is not a sketch,
+    // or it was already imported earlier in this session AND never cached —
+    // which the shared cache is there to prevent, so treat it as a real
+    // failure rather than silently drawing nothing.
+    throw new Error( `"${ sketchPath }" registered no draw function` );
+  }
+}
+
+// Imports run one at a time. There is a single capture slot, and a module's
+// top level runs whenever ITS chunk arrives: with two different sketches in
+// flight, the first to finish closed the capture while the second was still
+// loading, and the second's `sketch.draw( … )` then landed where it lands
+// without a capture — on the host, replacing the page's own draw with the
+// layer's. Seen as the page suddenly rendering an embedded sketch (and
+// throwing from it, since that sketch's setup never ran on the page), while
+// the layer that lost the race reported "registered no draw function".
+let loadQueue = Promise.resolve();
+
 function ensureSketchLoaded( sketchPath ) {
   if ( hasSketchFns( sketchPath ) || loading.has( sketchPath ) || failed.has( sketchPath ) ) {
     return;
@@ -141,40 +187,8 @@ function ensureSketchLoaded( sketchPath ) {
 
   loading.add( sketchPath );
 
-  import( "@/generated/sketchModuleRegistry" )
-    .then( ( {
-      loadSketchModule
-    } ) => {
-      // The capture is opened around the import ONLY. It is what keeps the
-      // host's own _setupFn/_drawFn intact while the embedded module runs its
-      // top level.
-      const capture = beginSketchCapture();
-
-      return Promise.resolve( loadSketchModule(
-        "p5",
-        sketchPath
-      ) ).then(
-        () => {
-          endSketchCapture();
-          rememberSketchFns(
-            sketchPath,
-            capture
-          );
-
-          if ( !hasSketchFns( sketchPath ) ) {
-            // The module resolved but registered nothing. Either it is not a
-            // sketch, or it was already imported earlier in this session AND
-            // never cached — which the shared cache is there to prevent, so
-            // treat it as a real failure rather than silently drawing nothing.
-            throw new Error( `"${ sketchPath }" registered no draw function` );
-          }
-        },
-        ( error ) => {
-          endSketchCapture();
-          throw error;
-        }
-      );
-    } )
+  loadQueue = loadQueue
+    .then( () => importCaptured( sketchPath ) )
     .catch( ( error ) => {
       failed.set(
         sketchPath,
@@ -263,6 +277,24 @@ const HOST_METHODS = new Set( [
 function makeSurfaceProxy(
   buffer, host, state
 ) {
+  // Host methods are bound once per proxy, not once per access: a sketch that
+  // calls `p.createGraphics` in setup pays nothing either way, but the trap is
+  // also on the path of every `p.map()` / `p.sin()` in a hot loop, and a fresh
+  // bound function per call there is allocation the sketch never asked for.
+  const boundHostMethods = new Map();
+
+  // What this layer allocates through the host — graphics buffers, mostly —
+  // goes into the host's element registry (`_elements`) and stays there until
+  // removed. A layer rebuilt on every resize would otherwise leave one buffer
+  // behind per rebuild; disposeInstance removes what is recorded here.
+  const trackGraphics = ( created ) => {
+    if ( created && typeof created.remove === "function" ) {
+      state.ownedGraphics.push( created );
+    }
+
+    return created;
+  };
+
   return new Proxy(
     buffer,
     {
@@ -271,6 +303,20 @@ function makeSurfaceProxy(
       ) {
         if ( prop === "background" && state.suppressBackground ) {
           return NOOP;
+        }
+
+        if ( prop === "createGraphics" && host ) {
+          let tracked = boundHostMethods.get( prop );
+
+          if ( !tracked ) {
+            tracked = ( ...args ) => trackGraphics( host.createGraphics( ...args ) );
+            boundHostMethods.set(
+              prop,
+              tracked
+            );
+          }
+
+          return tracked;
         }
 
         // The size the sketch lays itself out for, which is NOT the buffer's
@@ -288,7 +334,17 @@ function makeSurfaceProxy(
         }
 
         if ( host && HOST_METHODS.has( prop ) && typeof host[ prop ] === "function" ) {
-          return host[ prop ].bind( host );
+          let bound = boundHostMethods.get( prop );
+
+          if ( !bound ) {
+            bound = host[ prop ].bind( host );
+            boundHostMethods.set(
+              prop,
+              bound
+            );
+          }
+
+          return bound;
         }
 
         const value = Reflect.get(
@@ -322,6 +378,20 @@ function makeSurfaceProxy(
 /* ------------------------------------------------------------------ */
 
 function disposeInstance( instance ) {
+  // Everything the embedded sketch allocated through the host, then the layer's
+  // own buffer. Both are the host's `_elements` entries and hidden canvases.
+  for ( const owned of instance.state?.ownedGraphics ?? [] ) {
+    try {
+      owned.remove();
+    } catch {
+      // Already gone; nothing to free.
+    }
+  }
+
+  if ( instance.state ) {
+    instance.state.ownedGraphics = [];
+  }
+
   try {
     instance.buffer?.remove?.();
   } catch {
@@ -350,7 +420,9 @@ function createBuffer(
     suppressBackground: false,
     // What the sketch believes its canvas is (see makeSurfaceProxy).
     width,
-    height
+    height,
+    // Graphics the sketch created through the proxy, freed with the instance.
+    ownedGraphics: []
   };
   instance.proxy = makeSurfaceProxy(
     buffer,

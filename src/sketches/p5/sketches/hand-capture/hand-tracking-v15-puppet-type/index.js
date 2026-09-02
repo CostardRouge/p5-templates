@@ -38,10 +38,10 @@ const scene = new HandCaptureScene( {
   }
 } );
 
-const state = {
+const state = sketch.state( () => ( {
   letters: [],
   layoutKey: null
-};
+} ) );
 
 sketch.setup( async() => {
   await scene.init( options.sketch?.interaction ?? {} );

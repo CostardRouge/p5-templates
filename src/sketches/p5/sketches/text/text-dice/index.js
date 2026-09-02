@@ -14,11 +14,11 @@ const HALF_PI = Math.PI / 2;
 // background + a single centered word) and then drawn onto one side of a
 // rotating box. Textures are cached by a signature of every property that
 // affects how they look, so we only repaint when something actually changes.
-const state = {
+const state = sketch.state( () => ( {
   dice: null,
   rollOrder: null,
   rollSeed: null
-};
+} ) );
 
 const textureCache = new Map();
 

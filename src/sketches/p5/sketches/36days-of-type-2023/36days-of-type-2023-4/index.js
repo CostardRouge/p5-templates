@@ -15,7 +15,7 @@ import {
   getP5
 } from "@/p5/utils/sketch.js";
 
-const sketchState = {
+const sketchState = sketch.state( () => ( {
   interactive: {
     position: null,
     image: null
@@ -23,7 +23,7 @@ const sketchState = {
   shape: {
     graphics: null
   }
-};
+} ) );
 
 events.register(
   "engine-window-preload",

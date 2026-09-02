@@ -12,9 +12,9 @@ import {
   paletteStroke
 } from "../_shared.js";
 
-const sketchState = {
+const sketchState = sketch.state( () => ( {
   pixilatedCanvas: null
-};
+} ) );
 
 sketch.setup( () => {
   const p = getP5();

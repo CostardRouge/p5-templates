@@ -25,7 +25,7 @@ import {
 /*  Sketch state                                                       */
 /* ------------------------------------------------------------------ */
 
-const state = {
+const state = sketch.state( () => ( {
   // Path of the photo currently driving the segmenter (normalized to a string
   // even when the option is stored as a single-element array by the picker).
   imagePath: null,
@@ -69,7 +69,7 @@ const state = {
   bgG: null, // full-bleed backdrop for the blur / dim modes
   binaryMaskG: null, // hard 1-bit mask straight from the model
   softMaskG: null // feathered + grown/shrunk mask actually used to cut out
-};
+} ) );
 
 // Shared inference plumbing (pump, retry, mask cache). The reveal shows one
 // mask at a time, so the walk keeps exactly one focus point in the set —

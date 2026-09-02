@@ -3,6 +3,9 @@ import {
   getP5
 } from "./sketch.js";
 import {
+  createKeyedStore
+} from "./instanceState.js";
+import {
   EASINGS_GLSL, easingId
 } from "./easingGlsl.js";
 
@@ -792,41 +795,41 @@ function setUniformValue(
 export default function createPeaksFieldRenderer( {
   pointBody
 } ) {
-  const state = {
-    graphics: null,
-    program: null,
-    quadVBO: null,
-    cellVBO: null,
-    cellCount: 0,
-    gridKey: null,
-    perlinTexture: null,
-    perlinSeed: null,
-    locs: {},
-    ctxRef: null,
-    p5Ref: null,
-    ext: null,
-    aCornerLoc: -1,
-    aCellLoc: -1
-  };
+  // GL resources belong to one context, and one of this renderer serves every
+  // surface its module ever draws on — the page across re-navigations, and
+  // every layer embedding the sketch — so they are kept per surface. See
+  // instanceState.js; glowBatchGpu.js has the full story.
+  const store = createKeyedStore(
+    getP5,
+    () => ( {
+      graphics: null,
+      program: null,
+      quadVBO: null,
+      cellVBO: null,
+      cellCount: 0,
+      gridKey: null,
+      perlinTexture: null,
+      perlinSeed: null,
+      locs: {},
+      ctxRef: null,
+      ext: null,
+      aCornerLoc: -1,
+      aCellLoc: -1
+    } )
+  );
+
+  // Rebound on entry to render(), the one public call.
+  let state = null;
 
   function ensureGraphics() {
-    const p = getP5();
+    if ( !state.graphics ) {
+      const p = getP5();
 
-    // The renderer lives at module scope, so it survives sketch re-navigation
-    // (ES modules are cached). When p5 is torn down and recreated the cached
-    // buffer belongs to the old context, so recreate it and force the program +
-    // buffers to rebuild against the fresh context.
-    if ( !state.graphics || state.p5Ref !== p ) {
       state.graphics = graphics.createAutoResizableGraphics(
         p.width,
         p.height,
         "webgl"
       );
-      state.p5Ref = p;
-      state.program = null;
-      state.ctxRef = null;
-      state.gridKey = null;
-      state.perlinSeed = null;
     }
 
     return state.graphics;
@@ -1002,6 +1005,8 @@ export default function createPeaksFieldRenderer( {
     falloff = 0.5,
     uniforms = {}
   } ) {
+    state = store.current();
+
     const p = getP5();
     const g = ensureGraphics();
     const gl = g.drawingContext;

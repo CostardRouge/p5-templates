@@ -26,7 +26,7 @@ import {
 /*  Sketch state                                                       */
 /* ------------------------------------------------------------------ */
 
-const state = {
+const state = sketch.state( () => ( {
   // Path of the photo currently driving the segmenter (normalized to a string
   // even when the option is stored as a single-element array by the picker).
   imagePath: null,
@@ -65,7 +65,7 @@ const state = {
   bgG: null, // full-bleed backdrop for the blur / dim modes
   binaryMaskG: null, // hard 1-bit union mask
   softMaskG: null // feathered + grown/shrunk mask actually used to cut out
-};
+} ) );
 
 // One inference per focus point, run sequentially; masks cached per point.
 const segmenter = createMultiMaskSegmenter();

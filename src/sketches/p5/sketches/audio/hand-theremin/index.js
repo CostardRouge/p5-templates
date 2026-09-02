@@ -78,10 +78,10 @@ const SCALES = {
   ]
 };
 
-const state = {
+const state = sketch.state( () => ( {
   lastStep: -1,
   ripples: []
-};
+} ) );
 
 sketch.setup( async() => {
   await initInteraction( options.sketch?.interaction ?? {} );
