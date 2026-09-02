@@ -74,6 +74,9 @@ export class CavalryEngine implements SketchEngine {
   private deterministic = false;
   private listeners = new Map<string, Set<( payload: any ) => void>>();
 
+  // Live-preview clock, in app frames (fractional between rAF ticks).
+  private playhead = 0;
+  private playLoopId: number | null = null;
   private perfLoopId: number | null = null;
   private perfSample = {
     paused: true,
@@ -245,7 +248,7 @@ export class CavalryEngine implements SketchEngine {
         container,
         width,
         height,
-        "Cavalry Web Player not available — see console"
+        "Cavalry Web Player runtime not installed — see public/assets/libraries/cavalry/README.md"
       );
       console.error(
         "[CavalryEngine] player unavailable:",
@@ -309,6 +312,7 @@ export class CavalryEngine implements SketchEngine {
 
   destroy(): void {
     this.destroyed = true;
+    this.stopPlaybackLoop();
     this.stopPerformanceLoop();
     unregisterServerCaptureController();
 
@@ -346,21 +350,72 @@ export class CavalryEngine implements SketchEngine {
   /* ---- playback -------------------------------------------------- */
 
   play(): void {
-    this.player?.play();
+    this.startPlaybackLoop();
     this.perfSample.paused = false;
     this.emitPerformanceSample();
   }
 
   pause(): void {
-    this.player?.pause();
+    this.stopPlaybackLoop();
     this.perfSample.paused = true;
     this.emitPerformanceSample();
   }
 
   stop(): void {
-    this.player?.stop();
+    this.stopPlaybackLoop();
+    this.playhead = 0;
+    this.renderFrame( 0 );
     this.perfSample.paused = true;
     this.emitPerformanceSample();
+  }
+
+  /**
+   * Drive live preview from our own clock.
+   *
+   * The runtime can play a scene by itself, but that is a second wall-clock
+   * timeline on the same surface: it would ignore the app's duration/framerate
+   * and drift from what an export produces. Instead the loop converts elapsed
+   * time into an app frame and pushes it through the very same `renderFrame`
+   * the deterministic capture path uses, so preview and export agree by
+   * construction.
+   */
+  private startPlaybackLoop(): void {
+    if ( this.playLoopId !== null || !this.player ) {
+      return;
+    }
+
+    const fps = this.options ? this.getFrameRate( this.options ) : 60;
+    const total = this.options ? this.getTotalFrames( this.options ) : 0;
+    let last = performance.now();
+
+    const tick = ( now: number ) => {
+      if ( this.destroyed || this.deterministic ) {
+        this.playLoopId = null;
+
+        return;
+      }
+
+      this.playhead += ( ( now - last ) / 1000 ) * fps;
+      last = now;
+
+      if ( total > 0 ) {
+        this.playhead %= total;
+      }
+
+      this.renderFrame( Math.floor( this.playhead ) );
+      this.playLoopId = requestAnimationFrame( tick );
+    };
+
+    this.playLoopId = requestAnimationFrame( tick );
+  }
+
+  private stopPlaybackLoop(): void {
+    if ( this.playLoopId === null ) {
+      return;
+    }
+
+    cancelAnimationFrame( this.playLoopId );
+    this.playLoopId = null;
   }
 
   seek( frame: number ): void {
@@ -375,8 +430,13 @@ export class CavalryEngine implements SketchEngine {
    * Map an app frame index onto the loaded scene and render it.
    *
    * The app's animation config owns duration + frame rate (so a Cavalry clip
-   * loops in lock-step with every other engine). We convert the app frame to
-   * normalized progress and scale it to the scene's own frame count.
+   * loops in lock-step with every other engine). The app frame becomes
+   * normalized progress, which is then mapped across the composition's own
+   * playback range.
+   *
+   * That range is NOT assumed to start at 0: a composition carries an `inTime`,
+   * so `getStartFrame()` is commonly non-zero and rendering `progress * count`
+   * would show the wrong part of the scene (or nothing at all).
    */
   private renderFrame( appFrame: number ): void {
     if ( !this.player ) {
@@ -384,11 +444,12 @@ export class CavalryEngine implements SketchEngine {
     }
 
     const total = this.options ? this.getTotalFrames( this.options ) : 0;
-    const sceneFrames = this.player.getFrameCount();
+    const start = this.player.getStartFrame();
+    const end = this.player.getEndFrame();
 
     let sceneFrame = appFrame;
 
-    if ( total > 1 && sceneFrames > 1 ) {
+    if ( total > 1 && end > start ) {
       const progress = Math.min(
         Math.max(
           appFrame / ( total - 1 ),
@@ -397,7 +458,7 @@ export class CavalryEngine implements SketchEngine {
         1
       );
 
-      sceneFrame = Math.round( progress * ( sceneFrames - 1 ) );
+      sceneFrame = Math.round( start + progress * ( end - start ) );
     }
 
     this.player.setFrame( sceneFrame );
@@ -431,8 +492,8 @@ export class CavalryEngine implements SketchEngine {
 
   beginDeterministicCapture(): void {
     this.deterministic = true;
-    // Stop the player's own rAF loop so frames come only from setFrame().
-    this.player?.pause();
+    // Stop the preview loop so frames come only from the recorder's seeks.
+    this.stopPlaybackLoop();
   }
 
   endDeterministicCapture(): void {
