@@ -1821,6 +1821,19 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
       max: 120,
       step: 1
     },
+    // Unchecking freezes the layer on the frame `progression` picks; while it
+    // plays, `progression` offsets the layer's loop against the page's.
+    play: {
+      label: "Play the animation",
+      component: "checkbox"
+    },
+    progression: {
+      label: "Progression",
+      component: "slider",
+      min: 0,
+      max: 1,
+      step: 0.001
+    },
     drawBackground: {
       label: "Draw its own background",
       component: "checkbox"

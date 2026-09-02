@@ -26,11 +26,19 @@
 //     result is remembered per path in the shared sketchFnCache (ES modules
 //     evaluate once, so a second import registers nothing).
 //
-// What is deliberately NOT swapped: the clock. An embedded sketch reads the
-// host's loop phase, so the layer stays in sync with the page and, crucially,
-// stays deterministic under headless capture — the whole composition is a pure
-// function of the frame index. The per-layer `framerate` is expressed in that
-// same loop time (not wall-clock), for the same reason.
+// A fourth swap exists but is opt-in: the clock. By default an embedded sketch
+// reads the HOST's loop phase, so the layer stays in sync with the page and the
+// whole composition is a pure function of the frame index — which is what keeps
+// headless capture deterministic, and why the per-layer `framerate` is counted
+// in loop time rather than wall-clock. A layer that asks to sit elsewhere in
+// the loop (`progression`, and `play: false` to freeze) gets a phase override
+// (`pushPhaseOverride`, time.js) for the duration of its draw. That is still a
+// pure function of the frame index, so the guarantee holds; see `layerPhase`.
+//
+// Freezing is NOT implemented as a pinned clock, though — a frozen layer stops
+// being redrawn at all, and the buffer it last filled is what gets composited.
+// A pinned clock only stops sketches that animate from the loop phase; one
+// driving itself off p5's own random() or frameCount would carry on moving.
 //
 // ── The one sketch shape this cannot run: an async draw that awaits ─────────
 //
@@ -64,7 +72,9 @@ import {
 import {
   getSketchFns, hasSketchFns, rememberSketchFns
 } from "./sketchFnCache.js";
-import time from "./time.js";
+import time, {
+  pushPhaseOverride, popPhaseOverride
+} from "./time.js";
 
 // A buffer bigger than this in either axis is refused: an embedded sketch is a
 // layer, and a slider slip on "resolution" should not allocate a 16k texture.
@@ -307,6 +317,7 @@ function disposeInstance( instance ) {
   instance.buffer = null;
   instance.proxy = null;
   instance.ready = false;
+  instance.frozenItem = null;
 }
 
 function createBuffer(
@@ -335,17 +346,60 @@ function createBuffer(
   instance.ready = false;
   instance.settingUp = false;
   instance.lastStep = null;
+  instance.frozenItem = null;
 }
 
 /**
- * Run one embedded call (setup or draw) with the surface and the options both
- * pointed at this layer. Always restores, including on a throw: a leaked
- * override would send the HOST's remaining draw into the buffer, which reads
- * as the page silently going blank.
+ * The loop phase this layer draws at, or null when it simply follows the host.
+ *
+ * `progression` is the layer's own loop origin: added to the host's phase while
+ * the layer plays, and the whole answer while it is frozen. Null is returned —
+ * rather than the host's phase — for the untouched case, so a layer at its
+ * defaults installs no override at all and reads the host's clock verbatim,
+ * including during capture where `time.phase()` climbs past 1 without wrapping.
+ */
+export function layerPhase(
+  hostPhase, item
+) {
+  const raw = item?.progression;
+  const offset = Number.isFinite( raw )
+    ? Math.min(
+      1,
+      Math.max(
+        0,
+        raw
+      )
+    )
+    : 0;
+
+  if ( item?.play === false ) {
+    return offset;
+  }
+
+  if ( offset === 0 || !Number.isFinite( hostPhase ) ) {
+    return null;
+  }
+
+  const phase = hostPhase + offset;
+
+  // Wrapped, because an offset layer is a layer running ahead of the page in
+  // the SAME loop — `animation.progression` is a 0..1 value everywhere.
+  return phase - Math.floor( phase );
+}
+
+/**
+ * Run one embedded call (setup or draw) with the surface, the options and the
+ * loop phase all pointed at this layer. Always restores, including on a throw:
+ * a leaked override would send the HOST's remaining draw into the buffer, which
+ * reads as the page silently going blank.
  */
 function runEmbedded(
   instance, item, fn
 ) {
+  const previousPhase = pushPhaseOverride( layerPhase(
+    time.phase(),
+    item
+  ) );
   const previousSurface = pushSurfaceOverride( instance.proxy );
   const previousOptions = pushOptionsOverride( {
     sketch: item.settings ?? {},
@@ -360,6 +414,7 @@ function runEmbedded(
   } finally {
     popOptionsOverride( previousOptions );
     popSurfaceOverride( previousSurface );
+    popPhaseOverride( previousPhase );
   }
 }
 
@@ -507,6 +562,7 @@ export function renderNestedSketchLayer(
       ready: false,
       settingUp: false,
       lastStep: null,
+      frozenItem: null,
       error: null
     };
     instances.set(
@@ -585,7 +641,22 @@ export function renderNestedSketchLayer(
     return null;
   }
 
-  if ( !isRedrawDue(
+  const frozen = item.play === false;
+
+  if ( frozen ) {
+    // A frozen layer is redrawn only when what it should be holding changes.
+    // Identity is the whole test: the option store merges in place but treats
+    // arrays as leaf values (`mergeChangedInPlace` / `valuesEqual` in
+    // p5/shared/utils.js), so ANY edit inside a content list — the layer's
+    // `progression`, one of the embedded sketch's own parameters — replaces the
+    // whole `content` array with a clone, and leaves it untouched otherwise.
+    // A cheaper signal than a per-frame deep compare, and a stricter one than a
+    // frozen clock: not redrawing is what also stops a sketch that animates
+    // from random() or frameCount rather than from the loop phase.
+    if ( instance.frozenItem === item ) {
+      return instance.buffer;
+    }
+  } else if ( !isRedrawDue(
     instance,
     item.framerate
   ) ) {
@@ -635,6 +706,10 @@ export function renderNestedSketchLayer(
       markUnsupported( instance.sketchPath );
       return null;
     }
+
+    // Remembered only on a frame that actually completed, so a layer frozen
+    // while its draw threw is retried rather than holding a half-frame forever.
+    instance.frozenItem = frozen ? item : null;
   } catch( error ) {
     instance.error = error;
     console.warn(

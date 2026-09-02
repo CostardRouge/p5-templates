@@ -845,6 +845,20 @@ export const SketchLayerItemSchema = z.object( {
   framerate: z.number().min( 0 )
     .max( 120 )
     .default( 0 ),
+  // Whether the layer's animation runs. Off freezes it: the layer stops being
+  // redrawn and holds the frame `progression` selects, which is stronger than
+  // pinning the clock — a sketch that draws from p5's own random()/frameCount
+  // would keep moving under a frozen clock, but cannot move if it is not
+  // redrawn at all.
+  play: z.boolean().default( true ),
+  // Where the layer sits in its own loop, as a phase in [0, 1]. Playing, it is
+  // an OFFSET added to the host's phase (two copies of one sketch can run half
+  // a loop apart); frozen, it is the absolute position of the held frame — one
+  // meaning, "where this layer's loop starts". 0 leaves the layer exactly in
+  // step with the page, which is what every existing layer keeps.
+  progression: z.number().min( 0 )
+    .max( 1 )
+    .default( 0 ),
   opacity: z.number().min( 0 )
     .max( 1 )
     .default( 1 ),
