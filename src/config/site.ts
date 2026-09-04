@@ -11,6 +11,17 @@ export const SITE_DESCRIPTION =
 export const HOME_DESCRIPTION =
   "A browser studio for creative-coding visuals: a generated parameter form for every sketch, layers and live telemetry overlays, parameters bound to audio, camera, hands or face, slides that morph into one another, and an export queue that renders mp4, webm, gif and png at several sizes at once.";
 
+// ─── Canonical origin ─────────────────────────────────────────────────────────
+// The domain the site is actually served from, hardcoded on purpose: it is the
+// fallback for `getBaseUrl()` in any production build, so a build that forgot
+// `NEXT_PUBLIC_SITE_URL` still emits real canonicals instead of localhost.
+//
+// Same rationale as the Umami defaults in `lib/analytics/umami.ts`, which name
+// this host too — a value that is not secret, appears in the page HTML anyway,
+// and whose absence breaks something silently belongs in the repo with an env
+// var to override it, not in an env var alone.
+export const SITE_URL = "https://p5.steeve.website";
+
 // ─── Author / Publisher ───────────────────────────────────────────────────────
 export const SITE_AUTHOR = "Steeve Pommier";
 
