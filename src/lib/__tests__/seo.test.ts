@@ -4,7 +4,9 @@ import {
   buildShareTitle,
   buildSketchDescription,
   formatSketchTitle,
-  SITE_NAME
+  getBaseUrl,
+  SITE_NAME,
+  SITE_URL
 } from "@/lib/seo";
 
 describe(
@@ -58,6 +60,77 @@ describe(
       "suffixes OG titles with the site name",
       () => {
         expect( buildOgTitle( "Photo Balloons — Shared Sketch" ) ).toBe( `Photo Balloons — Shared Sketch | ${ SITE_NAME }` );
+      }
+    );
+  }
+);
+
+/**
+ * The production fallback is the whole point of this block: the statically
+ * prerendered routes resolve their canonical at BUILD time, so a build with no
+ * `NEXT_PUBLIC_SITE_URL` used to bake `http://localhost:3000` into the home
+ * page's canonical and into every `<loc>` of `/sitemap.xml`. Losing this
+ * fallback would silently de-index the site again.
+ */
+describe(
+  "getBaseUrl",
+  () => {
+    const original = {
+      site: process.env.NEXT_PUBLIC_SITE_URL,
+      vercel: process.env.VERCEL_URL,
+      node: process.env.NODE_ENV
+    };
+
+    const setNodeEnv = ( value: string ) => {
+      ( process.env as Record<string, string> ).NODE_ENV = value;
+    };
+
+    beforeEach( () => {
+      delete process.env.NEXT_PUBLIC_SITE_URL;
+      delete process.env.VERCEL_URL;
+    } );
+
+    afterAll( () => {
+      process.env.NEXT_PUBLIC_SITE_URL = original.site;
+      process.env.VERCEL_URL = original.vercel;
+      setNodeEnv( original.node ?? "test" );
+    } );
+
+    it(
+      "falls back to the canonical domain in a production build",
+      () => {
+        setNodeEnv( "production" );
+
+        expect( getBaseUrl() ).toBe( SITE_URL );
+      }
+    );
+
+    it(
+      "falls back to localhost outside production",
+      () => {
+        setNodeEnv( "development" );
+
+        expect( getBaseUrl() ).toBe( "http://localhost:3000" );
+      }
+    );
+
+    it(
+      "prefers an explicit NEXT_PUBLIC_SITE_URL over both fallbacks",
+      () => {
+        setNodeEnv( "production" );
+        process.env.NEXT_PUBLIC_SITE_URL = "https://preview.example";
+
+        expect( getBaseUrl() ).toBe( "https://preview.example" );
+      }
+    );
+
+    it(
+      "uses VERCEL_URL when no explicit site url is set",
+      () => {
+        setNodeEnv( "production" );
+        process.env.VERCEL_URL = "preview-123.vercel.app";
+
+        expect( getBaseUrl() ).toBe( "https://preview-123.vercel.app" );
       }
     );
   }

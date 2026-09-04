@@ -2,7 +2,8 @@ import {
   APP_FEATURE_LIST,
   OG_IMAGE,
   SITE_DESCRIPTION,
-  SITE_NAME
+  SITE_NAME,
+  SITE_URL
 } from "@/config/site";
 
 // Re-export all site constants so existing imports keep working
@@ -18,17 +19,37 @@ export {
   SITE_NAME,
   SITE_SHORT_NAME,
   SITE_TAGLINE,
+  SITE_URL,
   THEME_COLOR_DARK,
   THEME_COLOR_LIGHT
 } from "@/config/site";
 
-/** Returns the base URL from environment variables. */
+/**
+ * Origin every canonical, OG url, JSON-LD id and sitemap `<loc>` is built on.
+ *
+ * `NEXT_PUBLIC_SITE_URL` first, then Vercel's own host, then a **build-time**
+ * decision: a production build falls back to `SITE_URL`, everything else to
+ * localhost. The last step is the load-bearing one.
+ *
+ * Why it cannot be an env var alone: `NEXT_PUBLIC_*` is read when the route is
+ * rendered, and the statically prerendered routes (`/`, `/sketches`, `/sitemap`,
+ * `/sitemap.xml`, `/robots.txt`) are rendered at BUILD time. Setting the var on
+ * the running container is too late for them — only the dynamic sketch routes
+ * pick it up. `.github/workflows/docker-build.yml` does not pass it as a build
+ * arg, so the published image shipped `http://localhost:3000` as the canonical
+ * of its home page and in every `<loc>` of its sitemap: an instruction to search
+ * engines not to index the real URLs.
+ *
+ * Keeping the fallback out of development matters too — a dev server must keep
+ * minting localhost share links, embed URLs and QR codes.
+ */
 export function getBaseUrl(): string {
   return (
     process.env.NEXT_PUBLIC_SITE_URL ||
     ( process.env.VERCEL_URL
       ? `https://${ process.env.VERCEL_URL }`
-      : "http://localhost:3000" )
+      : "" ) ||
+    ( process.env.NODE_ENV === "production" ? SITE_URL : "http://localhost:3000" )
   );
 }
 

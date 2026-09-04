@@ -2,6 +2,20 @@
 
 Read before touching `src/app/page.tsx`, `src/components/HomePage.tsx`, `src/components/StudioFeatures/`, `src/config/site.ts`, `src/lib/seo.ts`, `src/app/sitemap.ts`, `src/app/sitemap/page.tsx` or the capture assets under `public/assets/images/features/`.
 
+## The canonical origin is decided at BUILD time, and shipped wrong for months (2026-09-04)
+
+`getBaseUrl()` is what every canonical, `og:url`, JSON-LD id and sitemap `<loc>` is built on. It reads `NEXT_PUBLIC_SITE_URL`, then `VERCEL_URL`, and **falls back to `SITE_URL` (`src/config/site.ts`) in a production build**, localhost otherwise. That last step is not decoration — removing it de-indexes the site.
+
+The failure it fixes, found live on `https://p5.steeve.website/sitemap.xml`: every `<loc>` read `http://localhost:3000`, and the home page, `/sketches` and `/sitemap` carried a `localhost` canonical — an explicit instruction to search engines to ignore the real URLs.
+
+Why it happened, and the rule to carry forward:
+
+- **A statically prerendered route resolves its URLs when it is built, not when it is served.** `/`, `/sketches`, `/sitemap`, `/sitemap.xml` and `/robots.txt` are `○` in the build output; the sketch routes are `ƒ`. Setting `NEXT_PUBLIC_SITE_URL` on the running container therefore fixed the sketch pages and nothing else — verified by starting a built server with the var set: sketch canonicals correct, static ones still localhost.
+- `.github/workflows/docker-build.yml` passes five `build-args` and **not** `NEXT_PUBLIC_SITE_URL`, and `docker-compose.yml` only supplies it at runtime. So the GHCR image the NAS pulls was always built without it.
+- The remedy is the one `lib/analytics/umami.ts` already uses for the same class of value: a real default in the repo (`SITE_URL`), overridable by the env var. Not secret, emitted into the HTML anyway, and its absence breaks something silently — that belongs in code, not in an env var alone. `.env.example` had a third spelling of the host (`sketchbook.steeve.website`) and was never the deployed one.
+- `src/lib/__tests__/seo.test.ts` pins all four branches. The production fallback is the one that matters; treat a change to it as a change to the site's indexability.
+- Consequence worth knowing: a **local** production build now prints the real domain in share links, embed URLs and QR codes. That is what makes the embed/share dialog capture possible, which the tour section below records as skipped for exactly this reason.
+
 ## Two site maps, one machine-readable and one for people (2026-09-04)
 
 `app/sitemap.ts` (the metadata file) owns `/sitemap.xml`; `app/sitemap/page.tsx` owns `/sitemap`. Next resolves the two independently — both show up as separate static routes in the build output — so the folder does **not** need a different name to avoid a collision.
