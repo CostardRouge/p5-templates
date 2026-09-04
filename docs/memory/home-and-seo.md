@@ -1,6 +1,17 @@
 # Home page, marketing surface and SEO
 
-Read before touching `src/app/page.tsx`, `src/components/HomePage.tsx`, `src/components/StudioFeatures/`, `src/config/site.ts`, `src/lib/seo.ts`, `src/app/sitemap.ts` or the capture assets under `public/assets/images/features/`.
+Read before touching `src/app/page.tsx`, `src/components/HomePage.tsx`, `src/components/StudioFeatures/`, `src/config/site.ts`, `src/lib/seo.ts`, `src/app/sitemap.ts`, `src/app/sitemap/page.tsx` or the capture assets under `public/assets/images/features/`.
+
+## Two site maps, one machine-readable and one for people (2026-09-04)
+
+`app/sitemap.ts` (the metadata file) owns `/sitemap.xml`; `app/sitemap/page.tsx` owns `/sitemap`. Next resolves the two independently — both show up as separate static routes in the build output — so the folder does **not** need a different name to avoid a collision.
+
+- The page is a **server component**: every sketch is an anchor in the first HTML response, which is the point — one crawlable page reaching all ~300 sketch routes, and the only place the shape of the site is visible without working the gallery's filters.
+- Sketch links are `prefetch={ false }`. A `next/link` prefetches once it scrolls into the viewport; three hundred of them would pull a sketch route's payload for every link the reader scrolls past. The dozen navigation links above them keep the default.
+- **Three columns, never four.** At four, a name like "Animated Text Points V10 Asterisk" no longer fits, and a truncated entry defeats a list whose whole job is telling near-identical `-vN` variants apart. Long names wrap.
+- **The heading needs `pt-14` on a phone.** `MenuBar` is `fixed top-2 left-2` (`md:top-4 md:left-4`), so at the usual `p-3 sm:p-6` page padding the button sits on top of the `h1`. Any new full-width page with a heading in the top-left corner has the same problem.
+- The page lists sketches under the gallery's rule (`filterSketchesForGallery`) — production drops the `.hidden-template` ones — while `sitemap.ts` maps raw `getMetadata()` and does not. So the XML advertises three sketches the HTML page hides. Close that when next touching `sitemap.ts`; `/recordings` is in the XML too while its page is `robots: index:false`.
+- Audited with axe-core in both colour schemes (same setup as the studio tour below): zero violations. Keep it that way.
 
 ## The home page documents the editor, and does it with real screenshots (2026-08-31)
 

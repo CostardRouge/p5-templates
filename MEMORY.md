@@ -60,6 +60,7 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 - The viewport's wheel pans and only a pinch (touch, or ctrl+wheel as browsers report a trackpad pinch) zooms; the wheel recogniser must skip ctrl+wheel itself → `canvas-interaction.md`.
 - A binding is data resolved at read time, in its own `interactive` namespace; its five kinds share one signal pipeline and differ only in the mapping and the fold rule → `interaction-bindings.md`.
 - The home page documents the editor surface by surface with real screenshots of it, as a server component slotted into the client page → `home-and-seo.md`.
+- There are two site maps: `/sitemap.xml` for crawlers (`app/sitemap.ts`) and `/sitemap` for people (`app/sitemap/page.tsx`); Next resolves them independently → `home-and-seo.md`.
 - An asset path is minted from the file's name, and a name is not an identity — every iOS camera-roll pick is `image.jpg` → `assets.md`.
 - A script-opened file input must be rendered (`HIDDEN_FILE_INPUT_CLASS`, never `hidden`) and its trigger must be a real control — iOS Safari ignores both otherwise, silently → `assets.md`.
 - Pixels that become a file travel as a Blob; a data URL is a mobile-Safari dead end → `assets.md`, `recording.md`.
@@ -71,6 +72,7 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 ## Open items (dated; remove when done)
 
 - 2026-09-01 — **Loading-screen UX shipped** (poster-as-progress + reserved caption, precomputed total, monotonic progress, 150ms anti-flash). Details and the traps it cost in `docs/memory/architecture.md`. Still open: the engine's `ready` event is not gated on assets settling — `TODO.md` asks for it, but it needs a timeout/failure policy first.
+- 2026-09-04 — `/sitemap.xml` lists three sketches marked `.hidden-template` that the gallery and `/sitemap` hide, and lists `/recordings` although that page is `robots: index:false`. Left alone to keep the site-map commit to one task; fix when `app/sitemap.ts` is next touched (`docs/memory/home-and-seo.md`).
 - 2026-08-20 — `.vscode/settings.json` was untracked as accidental IDE state (it arrived inside a sketch commit, 1ccd877). Its content was genuinely useful: eslint format-on-save matching the repo's `@stylistic` rules. If that is wanted as shared project config, re-add it deliberately with a `!.vscode/settings.json` negation — the file is still on disk.
 - 2026-08-20 — `.husky/pre-push` is entirely commented out, so nothing runs `npm run build` before a push; `.github/workflows/lint-fix.yml` records the reason as "a known issue with NEXT_BUILD_DIR resolution". Either fix the resolution and re-enable it, or delete the file. Left alone: hooks are the maintainer's call.
 - 2026-08-20 — `fast-check` is a devDependency that nothing imports. Either start using it for the maths helpers or drop it.

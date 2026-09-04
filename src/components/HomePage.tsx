@@ -640,7 +640,14 @@ export default function HomePage( {
             </div>
 
             <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-label">
-              mit license · { new Date().getFullYear() }
+              <Link
+                href="/sitemap"
+                className="hover:text-foreground transition-colors"
+              >
+                site map
+              </Link>
+              { " · mit license · " }
+              { new Date().getFullYear() }
             </p>
           </footer>
         </Reveal>

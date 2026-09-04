@@ -33,6 +33,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: now,
       changeFrequency: "daily",
       priority: 0.6
+    },
+    // The human-readable site map (`app/sitemap/page.tsx`): one crawlable page
+    // linking every sketch route, so it is worth listing here too.
+    {
+      url: `${ baseUrl }/sitemap`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.5
     }
   ];
 
