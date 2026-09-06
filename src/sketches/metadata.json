@@ -3601,6 +3601,18 @@
     "ctime": "2026-07-03T23:45:00.894Z"
   },
   {
+    "name": "cavalry-player",
+    "engine": "cavalry",
+    "category": null,
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "mtime": "2026-07-04T04:00:12.591Z",
+    "ctime": "2026-07-04T04:00:08.399Z"
+  },
+  {
     "name": "hand-tracking-v15-puppet-type",
     "engine": "p5",
     "category": "hand-capture",
