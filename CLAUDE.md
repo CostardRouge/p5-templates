@@ -100,6 +100,34 @@ are the expensive kind.
 conflicts without touching the working tree, which is the cheap way to see what
 you are in for before starting.
 
+## Rule 4 — Report the project's state (MANDATORY)
+
+The register of what is open is `PROJETS.md`, at the root of the private
+`second-brain` repository: one line per project, four states
+(`idée` → `actif` → `veille` → `clos`). That file is the source of truth — not
+this conversation, not Claude's memory, not `git log`, which records what
+changed and never what state the project is in.
+
+A session that changes code here changes this project's state, and the state
+has to reach that file.
+
+1. If a checkout of `second-brain` is reachable — a sibling directory, or a
+   repository attached to this session — edit its line in `PROJETS.md` and
+   commit it there, in its own commit: the date, the last known point, the
+   next action. **Never move a line between sections.** The state is the
+   maintainer's call, never the agent's.
+2. Otherwise, end the final message with the line, ready to paste:
+
+       - <projet> — <domaine> — YYYY-MM-DD · <dernier point connu> — <prochaine action>
+
+The date is the day of the session. The last known point is what someone who
+has been away for three months needs in order to pick the project back up, not
+a changelog — the commit body already carries the detail. The next action is
+one gesture, not a plan.
+
+A question, an exploration or an explanation changes no state and prints no
+line.
+
 ## Verification — trust the disk, not the context
 
 - A tool answering "success" is not proof. Before saying a change is done, prove it through the repo: `git status --porcelain`, `git diff`, `grep` for the expected value, `git show HEAD:<file>` compared to the file on disk.
