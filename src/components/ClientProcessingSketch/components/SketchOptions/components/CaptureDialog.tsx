@@ -1,7 +1,7 @@
 "use client";
 
 import React, {
-  useEffect
+  useCallback, useEffect, useState
 } from "react";
 import dynamic from "next/dynamic";
 import clsx from "clsx";
@@ -72,6 +72,36 @@ export default function CaptureDialog( {
     devActionsVisible
   } = useDevActions();
 
+  // Files the export panel produced and the user has not saved anywhere. The
+  // panel unmounts with the dialog (see the render below) and its blobs die
+  // with it, so closing on a non-zero count throws away a finished export —
+  // minutes of capture on a phone. Ask first.
+  const [
+    pendingFiles,
+    setPendingFiles
+  ] = useState( 0 );
+
+  const requestClose = useCallback(
+    () => {
+      const one = pendingFiles === 1;
+      const warning = [
+        `${ pendingFiles } exported file${ one ? " has" : "s have" } not been saved yet.`,
+        `Closing discards ${ one ? "it" : "them" }.`,
+        "Close anyway?"
+      ].join( " " );
+
+      if ( pendingFiles > 0 && !confirm( warning ) ) {
+        return;
+      }
+
+      onClose();
+    },
+    [
+      onClose,
+      pendingFiles
+    ]
+  );
+
   const hasFooterActions =
     capture.backendRecording ||
       ( devActionsVisible && capture.browserRecordingSupported );
@@ -84,7 +114,7 @@ export default function CaptureDialog( {
 
       const handleKeyDown = ( event: KeyboardEvent ) => {
         if ( event.key === "Escape" ) {
-          onClose();
+          requestClose();
         }
       };
 
@@ -100,7 +130,7 @@ export default function CaptureDialog( {
     },
     [
       open,
-      onClose
+      requestClose
     ]
   );
 
@@ -120,7 +150,7 @@ export default function CaptureDialog( {
           "absolute inset-0 bg-background/60 backdrop-blur-sm transition-opacity",
           open ? "opacity-100" : "opacity-0"
         ) }
-        onClick={ onClose }
+        onClick={ requestClose }
       />
 
       <div
@@ -158,7 +188,7 @@ export default function CaptureDialog( {
 
           <button
             type="button"
-            onClick={ onClose }
+            onClick={ requestClose }
             aria-label="Close"
             className="ml-auto rounded-lg p-1 text-label transition-colors hover:bg-hover hover:text-foreground"
           >
@@ -174,6 +204,7 @@ export default function CaptureDialog( {
             name={ capture.name }
             options={ capture.options as SketchOption }
             activeSlideIndex={ activeSlideIndex }
+            onPendingChange={ setPendingFiles }
           />
         )}
 

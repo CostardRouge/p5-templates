@@ -19,9 +19,6 @@ import type {
 import {
   applyExportOverrides, type OverrideHandle
 } from "./overrideScope";
-import {
-  triggerDownload
-} from "./download";
 import nextFrame from "./nextFrame";
 import {
   resolveFrameIndices
@@ -59,15 +56,27 @@ export type ExportItemState = {
 export type ExportBatchProgress = ( items: ExportItemState[] ) => void;
 
 /**
- * Hand a finished variant's files to the caller, so they can be previewed.
+ * Hand a finished variant's files to the caller.
+ *
+ * This is the run's ONLY delivery channel. The runner used to download each
+ * variant itself the moment it finished, which on a phone raced its own modal
+ * save prompts and lost files — see `delivery.ts`. Capturing and delivering are
+ * now separate jobs, and this is the seam: the caller decides whether these
+ * files download straight away or wait for a deliberate save.
  *
  * Deliberately a second channel rather than a field on `ExportItemState`: that
  * type is the progress feed, copied for every listener on every frame, and is
  * no place for blobs. The caller owns what it keeps and when it releases it —
  * the runner itself retains nothing once this returns.
+ *
+ * `bundleFileName` is the name the set takes when it collapses into one `.zip`.
+ * It is passed rather than derived because only the runner knows the size the
+ * variant actually rendered at.
  */
 export type ExportBatchArtifacts = (
-  variantId: string, artifacts: ExportArtifact[]
+  variantId: string,
+  artifacts: ExportArtifact[],
+  bundleFileName: string
 ) => void;
 
 export type RunExportBatchArgs = {
@@ -335,18 +344,17 @@ export async function runExportBatch( {
         await scope.restore();
         scope = null;
 
-        deliver(
-          variant,
-          artifacts,
-          sketchName,
-          runSize
-        );
-
-        // After delivering, so a preview can never delay the download the
-        // user is already waiting on.
         onArtifacts?.(
           variant.id,
-          artifacts
+          artifacts,
+          variantFileName(
+            variant,
+            sketchName,
+            runSize,
+            {
+              bundled: true
+            }
+          )
         );
 
         item.status = "done";
@@ -743,48 +751,4 @@ async function runCombinedVideoVariant( args: RunVariantArgs ): Promise<ExportAr
       blob
     }
   ];
-}
-
-/**
- * Hand a variant's artifacts to the browser.
- *
- * One artifact downloads as itself; several are bundled into a single zip —
- * browsers throttle (and prompt on) a burst of programmatic downloads, so a
- * seven-slide variant firing seven `<a download>` clicks is not an option.
- */
-function deliver(
-  variant: ExportVariant,
-  artifacts: ExportArtifact[],
-  sketchName: string,
-  runSize: ExportSize
-): void {
-  if ( artifacts.length === 0 ) {
-    return;
-  }
-
-  if ( artifacts.length === 1 ) {
-    triggerDownload(
-      artifacts[ 0 ].blob,
-      artifacts[ 0 ].fileName
-    );
-
-    return;
-  }
-
-  void Promise.all( artifacts.map( async( artifact ) => ( {
-    name: artifact.fileName,
-    data: await blobToBytes( artifact.blob )
-  } ) ) ).then( ( entries ) => {
-    triggerDownload(
-      createZip( entries ),
-      variantFileName(
-        variant,
-        sketchName,
-        runSize,
-        {
-          bundled: true
-        }
-      )
-    );
-  } );
 }

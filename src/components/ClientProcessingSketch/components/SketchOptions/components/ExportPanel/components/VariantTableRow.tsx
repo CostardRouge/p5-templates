@@ -101,6 +101,9 @@ type VariantTableRowProps = {
   supportedFormats: RecordingFormat[];
   state?: ExportItemState;
   running: boolean;
+  /** This variant's files actually reached the user. A finished variant that
+   *  has not is the whole point of the deferred delivery path. */
+  delivered: boolean;
   removable: boolean;
   /** Present once this variant's files are in hand and can be previewed. */
   onPreview?: () => void;
@@ -130,6 +133,7 @@ export default function VariantTableRow( {
   supportedFormats,
   state,
   running,
+  delivered,
   removable,
   onPreview,
   onPatch,
@@ -298,14 +302,19 @@ export default function VariantTableRow( {
             <button
               type="button"
               onClick={ onPreview }
-              title="See what this produced"
-              className="rounded-md px-1 py-0.5 text-green-500 underline decoration-dotted underline-offset-2 transition-colors hover:bg-hover"
+              title={ delivered
+                ? "See what this produced"
+                : "Ready, not saved yet — open it to save" }
+              className={ clsx(
+                "rounded-md px-1 py-0.5 underline decoration-dotted underline-offset-2 transition-colors hover:bg-hover",
+                delivered ? "text-green-500" : "text-foreground/80"
+              ) }
             >
-              ✓ {state?.bytes === undefined ? "Done" : formatBytes( state.bytes )}
+              {delivered ? "✓" : "·"} {state?.bytes === undefined ? "Done" : formatBytes( state.bytes )}
             </button>
           ) : (
-            <span className="text-green-500">
-              ✓ {state?.bytes === undefined ? "Done" : formatBytes( state.bytes )}
+            <span className={ delivered ? "text-green-500" : "text-foreground/80" }>
+              {delivered ? "✓" : "·"} {state?.bytes === undefined ? "Done" : formatBytes( state.bytes )}
             </span>
           )
         )}

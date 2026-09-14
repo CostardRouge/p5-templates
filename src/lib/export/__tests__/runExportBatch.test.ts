@@ -4,11 +4,12 @@
 /**
  * The runner's contract with the panel, for the branch that needs no encoder.
  *
- * Two guarantees, and the second one is the fragile one: a variant's files are
- * handed to `onArtifacts` so they can be previewed, AND they still download on
- * their own. The preview was added on top of an auto-download the user already
- * relies on, so a regression that silently replaces one with the other is the
- * failure worth a test.
+ * The guarantee that matters here is a negative one: the runner CAPTURES and
+ * hands its files over, and delivers nothing itself. It used to download each
+ * variant the moment it finished, which on a phone raced its own modal save
+ * prompts and lost files — so a regression that puts a download back inside the
+ * run is the failure worth a test. Delivery lives in `delivery.ts` now, driven
+ * by the panel.
  */
 
 import {
@@ -123,9 +124,9 @@ describe(
     } );
 
     it(
-      "hands a finished variant's files over AND still downloads them",
+      "hands a finished variant's files over and delivers nothing itself",
       async() => {
-        const artifacts: Array<[ string, string[] ]> = [];
+        const artifacts: Array<[ string, string[], string ]> = [];
 
         const items = await runExportBatch( {
           engine: makeEngine(),
@@ -136,10 +137,11 @@ describe(
             VARIANT
           ],
           onArtifacts: (
-            variantId, produced
+            variantId, produced, bundleFileName
           ) => artifacts.push( [
             variantId,
-            produced.map( ( artifact ) => artifact.fileName )
+            produced.map( ( artifact ) => artifact.fileName ),
+            bundleFileName
           ] )
         } );
 
@@ -148,9 +150,14 @@ describe(
         expect( artifacts[ 0 ][ 0 ] ).toBe( "v1" );
         expect( artifacts[ 0 ][ 1 ][ 0 ] ).toMatch( /^braid-still-320x240\.png$/ );
 
-        // The preview is additive: the download the user is waiting on still
-        // happens, and it happens for the same single file.
-        expect( triggerDownload ).toHaveBeenCalledTimes( 1 );
+        // The name a multi-file variant would collapse to, which only the
+        // runner can derive: it alone knows the size the variant rendered at.
+        expect( artifacts[ 0 ][ 2 ] ).toBe( "braid-still-320x240.zip" );
+
+        // The point of the change: capturing no longer delivers. A download
+        // fired from here has no user gesture behind it and no way to know
+        // whether its prompt was ever answered.
+        expect( triggerDownload ).not.toHaveBeenCalled();
       }
     );
 

@@ -181,6 +181,32 @@ describe(
     );
 
     it(
+      "delivers nothing while a sheet is already open",
+      async() => {
+        const share = jest.fn().mockRejectedValue( new DOMException(
+          "share() is already in progress",
+          "InvalidStateError"
+        ) );
+
+        setShareApi( {
+          canShare: () => true,
+          share
+        } );
+
+        // The spec rejects a second share() while one is in flight. Falling
+        // through to a download here would put the file BEHIND the open sheet,
+        // which is the stacking this whole path exists to prevent.
+        await expect( shareFiles(
+          [
+            makeFile()
+          ],
+          "Export"
+        ) ).resolves.toBe( "busy" );
+        expect( HTMLAnchorElement.prototype.click ).not.toHaveBeenCalled();
+      }
+    );
+
+    it(
       "carries the blob's own type onto the File, which is what the sheet routes on",
       () => {
         const file = makeFile();
