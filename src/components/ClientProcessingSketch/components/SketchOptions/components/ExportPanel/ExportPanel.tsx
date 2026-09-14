@@ -1,7 +1,7 @@
 "use client";
 
 import React, {
-  useCallback, useMemo, useRef, useState, useSyncExternalStore
+  useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore
 } from "react";
 import {
   Plus
@@ -12,6 +12,13 @@ import {
 import {
   runExportBatch, type ExportArtifact, type ExportItemState
 } from "@/lib/export/runExportBatch";
+import {
+  downloadArtifacts,
+  isDelivered,
+  saveArtifacts,
+  shouldDeferDelivery,
+  type SaveOutcome
+} from "@/lib/export/delivery";
 import {
   addVariant,
   duplicateVariantById,
@@ -26,6 +33,7 @@ import {
   nativeFramerateFor,
   nativeSizeFor,
   resolveSlideIndices,
+  slugify,
   VARIANT_PRESETS,
   type ExportVariant
 } from "@/lib/export/variants";
@@ -43,6 +51,15 @@ type ExportPanelProps = {
   name: string;
   options: SketchOption;
   activeSlideIndex: number | undefined;
+  /** How many produced files are still unsaved, so the dialog can guard its
+   *  close — the panel unmounts with it and the blobs die there. */
+  onPendingChange?: ( count: number ) => void;
+};
+
+/** One variant's output, plus the name it takes when zipped into one file. */
+type VariantOutput = {
+  artifacts: ExportArtifact[];
+  bundleFileName: string;
 };
 
 const FALLBACK_FORMATS: RecordingFormat[] = [
@@ -53,6 +70,13 @@ const FALLBACK_FORMATS: RecordingFormat[] = [
 
 const HEAD_CELL =
   "px-2.5 py-2 text-left text-[9.5px] font-semibold uppercase tracking-[0.09em] text-label";
+
+/** What to say when a save did not put anything anywhere. */
+const SAVE_NOTICE: Record<string, string> = {
+  dismissed: "Nothing saved — you dismissed the sheet.",
+  busy: "A share sheet is already open. Close it and try again.",
+  failed: "Those files could not be saved."
+};
 
 /**
  * The export surface: one row per variant, every setting editable in place.
@@ -67,11 +91,18 @@ const HEAD_CELL =
  * The row doubles as the run queue: its name cell carries the progress fill
  * and its output cell the live stage, so "62% · slide 2/7" is attached to the
  * variant it belongs to rather than to a single global bar.
+ *
+ * **The panel also owns delivery**, which the runner used to do itself. On a
+ * device with a share sheet nothing is delivered automatically: the run ends
+ * holding its files and the footer turns into a save action, because several
+ * unattended downloads there raise modal prompts that overwrite one another and
+ * report nothing back. See `src/lib/export/delivery.ts`.
  */
 export default function ExportPanel( {
   name,
   options,
-  activeSlideIndex
+  activeSlideIndex,
+  onPendingChange
 }: ExportPanelProps ) {
   const [
     {
@@ -104,18 +135,39 @@ export default function ExportPanel( {
     setError
   ] = useState<string | null>( null );
 
-  // What each finished variant produced, kept only so it can be previewed.
-  // ExportPanel is mounted only while the dialog is open, so this dies with
-  // the dialog — which is the whole intended lifetime.
+  // What each finished variant produced, kept so it can be previewed and — on
+  // a deferred device — so it can still be saved after the run. ExportPanel is
+  // mounted only while the dialog is open, so this dies with the dialog.
   const [
-    artifacts,
-    setArtifacts
-  ] = useState<Record<string, ExportArtifact[]>>( {} );
+    outputs,
+    setOutputs
+  ] = useState<Record<string, VariantOutput>>( {} );
+  const [
+    saved,
+    setSaved
+  ] = useState<Record<string, SaveOutcome>>( {} );
+  const [
+    saving,
+    setSaving
+  ] = useState( false );
+  const [
+    notice,
+    setNotice
+  ] = useState<string | null>( null );
   const [
     previewing,
     setPreviewing
   ] = useState<string | null>( null );
   const abortRef = useRef<AbortController | null>( null );
+
+  /**
+   * Whether this run holds its files back, decided ONCE from the first
+   * variant's real files.
+   *
+   * Per-variant would be worse than either answer: a batch that downloads its
+   * Reel and then silently keeps its square post is the confusing half-state.
+   */
+  const deferredRef = useRef<boolean | null>( null );
 
   const slideCount = Array.isArray( options.slides ) ? options.slides.length : 0;
 
@@ -168,6 +220,81 @@ export default function ExportPanel( {
     0
   );
 
+  /** Produced, but not yet anywhere the user can reach. */
+  const unsaved = snapshot.variants
+    .map( ( variant ) => ( {
+      variant,
+      output: outputs[ variant.id ]
+    } ) )
+    .filter( ( entry ): entry is {
+      variant: ExportVariant;
+      output: VariantOutput;
+    } => Boolean( entry.output ) && !isDelivered( saved[ entry.variant.id ] ?? "failed" ) );
+
+  const unsavedFileCount = unsaved.reduce(
+    (
+      total, entry
+    ) => total + entry.output.artifacts.length,
+    0
+  );
+
+  useEffect(
+    () => onPendingChange?.( unsavedFileCount ),
+    [
+      unsavedFileCount,
+      onPendingChange
+    ]
+  );
+
+  // Whatever is still held when the panel goes away goes with it: tell the
+  // dialog the count is zero so a later open does not inherit a stale guard.
+  useEffect(
+    () => () => onPendingChange?.( 0 ),
+    [
+      onPendingChange
+    ]
+  );
+
+  const markSaved = (
+    variantIds: string[], outcome: SaveOutcome
+  ) => setSaved( ( current ) => ( {
+    ...current,
+    ...Object.fromEntries( variantIds.map( ( id ) => [
+      id,
+      outcome
+    ] ) )
+  } ) );
+
+  const handleArtifacts = (
+    variantId: string, produced: ExportArtifact[], bundleFileName: string
+  ) => {
+    setOutputs( ( current ) => ( {
+      ...current,
+      [ variantId ]: {
+        artifacts: produced,
+        bundleFileName
+      }
+    } ) );
+
+    if ( deferredRef.current === null ) {
+      deferredRef.current = shouldDeferDelivery( produced );
+    }
+
+    if ( deferredRef.current ) {
+      return;
+    }
+
+    void downloadArtifacts(
+      produced,
+      bundleFileName
+    ).then( ( outcome ) => markSaved(
+      [
+        variantId
+      ],
+      outcome
+    ) );
+  };
+
   const handleExport = async() => {
     if ( running || !engine || snapshot.variants.length === 0 ) {
       return;
@@ -178,10 +305,13 @@ export default function ExportPanel( {
     abortRef.current = controller;
     setRunning( true );
     setError( null );
+    setNotice( null );
     // A new run replaces the last one's results; holding both would pin two
     // batches' worth of blobs for no reason.
     setPreviewing( null );
-    setArtifacts( {} );
+    setOutputs( {} );
+    setSaved( {} );
+    deferredRef.current = null;
 
     try {
       await runExportBatch( {
@@ -192,12 +322,7 @@ export default function ExportPanel( {
         variants: snapshot.variants,
         signal: controller.signal,
         onProgress: setItems,
-        onArtifacts: (
-          variantId, produced
-        ) => setArtifacts( ( current ) => ( {
-          ...current,
-          [ variantId ]: produced
-        } ) )
+        onArtifacts: handleArtifacts
       } );
     } catch( caught ) {
       // A cancel is a normal outcome, not a failure worth shouting about —
@@ -211,18 +336,65 @@ export default function ExportPanel( {
     }
   };
 
+  /**
+   * Every unsaved file, in one gesture.
+   *
+   * One share sheet carrying all of them is the whole point on a phone: iOS
+   * offers "Save 3 Videos" straight to Photos, where three separate prompts
+   * would have overwritten one another.
+   */
+  const handleSaveAll = async() => {
+    if ( saving || unsaved.length === 0 ) {
+      return;
+    }
+
+    setSaving( true );
+    setNotice( null );
+
+    try {
+      const outcome = await saveArtifacts(
+        unsaved.flatMap( ( entry ) => entry.output.artifacts ),
+        name,
+        `${ slugify( name ) || "sketch" }-export.zip`
+      );
+
+      if ( isDelivered( outcome ) ) {
+        markSaved(
+          unsaved.map( ( entry ) => entry.variant.id ),
+          outcome
+        );
+      } else {
+        setNotice( SAVE_NOTICE[ outcome ] ?? SAVE_NOTICE.failed );
+      }
+    } finally {
+      setSaving( false );
+    }
+  };
+
   const stateFor = ( id: string ) => items.find( ( item ) => item.variantId === id );
 
-  const previewed = previewing ? artifacts[ previewing ] : undefined;
+  const previewed = previewing ? outputs[ previewing ] : undefined;
 
   // The preview takes over the table's region rather than opening a second
   // modal: the dialog is already a bottom sheet on mobile, and stacking a
   // surface over that fights the chrome instead of using it.
-  if ( previewing && previewed && previewed.length > 0 ) {
+  if ( previewing && previewed && previewed.artifacts.length > 0 ) {
     return (
       <ExportPreview
         title={ snapshot.variants.find( ( variant ) => variant.id === previewing )?.name ?? "Export" }
-        artifacts={ previewed }
+        artifacts={ previewed.artifacts }
+        bundleFileName={ previewed.bundleFileName }
+        outcome={ saved[ previewing ] }
+        onSaved={ ( outcome ) => {
+          if ( isDelivered( outcome ) ) {
+            markSaved(
+              [
+                previewing
+              ],
+              outcome
+            );
+          }
+        } }
         onBack={ () => setPreviewing( null ) }
       />
     );
@@ -276,7 +448,8 @@ export default function ExportPanel( {
                 supportedFormats={ supportedFormats }
                 state={ stateFor( variant.id ) }
                 running={ running }
-                onPreview={ artifacts[ variant.id ]?.length
+                delivered={ isDelivered( saved[ variant.id ] ?? "failed" ) }
+                onPreview={ outputs[ variant.id ]?.artifacts.length
                   ? () => setPreviewing( variant.id )
                   : undefined }
                 removable={ snapshot.variants.length > 1 }
@@ -338,9 +511,14 @@ export default function ExportPanel( {
 
       <div className="flex items-center gap-2 border-t border-theme px-3 py-2">
         <span className="min-w-0 flex-1 truncate text-[10px] text-label">
-          {error ? (
-            <span className="text-red-500">{error}</span>
-          ) : (
+          {error && <span className="text-red-500">{error}</span>}
+          {!error && notice && <span className="text-red-500">{notice}</span>}
+          {!error && !notice && unsavedFileCount > 0 && (
+            <span className="text-foreground/80">
+              {unsavedFileCount} file{unsavedFileCount === 1 ? "" : "s"} ready · not saved yet
+            </span>
+          )}
+          {!error && !notice && unsavedFileCount === 0 && (
             `${ snapshot.variants.length } variant${ snapshot.variants.length === 1 ? "" : "s" } · ${ fileCount } file${ fileCount === 1 ? "" : "s" }`
           )}
         </span>
@@ -358,16 +536,33 @@ export default function ExportPanel( {
             Stop
           </button>
         ) : (
-          <button
-            type="button"
-            onClick={ handleExport }
-            disabled={ !engine || snapshot.variants.length === 0 }
-            className="shrink-0 rounded-lg bg-foreground px-3 py-1.5 text-xs font-medium text-background transition-opacity hover:opacity-85 disabled:opacity-40"
-          >
-            Export {snapshot.variants.length === 1
-              ? "variant"
-              : `all ${ snapshot.variants.length }`}
-          </button>
+          <>
+            {/* Re-exporting stays reachable while files are held, but it is no
+                longer the loud button: saving what the last run produced is. */}
+            <button
+              type="button"
+              onClick={ handleExport }
+              disabled={ !engine || snapshot.variants.length === 0 || saving }
+              className={ unsavedFileCount > 0
+                ? "shrink-0 rounded-lg border border-theme bg-background px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-hover disabled:opacity-40"
+                : "shrink-0 rounded-lg bg-foreground px-3 py-1.5 text-xs font-medium text-background transition-opacity hover:opacity-85 disabled:opacity-40" }
+            >
+              Export {snapshot.variants.length === 1
+                ? "variant"
+                : `all ${ snapshot.variants.length }`}
+            </button>
+
+            {unsavedFileCount > 0 && (
+              <button
+                type="button"
+                onClick={ handleSaveAll }
+                disabled={ saving }
+                className="shrink-0 rounded-lg bg-foreground px-3 py-1.5 text-xs font-medium text-background transition-opacity hover:opacity-85 disabled:opacity-40"
+              >
+                {saving ? "Saving…" : `Save ${ unsavedFileCount } file${ unsavedFileCount === 1 ? "" : "s" }`}
+              </button>
+            )}
+          </>
         )}
       </div>
     </div>

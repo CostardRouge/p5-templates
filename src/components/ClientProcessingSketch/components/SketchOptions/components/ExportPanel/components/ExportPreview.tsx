@@ -10,7 +10,10 @@ import {
   formatBytes
 } from "@/lib/export/download";
 import {
-  artifactToFile, canShareFiles, shareFiles
+  isDelivered, saveArtifacts, toFiles, type SaveOutcome
+} from "@/lib/export/delivery";
+import {
+  canShareFiles
 } from "@/lib/export/share";
 import type {
   ExportArtifact
@@ -19,6 +22,11 @@ import type {
 type ExportPreviewProps = {
   title: string;
   artifacts: ExportArtifact[];
+  /** The name these files take when they collapse into one download. */
+  bundleFileName: string;
+  /** How this variant's last save went, if it has been tried. */
+  outcome?: SaveOutcome;
+  onSaved?: ( outcome: SaveOutcome ) => void;
   onBack: () => void;
 };
 
@@ -54,12 +62,19 @@ function previewKindOf( fileName: string ): "video" | "image" | "none" {
 export default function ExportPreview( {
   title,
   artifacts,
+  bundleFileName,
+  outcome,
+  onSaved,
   onBack
 }: ExportPreviewProps ) {
   const [
     sharing,
     setSharing
   ] = useState( false );
+  const [
+    lastOutcome,
+    setLastOutcome
+  ] = useState<SaveOutcome | undefined>( outcome );
 
   // Built once per artifact set, and revoked together: an object URL left
   // behind pins its blob in memory for the life of the document.
@@ -86,10 +101,7 @@ export default function ExportPreview( {
   );
 
   const files = useMemo(
-    () => artifacts.map( ( artifact ) => artifactToFile(
-      artifact.blob,
-      artifact.fileName
-    ) ),
+    () => toFiles( artifacts ),
     [
       artifacts
     ]
@@ -107,14 +119,24 @@ export default function ExportPreview( {
     setSharing( true );
 
     try {
-      await shareFiles(
-        files,
-        title
+      // `saveArtifacts`, not `shareFiles`: a multi-slide variant holds one file
+      // per slide, and `shareFiles` falls back to downloading each of them —
+      // seven stacked prompts on the devices this screen exists for. This
+      // collapses to a single zip instead.
+      const result = await saveArtifacts(
+        artifacts,
+        title,
+        bundleFileName
       );
+
+      setLastOutcome( result );
+      onSaved?.( result );
     } finally {
       setSharing( false );
     }
   };
+
+  const delivered = isDelivered( lastOutcome ?? "failed" );
 
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-background">
@@ -182,9 +204,19 @@ export default function ExportPreview( {
 
       <div className="flex items-center gap-2 border-t border-theme px-3 py-2">
         <span className="min-w-0 flex-1 truncate text-[10px] text-label">
-          {shareable
-            ? "Already downloaded — share to save it to your photos"
-            : "Already downloaded"}
+          {delivered && "Saved"}
+          {!delivered && lastOutcome === "dismissed" && (
+            <span className="text-red-500">Not saved — you dismissed the sheet.</span>
+          )}
+          {!delivered && lastOutcome === "busy" && (
+            <span className="text-red-500">A share sheet is already open.</span>
+          )}
+          {!delivered && lastOutcome === "failed" && (
+            <span className="text-red-500">Could not save those files.</span>
+          )}
+          {!delivered && lastOutcome === undefined && ( shareable
+            ? "Not saved yet — share to put it in your photos"
+            : "Not saved yet" )}
         </span>
 
         <button
@@ -198,7 +230,7 @@ export default function ExportPreview( {
           ) : (
             <Download className="h-3.5 w-3.5" />
           )}
-          {shareable ? "Share" : "Download again"}
+          {shareable ? "Share" : delivered ? "Download again" : "Download"}
         </button>
       </div>
     </div>

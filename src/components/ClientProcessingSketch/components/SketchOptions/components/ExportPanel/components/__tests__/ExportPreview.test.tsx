@@ -9,7 +9,8 @@
  *     (a .gif in a <video> renders nothing at all),
  *   - a zip says so instead of pretending to be previewable,
  *   - the primary action is Share only where the browser says files can be
- *     shared, and Download everywhere else,
+ *     shared, and Download everywhere else, worded for whether this export has
+ *     actually been saved yet,
  *   - and every object URL is revoked when the preview goes away, or each
  *     export would pin its blobs for the life of the document.
  */
@@ -81,6 +82,7 @@ describe(
               "image/png"
             )
           ] }
+          bundleFileName="sketch-export.zip"
           onBack={ () => undefined }
         /> );
 
@@ -105,6 +107,7 @@ describe(
               "image/gif"
             )
           ] }
+          bundleFileName="sketch-export.zip"
           onBack={ () => undefined }
         /> );
 
@@ -124,6 +127,7 @@ describe(
               "video/mp4"
             )
           ] }
+          bundleFileName="sketch-export.zip"
           onBack={ () => undefined }
         /> );
 
@@ -146,6 +150,7 @@ describe(
               "application/zip"
             )
           ] }
+          bundleFileName="sketch-export.zip"
           onBack={ () => undefined }
         /> );
 
@@ -171,9 +176,40 @@ describe(
               "image/png"
             )
           ] }
+          bundleFileName="sketch-export.zip"
           onBack={ () => undefined }
         /> );
 
+        // "Download", not "Download again": a run no longer delivers on its own
+        // wherever files are held back, so claiming the user already has this
+        // file would be a lie — and the one that would cost them the export.
+        expect( screen.getByRole(
+          "button",
+          {
+            name: "Download"
+          }
+        ) ).toBeTruthy();
+        expect( screen.getByText( "Not saved yet" ) ).toBeTruthy();
+      }
+    );
+
+    it(
+      "says a file is saved once it has been delivered",
+      () => {
+        render( <ExportPreview
+          title="Post"
+          artifacts={ [
+            artifact(
+              "sketch.png",
+              "image/png"
+            )
+          ] }
+          bundleFileName="sketch-export.zip"
+          outcome="downloaded"
+          onBack={ () => undefined }
+        /> );
+
+        expect( screen.getByText( "Saved" ) ).toBeTruthy();
         expect( screen.getByRole(
           "button",
           {
@@ -198,6 +234,7 @@ describe(
               "image/png"
             )
           ] }
+          bundleFileName="sketch-export.zip"
           onBack={ () => undefined }
         /> );
 
@@ -229,6 +266,7 @@ describe(
               "image/png"
             )
           ] }
+          bundleFileName="sketch-export.zip"
           onBack={ () => undefined }
         /> );
 
