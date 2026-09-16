@@ -195,6 +195,13 @@ let _gyroPermissionListener = null;
 let _midiInitialized = false;
 let _midiAccess = null;
 const _midiNotes = new Map(); // noteNumber → velocity
+// Held control-change state: ccNumber → raw value (0–127). Kept exactly like
+// _midiNotes (filled by _onMidiMessage, cleared on reset / device switch /
+// dispose) and read by channels.js, which normalizes it to 0..1 scalars.
+const _midiControls = new Map(); // ccNumber → value (0–127)
+// The CC number that moved most recently, so one channel can act as a
+// zero-config "MIDI learn" (bind it, then wiggle a knob). -1 = nothing yet.
+let _midiLastControl = -1;
 // The input id the layer currently listens to ("" = every input). Tracked so a
 // runtime change of the picker re-wires the message handlers without a reload.
 let _midiDeviceId = "";
@@ -484,7 +491,23 @@ function _onMidiMessage( msg ) {
     );
   } else if ( command === 0x80 || ( command === 0x90 && velocity === 0 ) ) {
     _midiNotes.delete( note );
+  } else if ( command === 0xb0 ) {
+    // Control change: a knob/fader position, which unlike a note is HELD —
+    // there is no "off" message, so the entry stays until a reset.
+    _midiControls.set(
+      note,
+      velocity
+    );
+    _midiLastControl = note;
   }
+}
+
+// Drop held MIDI state. Notes and controls are cleared together everywhere: a
+// value from a device we stopped listening to is stale either way.
+function _clearMidiState() {
+  _midiNotes.clear();
+  _midiControls.clear();
+  _midiLastControl = -1;
 }
 
 async function _initMidi( opts ) {
@@ -632,7 +655,7 @@ export async function initInteraction( opts = {} ) {
   _midiAccess = null;
   _midiInitialized = false;
   _midiDeviceId = "";
-  _midiNotes.clear();
+  _clearMidiState();
 
   // ── Audio reset (lazy init triggered by _collectAudio) ───────────────────
   _closeAudio();
@@ -679,7 +702,7 @@ export function disposeInteraction() {
 
   _midiInitialized = false;
   _midiDeviceId = "";
-  _midiNotes.clear();
+  _clearMidiState();
 
   // Audio — stop the mic tracks (not just close the context) so the browser
   // microphone indicator clears when the sketch is torn down.
@@ -2276,13 +2299,13 @@ function _collectMidi(
     return;
   }
 
-  // Re-wire when the picker changes input at runtime, dropping notes still held
-  // on the previously-selected device so they don't linger.
+  // Re-wire when the picker changes input at runtime, dropping notes and knob
+  // positions still held on the previously-selected device so they don't linger.
   const desiredDevice = midi.deviceId || "";
 
   if ( _midiDeviceId !== desiredDevice ) {
     _midiDeviceId = desiredDevice;
-    _midiNotes.clear();
+    _clearMidiState();
     _wireMidiInputs();
   }
 
@@ -2492,6 +2515,32 @@ function _runAudioFeatures( audio ) {
  */
 export function getAudio() {
   return _audioFeatures;
+}
+
+/**
+ * Held MIDI control-change (CC) state: the same live Map every call, keyed by
+ * CC number with the raw 0–127 value the controller last sent. Only CC numbers
+ * actually received since the last reset are present — an untouched knob has no
+ * entry at all, which is what keeps a binding on it a no-op (see channels.js).
+ *
+ * Populated only while `interaction.midi.enabled` is on (the per-frame
+ * collector is what requests MIDI access).
+ *
+ * @returns {Map<number, number>} ccNumber → value (0–127)
+ */
+export function getMidiControls() {
+  return _midiControls;
+}
+
+/**
+ * The CC number that moved most recently, or -1 when none has. Backs the
+ * `midi.ccLast` channel, which is a zero-config MIDI learn: bind it, move any
+ * knob, and that knob drives the parameter regardless of its CC number.
+ *
+ * @returns {number}
+ */
+export function getMidiLastControl() {
+  return _midiLastControl;
 }
 
 /**

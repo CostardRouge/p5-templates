@@ -663,9 +663,10 @@ export function sourceCategory( source: string | undefined ): SourceCategory {
  * object) to switch ON so a freshly-picked input source actually produces a
  * channel — "pick a source → it works". Vision sources (hands / face / …) need
  * the camera AND their tracker; the semantic audio scalars (audio.bass,
- * audio.level, …) need the mic AND the named-bands feature; the rest just need
- * their own `enabled` flag. Generators and unknown ids have no source to enable
- * and return an empty list.
+ * audio.level, …) need the mic AND the named-bands feature; the MIDI CC scalars
+ * (midi.cc1 …) need the MIDI source; the rest just need their own `enabled`
+ * flag. Generators and unknown ids have no source to enable and return an empty
+ * list.
  *
  * Mirrors the per-source `enabled` guards the interaction handler's collectors
  * check (see the `_collect*` functions in `@/p5/utils/interaction/index.js`).
@@ -677,6 +678,16 @@ export function interactionEnablePaths( source: string ): string[] {
       "enabled",
       "audio.enabled",
       "audio.features.bands"
+    ];
+  }
+
+  // MIDI control-change scalars (midi.cc1 … midi.cc8, midi.ccLast): just the
+  // MIDI source on. There is no per-CC feature flag — the handler keeps every
+  // CC the selected input sends.
+  if ( source.startsWith( "midi." ) ) {
+    return [
+      "enabled",
+      "midi.enabled"
     ];
   }
 

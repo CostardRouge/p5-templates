@@ -37,6 +37,25 @@ Consequences worth knowing before extending it:
 
 Widening *targets* (content items, canvas size, duration) is a different axis from adding a kind — it is `getSketchScope`, not `bindingKindFor` — and is held back on purpose: modulating size or framerate would fight the capture pipeline.
 
+## A live channel that is not there publishes nothing — never a zero
+
+2026-09-16 — The capture-safety policy for every device-backed channel, and it is a rule about *absence*: a channel with no live value is **omitted from the snapshot**, not published as 0. `bindingValue` returns null for a missing channel and `foldTarget` leaves the parameter on its base value, so a binding on an unplugged device is inert rather than pinning the parameter to the bottom of its range — which is exactly what makes a headless export reproducible without the hardware. `audio.*` already worked this way by accident of its guard (no mic → `getAudio().bands` is null → no channels); `midi.cc*` follows it deliberately, per CC: an untouched knob has no entry in the controls Map and therefore no channel. **How to apply**: a new live channel publishes only values it actually has, and `prepareCapture` needs no new gate for it (it waits on vision only, because a camera *will* produce frames and needs warming; a knob nobody turned never will).
+
+## MIDI CC: a fixed set addressed by CC number, plus one learn channel
+
+2026-09-16 — `0xB0` messages fill a `_midiControls` Map (CC number → raw 0–127) beside `_midiNotes` in `interaction/index.js`, cleared with them in all three paths (`initInteraction`, `disposeInteraction`, and the runtime device switch in `_collectMidi` — a knob position from a device we stopped listening to is as stale as a held note). `channelsAdapter.midiControlChannels` divides by 127 and publishes `midi.cc1 … midi.cc8` plus `midi.ccLast`, so the resolver gets the same 0..1 signal as `audio.bass`.
+
+Both halves of the id scheme were chosen against the obvious alternative:
+
+- **`midi.cc<n>` is the CC NUMBER, not a slot filled in arrival order.** A slot assigned to "the first knob you touch" is not stable across a reload, so a saved binding would silently address a different physical control next session. The cost of naming real CC numbers is that the set has to be small and guessed (1–8: mod wheel, breath, foot, volume — what a generic controller's first knobs tend to send).
+- **`midi.ccLast` is what makes it work on hardware outside that set** (a Launch Control sends CC 21–28, an MPK its own map): bind it, move any knob, and that knob drives the parameter. It is the "wiggle to assign" mode `channelBridge`'s comment anticipated, as data rather than UI — no learn state to store, and the trade-off is honest because the label says "Last moved CC". A real MIDI-learn affordance (freeze the assignment into `midi.cc<n>` after a wiggle) is still the better UX and is unbuilt.
+
+Widening the set is `MIDI_CC_NUMBERS` **and** matching `INTERACTION_SOURCES` entries in `sources.js`, kept honest by a parity test.
+
+**The trap that costs a dead source**: a new dotted channel family also needs a branch in `interactionEnablePaths` (`BindingAffordance/bindingUtils.ts`). Its `switch` matches whole ids, so `midi.cc1` fell through to `default` → `[]`, and picking it in the popover would not switch `interaction.midi.enabled` on — the pastille shows a source that never produces a value, with nothing to suggest why. Three aligned edits, then: the manifest entry, the collector in `channels.js`, and the enable-paths branch.
+
+**Verifying one needs no hardware.** Stub `navigator.requestMIDIAccess` through Playwright's `addInitScript` with a fake access object whose `inputs` is a `Map` (its `forEach` already yields `( value, key )` like `MIDIInputMap`), then push `new Uint8Array( [ 0xb0, cc, value ] )` into the fake input's `onmidimessage` — that drives the real handler, channel layer and resolver. Read `--ch-midi-cc<n>` and `--bind-<target>` off `:root` (`channelBridge` writes both every frame) to watch the normalized channel and the resolved signal without decoding a single pixel; the CSS var being *empty* is how you see the absence rule above holding. If you do compare canvas pixels, pick a parameter that dominates the image — `noise-grid-v1-basic`'s `grid.rows` (1 vs 500) separates cleanly, while its `stroke.weightMin` does not: at 189×119 the strokes already blanket the canvas, so ink coverage and mean luminance both sit inside the noise field's own frame-to-frame drift and prove nothing.
+
 ## Binding UI chrome matches the rest of the panel's own conventions
 
 2026-09-01 — Both binding-editing surfaces had drifted from house style the same way: ad hoc sizing/radius instead of the shared primitives the rest of the sketch-options panel already uses. Fixed in both; the underlying rule going forward is **reach for the shared primitive, never restyle by hand**.

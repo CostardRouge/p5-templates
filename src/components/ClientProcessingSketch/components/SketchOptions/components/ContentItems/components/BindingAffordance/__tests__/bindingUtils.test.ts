@@ -94,6 +94,20 @@ describe(
     );
 
     it(
+      "enables the MIDI source for a control-change scalar",
+      () => {
+        expect( interactionEnablePaths( "midi.cc1" ) ).toEqual( [
+          "enabled",
+          "midi.enabled"
+        ] );
+        expect( interactionEnablePaths( "midi.ccLast" ) ).toEqual( [
+          "enabled",
+          "midi.enabled"
+        ] );
+      }
+    );
+
+    it(
       "returns nothing for generators and unknown sources",
       () => {
         expect( interactionEnablePaths( "oscillator" ) ).toEqual( [] );
@@ -143,6 +157,21 @@ describe(
         expect( audio!.options ).toHaveLength( 12 );
         expect( audio!.options.some( ( o ) => o.source === "audio.bass" ) ).toBe( true );
         expect( audio!.options.some( ( o ) => o.source === "audio" && o.project === "x" ) ).toBe( true );
+      }
+    );
+
+    it(
+      "gathers MIDI's note projections AND its control-change scalars under one MIDI group",
+      () => {
+        const groups = channelSourceGroups( "continuous" );
+        const midi = groups.find( ( g ) => g.key === "midi" );
+
+        expect( midi ).toBeDefined();
+        expect( midi!.label ).toBe( "MIDI" );
+        // 4 vector projections (x/y/mag/angle) + 8 fixed CCs + the learn channel.
+        expect( midi!.options ).toHaveLength( 13 );
+        expect( midi!.options.some( ( o ) => o.source === "midi.cc1" ) ).toBe( true );
+        expect( midi!.options.some( ( o ) => o.source === "midi.ccLast" ) ).toBe( true );
       }
     );
 

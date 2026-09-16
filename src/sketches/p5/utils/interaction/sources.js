@@ -10,9 +10,10 @@
 // source = add one entry to `_FLAT_COLLECTORS` AND one entry here.
 //
 // The `audio.*` scalars are semantic channels read from `getAudio().bands`
-// (see channels.js). They are the first per-source semantic mapping; richer
-// per-source channels (hands.pinch, gyro.tilt, midi.cc, …) follow the same
-// pattern.
+// (see channels.js). They were the first per-source semantic mapping; the
+// `hands.*` / `face.*` gesture scalars and the `midi.cc*` control-change
+// scalars follow the same pattern — a richer per-source channel is one entry
+// here plus one collector in channels.js.
 
 export const INTERACTION_SOURCES = [
   // ── Generic position sources (one vector2d channel each) ──────────────────
@@ -129,6 +130,59 @@ export const INTERACTION_SOURCES = [
     label: "Audio · Presence"
   },
 
+  // ── MIDI control-change scalars (from getMidiControls()) ──────────────────
+  // A knob/fader position, normalized 0..1 from its raw 0–127 value by
+  // channelsAdapter.midiControlChannels. `midi.cc<n>` is a FIXED set of CC
+  // numbers (MIDI_CC_NUMBERS below) so a saved binding keeps pointing at the
+  // same physical control; `midi.ccLast` follows whichever CC moved most
+  // recently, which is the zero-config way to bind a controller that sends CC
+  // numbers outside the fixed set.
+  {
+    id: "midi.cc1",
+    type: "scalar",
+    label: "MIDI · CC 1"
+  },
+  {
+    id: "midi.cc2",
+    type: "scalar",
+    label: "MIDI · CC 2"
+  },
+  {
+    id: "midi.cc3",
+    type: "scalar",
+    label: "MIDI · CC 3"
+  },
+  {
+    id: "midi.cc4",
+    type: "scalar",
+    label: "MIDI · CC 4"
+  },
+  {
+    id: "midi.cc5",
+    type: "scalar",
+    label: "MIDI · CC 5"
+  },
+  {
+    id: "midi.cc6",
+    type: "scalar",
+    label: "MIDI · CC 6"
+  },
+  {
+    id: "midi.cc7",
+    type: "scalar",
+    label: "MIDI · CC 7"
+  },
+  {
+    id: "midi.cc8",
+    type: "scalar",
+    label: "MIDI · CC 8"
+  },
+  {
+    id: "midi.ccLast",
+    type: "scalar",
+    label: "MIDI · Last moved CC"
+  },
+
   // ── Semantic hand/face gesture scalars (from getInteractionMetrics()) ──────
   // Derived, intuitive values about what the camera sees — open vs closed hand,
   // fingers/hands raised, suggested depth (nearness), pinch, spread, face
@@ -230,6 +284,28 @@ export const FLAT_SOURCE_IDS = [
   "joypad",
   "joypadRight"
 ];
+
+// The MIDI CC numbers exposed as `midi.cc<n>` scalar channels — the low,
+// widely-assigned controllers (1 mod wheel, 2 breath, 4 foot, 7 volume …),
+// which is what a generic controller's first knobs tend to send. The id is the
+// CC number itself, deliberately: a binding saved today must still address the
+// same physical knob tomorrow, which a position-in-arrival-order slot would
+// not. Controllers sending outside this set are reached through `midi.ccLast`.
+// Widening it means adding entries HERE and in INTERACTION_SOURCES above —
+// kept in sync by a parity test.
+export const MIDI_CC_NUMBERS = [
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8
+];
+
+// The channel id for the "last moved CC" learn channel.
+export const MIDI_CC_LAST_ID = "midi.ccLast";
 
 // The getAudio().bands keys exposed as `audio.<band>` scalar channels.
 export const AUDIO_BANDS = [

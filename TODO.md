@@ -113,10 +113,11 @@ What's left requires actions only the repo owner can take, in this order:
   - [ ] `useHands` — high-level hand state from MediaPipe
   - [ ] `useFace` — high-level face state
   - [ ] `useBody` — full-body pose state
-  - [ ] `useMidi` — WebMidi note/CC events (WebMidi.js already bundled)
+  - [ ] `useMidi` — WebMidi note/CC events (WebMidi.js already bundled). The *events* are handled: `interaction/index.js` keeps held notes and held control-change values, surfaced as the `midi` vector2d channel and the `midi.cc1 … midi.cc8` / `midi.ccLast` scalars (`docs/memory/interaction-bindings.md`). What is left here is the hook surface, if it is still wanted
   - [ ] `useAudio` — Web Audio API analyser data
   - [ ] `useOrbit` — 3D orbit camera controls
   - [ ] `usePerlinNoise` — seeded Perlin/Simplex noise with optional animated offset
+- [ ] **MIDI learn** — a knob is bound today either by its CC number (`midi.cc1 … midi.cc8`, stable but only eight guessed numbers) or by `midi.ccLast`, which follows whichever CC moved last and so reaches any controller with no configuration. Freezing that into an assignment — "wiggle a knob to bind this parameter to it", then keep addressing that CC — is what would make an arbitrary controller give a *stable* binding. See `docs/memory/interaction-bindings.md`
 - [ ] **Bind the exotic value types** — modulation covers number, 2D pad, boolean, select and colour (see `docs/memory/interaction-bindings.md`); the rest still has no `kind`
   - [ ] **Generators for the 2D pad** — it can only follow a live vector2d channel today (Orbit and Perlin noise animate without a device; everything else needs one). One generator per axis on a shared clock, with a phase offset, would give circles / figure-eights / drifts
   - [ ] **Easing** — an ordered list of easing keys, so it maps like the enum family
