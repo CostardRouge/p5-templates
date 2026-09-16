@@ -73,15 +73,18 @@ import {
 // quads in an offscreen WEBGL buffer — the text-dice pattern. Cells are then
 // free, however many there are.
 //
-// `card.renderer` picks what goes on the card. `strokes` rasterises the
-// capsule chain in 2D; `shader` runs v1's own material through the offscreen
-// mode of the shared GPU renderer, so at rest the board is made of v1's tubes.
-// Both draw the same geometry — only the material differs. What the shader
-// card cannot do is turn its lighting with the tile: it is baked face-on, so a
-// steeply turned tile reads as a lit decal rather than a lit tube. Fixing that
-// needs the whole board raymarched in one pass, which is a different sketch
-// (capsules in a data texture instead of uniform arrays, and cells found by
-// domain repetition rather than looped).
+// `card.renderer` picks what goes on the card, and both draw the same geometry
+// — only the material differs. `strokes` rasterises the capsule chain in 2D;
+// `shader` runs v1's own material through the offscreen mode of the shared GPU
+// renderer, so at rest the board is made of v1's tubes.
+//
+// `strokes` is the default, because what the shader card cannot do is turn its
+// lighting with the tile: it is baked face-on, so a steeply turned tile reads
+// as a lit decal rather than a lit tube. flip-v3-tube-cascade raymarches the
+// whole board instead and has no such compromise — it is where the material
+// belongs. The shader card stays here for the board v3 cannot reach: v3 caps
+// at 8 single glyphs because of how it selects a cell's capsules, while a
+// baked card costs one bake however deep the subdivision goes.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const MAX_FACES = 12; // cards resident at once (the cycle, or its letters)
@@ -915,7 +918,7 @@ sketch.draw( () => {
   ) => getCard(
     p,
     {
-      renderer: card.renderer ?? "shader",
+      renderer: card.renderer ?? "strokes",
       text,
       font: textCfg.font ?? "martian",
       detail: textCfg.detail ?? 0.6,

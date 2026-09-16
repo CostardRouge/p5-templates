@@ -84,6 +84,7 @@ export const sketchModuleLoaders: Record<string, SketchModuleLoader> = {
   "p5:face-capture/face-mesh-v1": () => import( "@/p5/sketches/face-capture/face-mesh-v1/index.js" ),
   "p5:flip/flip-v1-letter-cycle": () => import( "@/p5/sketches/flip/flip-v1-letter-cycle/index.js" ),
   "p5:flip/flip-v2-grid-cascade": () => import( "@/p5/sketches/flip/flip-v2-grid-cascade/index.js" ),
+  "p5:flip/flip-v3-tube-cascade": () => import( "@/p5/sketches/flip/flip-v3-tube-cascade/index.js" ),
   "p5:flowers-shaders/flowers-shaders-v1-melted": () => import( "@/p5/sketches/flowers-shaders/flowers-shaders-v1-melted/index.js" ),
   "p5:flowers-shaders/flowers-shaders-v2-pipes": () => import( "@/p5/sketches/flowers-shaders/flowers-shaders-v2-pipes/index.js" ),
   "p5:flowers-shaders/flowers-shaders-v3-hand-pipes": () => import( "@/p5/sketches/flowers-shaders/flowers-shaders-v3-hand-pipes/index.js" ),

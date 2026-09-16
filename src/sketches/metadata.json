@@ -4119,5 +4119,18 @@
     "asyncDraw": false,
     "mtime": "2026-09-16T15:28:24.468Z",
     "ctime": "2026-09-16T15:27:18.260Z"
+  },
+  {
+    "name": "flip-v3-tube-cascade",
+    "engine": "p5",
+    "category": "flip",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "asyncDraw": false,
+    "mtime": "2026-09-16T22:59:45.759Z",
+    "ctime": "2026-09-16T22:58:57.815Z"
   }
 ]

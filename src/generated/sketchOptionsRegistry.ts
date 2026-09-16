@@ -102,6 +102,7 @@ export const sketchFormLoaders: Record<string, SketchModuleLoader> = {
   "p5:face-capture/face-mesh-v1": () => import( "@/p5/sketches/face-capture/face-mesh-v1/options" ),
   "p5:flip/flip-v1-letter-cycle": () => import( "@/p5/sketches/flip/flip-v1-letter-cycle/options" ),
   "p5:flip/flip-v2-grid-cascade": () => import( "@/p5/sketches/flip/flip-v2-grid-cascade/options" ),
+  "p5:flip/flip-v3-tube-cascade": () => import( "@/p5/sketches/flip/flip-v3-tube-cascade/options" ),
   "p5:flowers-shaders/flowers-shaders-v1-melted": () => import( "@/p5/sketches/flowers-shaders/flowers-shaders-v1-melted/options" ),
   "p5:flowers-shaders/flowers-shaders-v2-pipes": () => import( "@/p5/sketches/flowers-shaders/flowers-shaders-v2-pipes/options" ),
   "p5:flowers-shaders/flowers-shaders-v3-hand-pipes": () => import( "@/p5/sketches/flowers-shaders/flowers-shaders-v3-hand-pipes/options" ),
