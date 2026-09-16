@@ -69,11 +69,16 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 - A whole sketch can be a layer inside another sketch (`sketch` content item), by overriding module singletons — the surface, the options, the registration, and the loop phase when the layer is frozen or offset — never by special-casing sketches → `architecture.md`, `studio-ui.md`.
 - The `visual` content item was retired once sketch layers superseded it; its drawing functions are kept, unreferenced, to become sketches → `studio-ui.md`.
 - A sketch layer has three distinct sizes — its box, the canvas the sketch lays out for, and the buffer's pixels; conflating them is what made `scale` crop a sketch drawn at absolute pixel sizes → `architecture.md`, `studio-ui.md`.
+- The `flip` category runs on one rule: the edge-on frame is the only place anything may jump — the glyph, the cell count, the framing — and a turn restarts at -90° rather than passing a glyph's own mirror → `sketches.md`.
+- A grid of independently turning planes is baked cards on WEBGL quads, not an SDF; and its tree is a pure function of the clock, or it cannot be captured → `sketches.md`.
+- A `conditional-group` branch switch rebuilds the whole object from each field's `default`, falling back to a slider's `min` → `sketches.md`.
 - A sketch's mutable module-level state goes through `sketch.state()` (one record per page/layer instance, drift-tested), GPU helpers keep GL resources per surface, and layer imports are serialised because there is one registration capture → `architecture.md`, `sketches.md`.
 
 - A session that changes code reports this project's state to `PROJETS.md`, at the root of the private `second-brain` repo: the register is that file, never Claude's memory and never `git log` → CLAUDE.md rule 4
 
 ## Open items (dated; remove when done)
+
+- 2026-09-16 — `flip-v2-grid-cascade` ships without a thumbnail or a preview (`hasThumbnail`/`hasPreview` false, so its gallery card is blank); nothing in the repo generates them, they are captured from the studio. Next in the category, deliberately deferred: a **v3** on quad (4-way) subdivision and deeper fragmentation — v2 splits in two on alternating axes on purpose, because that is what gives 1 → 2 → 4 → 8.
 
 - 2026-09-01 — **Loading-screen UX shipped** (poster-as-progress + reserved caption, precomputed total, monotonic progress, 150ms anti-flash). Details and the traps it cost in `docs/memory/architecture.md`. Still open: the engine's `ready` event is not gated on assets settling — `TODO.md` asks for it, but it needs a timeout/failure policy first.
 - 2026-08-20 — `.vscode/settings.json` was untracked as accidental IDE state (it arrived inside a sketch commit, 1ccd877). Its content was genuinely useful: eslint format-on-save matching the repo's `@stylistic` rules. If that is wanted as shared project config, re-add it deliberately with a `!.vscode/settings.json` negation — the file is still on disk.
