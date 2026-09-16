@@ -9,6 +9,13 @@
 // `getPointersDebug()` emits, which `channels.js` turns into channels. Adding a
 // source = add one entry to `_FLAT_COLLECTORS` AND one entry here.
 //
+// `derived: true` marks a channel COMPUTED FROM OTHER CHANNELS rather than read
+// from its own control — `midi.ccLast` mirrors the last CC to move,
+// `audio.level` averages the bands. They are bindable like any other, but MIDI
+// learn must skip them: a mirror moves exactly as much as the knob it is
+// mirroring, so a "which channel moved most" detector would hand back the
+// mirror and the assignment would not be stable. See `observeForLearn`.
+//
 // The `audio.*` scalars are semantic channels read from `getAudio().bands`
 // (see channels.js). They were the first per-source semantic mapping; the
 // `hands.*` / `face.*` gesture scalars and the `midi.cc*` control-change
@@ -92,7 +99,9 @@ export const INTERACTION_SOURCES = [
   {
     id: "audio.level",
     type: "scalar",
-    label: "Audio · Level"
+    label: "Audio · Level",
+    // The mean of the bands below, so it moves whenever any of them does.
+    derived: true
   },
   {
     id: "audio.sub",
@@ -139,7 +148,10 @@ export const INTERACTION_SOURCES = [
   {
     id: "midi.ccLast",
     type: "scalar",
-    label: "MIDI · Last moved CC"
+    label: "MIDI · Last moved CC",
+    // Mirrors whichever control moved last, so it is never the answer to
+    // "which control did you just move" — see `derived` below.
+    derived: true
   },
 
   // ── Semantic hand/face gesture scalars (from getInteractionMetrics()) ──────

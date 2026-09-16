@@ -5,7 +5,7 @@ import {
   Popover, PopoverButton, PopoverPanel
 } from "@headlessui/react";
 import {
-  Activity, ChevronDown, Plus, RotateCcw, Trash2, X
+  Activity, ChevronDown, Crosshair, Plus, RotateCcw, Trash2, X
 } from "lucide-react";
 import clsx from "clsx";
 import {
@@ -75,7 +75,7 @@ import {
   WAVE_OPTIONS
 } from "./bindingUtils";
 import {
-  useLiveChannelIds
+  useChannelLearn, useLiveChannelIds
 } from "./useLiveChannels";
 
 type Props = {
@@ -179,13 +179,17 @@ function BarSelect( {
 function SourceBar( {
   kind,
   binding,
-  onPick
+  onPick,
+  onArmLearn
 }: {
   kind: BindingKind;
   binding: Binding;
   onPick: ( source: string, project?: string ) => void;
+  onArmLearn: () => void;
 } ) {
   const liveIds = useLiveChannelIds();
+  // A learned control is always a scalar, so it carries no projection.
+  const learn = useChannelLearn( ( id ) => onPick( id ) );
   const groups = withSelectedSource(
     channelSourceGroups(
       kind,
@@ -202,45 +206,89 @@ function SourceBar( {
     .flatMap( ( group ) => group.options )
     .find( ( option ) => option.value === value );
 
-  return (
-    <div className={ CONTROL_BAR_CLASS }>
-      <BarLabelSegment label="Source" />
-      {/* Visible, non-interactive: shows the full "Family · Detail"
-          label so the source's group stays legible once collapsed —
-          the native <select> below would otherwise only echo back
-          the short, group-less option text. */}
-      <span
-        aria-hidden
-        className="pointer-events-none flex min-w-0 flex-1 items-center justify-between gap-1 px-2.5"
-      >
-        <span className="truncate">{selected?.label ?? binding.source}</span>
-        <ChevronDown className={ CONTROL_CHEVRON_CLASS } />
-      </span>
-      <select
-        value={ value }
-        onChange={ ( e ) => {
-          const {
-            source, project
-          } = decodeSource( e.target.value );
+  // While armed the bar reports the gesture instead of the current source —
+  // including the one failure that is otherwise silent, a paused sketch
+  // publishing no snapshot for the listener to read.
+  const barLabel = learn.armed
+    ? ( learn.seenSignal ? "Move a control…" : "No frames — is it paused?" )
+    : ( selected?.label ?? binding.source );
 
-          onPick(
-            source,
-            project
-          );
-        } }
-        aria-label="Source"
-        className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-      >
-        {groups.map( ( group ) => (
-          <optgroup key={ group.key } label={ group.label }>
-            {group.options.map( ( option ) => (
-              <option key={ option.value } value={ option.value }>
-                {sourceOptionShortLabel( option )}
-              </option>
-            ) )}
-          </optgroup>
-        ) )}
-      </select>
+  return (
+    <div className="flex items-center gap-1.5">
+      <div className={ CONTROL_BAR_CLASS }>
+        <BarLabelSegment label="Source" />
+        {/* Visible, non-interactive: shows the full "Family · Detail"
+            label so the source's group stays legible once collapsed —
+            the native <select> below would otherwise only echo back
+            the short, group-less option text. */}
+        <span
+          aria-hidden
+          className="pointer-events-none flex min-w-0 flex-1 items-center justify-between gap-1 px-2.5"
+        >
+          <span className={ clsx(
+            "truncate",
+            learn.armed && "text-focus"
+          ) }>{barLabel}</span>
+          <ChevronDown className={ CONTROL_CHEVRON_CLASS } />
+        </span>
+        <select
+          value={ value }
+          onChange={ ( e ) => {
+            const {
+              source, project
+            } = decodeSource( e.target.value );
+
+            // Picking by hand answers the same question learn was asking.
+            learn.disarm();
+            onPick(
+              source,
+              project
+            );
+          } }
+          aria-label="Source"
+          className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+        >
+          {groups.map( ( group ) => (
+            <optgroup key={ group.key } label={ group.label }>
+              {group.options.map( ( option ) => (
+                <option key={ option.value } value={ option.value }>
+                  {sourceOptionShortLabel( option )}
+                </option>
+              ) )}
+            </optgroup>
+          ) )}
+        </select>
+      </div>
+      {/* Learn is for scalars: a vector2d target can only take a whole
+          vector2d channel, and every one of those is already in the list. */}
+      {kind !== "vector2d" && (
+        <button
+          type="button"
+          aria-pressed={ learn.armed }
+          aria-label="Learn a control"
+          title={ learn.armed
+            ? "Listening — move the control you want"
+            : "Learn: arm, then move a control to assign it" }
+          onClick={ () => {
+            if ( learn.armed ) {
+              learn.disarm();
+              return;
+            }
+
+            // Order matters: the source has to be enabled BEFORE listening, or
+            // the collectors never sample it and the knob turns into nothing.
+            onArmLearn();
+            learn.arm();
+          } }
+          className={ clsx(
+            CONTROL_RESET_BUTTON_CLASS,
+            "shrink-0 border border-theme",
+            learn.armed && "border-focus text-focus"
+          ) }
+        >
+          <Crosshair className="h-3.5 w-3.5" />
+        </button>
+      )}
     </div>
   );
 }
@@ -859,6 +907,11 @@ export default function BindingAffordance( {
                 <SourceBar
                   kind={ kind }
                   binding={ binding }
+                  // Arming learn enables the MIDI source, and only that one:
+                  // it is the family whose channels cannot be listed ahead of
+                  // time, and the only one that costs no camera or microphone
+                  // permission to start listening to.
+                  onArmLearn={ () => void enableSourceInputs( "midi.ccLast" ) }
                   onPick={ (
                     source, project
                   ) => {

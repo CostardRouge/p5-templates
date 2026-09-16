@@ -16,7 +16,7 @@ import {
   INTERACTION_SOURCES
 } from "@/p5/utils/interaction/sources.js";
 import {
-  channelVarName
+  channelVarName, type ChannelSnapshot
 } from "@/lib/channelBridge";
 import type {
   FieldConfig, SelectOption
@@ -112,6 +112,8 @@ export type ChannelDescriptor = {
   id: string;
   type: "scalar" | "vector2d";
   label: string;
+  /** Computed from other channels (a mirror or an average) — see sources.js. */
+  derived?: boolean;
 };
 
 export type SourceOption = {
@@ -362,6 +364,88 @@ export function channelSourceGroups(
   }
 
   return groups;
+}
+
+// Channels that mirror or aggregate other channels, and so can never answer
+// "which control did you just move".
+const DERIVED_IDS = new Set( DESCRIPTORS.filter( ( d ) => d.derived ).map( ( d ) => d.id ) );
+
+/**
+ * How far a channel must travel from where it was first seen before it counts
+ * as "the control the user meant". 0.15 of full range is about 19 MIDI steps:
+ * a deliberate turn clears it in a flick, a pot's own jitter of a step or two
+ * never does.
+ */
+export const LEARN_THRESHOLD = 0.15;
+
+/**
+ * Watch one channel snapshot for the control someone is moving, and name it
+ * once it has moved far enough. The other half of MIDI learn — arm, wiggle,
+ * assigned — with the arming and the subscription in `useLiveChannels.ts`.
+ *
+ * Derived channels are skipped, and that is not a detail: `midi.ccLast` mirrors
+ * whichever CC moved last, so it moves in lockstep with the knob being turned —
+ * and, carrying a jump from the previously-moved control's value, it usually
+ * moves FURTHER. Learn measured against it handed back "Last moved CC" instead
+ * of `midi.cc79`, which is the opposite of the stable assignment learn exists
+ * to produce. Any channel computed from another has the same problem; the
+ * manifest flags them.
+ *
+ * `references` is the caller's running record of where each channel sat when it
+ * was FIRST seen since arming, updated in place. First-seen rather than
+ * arm-time is what makes a runtime channel learnable at all: `midi.cc113` does
+ * not exist until that knob moves, so it has no arm-time value — its first
+ * message seeds the reference and the rest of the turn is measured against it.
+ *
+ * Only scalars are candidates. Every vector2d channel is declared in the
+ * manifest and therefore already in the picker's list, so learn exists for the
+ * families whose channels cannot be listed in advance.
+ *
+ * The largest mover wins, and nothing here pretends that is certain: with a
+ * microphone or camera already running, their channels are candidates too and a
+ * loud noise can outvote a knob. The caller's job is to show what was picked
+ * and let it be re-armed — not to hide the ambiguity.
+ */
+export function observeForLearn(
+  snapshot: ChannelSnapshot,
+  references: Map<string, number>,
+  threshold: number = LEARN_THRESHOLD
+): string | null {
+  let winner: string | null = null;
+  let best = threshold;
+
+  for ( const [
+    id,
+    channel
+  ] of Object.entries( snapshot ?? {} ) ) {
+    if (
+      !channel ||
+      channel.type !== "scalar" ||
+      !Number.isFinite( channel.value ) ||
+      DERIVED_IDS.has( id )
+    ) {
+      continue;
+    }
+
+    const reference = references.get( id );
+
+    if ( reference === undefined ) {
+      references.set(
+        id,
+        channel.value
+      );
+      continue;
+    }
+
+    const delta = Math.abs( channel.value - reference );
+
+    if ( delta > best ) {
+      best = delta;
+      winner = id;
+    }
+  }
+
+  return winner;
 }
 
 /**

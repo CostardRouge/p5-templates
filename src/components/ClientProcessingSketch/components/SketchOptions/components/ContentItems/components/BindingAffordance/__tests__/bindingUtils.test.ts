@@ -3,9 +3,16 @@ import {
   channelSourceOptions,
   describeChannel,
   interactionEnablePaths,
+  LEARN_THRESHOLD,
+  observeForLearn,
   sourceOptionShortLabel,
   withSelectedSource
 } from "../bindingUtils";
+
+const scalar = ( value: number ) => ( {
+  type: "scalar" as const,
+  value
+} );
 
 describe(
   "interactionEnablePaths",
@@ -366,6 +373,211 @@ describe(
           "oscillator",
           undefined
         ) ).toBe( base );
+      }
+    );
+  }
+);
+
+describe(
+  "observeForLearn",
+  () => {
+    it(
+      "names nothing on the first snapshot, however far from zero a channel sits",
+      () => {
+        const references = new Map<string, number>();
+
+        // Seeding pass: a knob already parked at 0.9 is not "moving".
+        expect( observeForLearn(
+          {
+            "midi.cc29": scalar( 0.9 ),
+            "audio.level": scalar( 0.4 )
+          },
+          references
+        ) ).toBeNull();
+        expect( references.get( "midi.cc29" ) ).toBe( 0.9 );
+      }
+    );
+
+    it(
+      "names a channel once it travels past the threshold, in either direction",
+      () => {
+        const references = new Map<string, number>();
+
+        observeForLearn(
+          {
+            "midi.cc29": scalar( 0.5 )
+          },
+          references
+        );
+
+        // A nudge inside the threshold is a pot's jitter, not a gesture.
+        expect( observeForLearn(
+          {
+            "midi.cc29": scalar( 0.5 + LEARN_THRESHOLD / 2 )
+          },
+          references
+        ) ).toBeNull();
+
+        expect( observeForLearn(
+          {
+            "midi.cc29": scalar( 0.9 )
+          },
+          references
+        ) ).toBe( "midi.cc29" );
+        expect( observeForLearn(
+          {
+            "midi.cc29": scalar( 0.1 )
+          },
+          references
+        ) ).toBe( "midi.cc29" );
+      }
+    );
+
+    it(
+      "learns a channel that did not exist when arming",
+      () => {
+        const references = new Map<string, number>();
+
+        // The MIDI case: cc113 has no arm-time value at all — it appears with
+        // the knob's first message, which seeds it, and the rest of the turn
+        // is measured from there.
+        observeForLearn(
+          {
+            "midi.cc29": scalar( 0.5 )
+          },
+          references
+        );
+
+        expect( observeForLearn(
+          {
+            "midi.cc29": scalar( 0.5 ),
+            "midi.cc113": scalar( 0.2 )
+          },
+          references
+        ) ).toBeNull();
+        expect( observeForLearn(
+          {
+            "midi.cc29": scalar( 0.5 ),
+            "midi.cc113": scalar( 0.8 )
+          },
+          references
+        ) ).toBe( "midi.cc113" );
+      }
+    );
+
+    it(
+      "names the control, never a channel that merely mirrors it",
+      () => {
+        const references = new Map<string, number>();
+
+        // midi.ccLast follows whichever CC moved last, so after cc108 it sits
+        // high; turning cc79 drags it all the way down and it moves FURTHER
+        // than the freshly-seeded knob does. It must still lose.
+        observeForLearn(
+          {
+            "midi.cc108": scalar( 0.87 ),
+            "midi.ccLast": scalar( 0.87 )
+          },
+          references
+        );
+        observeForLearn(
+          {
+            "midi.cc108": scalar( 0.87 ),
+            "midi.cc79": scalar( 0.08 ),
+            "midi.ccLast": scalar( 0.08 )
+          },
+          references
+        );
+
+        expect( observeForLearn(
+          {
+            "midi.cc108": scalar( 0.87 ),
+            "midi.cc79": scalar( 0.94 ),
+            "midi.ccLast": scalar( 0.94 )
+          },
+          references
+        ) ).toBe( "midi.cc79" );
+      }
+    );
+
+    it(
+      "ignores an aggregate channel too",
+      () => {
+        const references = new Map<string, number>();
+
+        // audio.level is the mean of the bands, so it moves with all of them.
+        observeForLearn(
+          {
+            "audio.level": scalar( 0 ),
+            "audio.bass": scalar( 0 )
+          },
+          references
+        );
+
+        expect( observeForLearn(
+          {
+            "audio.level": scalar( 0.9 ),
+            "audio.bass": scalar( 0.8 )
+          },
+          references
+        ) ).toBe( "audio.bass" );
+      }
+    );
+
+    it(
+      "picks the largest mover and ignores vector2d channels",
+      () => {
+        const references = new Map<string, number>();
+        const first = {
+          "midi.cc29": scalar( 0 ),
+          "midi.cc79": scalar( 0 ),
+          mouse: {
+            type: "vector2d" as const,
+            x: 0,
+            y: 0
+          }
+        };
+
+        observeForLearn(
+          first,
+          references
+        );
+
+        expect( observeForLearn(
+          {
+            "midi.cc29": scalar( 0.3 ),
+            "midi.cc79": scalar( 0.7 ),
+            mouse: {
+              type: "vector2d" as const,
+              x: 1,
+              y: 1
+            }
+          },
+          references
+        ) ).toBe( "midi.cc79" );
+      }
+    );
+
+    it(
+      "survives an empty or malformed snapshot",
+      () => {
+        const references = new Map<string, number>();
+
+        expect( observeForLearn(
+          {},
+          references
+        ) ).toBeNull();
+        expect( observeForLearn(
+          undefined as any,
+          references
+        ) ).toBeNull();
+        expect( observeForLearn(
+          {
+            "midi.cc29": scalar( Number.NaN )
+          },
+          references
+        ) ).toBeNull();
+        expect( references.has( "midi.cc29" ) ).toBe( false );
       }
     );
   }
