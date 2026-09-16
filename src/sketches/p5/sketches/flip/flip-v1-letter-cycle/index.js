@@ -17,12 +17,17 @@ import {
   focalFromFov
 } from "@/p5/utils/braidShader.js";
 import easing from "@/p5/utils/easing.js";
+import {
+  flipBeat,
+  mod
+} from "../_shared.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// rings v11 — letter flip.
+// flip v1 — letter cycle.
 //
-// v3 orbits a still letter; v11 turns the letter instead and uses the turn to
-// change it. The word sits in one plane and rotates about a horizontal or a
+// rings-v3 orbits a still letter; this one turns the letter instead and uses
+// the turn to change it — the sketch the whole `flip` category grew out of.
+// The word sits in one plane and rotates about a horizontal or a
 // vertical axis; twice per turn the plane passes EDGE-ON to the camera and the
 // glyph collapses to a hairline — and that hairline is where the next entry of
 // the cycle takes over. Nothing cross-fades and nothing morphs: the swap is
@@ -57,7 +62,7 @@ import easing from "@/p5/utils/easing.js";
 // entry simply stops being drawn, and it stops at the instant it is invisible.
 //
 // ── Geometry ────────────────────────────────────────────────────────────────
-// Identical to v3 — textToPoints → splitContours → resampleContour, each glyph
+// Identical to rings-v3 — textToPoints → splitContours → resampleContour, each glyph
 // a chain of round capsules melted by a polynomial smooth-minimum — except
 // that a field is built and memoised per ENTRY, and each frame packs the slots
 // that are currently visible into the shader's fixed per-letter slices. The
@@ -277,14 +282,6 @@ function rotateAbout(
   ];
 }
 
-// Positive modulo — the beat index runs negative as soon as a stagger shifts a
-// slot back past frame 0.
-function mod(
-  n, m
-) {
-  return ( ( n % m ) + m ) % m;
-}
-
 // ── Letter geometry (built once per entry/font/detail, memoised) ─────────────
 const geometryMemo = new Map();
 const GEOMETRY_MEMO_MAX = 32;
@@ -466,7 +463,7 @@ function buildLetterField( {
   }
 
   if ( truncated ) {
-    console.warn( `rings-v11-letter-flip: "${ text }" truncated to ${ letterIndex } letters (max ${ MAX_LETTERS }, ${ SEG_STRIDE } capsules/letter). Use a shorter entry or raise the capsule spacing.` );
+    console.warn( `flip-v1-letter-cycle: "${ text }" truncated to ${ letterIndex } letters (max ${ MAX_LETTERS }, ${ SEG_STRIDE } capsules/letter). Use a shorter entry or raise the capsule spacing.` );
   }
 
   // Recentre the ENTRY: per-letter offsets relative to its bbox centre,
@@ -584,54 +581,6 @@ function fitDistance(
       0.1
     )
   ) * ( 1 + margin );
-}
-
-// One beat of the flip, for a slot delayed by `delay` beats.
-//
-// `turn` runs -1 → 0 → +1 over the beat (× 90° = the plane angle): edge-on,
-// face-on, edge-on. `fitU` runs 0 → 1 over the FIRST half only, so the camera
-// finishes travelling to the incoming entry's framing by the time it is
-// legible and is already parked when the beat's second half starts — which is
-// what keeps the distance continuous across the beat boundary.
-function flipBeat(
-  beats, delay, hold, easeFn
-) {
-  const shifted = beats - delay;
-  const index = Math.floor( shifted );
-  const u = shifted - index;
-  const half = ( 1 - hold ) / 2;
-
-  if ( half <= 1e-6 ) {
-    return {
-      index,
-      turn: 0,
-      fitU: 1
-    };
-  }
-
-  if ( u < half ) {
-    const eased = easeFn( u / half );
-
-    return {
-      index,
-      turn: eased - 1,
-      fitU: eased
-    };
-  }
-
-  if ( u < half + hold ) {
-    return {
-      index,
-      turn: 0,
-      fitU: 1
-    };
-  }
-
-  return {
-    index,
-    turn: easeFn( ( u - half - hold ) / half ),
-    fitU: 1
-  };
 }
 
 // Per-instance scratch: the slots visible this frame are packed into these
@@ -809,7 +758,6 @@ sketch.draw( () => {
   // per tile.
   const lead = flipBeat(
     beats,
-    0,
     hold,
     flipEase
   );
@@ -929,8 +877,7 @@ sketch.draw( () => {
   for ( let slot = 0; slot < slotCount; slot++ ) {
     const beat = perLetter
       ? flipBeat(
-        beats,
-        slot * staggerStep,
+        beats - slot * staggerStep,
         hold,
         flipEase
       )

@@ -8,7 +8,8 @@ import {
 // nothing to see — the next entry takes over. One beat = one entry = a half
 // turn, `flip.cycles` whole passes through the list per loop, so frame 0 wraps
 // exactly. See index.js for the beat's shape and why the plane restarts at
-// -90° rather than continuing to 180° (the back of a glyph is its mirror).
+// -90° rather than continuing to 180° (the back of a glyph is its mirror),
+// and ../_shared.js for the beat shape the whole category runs on.
 export const formValues = {
   timeScale: 1,
 
@@ -30,8 +31,8 @@ export const formValues = {
     // flip axis and is not offered here.
     axis: "y" as "y" | "x" | "alternate",
     // "camera": the plane rests facing the camera, so edge-on is exact
-    // whatever the camera is doing. "world": v3's fixed plane, tilted by the
-    // camera's elevation and orbit.
+    // whatever the camera is doing. "world": rings-v3's fixed plane, tilted by
+    // the camera's elevation and orbit.
     frame: "world" as "camera" | "world",
     // "letter": every glyph turns in place on its own axis (what makes the
     // stagger a split-flap cascade). "word": the whole plane turns as one.
