@@ -18,9 +18,9 @@ export const formValues = {
       "b",
       "c"
     ] as string[],
-    font: "multicoloure",
-    detail: 1,
-    spacing: 0.12,
+    font: "waverseVariable",
+    detail: 0.81,
+    spacing: 0.095,
     simplify: 0
   },
 
@@ -32,15 +32,15 @@ export const formValues = {
     // "camera": the plane rests facing the camera, so edge-on is exact
     // whatever the camera is doing. "world": v3's fixed plane, tilted by the
     // camera's elevation and orbit.
-    frame: "camera" as "camera" | "world",
+    frame: "world" as "camera" | "world",
     // "letter": every glyph turns in place on its own axis (what makes the
     // stagger a split-flap cascade). "word": the whole plane turns as one.
     pivot: "letter" as "letter" | "word",
-    cycles: 1,
+    cycles: 4,
     // Fraction of each beat the entry is held face-on and legible, before and
     // after being turned into the next one. 0 = a constant spin.
-    hold: 0.45,
-    easing: "easeInOutCubic",
+    hold: 0.05,
+    easing: "linear",
     direction: "forward" as "forward" | "backward",
     // Fraction of a beat the cascade spans: glyph k starts its turn that much
     // later than glyph 0. Ignored when the pivot is the word.
@@ -59,7 +59,7 @@ export const formValues = {
     // one entry's distance to the next's while the plane is still edge-on.
     distance: 4.4,
     autoFit: {
-      enabled: true,
+      enabled: false,
       margin: 0.2,
       easing: "easeInOutCubic"
     },
