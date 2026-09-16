@@ -26,9 +26,21 @@ export const formValues = {
     font: "waverseVariable",
     detail: 0.6,
     spacing: 0.06,
-    simplify: 0,
-    // Tube thickness, as a fraction of the card texture's side.
-    thickness: 0.05
+    simplify: 0
+  },
+
+  // What goes on a card. Both renderers draw the same geometry — only the
+  // material differs — but they measure the tube against different things, so
+  // the thickness lives in the branch rather than above it.
+  card: {
+    renderer: "shader" as "shader" | "strokes",
+    // Strokes: fraction of the card's side.
+    thickness: 0.05,
+    // Shader: glyph units, where 1 is roughly a cap height (v1's ratio of
+    // material.thickness to material.size is ~0.008; this reads thicker
+    // because a grid cell is small on screen).
+    tube: 0.045,
+    fusion: 0.02
   },
 
   layout: {
@@ -89,7 +101,25 @@ export const formValues = {
     tintPhase: 0,
     hueSpeed: 1,
     saturation: 55,
-    brightness: 1
+    brightness: 1,
+    // Shader card only: the hue drift up the glyph, and between the letters
+    // of one entry.
+    lengthHueShift: -0.25,
+    letterHueShift: 0.7,
+    shimmer: 2.2
+  },
+
+  // Shader card only — the strokes renderer has no lighting model.
+  light: {
+    azimuth: -1.1,
+    elevation: 0.45,
+    ambient: 0.48,
+    diffuse: 0.56,
+    specular: 1.52,
+    specPower: 31,
+    fresnelPower: 1.62,
+    rimStrength: 0,
+    shadowSoftness: 0
   },
 
   camera: {
@@ -158,13 +188,54 @@ export const formConfiguration: Record<string, any> = {
         min: 0,
         max: 2,
         step: 0.05
+      }
+    }
+  },
+  card: {
+    component: "conditional-group",
+    label: "Card (what a tile is made of)",
+    conditionalOn: "renderer",
+    typeSelector: {
+      label: "Material",
+      options: [
+        {
+          label: "Shader — v1's raymarched tubes",
+          value: "shader"
+        },
+        {
+          label: "Strokes — flat capsule chain",
+          value: "strokes"
+        }
+      ]
+    },
+    configs: {
+      shader: {
+        tube: {
+          label: "Tube thickness (glyph units)",
+          component: "slider",
+          min: 0.005,
+          max: 0.2,
+          step: 0.001,
+          default: 0.045
+        },
+        fusion: {
+          label: "Junction fusion (smooth-union fillet)",
+          component: "slider",
+          min: 0.001,
+          max: 0.12,
+          step: 0.001,
+          default: 0.02
+        }
       },
-      thickness: {
-        label: "Tube thickness",
-        component: "slider",
-        min: 0.005,
-        max: 0.2,
-        step: 0.005
+      strokes: {
+        thickness: {
+          label: "Stroke thickness (fraction of the card)",
+          component: "slider",
+          min: 0.005,
+          max: 0.2,
+          step: 0.005,
+          default: 0.05
+        }
       }
     }
   },
@@ -488,10 +559,10 @@ export const formConfiguration: Record<string, any> = {
         step: 1
       },
       hueSpread: {
-        label: "Hue travel along the glyph's own path",
+        label: "Hue travel across the glyph",
         component: "slider",
         min: 0,
-        max: 2,
+        max: 6,
         step: 0.01
       },
       faceHueShift: {
@@ -535,6 +606,96 @@ export const formConfiguration: Record<string, any> = {
         min: 0,
         max: 2,
         step: 0.01
+      },
+      lengthHueShift: {
+        label: "Hue drift up the glyph (shader card)",
+        component: "slider",
+        min: -2,
+        max: 2,
+        step: 0.01
+      },
+      letterHueShift: {
+        label: "Hue shift between letters of one entry (shader card)",
+        component: "slider",
+        min: -2,
+        max: 2,
+        step: 0.01
+      },
+      shimmer: {
+        label: "Shimmer — oil-slick (shader card)",
+        component: "slider",
+        min: 0,
+        max: 3,
+        step: 0.01
+      }
+    }
+  },
+  light: {
+    component: "nested-object",
+    label: "Lighting (shader card only)",
+    fields: {
+      azimuth: {
+        label: "Light azimuth",
+        component: "slider",
+        min: -3.1416,
+        max: 3.1416,
+        step: 0.01
+      },
+      elevation: {
+        label: "Light elevation",
+        component: "slider",
+        min: -1.5708,
+        max: 1.5708,
+        step: 0.01
+      },
+      ambient: {
+        label: "Ambient",
+        component: "slider",
+        min: 0,
+        max: 1,
+        step: 0.01
+      },
+      diffuse: {
+        label: "Diffuse",
+        component: "slider",
+        min: 0,
+        max: 2,
+        step: 0.01
+      },
+      specular: {
+        label: "Specular",
+        component: "slider",
+        min: 0,
+        max: 2,
+        step: 0.01
+      },
+      specPower: {
+        label: "Specular sharpness",
+        component: "slider",
+        min: 1,
+        max: 128,
+        step: 1
+      },
+      fresnelPower: {
+        label: "Fresnel power",
+        component: "slider",
+        min: 0.5,
+        max: 6,
+        step: 0.01
+      },
+      rimStrength: {
+        label: "Rim glow",
+        component: "slider",
+        min: 0,
+        max: 2,
+        step: 0.01
+      },
+      shadowSoftness: {
+        label: "Cast shadows between letters (0 = off)",
+        component: "slider",
+        min: 0,
+        max: 64,
+        step: 1
       }
     }
   },

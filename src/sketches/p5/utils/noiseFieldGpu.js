@@ -845,6 +845,17 @@ export default function createNoiseFieldRenderer( fragmentSource ) {
    *   for a large, divergence-free speed-up on heavy per-pixel shaders (the
    *   coordinate space the shader sees stays the full canvas, so pixel-space
    *   uniforms are unaffected). 1 = render at full canvas resolution (default).
+   * @param {{width: number, height: number}} [params.offscreen] render at this
+   *   size instead of the canvas's, and return the buffer rather than
+   *   compositing it. `uResolution` becomes the requested size, so a shader
+   *   that derives an aspect ratio from it sees the one asked for and not the
+   *   canvas's — which is the point: it is how a sketch bakes a square texture
+   *   out of a shader written for a full-screen quad.
+   *
+   *   The buffer is the renderer's own and is reused by the next call, so the
+   *   caller must consume it immediately (blit it into a graphic it owns)
+   *   rather than hold on to it.
+   * @returns {p5.Graphics|undefined} the buffer, in offscreen mode only.
    */
   function render( params ) {
     state = store.current();
@@ -857,6 +868,7 @@ export default function createNoiseFieldRenderer( fragmentSource ) {
       rows,
       center,
       resolutionScale = 1,
+      offscreen = null,
       uniforms = {}
     } = params;
 
@@ -867,8 +879,14 @@ export default function createNoiseFieldRenderer( fragmentSource ) {
     // like landmark coordinates need no rescaling); only the buffer it rasterises
     // into shrinks. Resizing here overrides the auto-resize size for this frame;
     // a canvas-resize event just costs one full-res frame before this re-applies.
-    const width = p.width;
-    const height = p.height;
+    const width = offscreen ? Math.max(
+      1,
+      Math.round( offscreen.width )
+    ) : p.width;
+    const height = offscreen ? Math.max(
+      1,
+      Math.round( offscreen.height )
+    ) : p.height;
     const scale = Math.min(
       1,
       Math.max(
@@ -1029,6 +1047,12 @@ export default function createNoiseFieldRenderer( fragmentSource ) {
     );
     g.resetShader();
 
+    // Offscreen: the caller wanted pixels, not a composite. Hand the buffer
+    // over — it is reused by the next render(), so it is theirs only until then.
+    if ( offscreen ) {
+      return g;
+    }
+
     // Stretch the (possibly reduced-resolution) buffer back to the full canvas.
     // When resolutionScale is 1 the buffer already matches, so this is a 1:1 blit.
     p.image(
@@ -1038,6 +1062,8 @@ export default function createNoiseFieldRenderer( fragmentSource ) {
       width,
       height
     );
+
+    return undefined;
   }
 
   return {

@@ -70,7 +70,8 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 - The `visual` content item was retired once sketch layers superseded it; its drawing functions are kept, unreferenced, to become sketches → `studio-ui.md`.
 - A sketch layer has three distinct sizes — its box, the canvas the sketch lays out for, and the buffer's pixels; conflating them is what made `scale` crop a sketch drawn at absolute pixel sizes → `architecture.md`, `studio-ui.md`.
 - The `flip` category runs on one rule: the edge-on frame is the only place anything may jump — the glyph, the cell count, the framing — and a turn restarts at -90° rather than passing a glyph's own mirror → `sketches.md`.
-- A grid of independently turning planes is baked cards on WEBGL quads, not an SDF; and its tree is a pure function of the clock, or it cannot be captured → `sketches.md`.
+- A grid of independently turning planes is baked cards on WEBGL quads, not an SDF held in uniform arrays; a card can itself be shader-baked through the GPU renderer's `offscreen` mode, at the cost of lighting that no longer turns → `sketches.md`.
+- A cascade's tree is a pure function of the clock, or it cannot be captured → `sketches.md`.
 - A `conditional-group` branch switch rebuilds the whole object from each field's `default`, falling back to a slider's `min` → `sketches.md`.
 - A sketch's mutable module-level state goes through `sketch.state()` (one record per page/layer instance, drift-tested), GPU helpers keep GL resources per surface, and layer imports are serialised because there is one registration capture → `architecture.md`, `sketches.md`.
 
