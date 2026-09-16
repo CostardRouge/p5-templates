@@ -108,7 +108,7 @@ export type Binding = {
   };
 };
 
-type ChannelDescriptor = {
+export type ChannelDescriptor = {
   id: string;
   type: "scalar" | "vector2d";
   label: string;
@@ -168,16 +168,97 @@ export function decodeSource( value: string ): {
 }
 
 /**
+ * A descriptor for a channel id the manifest does not list.
+ *
+ * Some families mint ids at RUNTIME — `midi.cc29` exists the moment CC 29
+ * arrives — so the picker has to name a channel it has never seen declared.
+ * A manifest hit always wins; otherwise the label is derived from the id, and
+ * the type defaults to scalar because every runtime-minted channel is one.
+ */
+export function describeChannel( id: string ): ChannelDescriptor {
+  const declared = DESCRIPTORS.find( ( d ) => d.id === id );
+
+  if ( declared ) {
+    return declared;
+  }
+
+  const cc = /^midi\.cc(\d+)$/.exec( id );
+
+  if ( cc ) {
+    return {
+      id,
+      type: "scalar",
+      label: `MIDI · CC ${ cc[ 1 ] }`
+    };
+  }
+
+  const dot = id.indexOf( "." );
+
+  return {
+    id,
+    type: "scalar",
+    label: dot > 0
+      ? `${ sourceFamilyLabel( id ) } · ${ id.slice( dot + 1 ) }`
+      : id
+  };
+}
+
+// Runtime channels sort after the manifest, by family and then by the number in
+// their id where they have one — so CC 9 sits before CC 29 before CC 104, which
+// a plain string sort gets wrong.
+function trailingNumber( id: string ): number {
+  const match = /(\d+)$/.exec( id );
+
+  return match ? Number( match[ 1 ] ) : Number.NaN;
+}
+
+function compareChannelIds(
+  a: string, b: string
+): number {
+  const familyA = a.split( "." )[ 0 ];
+  const familyB = b.split( "." )[ 0 ];
+
+  if ( familyA !== familyB ) {
+    return familyA.localeCompare( familyB );
+  }
+
+  const numA = trailingNumber( a );
+  const numB = trailingNumber( b );
+
+  if ( !Number.isNaN( numA ) && !Number.isNaN( numB ) ) {
+    return numA - numB;
+  }
+
+  return a.localeCompare( b );
+}
+
+/**
  * The channel sources a target of the given kind can bind to.
  *  - vector2d target: every vector2d channel, whole (passthrough).
  *  - every other kind (continuous, boolean, enum, color) is driven by a single
  *    0..1 signal, so it gets every scalar channel plus each vector2d channel
  *    expanded into its x / y / magnitude / angle projections.
+ *
+ * `extra` widens the list with channels that exist only at runtime — pass the
+ * ids currently being published (see `useLiveChannels`). They are appended
+ * after the manifest, so `channelSourceGroups` drops each into the family group
+ * the manifest already opened. Ids already declared are ignored, and the
+ * function stays pure: nothing here reads the live snapshot itself.
  */
-export function channelSourceOptions( kind: BindingKind ): SourceOption[] {
+export function channelSourceOptions(
+  kind: BindingKind, extra?: Iterable<string>
+): SourceOption[] {
   const options: SourceOption[] = [];
+  const declared = new Set( DESCRIPTORS.map( ( d ) => d.id ) );
+  const runtime = Array.from( new Set( extra ?? [] ) )
+    .filter( ( id ) => id && !declared.has( id ) )
+    .sort( compareChannelIds )
+    .map( describeChannel );
 
-  for ( const descriptor of DESCRIPTORS ) {
+  for ( const descriptor of [
+    ...DESCRIPTORS,
+    ...runtime
+  ] ) {
     if ( kind === "vector2d" ) {
       if ( descriptor.type === "vector2d" ) {
         options.push( {
@@ -250,11 +331,16 @@ function sourceFamilyLabel( sourceId: string ): string {
  * sit under one heading instead of flooding a flat list. Group order follows
  * the source manifest; option order within a group is preserved.
  */
-export function channelSourceGroups( kind: BindingKind ): SourceGroup[] {
+export function channelSourceGroups(
+  kind: BindingKind, extra?: Iterable<string>
+): SourceGroup[] {
   const groups: SourceGroup[] = [];
   const byKey = new Map<string, SourceGroup>();
 
-  for ( const option of channelSourceOptions( kind ) ) {
+  for ( const option of channelSourceOptions(
+    kind,
+    extra
+  ) ) {
     const key = String( option.source ).split( "." )[ 0 ];
 
     let group = byKey.get( key );
@@ -276,6 +362,77 @@ export function channelSourceGroups( kind: BindingKind ): SourceGroup[] {
   }
 
   return groups;
+}
+
+/**
+ * The same groups, with the binding's CURRENT source guaranteed to be in them.
+ *
+ * A runtime channel only exists while it is being published: reload the page
+ * and `midi.cc29` is gone until that knob is touched again. The `<select>` is
+ * React-controlled, so a value with no matching `<option>` leaves the native
+ * control showing the first entry of the list while the label beside it still
+ * reads the saved source — and the next change event writes whatever the
+ * browser happens to be displaying over the user's binding. Synthesizing the
+ * missing option keeps the two in step; it carries a "not arriving" marker so
+ * a channel that is merely remembered is not mistaken for a live one.
+ */
+export function withSelectedSource(
+  groups: SourceGroup[],
+  source: string | undefined,
+  project: string | undefined
+): SourceGroup[] {
+  if ( !source || sourceCategory( source ) !== "input" ) {
+    return groups;
+  }
+
+  const value = encodeSource(
+    source,
+    project
+  );
+
+  if ( groups.some( ( group ) => group.options.some( ( option ) => option.value === value ) ) ) {
+    return groups;
+  }
+
+  const descriptor = describeChannel( source );
+  const suffix = project
+    ? PROJECTIONS.find( ( p ) => p.project === project )?.suffix ?? project
+    : "";
+  const option: SourceOption = {
+    value,
+    label: `${ descriptor.label }${ suffix ? ` · ${ suffix }` : "" } (not arriving)`,
+    source,
+    project,
+    varName: channelVarName(
+      source,
+      project
+    )
+  };
+  const key = source.split( "." )[ 0 ];
+  const existing = groups.find( ( group ) => group.key === key );
+
+  if ( existing ) {
+    return groups.map( ( group ) => ( group.key === key
+      ? {
+        ...group,
+        options: [
+          ...group.options,
+          option
+        ]
+      }
+      : group ) );
+  }
+
+  return [
+    ...groups,
+    {
+      key,
+      label: sourceFamilyLabel( source ),
+      options: [
+        option
+      ]
+    }
+  ];
 }
 
 /**
@@ -861,11 +1018,9 @@ export function bindingSourceLabel( binding: Binding ): string {
     return binding.source.charAt( 0 ).toUpperCase() + binding.source.slice( 1 );
   }
 
-  const base = String( binding.source ).split( "." )[ 0 ];
-  const descriptor =
-    DESCRIPTORS.find( ( d ) => d.id === binding.source ) ??
-    DESCRIPTORS.find( ( d ) => d.id === base );
-  const familyLabel = descriptor ? descriptor.label : binding.source;
+  // describeChannel covers runtime-minted ids too, so a mixer row reads
+  // "MIDI · CC 29" instead of collapsing every bound knob to "MIDI".
+  const familyLabel = describeChannel( binding.source ).label;
 
   if ( binding.project ) {
     const suffix =

@@ -1,8 +1,10 @@
 import {
   channelSourceGroups,
   channelSourceOptions,
+  describeChannel,
   interactionEnablePaths,
-  sourceOptionShortLabel
+  sourceOptionShortLabel,
+  withSelectedSource
 } from "../bindingUtils";
 
 describe(
@@ -161,17 +163,61 @@ describe(
     );
 
     it(
-      "gathers MIDI's note projections AND its control-change scalars under one MIDI group",
+      "offers MIDI's note projections and the learn channel, but no guessed CC",
       () => {
         const groups = channelSourceGroups( "continuous" );
         const midi = groups.find( ( g ) => g.key === "midi" );
 
         expect( midi ).toBeDefined();
         expect( midi!.label ).toBe( "MIDI" );
-        // 4 vector projections (x/y/mag/angle) + 8 fixed CCs + the learn channel.
-        expect( midi!.options ).toHaveLength( 13 );
-        expect( midi!.options.some( ( o ) => o.source === "midi.cc1" ) ).toBe( true );
+        // 4 vector projections (x/y/mag/angle) + the learn channel. A per-CC
+        // option only exists once that CC has actually arrived.
+        expect( midi!.options ).toHaveLength( 5 );
         expect( midi!.options.some( ( o ) => o.source === "midi.ccLast" ) ).toBe( true );
+        expect( midi!.options.some( ( o ) => /^midi\.cc\d+$/.test( o.source ) ) ).toBe( false );
+      }
+    );
+
+    it(
+      "drops live channels into the family group the manifest already opened",
+      () => {
+        const groups = channelSourceGroups(
+          "continuous",
+          [
+            "midi.cc113",
+            "midi.cc29",
+            "midi.cc9"
+          ]
+        );
+        const midi = groups.find( ( g ) => g.key === "midi" );
+
+        // No second "midi" group, and the CCs sort numerically rather than as
+        // strings ("midi.cc113" < "midi.cc29" alphabetically).
+        expect( groups.filter( ( g ) => g.key === "midi" ) ).toHaveLength( 1 );
+        expect( midi!.options.slice( -3 ).map( ( o ) => o.source ) ).toEqual( [
+          "midi.cc9",
+          "midi.cc29",
+          "midi.cc113"
+        ] );
+        expect( midi!.options.slice( -3 ).map( ( o ) => o.label ) ).toEqual( [
+          "MIDI · CC 9",
+          "MIDI · CC 29",
+          "MIDI · CC 113"
+        ] );
+      }
+    );
+
+    it(
+      "never offers a live channel to a vector2d target",
+      () => {
+        const groups = channelSourceGroups(
+          "vector2d",
+          [
+            "midi.cc29"
+          ]
+        );
+
+        expect( groups.some( ( g ) => g.options.some( ( o ) => o.source === "midi.cc29" ) ) ).toBe( false );
       }
     );
 
@@ -236,6 +282,90 @@ describe(
           source: "mouse",
           varName: ""
         } ) ).toBe( "Mouse" );
+      }
+    );
+  }
+);
+
+describe(
+  "describeChannel",
+  () => {
+    it(
+      "prefers the manifest, then derives a label for a runtime id",
+      () => {
+        expect( describeChannel( "audio.bass" ).label ).toBe( "Audio · Bass" );
+        expect( describeChannel( "midi.cc29" ) ).toEqual( {
+          id: "midi.cc29",
+          type: "scalar",
+          label: "MIDI · CC 29"
+        } );
+        // An unknown family still reads as a channel rather than as an id.
+        expect( describeChannel( "joypad.trigger" ).label ).toBe( "Joypad · Left stick · trigger" );
+        expect( describeChannel( "whatever" ).label ).toBe( "whatever" );
+      }
+    );
+  }
+);
+
+describe(
+  "withSelectedSource",
+  () => {
+    const groups = () => channelSourceGroups( "continuous" );
+
+    it(
+      "leaves the groups alone when the source is already offered",
+      () => {
+        const base = groups();
+
+        expect( withSelectedSource(
+          base,
+          "audio.bass",
+          undefined
+        ) ).toBe( base );
+        expect( withSelectedSource(
+          base,
+          "mouse",
+          "x"
+        ) ).toBe( base );
+      }
+    );
+
+    it(
+      "adds the binding's own source when it is not arriving",
+      () => {
+        // The reload case: CC 29 is saved on the binding but the knob has not
+        // been touched yet, so no live channel carries it.
+        const midi = withSelectedSource(
+          groups(),
+          "midi.cc29",
+          undefined
+        ).find( ( g ) => g.key === "midi" );
+        const option = midi!.options[ midi!.options.length - 1 ];
+
+        expect( option.value ).toBe( "midi.cc29::" );
+        expect( option.label ).toBe( "MIDI · CC 29 (not arriving)" );
+      }
+    );
+
+    it(
+      "keeps the projection on a vector2d source, and ignores generators",
+      () => {
+        const wild = withSelectedSource(
+          groups(),
+          "tilt.pad",
+          "mag"
+        ).find( ( g ) => g.key === "tilt" );
+
+        expect( wild!.options[ 0 ].value ).toBe( "tilt.pad::mag" );
+        expect( wild!.options[ 0 ].label ).toBe( "tilt · pad · Magnitude (not arriving)" );
+
+        const base = groups();
+
+        expect( withSelectedSource(
+          base,
+          "oscillator",
+          undefined
+        ) ).toBe( base );
       }
     );
   }

@@ -4,7 +4,7 @@
 // (index.js → MediaPipe). channels.js imports these.
 
 import {
-  MIDI_CC_NUMBERS, MIDI_CC_LAST_ID
+  MIDI_CC_PREFIX, MIDI_CC_LAST_ID
 } from "./sources.js";
 
 export function clamp01( v ) {
@@ -71,9 +71,15 @@ export function buildChannelsFromDebug(
 
 /**
  * Map held MIDI control-change state — `getMidiControls()`, a Map of CC number
- * → raw 0–127 value — onto `midi.cc<n>` scalar channels, plus `midi.ccLast`
- * for the CC that moved most recently. Values are divided by 127 so the binding
- * resolver receives the 0..1 signal every other scalar channel publishes.
+ * → raw 0–127 value — onto one `midi.cc<n>` scalar channel per CC number the
+ * controller has actually sent, plus `midi.ccLast` for the one that moved most
+ * recently. Values are divided by 127 so the binding resolver receives the
+ * 0..1 signal every other scalar channel publishes.
+ *
+ * The channel set is therefore GROWN FROM THE HARDWARE, not declared: whatever
+ * CC number a knob sends becomes bindable the first time it is touched. A
+ * guessed list cannot do this — see MIDI_CC_PREFIX in sources.js for the
+ * Launchkey mapping that proves it.
  *
  * A CC with no entry publishes NO channel, rather than a zero: an untouched
  * knob must leave the parameter on its base value (and in a headless render,
@@ -90,22 +96,24 @@ export function midiControlChannels(
 ) {
   const channels = {};
 
-  if ( !controls || typeof controls.get !== "function" ) {
+  if ( !controls || typeof controls.forEach !== "function" ) {
     return channels;
   }
 
-  for ( const cc of MIDI_CC_NUMBERS ) {
-    const value = controls.get( cc );
-
+  controls.forEach( (
+    value, cc
+  ) => {
     if ( typeof value === "number" ) {
-      channels[ `midi.cc${ cc }` ] = {
+      channels[ `${ MIDI_CC_PREFIX }${ cc }` ] = {
         type: "scalar",
         value: clamp01( value / 127 )
       };
     }
-  }
+  } );
 
-  const lastValue = controls.get( lastControl );
+  const lastValue = typeof controls.get === "function"
+    ? controls.get( lastControl )
+    : undefined;
 
   if ( typeof lastValue === "number" ) {
     channels[ MIDI_CC_LAST_ID ] = {

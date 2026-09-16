@@ -130,53 +130,12 @@ export const INTERACTION_SOURCES = [
     label: "Audio · Presence"
   },
 
-  // ── MIDI control-change scalars (from getMidiControls()) ──────────────────
+  // ── MIDI control change (from getMidiControls()) ──────────────────────────
   // A knob/fader position, normalized 0..1 from its raw 0–127 value by
-  // channelsAdapter.midiControlChannels. `midi.cc<n>` is a FIXED set of CC
-  // numbers (MIDI_CC_NUMBERS below) so a saved binding keeps pointing at the
-  // same physical control; `midi.ccLast` follows whichever CC moved most
-  // recently, which is the zero-config way to bind a controller that sends CC
-  // numbers outside the fixed set.
-  {
-    id: "midi.cc1",
-    type: "scalar",
-    label: "MIDI · CC 1"
-  },
-  {
-    id: "midi.cc2",
-    type: "scalar",
-    label: "MIDI · CC 2"
-  },
-  {
-    id: "midi.cc3",
-    type: "scalar",
-    label: "MIDI · CC 3"
-  },
-  {
-    id: "midi.cc4",
-    type: "scalar",
-    label: "MIDI · CC 4"
-  },
-  {
-    id: "midi.cc5",
-    type: "scalar",
-    label: "MIDI · CC 5"
-  },
-  {
-    id: "midi.cc6",
-    type: "scalar",
-    label: "MIDI · CC 6"
-  },
-  {
-    id: "midi.cc7",
-    type: "scalar",
-    label: "MIDI · CC 7"
-  },
-  {
-    id: "midi.cc8",
-    type: "scalar",
-    label: "MIDI · CC 8"
-  },
+  // channelsAdapter.midiControlChannels. The per-control channels are MINTED AT
+  // RUNTIME, one `midi.cc<n>` per CC number actually received, so they are not
+  // listed here — see MIDI_CC_LAST_ID below for why a fixed list cannot work.
+  // Only the learn channel is static, because it exists before any CC arrives.
   {
     id: "midi.ccLast",
     type: "scalar",
@@ -285,26 +244,20 @@ export const FLAT_SOURCE_IDS = [
   "joypadRight"
 ];
 
-// The MIDI CC numbers exposed as `midi.cc<n>` scalar channels — the low,
-// widely-assigned controllers (1 mod wheel, 2 breath, 4 foot, 7 volume …),
-// which is what a generic controller's first knobs tend to send. The id is the
-// CC number itself, deliberately: a binding saved today must still address the
-// same physical knob tomorrow, which a position-in-arrival-order slot would
-// not. Controllers sending outside this set are reached through `midi.ccLast`.
-// Widening it means adding entries HERE and in INTERACTION_SOURCES above —
-// kept in sync by a parity test.
-export const MIDI_CC_NUMBERS = [
-  1,
-  2,
-  3,
-  4,
-  5,
-  6,
-  7,
-  8
-];
+// The channel id prefix for a single MIDI control: `midi.cc29` is CC 29. The id
+// is the CC NUMBER, so a binding saved today still addresses the same physical
+// knob tomorrow — a slot numbered by arrival order would not survive a reload.
+//
+// There is deliberately NO fixed list of them. A Launchkey Mini's eight pots
+// send CC 29, 79, 80, 104, 108, 109, 113 and 112 — not contiguous, and not even
+// in panel order — so any guessed set is dead on arrival for real hardware.
+// midiControlChannels mints one channel per CC actually received instead, and
+// the binding picker widens its list from the live snapshot (see
+// `BindingAffordance/useLiveChannels.ts`).
+export const MIDI_CC_PREFIX = "midi.cc";
 
-// The channel id for the "last moved CC" learn channel.
+// The channel id for the "last moved CC" learn channel: the one MIDI scalar
+// that exists before any CC has arrived, so it is the only one in the manifest.
 export const MIDI_CC_LAST_ID = "midi.ccLast";
 
 // The getAudio().bands keys exposed as `audio.<band>` scalar channels.

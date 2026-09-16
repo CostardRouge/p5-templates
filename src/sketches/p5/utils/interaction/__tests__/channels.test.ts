@@ -11,9 +11,24 @@ import {
   INTERACTION_SOURCES,
   FLAT_SOURCE_IDS,
   AUDIO_BANDS,
-  MIDI_CC_NUMBERS,
   MIDI_CC_LAST_ID
 } from "../sources.js";
+
+// The pot bank of a Novation Launchkey Mini, as reported by the hardware:
+// not contiguous, and not even in panel order (pot 6 sends a lower number than
+// pot 5). It is the case that killed the original fixed `midi.cc1 … midi.cc8`
+// set, so the channel adapter is tested against it rather than against a tidy
+// range that would pass either way.
+const LAUNCHKEY_POTS = [
+  29,
+  79,
+  80,
+  104,
+  109,
+  108,
+  113,
+  112
+];
 
 const tag = (
   source: string, x: number, y: number
@@ -192,6 +207,36 @@ describe(
     );
 
     it(
+      "mints a channel for whatever CC number arrives, however scattered",
+      () => {
+        const controls = new Map( LAUNCHKEY_POTS.map( (
+          cc, i
+        ) => [
+          cc,
+          i * 16
+        ] ) );
+        const channels: any = midiControlChannels(
+          controls,
+          LAUNCHKEY_POTS[ 0 ]
+        );
+
+        LAUNCHKEY_POTS.forEach( (
+          cc, i
+        ) => {
+          expect( channels[ `midi.cc${ cc }` ] ).toEqual( {
+            type: "scalar",
+            value: ( i * 16 ) / 127
+          } );
+        } );
+
+        // No channel is invented for a number nobody sent — including the ones
+        // the old fixed set declared.
+        expect( channels[ "midi.cc1" ] ).toBeUndefined();
+        expect( channels[ "midi.cc8" ] ).toBeUndefined();
+      }
+    );
+
+    it(
       "mirrors the most recently moved CC onto the learn channel",
       () => {
         const controls = new Map( [
@@ -292,16 +337,16 @@ describe(
     );
 
     it(
-      "exposes a scalar midi.cc<n> channel for every fixed CC number plus the learn channel",
+      "declares the MIDI learn channel and NO fixed per-CC channel",
       () => {
         const scalarIds = INTERACTION_SOURCES
           .filter( ( s ) => s.type === "scalar" )
           .map( ( s ) => s.id );
 
-        for ( const cc of MIDI_CC_NUMBERS ) {
-          expect( scalarIds ).toContain( `midi.cc${ cc }` );
-        }
         expect( scalarIds ).toContain( MIDI_CC_LAST_ID );
+        // Per-control channels are minted from the hardware, so a manifest
+        // entry for one would be a guess — the bug this replaced.
+        expect( scalarIds.filter( ( id ) => /^midi\.cc\d+$/.test( id ) ) ).toEqual( [] );
       }
     );
   }

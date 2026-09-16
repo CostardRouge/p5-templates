@@ -56,6 +56,7 @@ import {
   channelSourceGroups,
   channelSourceOptions,
   sourceOptionShortLabel,
+  withSelectedSource,
   decodeSource,
   defaultSequence,
   DEFAULT_NOISE,
@@ -73,6 +74,9 @@ import {
   toSketchRelativePath,
   WAVE_OPTIONS
 } from "./bindingUtils";
+import {
+  useLiveChannelIds
+} from "./useLiveChannels";
 
 type Props = {
   fieldPath: string;
@@ -151,6 +155,90 @@ function BarSelect( {
           <option key={ option.value } value={ option.value }>
             {option.label}
           </option>
+        ) )}
+      </select>
+    </div>
+  );
+}
+
+/**
+ * The input-source picker: the same control bar as BarSelect, but with its own
+ * richer closed-state label (the full "Family · Detail", since the open list
+ * groups by family under an <optgroup> heading where a short label reads best).
+ *
+ * It is a component rather than inline JSX so that `useLiveChannelIds` is
+ * mounted exactly when the picker is on screen. Headless UI unmounts the
+ * popover panel on close, so nothing subscribes to the per-frame channel
+ * snapshot the rest of the time.
+ *
+ * The list is the static manifest widened by whatever is currently arriving —
+ * that is how a knob sending CC 29 becomes pickable — and then `withSelectedSource`
+ * guarantees the binding's own source is present even when it is not arriving,
+ * which is the case on every reload before the knob is touched again.
+ */
+function SourceBar( {
+  kind,
+  binding,
+  onPick
+}: {
+  kind: BindingKind;
+  binding: Binding;
+  onPick: ( source: string, project?: string ) => void;
+} ) {
+  const liveIds = useLiveChannelIds();
+  const groups = withSelectedSource(
+    channelSourceGroups(
+      kind,
+      liveIds
+    ),
+    binding.source,
+    binding.project
+  );
+  const value = encodeSource(
+    binding.source,
+    binding.project
+  );
+  const selected = groups
+    .flatMap( ( group ) => group.options )
+    .find( ( option ) => option.value === value );
+
+  return (
+    <div className={ CONTROL_BAR_CLASS }>
+      <BarLabelSegment label="Source" />
+      {/* Visible, non-interactive: shows the full "Family · Detail"
+          label so the source's group stays legible once collapsed —
+          the native <select> below would otherwise only echo back
+          the short, group-less option text. */}
+      <span
+        aria-hidden
+        className="pointer-events-none flex min-w-0 flex-1 items-center justify-between gap-1 px-2.5"
+      >
+        <span className="truncate">{selected?.label ?? binding.source}</span>
+        <ChevronDown className={ CONTROL_CHEVRON_CLASS } />
+      </span>
+      <select
+        value={ value }
+        onChange={ ( e ) => {
+          const {
+            source, project
+          } = decodeSource( e.target.value );
+
+          onPick(
+            source,
+            project
+          );
+        } }
+        aria-label="Source"
+        className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+      >
+        {groups.map( ( group ) => (
+          <optgroup key={ group.key } label={ group.label }>
+            {group.options.map( ( option ) => (
+              <option key={ option.value } value={ option.value }>
+                {sourceOptionShortLabel( option )}
+              </option>
+            ) )}
+          </optgroup>
         ) )}
       </select>
     </div>
@@ -251,15 +339,6 @@ export default function BindingAffordance( {
         return option?.label ?? String( value );
       } )
       : [];
-
-  // The selected input source's full "Family · Detail" label — shown only on
-  // the closed control, since the open list already groups by family under
-  // an <optgroup> heading (a short label there would be redundant).
-  const selectedSourceOption = binding && sourceOptions.find( ( option ) => option.value === encodeSource(
-    binding.source,
-    binding.project
-  ) );
-  const selectedSourceLabel = selectedSourceOption?.label ?? binding?.source ?? "";
 
   // Path of the selected binding object in the form; sub-fields (mapping.min,
   // smoothing, enabled…) are edited in place so they round-trip like any other
@@ -777,53 +856,23 @@ export default function BindingAffordance( {
               )}
 
               {category === "input" && (
-                <div className={ CONTROL_BAR_CLASS }>
-                  <BarLabelSegment label="Source" />
-                  {/* Visible, non-interactive: shows the full "Family · Detail"
-                      label so the source's group stays legible once collapsed —
-                      the native <select> below would otherwise only echo back
-                      the short, group-less option text. */}
-                  <span
-                    aria-hidden
-                    className="pointer-events-none flex min-w-0 flex-1 items-center justify-between gap-1 px-2.5"
-                  >
-                    <span className="truncate">{selectedSourceLabel}</span>
-                    <ChevronDown className={ CONTROL_CHEVRON_CLASS } />
-                  </span>
-                  <select
-                    value={ encodeSource(
-                      binding.source,
-                      binding.project
-                    ) }
-                    onChange={ ( e ) => {
-                      const {
-                        source, project
-                      } = decodeSource( e.target.value );
-
-                      setField(
-                        "source",
-                        source
-                      );
-                      setField(
-                        "project",
-                        project ?? null
-                      );
-                      void enableSourceInputs( source );
-                    } }
-                    aria-label="Source"
-                    className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                  >
-                    {channelSourceGroups( kind ).map( ( group ) => (
-                      <optgroup key={ group.key } label={ group.label }>
-                        {group.options.map( ( option ) => (
-                          <option key={ option.value } value={ option.value }>
-                            {sourceOptionShortLabel( option )}
-                          </option>
-                        ) )}
-                      </optgroup>
-                    ) )}
-                  </select>
-                </div>
+                <SourceBar
+                  kind={ kind }
+                  binding={ binding }
+                  onPick={ (
+                    source, project
+                  ) => {
+                    setField(
+                      "source",
+                      source
+                    );
+                    setField(
+                      "project",
+                      project ?? null
+                    );
+                    void enableSourceInputs( source );
+                  } }
+                />
               )}
 
               {category === "oscillator" && (
