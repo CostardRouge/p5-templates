@@ -60,6 +60,7 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 - Every positioned content item is grabbable on canvas, and that takes three aligned edits (type set, anchor resolution, renderer-reported bounds) — not just a schema → `canvas-interaction.md`.
 - The viewport's wheel pans and only a pinch (touch, or ctrl+wheel as browsers report a trackpad pinch) zooms; the wheel recogniser must skip ctrl+wheel itself → `canvas-interaction.md`.
 - A binding is data resolved at read time, in its own `interactive` namespace; its five kinds share one signal pipeline and differ only in the mapping and the fold rule → `interaction-bindings.md`.
+- A device-backed channel publishes nothing when it has no value, never a zero — which is what keeps a headless export from depending on hardware being plugged in → `interaction-bindings.md`.
 - The home page documents the editor surface by surface with real screenshots of it, as a server component slotted into the client page → `home-and-seo.md`.
 - There are two site maps: `/sitemap.xml` for crawlers (`app/sitemap.ts`) and `/sitemap` for people (`app/sitemap/page.tsx`); Next resolves them independently → `home-and-seo.md`.
 - The canonical origin has a hardcoded production default (`SITE_URL`) because statically prerendered routes bake their URLs at build time, where a runtime env var is too late → `home-and-seo.md`.

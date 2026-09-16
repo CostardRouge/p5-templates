@@ -9,10 +9,18 @@
 // `getPointersDebug()` emits, which `channels.js` turns into channels. Adding a
 // source = add one entry to `_FLAT_COLLECTORS` AND one entry here.
 //
+// `derived: true` marks a channel COMPUTED FROM OTHER CHANNELS rather than read
+// from its own control — `midi.ccLast` mirrors the last CC to move,
+// `audio.level` averages the bands. They are bindable like any other, but MIDI
+// learn must skip them: a mirror moves exactly as much as the knob it is
+// mirroring, so a "which channel moved most" detector would hand back the
+// mirror and the assignment would not be stable. See `observeForLearn`.
+//
 // The `audio.*` scalars are semantic channels read from `getAudio().bands`
-// (see channels.js). They are the first per-source semantic mapping; richer
-// per-source channels (hands.pinch, gyro.tilt, midi.cc, …) follow the same
-// pattern.
+// (see channels.js). They were the first per-source semantic mapping; the
+// `hands.*` / `face.*` gesture scalars and the `midi.cc*` control-change
+// scalars follow the same pattern — a richer per-source channel is one entry
+// here plus one collector in channels.js.
 
 export const INTERACTION_SOURCES = [
   // ── Generic position sources (one vector2d channel each) ──────────────────
@@ -91,7 +99,9 @@ export const INTERACTION_SOURCES = [
   {
     id: "audio.level",
     type: "scalar",
-    label: "Audio · Level"
+    label: "Audio · Level",
+    // The mean of the bands below, so it moves whenever any of them does.
+    derived: true
   },
   {
     id: "audio.sub",
@@ -127,6 +137,21 @@ export const INTERACTION_SOURCES = [
     id: "audio.presence",
     type: "scalar",
     label: "Audio · Presence"
+  },
+
+  // ── MIDI control change (from getMidiControls()) ──────────────────────────
+  // A knob/fader position, normalized 0..1 from its raw 0–127 value by
+  // channelsAdapter.midiControlChannels. The per-control channels are MINTED AT
+  // RUNTIME, one `midi.cc<n>` per CC number actually received, so they are not
+  // listed here — see MIDI_CC_LAST_ID below for why a fixed list cannot work.
+  // Only the learn channel is static, because it exists before any CC arrives.
+  {
+    id: "midi.ccLast",
+    type: "scalar",
+    label: "MIDI · Last moved CC",
+    // Mirrors whichever control moved last, so it is never the answer to
+    // "which control did you just move" — see `derived` below.
+    derived: true
   },
 
   // ── Semantic hand/face gesture scalars (from getInteractionMetrics()) ──────
@@ -230,6 +255,22 @@ export const FLAT_SOURCE_IDS = [
   "joypad",
   "joypadRight"
 ];
+
+// The channel id prefix for a single MIDI control: `midi.cc29` is CC 29. The id
+// is the CC NUMBER, so a binding saved today still addresses the same physical
+// knob tomorrow — a slot numbered by arrival order would not survive a reload.
+//
+// There is deliberately NO fixed list of them. A Launchkey Mini's eight pots
+// send CC 29, 79, 80, 104, 108, 109, 113 and 112 — not contiguous, and not even
+// in panel order — so any guessed set is dead on arrival for real hardware.
+// midiControlChannels mints one channel per CC actually received instead, and
+// the binding picker widens its list from the live snapshot (see
+// `BindingAffordance/useLiveChannels.ts`).
+export const MIDI_CC_PREFIX = "midi.cc";
+
+// The channel id for the "last moved CC" learn channel: the one MIDI scalar
+// that exists before any CC has arrived, so it is the only one in the manifest.
+export const MIDI_CC_LAST_ID = "midi.ccLast";
 
 // The getAudio().bands keys exposed as `audio.<band>` scalar channels.
 export const AUDIO_BANDS = [
