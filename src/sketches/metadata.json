@@ -4093,5 +4093,18 @@
     "asyncDraw": false,
     "mtime": "2026-08-24T23:30:46.893Z",
     "ctime": "2026-08-24T23:30:32.505Z"
+  },
+  {
+    "name": "rings-v11-letter-flip",
+    "engine": "p5",
+    "category": "rings",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "asyncDraw": false,
+    "mtime": "2026-09-16T14:17:20.810Z",
+    "ctime": "2026-09-16T14:15:56.998Z"
   }
 ]
