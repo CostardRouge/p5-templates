@@ -89,7 +89,7 @@ Two things about the empirical setup, both paid for:
 
 2026-09-01 — **The floating (non-docked) mixer now stacks directly above the Controls card** instead of floating bottom-center over the canvas, both `w-80` and left-aligned at `left-4`. This uses plain CSS flow, not measured/computed pixel offsets: `SketchOptions.tsx` wraps `InteractivePanel` (new `stacked` prop — renders as an unpositioned flex child instead of self-positioning) and `SketchSettings`' floating card (which lost its own `absolute`/`ISLAND_BOTTOM` positioning — the caller now owns it) in one shared `absolute left-4 flex-col` column anchored only by `bottom`; document order stacks the mixer above Controls regardless of how tall Controls' expanded sections make it, with zero `ResizeObserver`/height-measurement code. Docked mode is unaffected and intentionally different: `SketchSettings` there is a full-height rail with no room to stack above, so the mixer keeps its original standalone centered-bottom float (`bottomOffset={mixerBottom}`, `stacked` omitted). **Apply when adding another floating panel that must sit above/below an existing island**: reach for this same shared-flex-column pattern (already precedented once more on the right rail: banner + `OptionsPanel` + `SlideFilmstrip` in one `space-y-2` column) rather than computing a bottom offset by hand.
 
-## A sketch can declare which control drives a field
+## An abstract control, declared by the sketch or learned by hand
 
 2026-09-17 — A field config can carry `binding: { control: "knob.1" }`
 (`BaseConfig`, beside `managed`). `control` is an **abstract address** naming no
@@ -98,7 +98,18 @@ device, port or CC number, so the vocabulary can later reach `axis.left-x`,
 describes the CONTROL, never a data source, and a source-flavoured kind would
 multiply once per field type.
 
-**They resolve at read time and are NEVER written to the document.**
+**A learned binding carries the same `control`.** The crosshair — and the
+context-menu entry that arms the same `useChannelLearn` hook — captures a
+channel id, then stores the abstract control the connected port maps it back to
+(`controlForChannel`), falling back to the raw channel when no map matches. That
+is what makes a hand-made binding survive a port switch: a Launchkey's knob 3 is
+cc80 on its MIDI port and cc23 on its DAW port, and only `knob.3` is true on
+both. Two rules the gesture follows: on an already-bound field it replaces the
+**source only**, keeping the range, curve and smoothing that were set by hand;
+and since the context menu closes on click, the **field itself** has to show it
+is listening, or a knob that does nothing reads as a fault.
+
+**Declared ones resolve at read time and are NEVER written to the document.**
 `effectiveInteractive` (`options.js`) appends them inside the ephemeral array it
 hands `resolveBindings`; nothing writes back. Persisting them would put one
 machine's CC numbers into the saved JSON, the export and `/embed`, dirty the form
@@ -116,6 +127,10 @@ option store.
   `randomUUID` would reset it every frame. That helper is still the right source
   for the *mapping* — it alone derives a range from a slider's min/max or a
   select's option list — but its `source` and `id` are discarded.
+- **The port name travels on `channelBridge`**, published by the engine each
+  frame beside the channel snapshot. The editor needs it to turn a learned
+  channel back into a control, and must not import the interaction handler to
+  get it — that drags MediaPipe into the editor bundle.
 - **The walk belongs to React.** The engine sees values, never the form config
   carrying the keys (same reason an enum binding transports its option list).
   `collectDeclaredBindings` follows only the LIVE branch of a `conditional-group`;

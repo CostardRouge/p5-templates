@@ -8,6 +8,7 @@
  */
 import {
   CONTROLLER_MAPS,
+  controlForChannel,
   controllerMapFor,
   portRequiresArming,
   resolveControl
@@ -127,6 +128,63 @@ describe(
         expect( resolveControl(
           DAW_PORT,
           undefined
+        ) ).toBeNull();
+      }
+    );
+  }
+);
+
+describe(
+  "controlForChannel",
+  () => {
+    it(
+      "walks back from a channel to the abstract control, per port",
+      () => {
+        // What lets a LEARNED binding be stored portably: the same knob is cc80 on
+        // one port and cc23 on the other, and only "knob.3" is true on both.
+        expect( controlForChannel(
+          MIDI_PORT,
+          "midi.cc80"
+        ) ).toBe( "knob.3" );
+        expect( controlForChannel(
+          DAW_PORT,
+          "midi.cc23"
+        ) ).toBe( "knob.3" );
+      }
+    );
+
+    it(
+      "round-trips with resolveControl",
+      () => {
+        for ( let i = 1; i <= 8; i++ ) {
+          const control = `knob.${ i }`;
+
+          expect( controlForChannel(
+            MIDI_PORT,
+            resolveControl(
+              MIDI_PORT,
+              control
+            )
+          ) ).toBe( control );
+        }
+      }
+    );
+
+    it(
+      "returns null when the channel is not on that port",
+      () => {
+        // cc80 is a MIDI-port number; the DAW port knows nothing about it.
+        expect( controlForChannel(
+          DAW_PORT,
+          "midi.cc80"
+        ) ).toBeNull();
+        expect( controlForChannel(
+          "Some Other Controller",
+          "midi.cc80"
+        ) ).toBeNull();
+        expect( controlForChannel(
+          MIDI_PORT,
+          "audio.bass"
         ) ).toBeNull();
       }
     );

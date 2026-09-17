@@ -146,6 +146,27 @@ export function resolveControl(
   return map.controls[ control ] ?? null;
 }
 
+// The inverse of `resolveControl`: `( "… DAW Port", "midi.cc21" )` → `"knob.1"`.
+//
+// What lets a LEARNED binding be stored as an abstract control rather than the
+// raw channel it was captured on. The binding then survives the user switching
+// port — the same portability a declared control has — instead of going inert
+// the moment the numbers change underneath it. Null when nothing on this port
+// emits that channel, and the caller then stores the raw channel.
+export function controlForChannel(
+  portName, channelId
+) {
+  const map = controllerMapFor( portName );
+
+  if ( !map || typeof channelId !== "string" ) {
+    return null;
+  }
+
+  const hit = Object.keys( map.controls ).find( ( control ) => map.controls[ control ] === channelId );
+
+  return hit ?? null;
+}
+
 // Whether this port stays silent until `9F 0C 7F` is sent to it. Used to tell
 // "nothing is plugged in" apart from "nothing is armed", which are the same
 // silence but not the same problem.
