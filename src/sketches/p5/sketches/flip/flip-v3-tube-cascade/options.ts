@@ -33,8 +33,14 @@ export const formValues = {
     rate: 1,
     schedule: "grow" as "pingPong" | "grow",
     scatter: 0.76,
-    columns: undefined,
-    rows: undefined
+    // The `fixed` branch's values are kept here even though `subdivide` is
+    // active: a conditional-group branch switch rebuilds the object from the
+    // incoming branch's defaults and drops the other's keys, and a studio save
+    // then writes them back as `undefined`. The runtime guards read through it,
+    // but a literal `undefined` in a source default is a trap waiting on the
+    // next person who removes a `??`.
+    columns: 4,
+    rows: 3
   },
 
   flip: {
