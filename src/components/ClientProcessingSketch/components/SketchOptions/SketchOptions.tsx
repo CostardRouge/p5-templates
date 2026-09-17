@@ -26,6 +26,7 @@ import type {
   CaptureActionsRef
 } from "./components/CaptureActions";
 import useBrowserRecordingSupported from "./components/CaptureActions/hooks/useBrowserRecordingSupported";
+import useDeclaredBindings from "./hooks/useDeclaredBindings";
 import OptionsPanel from "./components/OptionsPanel";
 import {
   FormUndoRedo
@@ -278,7 +279,12 @@ export default function SketchOptions( {
 
   const [
     {
-      backendRecording, sketchFormValues, engine, browserRecording, engineId
+      backendRecording,
+      sketchFormValues,
+      engine,
+      browserRecording,
+      engineId,
+      sketchFormConfiguration
     }
   ] = useSketch();
 
@@ -327,6 +333,17 @@ export default function SketchOptions( {
     enableThumbnails,
     pendingThumbnailCaptureRef
   } );
+
+  // A sketch can declare which physical control drives a field
+  // (`binding: { control: "knob.1" }`). Published for the engine to resolve
+  // against the connected controller; never written to the document.
+  useDeclaredBindings(
+    sketchFormConfiguration,
+    methods,
+    activeSlideIndex !== undefined
+      ? `slides.${ activeSlideIndex }.sketch`
+      : "sketch"
+  );
 
   // Stable identity of the active slide. The sketch settings form edits a
   // positional path (`slides.N.sketch`), so when a structural change — e.g.

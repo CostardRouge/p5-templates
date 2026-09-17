@@ -46,8 +46,16 @@ import {
   resolveBindings, computeBindingSignals
 } from "./interaction/bindings.js";
 import {
-  sampleChannels
+  sampleChannels, midiPortName
 } from "./interaction/channels.js";
+
+import {
+  resolveControl
+} from "./interaction/controllerMap.js";
+
+import {
+  getDeclaredBindings
+} from "@/lib/declaredBindings";
 import {
   publishChannels, publishBindingSignals
 } from "@/lib/channelBridge";
@@ -644,11 +652,75 @@ function effectiveInteractive(
 ) {
   const root = live?.interactive;
   const slide = liveCurrentSlide()?.interactive;
+  const stored = slide?.bindings ?? root?.bindings ?? base?.bindings;
+  const interaction = base?.interaction ?? slide?.interaction ?? root?.interaction;
+  const declared = getDeclaredBindings();
+
+  if ( declared.bindings.length === 0 ) {
+    return {
+      bindings: stored,
+      interaction
+    };
+  }
 
   return {
-    bindings: slide?.bindings ?? root?.bindings ?? base?.bindings,
-    interaction: base?.interaction ?? slide?.interaction ?? root?.interaction
+    bindings: withDeclaredBindings( stored ),
+    interaction
   };
+}
+
+// Turn the sketch's DECLARED controls into real bindings for this frame, and
+// append them after the stored ones.
+//
+// Order is the whole contract: `foldTarget` layers by target in list order, so
+// a binding the user actually authored on the same parameter lands last and
+// wins. A declared control is a default, never an override.
+//
+// The result is a fresh array handed straight to `resolveBindings` and dropped
+// after the frame — it is never written back, so none of this reaches the form,
+// the saved JSON or `/embed`.
+function withDeclaredBindings( stored ) {
+  const port = midiPortName();
+  const base = Array.isArray( stored ) ? stored : [];
+
+  if ( !port ) {
+    // No named port: either nothing is picked or every input is being heard at
+    // once, and applying a map there would address the wrong knob in silence.
+    return base;
+  }
+
+  const resolved = [];
+
+  for ( const declared of getDeclaredBindings().bindings ) {
+    const source = resolveControl(
+      port,
+      declared.control
+    );
+
+    // An unknown controller, or a control this one does not carry, leaves the
+    // parameter on its own value — better than pinning it to a channel that
+    // will never publish.
+    if ( !source ) {
+      continue;
+    }
+
+    resolved.push( {
+      id: `declared:${ declared.control }:${ declared.target }`,
+      source,
+      target: declared.target,
+      kind: declared.kind,
+      mapping: declared.mapping,
+      smoothing: declared.smoothing,
+      enabled: true,
+      weight: 1,
+      blend: "replace"
+    } );
+  }
+
+  return resolved.length > 0 ? [
+    ...resolved,
+    ...base
+  ] : base;
 }
 
 // The generator context: the loop-normalized progression (deterministic during
