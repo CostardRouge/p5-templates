@@ -72,7 +72,11 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 - The `visual` content item was retired once sketch layers superseded it; its drawing functions are kept, unreferenced, to become sketches → `studio-ui.md`.
 - A sketch layer has three distinct sizes — its box, the canvas the sketch lays out for, and the buffer's pixels; conflating them is what made `scale` crop a sketch drawn at absolute pixel sizes → `architecture.md`, `studio-ui.md`.
 - The `flip` category runs on one rule: the edge-on frame is the only place anything may jump — the glyph, the cell count, the framing — and a turn restarts at -90° rather than passing a glyph's own mirror → `sketches.md`.
-- A grid of independently turning planes is baked cards on WEBGL quads, not an SDF; and its tree is a pure function of the clock, or it cannot be captured → `sketches.md`.
+- A whole board DOES raymarch in one pass: walk the structure instead of uploading it, recompute per-cell values instead of looking them up, and a cell shows one glyph → `sketches.md`.
+- In a sphere trace every conservative BOUND must stay above the hit threshold, or the bounding volume renders as a solid slab → `sketches.md`.
+- A flooded raymarcher is debugged by probing parameters, then rendering the field, then rendering the march — not by reasoning about the SDF → `sketches.md`.
+- Baked cards on WEBGL quads remain the cheap board (v2), at the cost of lighting that no longer turns; the GPU renderer's `offscreen` mode is what bakes them → `sketches.md`.
+- A cascade's tree is a pure function of the clock, or it cannot be captured → `sketches.md`.
 - A `conditional-group` branch switch rebuilds the whole object from each field's `default`, falling back to a slider's `min` → `sketches.md`.
 - A sketch's mutable module-level state goes through `sketch.state()` (one record per page/layer instance, drift-tested), GPU helpers keep GL resources per surface, and layer imports are serialised because there is one registration capture → `architecture.md`, `sketches.md`.
 
@@ -80,7 +84,7 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 
 ## Open items (dated; remove when done)
 
-- 2026-09-16 — `flip-v2-grid-cascade` ships without a thumbnail or a preview (`hasThumbnail`/`hasPreview` false, so its gallery card is blank); nothing in the repo generates them, they are captured from the studio. Next in the category, deliberately deferred: a **v3** on quad (4-way) subdivision and deeper fragmentation — v2 splits in two on alternating axes on purpose, because that is what gives 1 → 2 → 4 → 8.
+- 2026-09-16 — `flip-v2-grid-cascade` and `flip-v3-tube-cascade` ship without thumbnails or previews (`hasThumbnail`/`hasPreview` false, so their gallery cards are blank); nothing in the repo generates them, they are captured from the studio. Open in the category: v3 caps at 8 single glyphs and 64 cells by construction (see `sketches.md`) — a deeper board would need the capsules in a data texture after all; and quad (4-way) subdivision is still unexplored, v2 and v3 both splitting in two on alternating axes on purpose, because that is what gives 1 → 2 → 4 → 8.
 
 - 2026-09-01 — **Loading-screen UX shipped** (poster-as-progress + reserved caption, precomputed total, monotonic progress, 150ms anti-flash). Details and the traps it cost in `docs/memory/architecture.md`. Still open: the engine's `ready` event is not gated on assets settling — `TODO.md` asks for it, but it needs a timeout/failure policy first.
 - 2026-08-20 — `.vscode/settings.json` was untracked as accidental IDE state (it arrived inside a sketch commit, 1ccd877). Its content was genuinely useful: eslint format-on-save matching the repo's `@stylistic` rules. If that is wanted as shared project config, re-add it deliberately with a `!.vscode/settings.json` negation — the file is still on disk.

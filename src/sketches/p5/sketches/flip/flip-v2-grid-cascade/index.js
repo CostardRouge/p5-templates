@@ -5,16 +5,25 @@ import sketch, {
 import animation from "@/p5/utils/animation.js";
 import easing from "@/p5/utils/easing.js";
 import string from "@/p5/utils/string.js";
+import createNoiseFieldRenderer from "@/p5/utils/noiseFieldGpu.js";
 import {
-  splitContours,
-  resampleContour
-} from "@/p5/utils/letterPaths.js";
+  BRAID_UNIFORMS_GLSL,
+  IRIDESCENT_GLSL,
+  braidShadingGlsl,
+  lightDirFrom
+} from "@/p5/utils/braidShader.js";
 import {
   flipBeat,
   mod,
   hash2,
   valueNoise
 } from "../_shared.js";
+import {
+  MAX_LETTERS,
+  SEG_STRIDE,
+  MAX_TOTAL_SEG,
+  getLetterField
+} from "../_letterField.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // flip v2 — grid cascade.
@@ -55,19 +64,31 @@ import {
 // arbitrary angle the instant the parent vanishes. That is the anime cut-in,
 // and it is the same knob as the chaos — not a separate mode.
 //
-// ── Why this does not raymarch ──────────────────────────────────────────────
+// ── Why the board is cards on quads, not one raymarch ───────────────────────
 // v1's SDF holds 8 glyph planes at 48 capsules each. A board of 64 independent
 // planes would unroll to tens of thousands of capsule evaluations per scene
 // sample; GLSL ES 1.00 also forbids picking a letter's uniform slice by a
 // uniform-derived index, so every cell would have to loop the whole bank. So
-// each entry is baked ONCE into a card (the same capsule-chain tube look,
-// rasterised in 2D) and the board is that card on turning quads in an
-// offscreen WEBGL buffer — the text-dice pattern. Cells are then free.
+// each entry is baked ONCE into a card and the board is that card on turning
+// quads in an offscreen WEBGL buffer — the text-dice pattern. Cells are then
+// free, however many there are.
+//
+// `card.renderer` picks what goes on the card, and both draw the same geometry
+// — only the material differs. `strokes` rasterises the capsule chain in 2D;
+// `shader` runs v1's own material through the offscreen mode of the shared GPU
+// renderer, so at rest the board is made of v1's tubes.
+//
+// `strokes` is the default, because what the shader card cannot do is turn its
+// lighting with the tile: it is baked face-on, so a steeply turned tile reads
+// as a lit decal rather than a lit tube. flip-v3-tube-cascade raymarches the
+// whole board instead and has no such compromise — it is where the material
+// belongs. The shader card stays here for the board v3 cannot reach: v3 caps
+// at 8 single glyphs because of how it selects a cell's capsules, while a
+// baked card costs one bake however deep the subdivision goes.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const MAX_FACES = 12; // cards resident at once (the cycle, or its letters)
 const MAX_DEPTH = 6; // 2^6 = 64 tiles, the ceiling the depth slider clamps to
-const BUILD_SIZE = 100; // glyph sampling size, as in v1
 const CARD_MAX = 512; // card texture side, px
 const CARD_MIN = 128;
 const CARD_CACHE_MAX = 16;
@@ -104,106 +125,146 @@ function resetGraphics() {
   state.scene = null;
 }
 
-// Bake one face — a letter or a whole word — as a chain of round-capped
-// capsules, the 2D reading of v1's tube SDF. Two passes: a wide dark body and
-// a narrower bright core, which is what makes a flat stroke read as a tube.
-// The hue varies ALONG the path and never with time: a time-varying hue would
-// mean re-baking every frame, so animated colour rides the per-cell tint
-// instead.
-function bakeCard(
-  p, spec
-) {
-  const font = string.fonts[ spec.font ] ?? string.fonts.sans;
+// ── The card shader ──────────────────────────────────────────────────────────
+//
+// v1's material, reduced to what a card needs: one upright plane holding the
+// whole entry, seen straight on. Every letter shares the plane's basis here,
+// so the per-letter rotation v1 carries collapses to an offset — which is why
+// this is a fraction of v1's shader rather than a copy of it.
+const CARD_FRAGMENT = `
+  ${ BRAID_UNIFORMS_GLSL }
 
-  if ( !font?.font || !spec.text.length ) {
-    return null;
+  uniform int   uLetterCount;
+  uniform vec3  uLetCtr[${ MAX_LETTERS }];      // letter centre, glyph units
+  uniform float uLetRad[${ MAX_LETTERS }];      // bounding radius
+  uniform int   uLetSegCount[${ MAX_LETTERS }]; // valid capsules in this slice
+  uniform vec4  uSeg[${ MAX_TOTAL_SEG }];       // (ax, ay, bx, by), ${ SEG_STRIDE }/letter
+  uniform float uLetScale;
+  uniform float uTubeR;
+  uniform float uSmoothK;
+  uniform float uOrthoSpan;                     // world height the card covers
+  uniform float uCamDistance;
+
+  ${ IRIDESCENT_GLSL }
+
+  float smin(float a, float b, float k) {
+    float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0);
+
+    return mix(b, a, h) - k * h * (1.0 - h);
   }
 
-  const contours = [];
-  const sampleStep = Math.max(
-    1,
-    spec.spacing * BUILD_SIZE
+  float segDist2D(vec2 p, vec2 a, vec2 b) {
+    vec2 pa = p - a;
+    vec2 ba = b - a;
+    float h = clamp(dot(pa, ba) / max(dot(ba, ba), 1e-6), 0.0, 1.0);
+
+    return length(pa - ba * h);
+  }
+
+  float discBound(vec2 q, float lz, float r) {
+    float radial = max(length(q) - r, 0.0);
+
+    return sqrt(radial * radial + lz * lz);
+  }
+
+  float mapScene(vec3 p) {
+    float best = 1e9;
+    float kn = max(uSmoothK, 1e-4);
+
+    for (int L = 0; L < ${ MAX_LETTERS }; L++) {
+      if (L >= uLetterCount) { break; }
+
+      vec3 rel = p - uLetCtr[L];
+      float bound = discBound(rel.xy, rel.z, uLetRad[L]) - uTubeR - kn;
+
+      if (bound > 0.3) { best = min(best, bound); continue; }
+
+      int cnt = uLetSegCount[L];
+      float d2 = 1e9;
+
+      for (int s = 0; s < ${ SEG_STRIDE }; s++) {
+        if (s >= cnt) { break; }
+
+        vec4 seg = uSeg[L * ${ SEG_STRIDE } + s];
+
+        d2 = smin(d2, segDist2D(rel.xy, seg.xy, seg.zw), kn);
+      }
+
+      best = min(best, sqrt(d2 * d2 + rel.z * rel.z) - uTubeR);
+    }
+
+    return best * uLetScale;
+  }
+
+  float nearestPipe(vec3 p) {
+    float best = 1e9;
+    float bestL = 0.0;
+
+    for (int L = 0; L < ${ MAX_LETTERS }; L++) {
+      if (L >= uLetterCount) { break; }
+
+      vec3 rel = p - uLetCtr[L];
+      float d = discBound(rel.xy, rel.z, uLetRad[L]) - uTubeR;
+
+      if (d < best) { best = d; bestL = float(L); }
+    }
+
+    return bestL;
+  }
+
+  ${ braidShadingGlsl( {
+    maxSteps: 72,
+    surfEps: 0.0006
+  } ) }
+
+  // Orthographic, deliberately: the card becomes a texture on a quad that
+  // supplies its own perspective, and a perspective bake would apply it twice.
+  void main() {
+    vec2 frag = vec2(vUv.x * uResolution.x, vUv.y * uResolution.y);
+    vec2 uv = (frag - 0.5 * uResolution) / uResolution.y;
+
+    vec3 ro = vec3(uv * uOrthoSpan, -uCamDistance);
+    vec3 rd = vec3(0.0, 0.0, 1.0);
+
+    gl_FragColor = traceRay(ro, rd);
+  }
+`;
+
+const cardRenderer = createNoiseFieldRenderer( CARD_FRAGMENT );
+
+// ── The two card renderers ───────────────────────────────────────────────────
+//
+// Both draw the SAME geometry — the letter field from ../_letterField.js — so
+// switching renderer changes the material and nothing else. That is the whole
+// reason the field lives in its own module rather than inside either of them.
+
+// Where the field sits inside a square card: the entry is fitted on its larger
+// half-extent so a wide word and a tall letter are framed the same way, and
+// `fill` is the margin knob both renderers share.
+function cardFit(
+  field, fill
+) {
+  const half = Math.max(
+    field.halfW,
+    field.halfH,
+    1e-3
   );
 
-  p.push();
-  p.textFont( font );
-  p.textSize( BUILD_SIZE );
+  return half / Math.max(
+    fill,
+    0.05
+  );
+}
 
-  let pen = 0;
-
-  for ( const char of spec.text ) {
-    const advance = p.textWidth( char );
-
-    if ( char.trim() === "" ) {
-      pen += advance;
-      continue;
-    }
-
-    const raw = font.textToPoints(
-      char,
-      pen,
-      0,
-      BUILD_SIZE,
-      {
-        sampleFactor: spec.detail,
-        simplifyThreshold: spec.simplify
-      }
-    );
-
-    pen += advance;
-
-    if ( !raw.length ) {
-      continue;
-    }
-
-    for ( const pts of splitContours(
-      raw,
-      0.2 * BUILD_SIZE
-    ) ) {
-      const resampled = resampleContour(
-        pts,
-        sampleStep,
-        true
-      );
-
-      if ( resampled.length >= 2 ) {
-        contours.push( resampled );
-      }
-    }
-  }
-
-  p.pop();
-
-  if ( !contours.length ) {
-    return null;
-  }
-
-  let minX = Infinity;
-  let maxX = -Infinity;
-  let minY = Infinity;
-  let maxY = -Infinity;
-
-  for ( const contour of contours ) {
-    for ( const pt of contour ) {
-      minX = Math.min(
-        minX,
-        pt.x
-      );
-      maxX = Math.max(
-        maxX,
-        pt.x
-      );
-      minY = Math.min(
-        minY,
-        pt.y
-      );
-      maxY = Math.max(
-        maxY,
-        pt.y
-      );
-    }
-  }
-
+// Strokes: each capsule drawn as a round-capped line, twice — a wide dark body
+// under a narrow bright core, which is what makes a flat stroke read as a tube.
+// Cheap, and it stays legible at the sizes a deep subdivision produces.
+//
+// The hue varies ALONG the path and never with time: a time-varying hue would
+// mean re-baking every frame, so animated colour rides the per-cell tint.
+function bakeStrokeCard(
+  p, spec, field
+) {
   const g = p.createGraphics(
     spec.size,
     spec.size
@@ -220,29 +281,20 @@ function bakeCard(
   g.noFill();
   g.strokeCap( g.ROUND );
 
-  // Fit the face inside the card, leaving room for half a stroke on each side
-  // so the thickest tube never clips against the card's edge.
-  const tube = spec.thickness * spec.size;
-  const pad = tube * 0.6 + spec.size * 0.04;
-  const boxW = Math.max(
-    maxX - minX,
-    1e-3
+  const span = cardFit(
+    field,
+    spec.fill
   );
-  const boxH = Math.max(
-    maxY - minY,
-    1e-3
+  const scale = spec.size / ( 2 * span );
+  const tube = Math.max(
+    1,
+    spec.thickness * spec.size
   );
-  const scale = Math.min(
-    ( spec.size - pad * 2 ) / boxW,
-    ( spec.size - pad * 2 ) / boxH
-  ) * spec.fill;
-  const offsetX = spec.size / 2 - ( minX + boxW / 2 ) * scale;
-  const offsetY = spec.size / 2 - ( minY + boxH / 2 ) * scale;
 
   let total = 0;
 
-  for ( const contour of contours ) {
-    total += contour.length;
+  for ( let k = 0; k < field.count; k++ ) {
+    total += field.segCount[ k ];
   }
 
   const passes = [
@@ -259,19 +311,18 @@ function bakeCard(
   ];
 
   for ( const pass of passes ) {
-    g.strokeWeight( Math.max(
-      1,
-      pass.weight
-    ) );
+    g.strokeWeight( pass.weight );
 
     let walked = 0;
 
-    for ( const contour of contours ) {
-      const n = contour.length;
+    for ( let k = 0; k < field.count; k++ ) {
+      const ox = field.offsets[ k * 2 ];
+      const oy = field.offsets[ k * 2 + 1 ];
+      const count = field.segCount[ k ];
+      const base = k * SEG_STRIDE * 4;
 
-      for ( let i = 0; i < n; i++ ) {
-        const a = contour[ i ];
-        const b = contour[ ( i + 1 ) % n ];
+      for ( let s = 0; s < count; s++ ) {
+        const at = base + s * 4;
         const along = total > 1 ? walked / ( total - 1 ) : 0;
 
         walked++;
@@ -285,15 +336,128 @@ function bakeCard(
           pass.bri * spec.brightness,
           100
         );
+
+        // Glyph space is y-up and centred on the origin; the card is y-down
+        // and centred on its middle.
         g.line(
-          a.x * scale + offsetX,
-          a.y * scale + offsetY,
-          b.x * scale + offsetX,
-          b.y * scale + offsetY
+          spec.size / 2 + ( ox + field.seg[ at ] ) * scale,
+          spec.size / 2 - ( oy + field.seg[ at + 1 ] ) * scale,
+          spec.size / 2 + ( ox + field.seg[ at + 2 ] ) * scale,
+          spec.size / 2 - ( oy + field.seg[ at + 3 ] ) * scale
         );
       }
     }
   }
+
+  return g;
+}
+
+// Shader: v1's material, raymarched — real iridescence, specular, ambient
+// occlusion and optional cast shadows. The camera is ORTHOGRAPHIC, unlike v1's,
+// because the card is a texture that a turning quad will give its own
+// perspective to; a perspective bake would apply it twice.
+//
+// The one thing this cannot do, and it is worth stating rather than
+// discovering: the lighting is baked face-on, so it does not turn with the
+// tile. Near face-on it is v1 exactly; at a steep angle it reads as a lit
+// decal rather than a lit tube. Real per-angle lighting needs the whole board
+// raymarched in one pass, which is a different sketch.
+function bakeShaderCard(
+  p, spec, field
+) {
+  const span = cardFit(
+    field,
+    spec.fill
+  );
+  const reach = spec.tube + spec.fusion;
+  const camDistance = span + reach + 1;
+  const uniforms = {
+    uT: 0,
+    uLetterCount: {
+      int: field.count
+    },
+    uSeg: {
+      vec4v: field.seg
+    },
+    uLetSegCount: {
+      intv: field.segCount
+    },
+    uLetRad: {
+      floatv: field.radius
+    },
+    uLetScale: 1,
+    uTubeR: Math.max(
+      spec.tube,
+      1e-3
+    ),
+    uSmoothK: Math.max(
+      spec.fusion,
+      1e-3
+    ),
+    uOrthoSpan: span * 2,
+    uCamDistance: camDistance,
+    uMaxDist: camDistance * 2 + reach * 2,
+    uHueSpeed: 0,
+    uHueSpread: spec.hueSpread,
+    uHuePhase: spec.hue * Math.PI / 180,
+    uLengthHueShift: spec.lengthHueShift,
+    uPipeHueShift: spec.letterHueShift,
+    uShimmer: spec.shimmer,
+    uSaturation: spec.saturation / 100,
+    uBrightness: spec.brightness,
+    uLightDir: lightDirFrom(
+      spec.light.azimuth,
+      spec.light.elevation
+    ),
+    uAmbient: spec.light.ambient,
+    uDiffuse: spec.light.diffuse,
+    uSpecular: spec.light.specular,
+    uSpecPower: spec.light.specPower,
+    uFresnelPower: spec.light.fresnelPower,
+    uRimStrength: spec.light.rimStrength,
+    uShadowSoft: spec.light.shadowSoftness,
+    uFogDensity: 0,
+    uFogStart: 0
+  };
+
+  for ( let k = 0; k < field.count; k++ ) {
+    uniforms[ `uLetCtr[${ k }]` ] = [
+      field.offsets[ k * 2 ],
+      field.offsets[ k * 2 + 1 ],
+      0
+    ];
+  }
+
+  const buffer = cardRenderer.render( {
+    columns: 1,
+    rows: 1,
+    offscreen: {
+      width: spec.size,
+      height: spec.size
+    },
+    uniforms
+  } );
+
+  // The program can still be compiling on the first frame.
+  if ( !buffer ) {
+    return null;
+  }
+
+  // The renderer's buffer is reused by the next call, so the pixels are copied
+  // into a graphic this sketch owns before anything else can bake.
+  const g = p.createGraphics(
+    spec.size,
+    spec.size
+  );
+
+  g.clear();
+  g.image(
+    buffer,
+    0,
+    0,
+    spec.size,
+    spec.size
+  );
 
   return g;
 }
@@ -304,18 +468,25 @@ function getCard(
   const font = string.fonts[ spec.font ] ?? string.fonts.sans;
   const family = font?.font?.names?.fontFamily?.en || "unknown";
   const key = [
+    spec.renderer,
     spec.text,
     family,
     spec.detail,
     spec.simplify,
     spec.spacing,
     spec.thickness,
+    spec.tube,
+    spec.fusion,
     spec.fill,
     spec.hue,
     spec.hueSpread,
+    spec.lengthHueShift,
+    spec.letterHueShift,
+    spec.shimmer,
     spec.saturation,
     spec.brightness,
-    spec.size
+    spec.size,
+    spec.renderer === "shader" ? JSON.stringify( spec.light ) : ""
   ].join( "|" );
 
   const cached = state.cards.get( key );
@@ -324,12 +495,32 @@ function getCard(
     return cached;
   }
 
-  const card = bakeCard(
-    p,
-    spec
-  );
+  const field = getLetterField( {
+    text: spec.text,
+    fontName: spec.font,
+    sampleFactor: spec.detail,
+    simplifyThreshold: spec.simplify,
+    contourBreak: 0.2,
+    spacing: spec.spacing
+  } );
 
   // Font still loading — don't cache the miss, retry next frame.
+  if ( !field ) {
+    return null;
+  }
+
+  const card = spec.renderer === "shader"
+    ? bakeShaderCard(
+      p,
+      spec,
+      field
+    )
+    : bakeStrokeCard(
+      p,
+      spec,
+      field
+    );
+
   if ( !card ) {
     return null;
   }
@@ -682,7 +873,9 @@ sketch.draw( () => {
   const wave = o.wave ?? {};
   const content = o.content ?? {};
   const cell = o.cell ?? {};
+  const card = o.card ?? {};
   const colors = o.colors ?? {};
+  const light = o.light ?? {};
   const camera = o.camera ?? {};
 
   p.clear();
@@ -725,20 +918,40 @@ sketch.draw( () => {
   ) => getCard(
     p,
     {
+      renderer: card.renderer ?? "strokes",
       text,
       font: textCfg.font ?? "martian",
       detail: textCfg.detail ?? 0.6,
       simplify: textCfg.simplify ?? 0,
       spacing: textCfg.spacing ?? 0.06,
-      thickness: textCfg.thickness ?? 0.05,
+      // Strokes measure the tube against the card; the shader measures it
+      // against a glyph unit. Same idea, different rulers — which is why they
+      // are two fields in two branches rather than one shared slider.
+      thickness: card.thickness ?? 0.05,
+      tube: card.tube ?? 0.045,
+      fusion: card.fusion ?? 0.02,
       fill: cell.fill ?? 0.86,
       hue: mod(
         ( colors.huePhase ?? 200 ) + i * ( colors.faceHueShift ?? 40 ),
         360
       ),
       hueSpread: colors.hueSpread ?? 0.6,
+      lengthHueShift: colors.lengthHueShift ?? -0.25,
+      letterHueShift: colors.letterHueShift ?? 0.7,
+      shimmer: colors.shimmer ?? 2.2,
       saturation: colors.saturation ?? 55,
       brightness: colors.brightness ?? 1,
+      light: {
+        azimuth: light.azimuth ?? -1.1,
+        elevation: light.elevation ?? 0.45,
+        ambient: light.ambient ?? 0.48,
+        diffuse: light.diffuse ?? 0.56,
+        specular: light.specular ?? 1.52,
+        specPower: light.specPower ?? 31,
+        fresnelPower: light.fresnelPower ?? 1.62,
+        rimStrength: light.rimStrength ?? 0,
+        shadowSoftness: light.shadowSoftness ?? 0
+      },
       size: cardSize
     }
   ) );

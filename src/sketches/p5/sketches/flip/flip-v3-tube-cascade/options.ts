@@ -2,64 +2,45 @@ import {
   fontNames
 } from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/constants/field-config";
 
-// A board of turning tiles where the turn is also what multiplies them: a tile
-// goes edge-on and comes back as two, then four, then eight. See index.js for
-// why the tree is rebuilt every frame (it has to be a pure function of the
-// clock to be capturable) and ../_shared.js for the beat every sketch in this
-// category runs on.
+// v2's board, raymarched in one pass instead of baked into cards: the tiles
+// are v1's tubes for real, so the specular travels as a tile turns and the
+// ambient occlusion is computed where the tubes actually meet.
 //
-// One trap worth knowing before editing `layout`: switching a conditional
-// group's branch REBUILDS the whole object from the branch's field defaults,
-// and a field without an explicit `default` falls back to its `min` (see
-// ConditionalGroup.getDefaultValueForFieldConfig). Every field inside the two
-// branches below therefore carries one.
+// The defining constraint, and the reason a cell shows ONE GLYPH rather than a
+// word: the shader reaches a cell's capsules through a loop over the bank (GLSL
+// ES 1.00 forbids indexing a uniform array by a uniform-derived index), and one
+// glyph per face is what keeps that budget at v1's 8 x 48. `text.glyphs` is
+// therefore a bank of characters, not a list of words. See index.js.
+//
+// Editing `layout`: switching a conditional group's branch REBUILDS the whole
+// object from the branch's field defaults, and a field without an explicit
+// `default` falls back to its `min` — so every field in both branches has one.
 export const formValues = {
   timeScale: 1,
 
   text: {
-    words: [
-      "1",
-      "2",
-      "3",
-      "4"
-    ] as string[],
-    font: "spaceMonoItalic",
-    detail: 0.92,
-    spacing: 0.02,
+    // One character per face; the board picks from this bank.
+    glyphs: "abcd",
+    font: "waverseVariable",
+    detail: 1,
+    spacing: 0.14,
     simplify: 0
   },
 
-  // What goes on a card. Both renderers draw the same geometry — only the
-  // material differs — but they measure the tube against different things, so
-  // the thickness lives in the branch rather than above it.
-  //
-  // `strokes` is the default since v3 exists: v3 raymarches the whole board,
-  // so its tubes are lit for real rather than lit face-on and painted on.
-  // The shader card stays here because it costs a bake instead of a march,
-  // which is what a board deeper than v3's ceiling needs.
-  card: {
-    renderer: "strokes" as "shader" | "strokes",
-    // Strokes: fraction of the card's side. This is the tuned value that used
-    // to live on `text.thickness`; the group moved, the number did not.
-    thickness: 0.035,
-    // Shader: glyph units, where 1 is roughly a cap height (v1's ratio of
-    // material.thickness to material.size is ~0.008; this reads thicker
-    // because a grid cell is small on screen).
-    tube: 0.045,
-    fusion: 0.02
-  },
-
   layout: {
-    // "subdivide" — the cascade, owned by the sketch because a split has to
-    // land on a flat frame. "fixed" — a plain board, two numbers you can drive
-    // from anywhere because nothing about them has to.
     mode: "subdivide" as "subdivide" | "fixed",
-    depth: 6,
-    rate: 2,
+    depth: 5,
+    rate: 1,
     schedule: "grow" as "pingPong" | "grow",
-    scatter: 0,
-    columns: 8,
-    rows: 5
+    scatter: 0.76,
+    // The `fixed` branch's values are kept here even though `subdivide` is
+    // active: a conditional-group branch switch rebuilds the object from the
+    // incoming branch's defaults and drops the other's keys, and a studio save
+    // then writes them back as `undefined`. The runtime guards read through it,
+    // but a literal `undefined` in a source default is a trap waiting on the
+    // next person who removes a `??`.
+    columns: 4,
+    rows: 3
   },
 
   flip: {
@@ -73,49 +54,43 @@ export const formValues = {
   },
 
   wave: {
-    order: "columns" as "all" | "columns" | "rows" | "diagonal" | "radial" | "noise" | "random",
+    order: "radial" as "all" | "columns" | "rows" | "diagonal" | "radial" | "noise" | "random",
     spread: 0.55,
-    jitter: 0.46,
+    jitter: 0.2,
     frequency: 4,
-    seed: 350,
-    // "manual" hands the front over: `head` then replaces the loop clock
-    // outright, so an interaction binding drives the whole board.
+    seed: 7,
     headMode: "clock" as "clock" | "manual",
-    head: 0.29
+    head: 0
   },
 
   content: {
     mode: "scatter" as "scatter" | "chorus" | "spell",
-    offset: 1.7,
-    // Every cell samples its own rectangle of ONE face spanning the board, so
-    // subdividing cuts the glyph into pieces instead of replacing it.
-    inherit: false
+    offset: 1
   },
 
   cell: {
-    gutter: 0.23,
-    fill: 0.65,
-    depth: 0.29,
-    trail: 0.37
+    gutter: 0.12,
+    fill: 0.86,
+    depth: 0
+  },
+
+  material: {
+    // Glyph units, where 1 is roughly a cap height.
+    tube: 0.05,
+    fusion: 0.03
   },
 
   colors: {
-    huePhase: 161,
-    hueSpread: 0.6,
-    faceHueShift: 55,
-    cellHueShift: 60,
-    tintPhase: 215,
-    hueSpeed: 1,
-    saturation: 55,
-    brightness: 1,
-    // Shader card only: the hue drift up the glyph, and between the letters
-    // of one entry.
+    hueSpeed: 0,
+    hueSpread: 1.73,
+    huePhase: 2.6,
     lengthHueShift: -0.25,
-    letterHueShift: 0.7,
-    shimmer: 2.2
+    cellHueShift: 0.7,
+    shimmer: 2.2,
+    saturation: 0.9,
+    brightness: 1.25
   },
 
-  // Shader card only — the strokes renderer has no lighting model.
   light: {
     azimuth: -1.1,
     elevation: 0.45,
@@ -124,17 +99,20 @@ export const formValues = {
     specular: 1.52,
     specPower: 31,
     fresnelPower: 1.62,
-    rimStrength: 0,
-    shadowSoftness: 0
+    rimStrength: 0
   },
 
   camera: {
-    fov: 45,
-    margin: 0.08,
+    fov: 21,
+    margin: 0,
     pullBack: 1,
     azimuth: 0,
-    elevation: 0.12,
-    fog: 0.25
+    elevation: 0,
+    fog: 0
+  },
+
+  rendering: {
+    resolutionScale: 0.7
   },
 
   backgroundColor: [
@@ -156,15 +134,9 @@ export const formConfiguration: Record<string, any> = {
     component: "nested-object",
     label: "Text",
     fields: {
-      words: {
-        label: "Faces (one per beat — a letter or a word)",
-        component: "item-list",
-        minItems: 1,
-        maxItems: 12,
-        itemConfig: {
-          label: "Face",
-          component: "text"
-        }
+      glyphs: {
+        label: "Glyph bank (one character per face, max 8)",
+        component: "text"
       },
       font: {
         label: "Font",
@@ -197,54 +169,6 @@ export const formConfiguration: Record<string, any> = {
       }
     }
   },
-  card: {
-    component: "conditional-group",
-    label: "Card (what a tile is made of)",
-    conditionalOn: "renderer",
-    typeSelector: {
-      label: "Material",
-      options: [
-        {
-          label: "Shader — v1's raymarched tubes",
-          value: "shader"
-        },
-        {
-          label: "Strokes — flat capsule chain",
-          value: "strokes"
-        }
-      ]
-    },
-    configs: {
-      shader: {
-        tube: {
-          label: "Tube thickness (glyph units)",
-          component: "slider",
-          min: 0.005,
-          max: 0.2,
-          step: 0.001,
-          default: 0.045
-        },
-        fusion: {
-          label: "Junction fusion (smooth-union fillet)",
-          component: "slider",
-          min: 0.001,
-          max: 0.12,
-          step: 0.001,
-          default: 0.02
-        }
-      },
-      strokes: {
-        thickness: {
-          label: "Stroke thickness (fraction of the card)",
-          component: "slider",
-          min: 0.005,
-          max: 0.2,
-          step: 0.005,
-          default: 0.035
-        }
-      }
-    }
-  },
   layout: {
     component: "conditional-group",
     label: "Layout (how many cells)",
@@ -270,7 +194,7 @@ export const formConfiguration: Record<string, any> = {
           min: 0,
           max: 6,
           step: 1,
-          default: 4
+          default: 3
         },
         rate: {
           label: "Beats per generation",
@@ -309,7 +233,7 @@ export const formConfiguration: Record<string, any> = {
           label: "Columns",
           component: "slider",
           min: 1,
-          max: 16,
+          max: 12,
           step: 1,
           default: 4
         },
@@ -317,7 +241,7 @@ export const formConfiguration: Record<string, any> = {
           label: "Rows",
           component: "slider",
           min: 1,
-          max: 12,
+          max: 10,
           step: 1,
           default: 3
         }
@@ -486,36 +410,32 @@ export const formConfiguration: Record<string, any> = {
   },
   content: {
     component: "nested-object",
-    label: "Content (what a cell shows)",
+    label: "Content (which glyph a cell shows)",
     fields: {
       mode: {
         label: "Mode",
         component: "select",
         options: [
           {
-            label: "Scatter — each cell offset in the cycle",
+            label: "Scatter — each cell offset in the bank",
             value: "scatter"
           },
           {
-            label: "Chorus — every cell shows the same face",
+            label: "Chorus — every cell shows the same glyph",
             value: "chorus"
           },
           {
-            label: "Spell — the faces march across the board",
+            label: "Spell — the bank marches across the board",
             value: "spell"
           }
         ]
       },
       offset: {
-        label: "Scatter spread (how far apart cells sit in the cycle)",
+        label: "Scatter spread (how far apart cells sit in the bank)",
         component: "slider",
         min: 0,
         max: 4,
         step: 0.05
-      },
-      inherit: {
-        label: "Fragment instead of replace (one face cut across the board)",
-        component: "checkbox"
       }
     }
   },
@@ -527,14 +447,14 @@ export const formConfiguration: Record<string, any> = {
         label: "Gutter between tiles",
         component: "slider",
         min: 0,
-        max: 0.6,
+        max: 0.9,
         step: 0.01
       },
       fill: {
         label: "Glyph size inside its tile",
         component: "slider",
         min: 0.2,
-        max: 1.1,
+        max: 1.2,
         step: 0.01
       },
       depth: {
@@ -543,13 +463,26 @@ export const formConfiguration: Record<string, any> = {
         min: 0,
         max: 1,
         step: 0.01
-      },
-      trail: {
-        label: "Afterglow (a cell stays hot just after it turns)",
+      }
+    }
+  },
+  material: {
+    component: "nested-object",
+    label: "Material (tube)",
+    fields: {
+      tube: {
+        label: "Tube thickness (glyph units)",
         component: "slider",
-        min: 0,
-        max: 1,
-        step: 0.01
+        min: 0.005,
+        max: 0.2,
+        step: 0.001
+      },
+      fusion: {
+        label: "Junction fusion (smooth-union fillet)",
+        component: "slider",
+        min: 0.001,
+        max: 0.12,
+        step: 0.001
       }
     }
   },
@@ -557,78 +490,57 @@ export const formConfiguration: Record<string, any> = {
     component: "nested-object",
     label: "Iridescent",
     fields: {
-      huePhase: {
-        label: "Base hue °",
+      hueSpeed: {
+        label: "Hue scroll (snaps to whole cycles per loop)",
         component: "slider",
-        min: 0,
-        max: 360,
-        step: 1
+        min: -5,
+        max: 5,
+        step: 0.01
       },
       hueSpread: {
-        label: "Hue travel across the glyph",
+        label: "Hue spread",
         component: "slider",
-        min: 0,
+        min: 0.1,
         max: 6,
         step: 0.01
       },
-      faceHueShift: {
-        label: "Hue shift between faces °",
+      huePhase: {
+        label: "Hue phase",
         component: "slider",
         min: 0,
-        max: 180,
-        step: 1
-      },
-      cellHueShift: {
-        label: "Hue shift across the board ° (0 = one colour everywhere)",
-        component: "slider",
-        min: 0,
-        max: 180,
-        step: 1
-      },
-      tintPhase: {
-        label: "Board hue phase °",
-        component: "slider",
-        min: 0,
-        max: 360,
-        step: 1
-      },
-      hueSpeed: {
-        label: "Hue scroll (whole cycles per loop)",
-        component: "slider",
-        min: -4,
-        max: 4,
-        step: 1
-      },
-      saturation: {
-        label: "Saturation",
-        component: "slider",
-        min: 0,
-        max: 100,
-        step: 1
-      },
-      brightness: {
-        label: "Brightness",
-        component: "slider",
-        min: 0,
-        max: 2,
+        max: 6.2832,
         step: 0.01
       },
       lengthHueShift: {
-        label: "Hue drift up the glyph (shader card)",
+        label: "Hue drift up the board",
         component: "slider",
         min: -2,
         max: 2,
         step: 0.01
       },
-      letterHueShift: {
-        label: "Hue shift between letters of one entry (shader card)",
+      cellHueShift: {
+        label: "Hue shift between cells",
         component: "slider",
         min: -2,
         max: 2,
         step: 0.01
       },
       shimmer: {
-        label: "Shimmer — oil-slick (shader card)",
+        label: "Shimmer (oil-slick)",
+        component: "slider",
+        min: 0,
+        max: 3,
+        step: 0.01
+      },
+      saturation: {
+        label: "Saturation",
+        component: "slider",
+        min: 0,
+        max: 1,
+        step: 0.01
+      },
+      brightness: {
+        label: "Brightness",
         component: "slider",
         min: 0,
         max: 3,
@@ -638,7 +550,7 @@ export const formConfiguration: Record<string, any> = {
   },
   light: {
     component: "nested-object",
-    label: "Lighting (shader card only)",
+    label: "Lighting",
     fields: {
       azimuth: {
         label: "Light azimuth",
@@ -695,13 +607,6 @@ export const formConfiguration: Record<string, any> = {
         min: 0,
         max: 2,
         step: 0.01
-      },
-      shadowSoftness: {
-        label: "Cast shadows between letters (0 = off)",
-        component: "slider",
-        min: 0,
-        max: 64,
-        step: 1
       }
     }
   },
@@ -750,6 +655,19 @@ export const formConfiguration: Record<string, any> = {
         min: 0,
         max: 1,
         step: 0.01
+      }
+    }
+  },
+  rendering: {
+    component: "nested-object",
+    label: "Rendering",
+    fields: {
+      resolutionScale: {
+        label: "Resolution scale (perf ↔ quality)",
+        component: "slider",
+        min: 0.25,
+        max: 1,
+        step: 0.05
       }
     }
   },

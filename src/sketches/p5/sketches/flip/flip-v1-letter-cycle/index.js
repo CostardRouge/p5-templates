@@ -4,11 +4,6 @@ import sketch, {
 } from "@/p5/utils/sketch.js";
 import animation from "@/p5/utils/animation.js";
 import createNoiseFieldRenderer from "@/p5/utils/noiseFieldGpu.js";
-import string from "@/p5/utils/string.js";
-import {
-  splitContours,
-  resampleContour
-} from "@/p5/utils/letterPaths.js";
 import {
   BRAID_UNIFORMS_GLSL,
   IRIDESCENT_GLSL,
@@ -21,6 +16,12 @@ import {
   flipBeat,
   mod
 } from "../_shared.js";
+import {
+  MAX_LETTERS,
+  SEG_STRIDE,
+  MAX_TOTAL_SEG,
+  getLetterField
+} from "../_letterField.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // flip v1 — letter cycle.
@@ -70,14 +71,8 @@ import {
 // flip: rotating them about the plane's own up or right axis is all it takes.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const MAX_LETTERS = 8; // letters rendered per entry (longer entries truncate)
 const MAX_WORDS = 8; // entries in the cycle (the item-list caps at this too)
-const SEG_STRIDE = 48; // capsules stored per letter (fixed stride: GLSL ES 1.00
-// forbids indexing a uniform array by a uniform-derived index, so each letter
-// occupies a fixed [L*STRIDE, L*STRIDE+count) slice indexed by loop vars only)
-const MAX_TOTAL_SEG = MAX_LETTERS * SEG_STRIDE; // flat capsule array size
 const MAX_STEPS = 96; // sphere-trace iterations per ray
-const BUILD_SIZE = 100; // glyph sampling size; geometry normalised by it
 const HALF_PI = Math.PI / 2;
 
 const FRAGMENT = `
@@ -280,288 +275,6 @@ function rotateAbout(
     v[ 1 ] * c + k[ 1 ] * s + axis[ 1 ] * d * ( 1 - c ),
     v[ 2 ] * c + k[ 2 ] * s + axis[ 2 ] * d * ( 1 - c )
   ];
-}
-
-// ── Letter geometry (built once per entry/font/detail, memoised) ─────────────
-const geometryMemo = new Map();
-const GEOMETRY_MEMO_MAX = 32;
-
-// Build the capsule field for one centred entry: glyphs sampled one by one on
-// their natural advances, each recentred on its own bounding box (small bounds
-// for culling), the entry as a whole recentred on origin. Per-letter offsets
-// are returned in normalised units ([x, y], y up), and each letter's capsules
-// live in its own SEG_STRIDE slice so a slot can be packed straight into the
-// shader's array without re-slicing.
-function buildLetterField( {
-  text,
-  fontName,
-  sampleFactor,
-  simplifyThreshold,
-  contourBreak,
-  spacing
-} ) {
-  const p = getP5();
-  const font = string.fonts[ fontName ] ?? string.fonts.sans;
-
-  if ( !font?.font || !text.length ) {
-    return null;
-  }
-
-  p.push();
-  p.textFont( font );
-  p.textSize( BUILD_SIZE );
-
-  const breakDistance = contourBreak * BUILD_SIZE;
-  const sampleStep = Math.max(
-    1,
-    spacing * BUILD_SIZE
-  );
-  const seg = new Float32Array( MAX_TOTAL_SEG * 4 );
-  const segCount = new Int32Array( MAX_LETTERS );
-  const radius = new Float32Array( MAX_LETTERS );
-  const centreX = new Float32Array( MAX_LETTERS ); // word space (build units)
-  const centreY = new Float32Array( MAX_LETTERS );
-
-  let letterIndex = 0;
-  let pen = 0; // baseline x advance in build units
-  let truncated = false;
-
-  for ( const char of text ) {
-    if ( letterIndex >= MAX_LETTERS ) {
-      truncated = true;
-      break;
-    }
-
-    const advance = p.textWidth( char );
-
-    if ( char.trim() === "" ) {
-      pen += advance;
-      continue;
-    }
-
-    const raw = font.textToPoints(
-      char,
-      pen,
-      0,
-      BUILD_SIZE,
-      {
-        sampleFactor,
-        simplifyThreshold
-      }
-    );
-
-    pen += advance;
-
-    if ( !raw.length ) {
-      continue;
-    }
-
-    const contours = splitContours(
-      raw,
-      breakDistance
-    )
-      .map( ( pts ) => resampleContour(
-        pts,
-        sampleStep,
-        true
-      ) )
-      .filter( ( pts ) => pts.length >= 2 );
-
-    if ( !contours.length ) {
-      continue;
-    }
-
-    // Bounding box of the glyph (word space) — its centre anchors the letter.
-    let minX = Infinity;
-    let maxX = -Infinity;
-    let minY = Infinity;
-    let maxY = -Infinity;
-
-    for ( const contour of contours ) {
-      for ( const pt of contour ) {
-        minX = Math.min(
-          minX,
-          pt.x
-        );
-        maxX = Math.max(
-          maxX,
-          pt.x
-        );
-        minY = Math.min(
-          minY,
-          pt.y
-        );
-        maxY = Math.max(
-          maxY,
-          pt.y
-        );
-      }
-    }
-
-    const ctrX = ( minX + maxX ) / 2;
-    const ctrY = ( minY + maxY ) / 2;
-
-    // Emit normalised capsules into this letter's fixed stride slice (recentred
-    // on the glyph bbox, y flipped to point up, divided by BUILD_SIZE so a
-    // glyph unit ≈ cap height). The base offset is letterIndex * SEG_STRIDE.
-    const base = letterIndex * SEG_STRIDE;
-    let local = 0;
-    let maxR = 0;
-
-    for ( const contour of contours ) {
-      const m = contour.length;
-
-      for ( let i = 0; i < m; i++ ) {
-        if ( local >= SEG_STRIDE ) {
-          truncated = true;
-          break;
-        }
-
-        const a = contour[ i ];
-        const b = contour[ ( i + 1 ) % m ];
-        const ax = ( a.x - ctrX ) / BUILD_SIZE;
-        const ay = -( a.y - ctrY ) / BUILD_SIZE;
-        const bx = ( b.x - ctrX ) / BUILD_SIZE;
-        const by = -( b.y - ctrY ) / BUILD_SIZE;
-        const w = ( base + local ) * 4;
-
-        seg[ w ] = ax;
-        seg[ w + 1 ] = ay;
-        seg[ w + 2 ] = bx;
-        seg[ w + 3 ] = by;
-        local++;
-
-        maxR = Math.max(
-          maxR,
-          Math.hypot(
-            ax,
-            ay
-          ),
-          Math.hypot(
-            bx,
-            by
-          )
-        );
-      }
-    }
-
-    if ( local === 0 ) {
-      continue;
-    }
-
-    segCount[ letterIndex ] = local;
-    radius[ letterIndex ] = maxR;
-    centreX[ letterIndex ] = ctrX;
-    centreY[ letterIndex ] = ctrY;
-    letterIndex++;
-  }
-
-  p.pop();
-
-  if ( letterIndex === 0 ) {
-    return null;
-  }
-
-  if ( truncated ) {
-    console.warn( `flip-v1-letter-cycle: "${ text }" truncated to ${ letterIndex } letters (max ${ MAX_LETTERS }, ${ SEG_STRIDE } capsules/letter). Use a shorter entry or raise the capsule spacing.` );
-  }
-
-  // Recentre the ENTRY: per-letter offsets relative to its bbox centre,
-  // normalised, y flipped to world-up.
-  let wordMinX = Infinity;
-  let wordMaxX = -Infinity;
-  let wordMinY = Infinity;
-  let wordMaxY = -Infinity;
-
-  for ( let k = 0; k < letterIndex; k++ ) {
-    const r = radius[ k ] * BUILD_SIZE;
-
-    wordMinX = Math.min(
-      wordMinX,
-      centreX[ k ] - r
-    );
-    wordMaxX = Math.max(
-      wordMaxX,
-      centreX[ k ] + r
-    );
-    wordMinY = Math.min(
-      wordMinY,
-      centreY[ k ] - r
-    );
-    wordMaxY = Math.max(
-      wordMaxY,
-      centreY[ k ] + r
-    );
-  }
-
-  const wordCtrX = ( wordMinX + wordMaxX ) / 2;
-  const wordCtrY = ( wordMinY + wordMaxY ) / 2;
-  const offsets = new Float32Array( MAX_LETTERS * 2 );
-
-  let wordRadius = 0;
-
-  for ( let k = 0; k < letterIndex; k++ ) {
-    const ox = ( centreX[ k ] - wordCtrX ) / BUILD_SIZE;
-    const oy = -( centreY[ k ] - wordCtrY ) / BUILD_SIZE;
-
-    offsets[ k * 2 ] = ox;
-    offsets[ k * 2 + 1 ] = oy;
-    wordRadius = Math.max(
-      wordRadius,
-      Math.hypot(
-        ox,
-        oy
-      ) + radius[ k ]
-    );
-  }
-
-  return {
-    count: letterIndex,
-    seg,
-    segCount,
-    radius,
-    offsets,
-    wordRadius,
-    halfW: ( wordMaxX - wordMinX ) / 2 / BUILD_SIZE,
-    halfH: ( wordMaxY - wordMinY ) / 2 / BUILD_SIZE
-  };
-}
-
-function getLetterField( cfg ) {
-  const font = string.fonts[ cfg.fontName ] ?? string.fonts.sans;
-  const fontFamily = font?.font?.names?.fontFamily?.en || "unknown";
-  const key = [
-    cfg.text,
-    fontFamily,
-    cfg.sampleFactor,
-    cfg.simplifyThreshold,
-    cfg.contourBreak,
-    cfg.spacing
-  ].join( "|" );
-
-  const cached = geometryMemo.get( key );
-
-  if ( cached ) {
-    return cached;
-  }
-
-  const field = buildLetterField( cfg );
-
-  // Font still loading → don't cache the null, retry next frame.
-  if ( !field ) {
-    return null;
-  }
-
-  geometryMemo.set(
-    key,
-    field
-  );
-
-  if ( geometryMemo.size > GEOMETRY_MEMO_MAX ) {
-    geometryMemo.delete( geometryMemo.keys().next().value );
-  }
-
-  return field;
 }
 
 // The camera distance at which an entry's bbox (plus tube reach and margin)
