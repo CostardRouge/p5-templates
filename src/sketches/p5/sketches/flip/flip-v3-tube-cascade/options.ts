@@ -22,19 +22,19 @@ export const formValues = {
     // One character per face; the board picks from this bank.
     glyphs: "abcd",
     font: "waverseVariable",
-    detail: 0.6,
-    spacing: 0.06,
+    detail: 1,
+    spacing: 0.14,
     simplify: 0
   },
 
   layout: {
     mode: "subdivide" as "subdivide" | "fixed",
-    depth: 3,
+    depth: 5,
     rate: 1,
-    schedule: "pingPong" as "pingPong" | "grow",
-    scatter: 0.35,
-    columns: 4,
-    rows: 3
+    schedule: "grow" as "pingPong" | "grow",
+    scatter: 0.76,
+    columns: undefined,
+    rows: undefined
   },
 
   flip: {
@@ -97,8 +97,8 @@ export const formValues = {
   },
 
   camera: {
-    fov: 45,
-    margin: 0.08,
+    fov: 21,
+    margin: 0,
     pullBack: 1,
     azimuth: 0,
     elevation: 0,
