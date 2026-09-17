@@ -15,6 +15,9 @@ import type {
 import {
   CONTENT_ITEM_SELECT_EVENT
 } from "@/components/ClientProcessingSketch/components/SketchOptions/constants/drawer-events";
+import {
+  resolveAxes
+} from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/ControlledVector2DInput/utils/vector2dMath";
 
 /**
  * HUD quick-add: right-click a sketch control → add a HUD element already
@@ -23,18 +26,55 @@ import {
  *
  * Only sketch parameters qualify (`getSketchScope` — content-item forms,
  * canvas/animation and the interactive namespace are excluded), and the
- * offered kinds follow the control's component:
- *  - slider / number → counter, gauge, sparkline (the numeric readouts)
- *  - color           → swatch
- * `vector2d` is deliberately NOT offered: crosshairs consumes canvas-pixel
- * points while sketch vector params are normalized 0..1, so the reticle would
- * pin near the top-left corner instead of tracking the value.
+ * offered kinds follow the **value shape** the control edits, since that is
+ * what decides which widget can read it:
+ *  - slider / number             → counter, gauge, sparkline
+ *  - color                       → swatch
+ *  - vector2d                    → the vector map
+ *  - text / select / checkbox …  → the readout (prints whatever it carries)
+ *
+ * Adding a kind to the menu is one entry in QUICK_ADD_KINDS, plus a seed
+ * branch below when the element can inherit something from the control.
  */
 
-const NUMERIC_COMPONENTS = new Set( [
-  "slider",
-  "number"
-] );
+const QUICK_ADD_KINDS: Record<string, ItemKind[]> = {
+  slider: [
+    "hud-counter",
+    "hud-gauge",
+    "hud-sparkline"
+  ],
+  number: [
+    "hud-counter",
+    "hud-gauge",
+    "hud-sparkline"
+  ],
+  color: [
+    "hud-swatch"
+  ],
+  // A sketch vector is normalized in its own domain, which the map carries as
+  // `space: "value"` + the control's own range — that is what crosshairs (a
+  // canvas-pixel reticle) could not do, and why vector2d used to offer nothing.
+  vector2d: [
+    "hud-vector"
+  ],
+  // Non-numeric parameters: the readout prints strings, enums and booleans, so
+  // "which font is this sketch using?" becomes a layer instead of a guess.
+  text: [
+    "hud-readout"
+  ],
+  textarea: [
+    "hud-readout"
+  ],
+  select: [
+    "hud-readout"
+  ],
+  checkbox: [
+    "hud-readout"
+  ],
+  easing: [
+    "hud-readout"
+  ]
+};
 
 export function hudQuickAddKinds(
   registeredName: string,
@@ -44,21 +84,7 @@ export function hudQuickAddKinds(
     return [];
   }
 
-  if ( NUMERIC_COMPONENTS.has( config.component ) ) {
-    return [
-      "hud-counter",
-      "hud-gauge",
-      "hud-sparkline"
-    ];
-  }
-
-  if ( config.component === "color" ) {
-    return [
-      "hud-swatch"
-    ];
-  }
-
-  return [];
+  return QUICK_ADD_KINDS[ config.component ] ?? [];
 }
 
 /**
@@ -110,6 +136,29 @@ export function addHudElementForControl(
     if ( typeof ranged.max === "number" ) {
       seed.max = ranged.max;
     }
+  }
+
+  // The map reads the parameter in its own units, so it inherits the pad's
+  // resolved domain (defaults → allowNegative → shared → per-axis: never the
+  // raw min/max, which a vector2d may not carry at all) and its vertical
+  // orientation, so the layer reads like the control it was created from. The
+  // two axes are collapsed into one square domain: the map is a square, and a
+  // per-axis domain would distort it rather than inform it.
+  if ( kind === "hud-vector" && config.component === "vector2d" ) {
+    const {
+      xAxis, yAxis
+    } = resolveAxes( config );
+
+    seed.space = "value";
+    seed.min = Math.min(
+      xAxis.min,
+      yAxis.min
+    );
+    seed.max = Math.max(
+      xAxis.max,
+      yAxis.max
+    );
+    seed.yDown = config.yDown ?? false;
   }
 
   const current = getValues( base );

@@ -16,7 +16,7 @@ import {
   INTERACTION_SOURCES
 } from "@/p5/utils/interaction/sources.js";
 import {
-  channelVarName
+  channelVarName, type ChannelSnapshot
 } from "@/lib/channelBridge";
 import type {
   FieldConfig, SelectOption
@@ -108,10 +108,12 @@ export type Binding = {
   };
 };
 
-type ChannelDescriptor = {
+export type ChannelDescriptor = {
   id: string;
   type: "scalar" | "vector2d";
   label: string;
+  /** Computed from other channels (a mirror or an average) — see sources.js. */
+  derived?: boolean;
 };
 
 export type SourceOption = {
@@ -168,16 +170,97 @@ export function decodeSource( value: string ): {
 }
 
 /**
+ * A descriptor for a channel id the manifest does not list.
+ *
+ * Some families mint ids at RUNTIME — `midi.cc29` exists the moment CC 29
+ * arrives — so the picker has to name a channel it has never seen declared.
+ * A manifest hit always wins; otherwise the label is derived from the id, and
+ * the type defaults to scalar because every runtime-minted channel is one.
+ */
+export function describeChannel( id: string ): ChannelDescriptor {
+  const declared = DESCRIPTORS.find( ( d ) => d.id === id );
+
+  if ( declared ) {
+    return declared;
+  }
+
+  const cc = /^midi\.cc(\d+)$/.exec( id );
+
+  if ( cc ) {
+    return {
+      id,
+      type: "scalar",
+      label: `MIDI · CC ${ cc[ 1 ] }`
+    };
+  }
+
+  const dot = id.indexOf( "." );
+
+  return {
+    id,
+    type: "scalar",
+    label: dot > 0
+      ? `${ sourceFamilyLabel( id ) } · ${ id.slice( dot + 1 ) }`
+      : id
+  };
+}
+
+// Runtime channels sort after the manifest, by family and then by the number in
+// their id where they have one — so CC 9 sits before CC 29 before CC 104, which
+// a plain string sort gets wrong.
+function trailingNumber( id: string ): number {
+  const match = /(\d+)$/.exec( id );
+
+  return match ? Number( match[ 1 ] ) : Number.NaN;
+}
+
+function compareChannelIds(
+  a: string, b: string
+): number {
+  const familyA = a.split( "." )[ 0 ];
+  const familyB = b.split( "." )[ 0 ];
+
+  if ( familyA !== familyB ) {
+    return familyA.localeCompare( familyB );
+  }
+
+  const numA = trailingNumber( a );
+  const numB = trailingNumber( b );
+
+  if ( !Number.isNaN( numA ) && !Number.isNaN( numB ) ) {
+    return numA - numB;
+  }
+
+  return a.localeCompare( b );
+}
+
+/**
  * The channel sources a target of the given kind can bind to.
  *  - vector2d target: every vector2d channel, whole (passthrough).
  *  - every other kind (continuous, boolean, enum, color) is driven by a single
  *    0..1 signal, so it gets every scalar channel plus each vector2d channel
  *    expanded into its x / y / magnitude / angle projections.
+ *
+ * `extra` widens the list with channels that exist only at runtime — pass the
+ * ids currently being published (see `useLiveChannels`). They are appended
+ * after the manifest, so `channelSourceGroups` drops each into the family group
+ * the manifest already opened. Ids already declared are ignored, and the
+ * function stays pure: nothing here reads the live snapshot itself.
  */
-export function channelSourceOptions( kind: BindingKind ): SourceOption[] {
+export function channelSourceOptions(
+  kind: BindingKind, extra?: Iterable<string>
+): SourceOption[] {
   const options: SourceOption[] = [];
+  const declared = new Set( DESCRIPTORS.map( ( d ) => d.id ) );
+  const runtime = Array.from( new Set( extra ?? [] ) )
+    .filter( ( id ) => id && !declared.has( id ) )
+    .sort( compareChannelIds )
+    .map( describeChannel );
 
-  for ( const descriptor of DESCRIPTORS ) {
+  for ( const descriptor of [
+    ...DESCRIPTORS,
+    ...runtime
+  ] ) {
     if ( kind === "vector2d" ) {
       if ( descriptor.type === "vector2d" ) {
         options.push( {
@@ -250,11 +333,16 @@ function sourceFamilyLabel( sourceId: string ): string {
  * sit under one heading instead of flooding a flat list. Group order follows
  * the source manifest; option order within a group is preserved.
  */
-export function channelSourceGroups( kind: BindingKind ): SourceGroup[] {
+export function channelSourceGroups(
+  kind: BindingKind, extra?: Iterable<string>
+): SourceGroup[] {
   const groups: SourceGroup[] = [];
   const byKey = new Map<string, SourceGroup>();
 
-  for ( const option of channelSourceOptions( kind ) ) {
+  for ( const option of channelSourceOptions(
+    kind,
+    extra
+  ) ) {
     const key = String( option.source ).split( "." )[ 0 ];
 
     let group = byKey.get( key );
@@ -276,6 +364,159 @@ export function channelSourceGroups( kind: BindingKind ): SourceGroup[] {
   }
 
   return groups;
+}
+
+// Channels that mirror or aggregate other channels, and so can never answer
+// "which control did you just move".
+const DERIVED_IDS = new Set( DESCRIPTORS.filter( ( d ) => d.derived ).map( ( d ) => d.id ) );
+
+/**
+ * How far a channel must travel from where it was first seen before it counts
+ * as "the control the user meant". 0.15 of full range is about 19 MIDI steps:
+ * a deliberate turn clears it in a flick, a pot's own jitter of a step or two
+ * never does.
+ */
+export const LEARN_THRESHOLD = 0.15;
+
+/**
+ * Watch one channel snapshot for the control someone is moving, and name it
+ * once it has moved far enough. The other half of MIDI learn — arm, wiggle,
+ * assigned — with the arming and the subscription in `useLiveChannels.ts`.
+ *
+ * Derived channels are skipped, and that is not a detail: `midi.ccLast` mirrors
+ * whichever CC moved last, so it moves in lockstep with the knob being turned —
+ * and, carrying a jump from the previously-moved control's value, it usually
+ * moves FURTHER. Learn measured against it handed back "Last moved CC" instead
+ * of `midi.cc79`, which is the opposite of the stable assignment learn exists
+ * to produce. Any channel computed from another has the same problem; the
+ * manifest flags them.
+ *
+ * `references` is the caller's running record of where each channel sat when it
+ * was FIRST seen since arming, updated in place. First-seen rather than
+ * arm-time is what makes a runtime channel learnable at all: `midi.cc113` does
+ * not exist until that knob moves, so it has no arm-time value — its first
+ * message seeds the reference and the rest of the turn is measured against it.
+ *
+ * Only scalars are candidates. Every vector2d channel is declared in the
+ * manifest and therefore already in the picker's list, so learn exists for the
+ * families whose channels cannot be listed in advance.
+ *
+ * The largest mover wins, and nothing here pretends that is certain: with a
+ * microphone or camera already running, their channels are candidates too and a
+ * loud noise can outvote a knob. The caller's job is to show what was picked
+ * and let it be re-armed — not to hide the ambiguity.
+ */
+export function observeForLearn(
+  snapshot: ChannelSnapshot,
+  references: Map<string, number>,
+  threshold: number = LEARN_THRESHOLD
+): string | null {
+  let winner: string | null = null;
+  let best = threshold;
+
+  for ( const [
+    id,
+    channel
+  ] of Object.entries( snapshot ?? {} ) ) {
+    if (
+      !channel ||
+      channel.type !== "scalar" ||
+      !Number.isFinite( channel.value ) ||
+      DERIVED_IDS.has( id )
+    ) {
+      continue;
+    }
+
+    const reference = references.get( id );
+
+    if ( reference === undefined ) {
+      references.set(
+        id,
+        channel.value
+      );
+      continue;
+    }
+
+    const delta = Math.abs( channel.value - reference );
+
+    if ( delta > best ) {
+      best = delta;
+      winner = id;
+    }
+  }
+
+  return winner;
+}
+
+/**
+ * The same groups, with the binding's CURRENT source guaranteed to be in them.
+ *
+ * A runtime channel only exists while it is being published: reload the page
+ * and `midi.cc29` is gone until that knob is touched again. The `<select>` is
+ * React-controlled, so a value with no matching `<option>` leaves the native
+ * control showing the first entry of the list while the label beside it still
+ * reads the saved source — and the next change event writes whatever the
+ * browser happens to be displaying over the user's binding. Synthesizing the
+ * missing option keeps the two in step; it carries a "not arriving" marker so
+ * a channel that is merely remembered is not mistaken for a live one.
+ */
+export function withSelectedSource(
+  groups: SourceGroup[],
+  source: string | undefined,
+  project: string | undefined
+): SourceGroup[] {
+  if ( !source || sourceCategory( source ) !== "input" ) {
+    return groups;
+  }
+
+  const value = encodeSource(
+    source,
+    project
+  );
+
+  if ( groups.some( ( group ) => group.options.some( ( option ) => option.value === value ) ) ) {
+    return groups;
+  }
+
+  const descriptor = describeChannel( source );
+  const suffix = project
+    ? PROJECTIONS.find( ( p ) => p.project === project )?.suffix ?? project
+    : "";
+  const option: SourceOption = {
+    value,
+    label: `${ descriptor.label }${ suffix ? ` · ${ suffix }` : "" } (not arriving)`,
+    source,
+    project,
+    varName: channelVarName(
+      source,
+      project
+    )
+  };
+  const key = source.split( "." )[ 0 ];
+  const existing = groups.find( ( group ) => group.key === key );
+
+  if ( existing ) {
+    return groups.map( ( group ) => ( group.key === key
+      ? {
+        ...group,
+        options: [
+          ...group.options,
+          option
+        ]
+      }
+      : group ) );
+  }
+
+  return [
+    ...groups,
+    {
+      key,
+      label: sourceFamilyLabel( source ),
+      options: [
+        option
+      ]
+    }
+  ];
 }
 
 /**
@@ -663,9 +904,10 @@ export function sourceCategory( source: string | undefined ): SourceCategory {
  * object) to switch ON so a freshly-picked input source actually produces a
  * channel — "pick a source → it works". Vision sources (hands / face / …) need
  * the camera AND their tracker; the semantic audio scalars (audio.bass,
- * audio.level, …) need the mic AND the named-bands feature; the rest just need
- * their own `enabled` flag. Generators and unknown ids have no source to enable
- * and return an empty list.
+ * audio.level, …) need the mic AND the named-bands feature; the MIDI CC scalars
+ * (midi.cc1 …) need the MIDI source; the rest just need their own `enabled`
+ * flag. Generators and unknown ids have no source to enable and return an empty
+ * list.
  *
  * Mirrors the per-source `enabled` guards the interaction handler's collectors
  * check (see the `_collect*` functions in `@/p5/utils/interaction/index.js`).
@@ -677,6 +919,16 @@ export function interactionEnablePaths( source: string ): string[] {
       "enabled",
       "audio.enabled",
       "audio.features.bands"
+    ];
+  }
+
+  // MIDI control-change scalars (midi.cc1 … midi.cc8, midi.ccLast): just the
+  // MIDI source on. There is no per-CC feature flag — the handler keeps every
+  // CC the selected input sends.
+  if ( source.startsWith( "midi." ) ) {
+    return [
+      "enabled",
+      "midi.enabled"
     ];
   }
 
@@ -850,11 +1102,9 @@ export function bindingSourceLabel( binding: Binding ): string {
     return binding.source.charAt( 0 ).toUpperCase() + binding.source.slice( 1 );
   }
 
-  const base = String( binding.source ).split( "." )[ 0 ];
-  const descriptor =
-    DESCRIPTORS.find( ( d ) => d.id === binding.source ) ??
-    DESCRIPTORS.find( ( d ) => d.id === base );
-  const familyLabel = descriptor ? descriptor.label : binding.source;
+  // describeChannel covers runtime-minted ids too, so a mixer row reads
+  // "MIDI · CC 29" instead of collapsing every bound knob to "MIDI".
+  const familyLabel = describeChannel( binding.source ).label;
 
   if ( binding.project ) {
     const suffix =

@@ -6,8 +6,10 @@ import {
   HudCounterItemSchema,
   HudCrosshairsItemSchema,
   HudGaugeItemSchema,
+  HudReadoutItemSchema,
   HudSparklineItemSchema,
   HudSwatchItemSchema,
+  HudVectorItemSchema,
   ImageItemSchema,
   ImagesStackItemSchema,
   MetaItemSchema,
@@ -96,6 +98,16 @@ export default function makeDefaultItem(
       } );
     case "hud-swatch":
       return HudSwatchItemSchema.parse( {
+        ...seed,
+        type
+      } );
+    case "hud-readout":
+      return HudReadoutItemSchema.parse( {
+        ...seed,
+        type
+      } );
+    case "hud-vector":
+      return HudVectorItemSchema.parse( {
         ...seed,
         type
       } );

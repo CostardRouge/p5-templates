@@ -10,7 +10,9 @@
 // normalize those canvas-space vectors to 0..1 and expose them by source id, so
 // enhancing a handler automatically makes it bindable. Semantic audio scalars
 // (level/bass/treble) come from `getAudio()`; semantic hand/face gesture scalars
-// (hands.openness/fingers/depth …, face.depth) come from `getInteractionMetrics()`.
+// (hands.openness/fingers/depth …, face.depth) come from `getInteractionMetrics()`;
+// MIDI control-change scalars (midi.cc1 … midi.cc8, midi.ccLast) come from
+// `getMidiControls()`.
 //
 // A lightweight baseline `mouse` channel is always present (its own pointer
 // listener) so sketches WITHOUT an interaction block can still bind the mouse.
@@ -18,9 +20,13 @@
 // Generators (oscillator, ramp, sequence, noise, random) are NOT sampled here —
 // they are computed from the sketch's animation progression in the resolver.
 //
-// Determinism: live channels (camera/mic/mouse/gyro) don't reproduce in a
+// Determinism: live channels (camera/mic/mouse/gyro/MIDI) don't reproduce in a
 // server render — the same pre-existing caveat as the mouse binding and the live
-// HUD. Generators remain the recording-safe path.
+// HUD. Generators remain the recording-safe path. A live channel that is not
+// there publishes NOTHING rather than a zero, which is what makes that caveat
+// safe: `bindingValue` returns null for a missing channel, so the parameter
+// keeps the base value the user set instead of snapping to the bottom of its
+// range. Never publish a placeholder value for an absent device.
 
 import {
   getP5
@@ -29,7 +35,7 @@ import {
   AUDIO_BANDS
 } from "./sources.js";
 import {
-  clamp01, buildChannelsFromDebug
+  clamp01, buildChannelsFromDebug, midiControlChannels
 } from "./channelsAdapter.js";
 import {
   gestureChannelValues
@@ -167,6 +173,27 @@ function _collectAudioChannels(
   };
 }
 
+// MIDI control-change scalar channels from getMidiControls() — a hardware knob
+// or fader, normalized 0..1 from its raw 0–127 value. Populated only when the
+// sketch enabled `interaction.midi` (which is also what requests MIDI access,
+// via _collectMidi in the handler) AND the controller has actually sent that
+// CC; see midiControlChannels for why an untouched knob publishes nothing.
+function _collectMidiChannels(
+  interactionOpts, channels
+) {
+  if ( !interactionOpts.midi?.enabled || !_interaction ) {
+    return;
+  }
+
+  Object.assign(
+    channels,
+    midiControlChannels(
+      _interaction.getMidiControls(),
+      _interaction.getMidiLastControl()
+    )
+  );
+}
+
 // Semantic hand/face gesture scalar channels from getInteractionMetrics()
 // (each already normalized 0..1 by gestureChannelValues). The metrics read the
 // same MediaPipe results the pointer collectors already drive, so this only
@@ -255,6 +282,10 @@ export function sampleChannels( interactionOpts ) {
           )
         );
         _collectAudioChannels(
+          interactionOpts,
+          channels
+        );
+        _collectMidiChannels(
           interactionOpts,
           channels
         );

@@ -5,7 +5,7 @@ import {
   Popover, PopoverButton, PopoverPanel
 } from "@headlessui/react";
 import {
-  Activity, ChevronDown, Plus, RotateCcw, Trash2, X
+  Activity, ChevronDown, Crosshair, Plus, RotateCcw, Trash2, X
 } from "lucide-react";
 import clsx from "clsx";
 import {
@@ -56,6 +56,7 @@ import {
   channelSourceGroups,
   channelSourceOptions,
   sourceOptionShortLabel,
+  withSelectedSource,
   decodeSource,
   defaultSequence,
   DEFAULT_NOISE,
@@ -73,6 +74,9 @@ import {
   toSketchRelativePath,
   WAVE_OPTIONS
 } from "./bindingUtils";
+import {
+  useChannelLearn, useLiveChannelIds
+} from "./useLiveChannels";
 
 type Props = {
   fieldPath: string;
@@ -153,6 +157,138 @@ function BarSelect( {
           </option>
         ) )}
       </select>
+    </div>
+  );
+}
+
+/**
+ * The input-source picker: the same control bar as BarSelect, but with its own
+ * richer closed-state label (the full "Family · Detail", since the open list
+ * groups by family under an <optgroup> heading where a short label reads best).
+ *
+ * It is a component rather than inline JSX so that `useLiveChannelIds` is
+ * mounted exactly when the picker is on screen. Headless UI unmounts the
+ * popover panel on close, so nothing subscribes to the per-frame channel
+ * snapshot the rest of the time.
+ *
+ * The list is the static manifest widened by whatever is currently arriving —
+ * that is how a knob sending CC 29 becomes pickable — and then `withSelectedSource`
+ * guarantees the binding's own source is present even when it is not arriving,
+ * which is the case on every reload before the knob is touched again.
+ */
+function SourceBar( {
+  kind,
+  binding,
+  onPick,
+  onArmLearn
+}: {
+  kind: BindingKind;
+  binding: Binding;
+  onPick: ( source: string, project?: string ) => void;
+  onArmLearn: () => void;
+} ) {
+  const liveIds = useLiveChannelIds();
+  // A learned control is always a scalar, so it carries no projection.
+  const learn = useChannelLearn( ( id ) => onPick( id ) );
+  const groups = withSelectedSource(
+    channelSourceGroups(
+      kind,
+      liveIds
+    ),
+    binding.source,
+    binding.project
+  );
+  const value = encodeSource(
+    binding.source,
+    binding.project
+  );
+  const selected = groups
+    .flatMap( ( group ) => group.options )
+    .find( ( option ) => option.value === value );
+
+  // While armed the bar reports the gesture instead of the current source —
+  // including the one failure that is otherwise silent, a paused sketch
+  // publishing no snapshot for the listener to read.
+  const barLabel = learn.armed
+    ? ( learn.seenSignal ? "Move a control…" : "No frames — is it paused?" )
+    : ( selected?.label ?? binding.source );
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <div className={ CONTROL_BAR_CLASS }>
+        <BarLabelSegment label="Source" />
+        {/* Visible, non-interactive: shows the full "Family · Detail"
+            label so the source's group stays legible once collapsed —
+            the native <select> below would otherwise only echo back
+            the short, group-less option text. */}
+        <span
+          aria-hidden
+          className="pointer-events-none flex min-w-0 flex-1 items-center justify-between gap-1 px-2.5"
+        >
+          <span className={ clsx(
+            "truncate",
+            learn.armed && "text-focus"
+          ) }>{barLabel}</span>
+          <ChevronDown className={ CONTROL_CHEVRON_CLASS } />
+        </span>
+        <select
+          value={ value }
+          onChange={ ( e ) => {
+            const {
+              source, project
+            } = decodeSource( e.target.value );
+
+            // Picking by hand answers the same question learn was asking.
+            learn.disarm();
+            onPick(
+              source,
+              project
+            );
+          } }
+          aria-label="Source"
+          className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+        >
+          {groups.map( ( group ) => (
+            <optgroup key={ group.key } label={ group.label }>
+              {group.options.map( ( option ) => (
+                <option key={ option.value } value={ option.value }>
+                  {sourceOptionShortLabel( option )}
+                </option>
+              ) )}
+            </optgroup>
+          ) )}
+        </select>
+      </div>
+      {/* Learn is for scalars: a vector2d target can only take a whole
+          vector2d channel, and every one of those is already in the list. */}
+      {kind !== "vector2d" && (
+        <button
+          type="button"
+          aria-pressed={ learn.armed }
+          aria-label="Learn a control"
+          title={ learn.armed
+            ? "Listening — move the control you want"
+            : "Learn: arm, then move a control to assign it" }
+          onClick={ () => {
+            if ( learn.armed ) {
+              learn.disarm();
+              return;
+            }
+
+            // Order matters: the source has to be enabled BEFORE listening, or
+            // the collectors never sample it and the knob turns into nothing.
+            onArmLearn();
+            learn.arm();
+          } }
+          className={ clsx(
+            CONTROL_RESET_BUTTON_CLASS,
+            "shrink-0 border border-theme",
+            learn.armed && "border-focus text-focus"
+          ) }
+        >
+          <Crosshair className="h-3.5 w-3.5" />
+        </button>
+      )}
     </div>
   );
 }
@@ -251,15 +387,6 @@ export default function BindingAffordance( {
         return option?.label ?? String( value );
       } )
       : [];
-
-  // The selected input source's full "Family · Detail" label — shown only on
-  // the closed control, since the open list already groups by family under
-  // an <optgroup> heading (a short label there would be redundant).
-  const selectedSourceOption = binding && sourceOptions.find( ( option ) => option.value === encodeSource(
-    binding.source,
-    binding.project
-  ) );
-  const selectedSourceLabel = selectedSourceOption?.label ?? binding?.source ?? "";
 
   // Path of the selected binding object in the form; sub-fields (mapping.min,
   // smoothing, enabled…) are edited in place so they round-trip like any other
@@ -777,53 +904,28 @@ export default function BindingAffordance( {
               )}
 
               {category === "input" && (
-                <div className={ CONTROL_BAR_CLASS }>
-                  <BarLabelSegment label="Source" />
-                  {/* Visible, non-interactive: shows the full "Family · Detail"
-                      label so the source's group stays legible once collapsed —
-                      the native <select> below would otherwise only echo back
-                      the short, group-less option text. */}
-                  <span
-                    aria-hidden
-                    className="pointer-events-none flex min-w-0 flex-1 items-center justify-between gap-1 px-2.5"
-                  >
-                    <span className="truncate">{selectedSourceLabel}</span>
-                    <ChevronDown className={ CONTROL_CHEVRON_CLASS } />
-                  </span>
-                  <select
-                    value={ encodeSource(
-                      binding.source,
-                      binding.project
-                    ) }
-                    onChange={ ( e ) => {
-                      const {
-                        source, project
-                      } = decodeSource( e.target.value );
-
-                      setField(
-                        "source",
-                        source
-                      );
-                      setField(
-                        "project",
-                        project ?? null
-                      );
-                      void enableSourceInputs( source );
-                    } }
-                    aria-label="Source"
-                    className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                  >
-                    {channelSourceGroups( kind ).map( ( group ) => (
-                      <optgroup key={ group.key } label={ group.label }>
-                        {group.options.map( ( option ) => (
-                          <option key={ option.value } value={ option.value }>
-                            {sourceOptionShortLabel( option )}
-                          </option>
-                        ) )}
-                      </optgroup>
-                    ) )}
-                  </select>
-                </div>
+                <SourceBar
+                  kind={ kind }
+                  binding={ binding }
+                  // Arming learn enables the MIDI source, and only that one:
+                  // it is the family whose channels cannot be listed ahead of
+                  // time, and the only one that costs no camera or microphone
+                  // permission to start listening to.
+                  onArmLearn={ () => void enableSourceInputs( "midi.ccLast" ) }
+                  onPick={ (
+                    source, project
+                  ) => {
+                    setField(
+                      "source",
+                      source
+                    );
+                    setField(
+                      "project",
+                      project ?? null
+                    );
+                    void enableSourceInputs( source );
+                  } }
+                />
               )}
 
               {category === "oscillator" && (

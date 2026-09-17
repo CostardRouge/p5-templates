@@ -18,14 +18,14 @@ export const formValues = {
 
   text: {
     words: [
-      "a",
-      "b",
-      "c",
-      "d"
+      "1",
+      "2",
+      "3",
+      "4"
     ] as string[],
-    font: "waverseVariable",
-    detail: 0.6,
-    spacing: 0.06,
+    font: "spaceMonoItalic",
+    detail: 0.92,
+    spacing: 0.02,
     simplify: 0
   },
 
@@ -39,8 +39,9 @@ export const formValues = {
   // which is what a board deeper than v3's ceiling needs.
   card: {
     renderer: "strokes" as "shader" | "strokes",
-    // Strokes: fraction of the card's side.
-    thickness: 0.05,
+    // Strokes: fraction of the card's side. This is the tuned value that used
+    // to live on `text.thickness`; the group moved, the number did not.
+    thickness: 0.035,
     // Shader: glyph units, where 1 is roughly a cap height (v1's ratio of
     // material.thickness to material.size is ~0.008; this reads thicker
     // because a grid cell is small on screen).
@@ -53,12 +54,12 @@ export const formValues = {
     // land on a flat frame. "fixed" — a plain board, two numbers you can drive
     // from anywhere because nothing about them has to.
     mode: "subdivide" as "subdivide" | "fixed",
-    depth: 4,
-    rate: 1,
-    schedule: "pingPong" as "pingPong" | "grow",
-    scatter: 0.35,
-    columns: 4,
-    rows: 3
+    depth: 6,
+    rate: 2,
+    schedule: "grow" as "pingPong" | "grow",
+    scatter: 0,
+    columns: 8,
+    rows: 5
   },
 
   flip: {
@@ -72,38 +73,38 @@ export const formValues = {
   },
 
   wave: {
-    order: "radial" as "all" | "columns" | "rows" | "diagonal" | "radial" | "noise" | "random",
+    order: "columns" as "all" | "columns" | "rows" | "diagonal" | "radial" | "noise" | "random",
     spread: 0.55,
-    jitter: 0.2,
+    jitter: 0.46,
     frequency: 4,
-    seed: 7,
+    seed: 350,
     // "manual" hands the front over: `head` then replaces the loop clock
     // outright, so an interaction binding drives the whole board.
     headMode: "clock" as "clock" | "manual",
-    head: 0
+    head: 0.29
   },
 
   content: {
     mode: "scatter" as "scatter" | "chorus" | "spell",
-    offset: 1,
+    offset: 1.7,
     // Every cell samples its own rectangle of ONE face spanning the board, so
     // subdividing cuts the glyph into pieces instead of replacing it.
     inherit: false
   },
 
   cell: {
-    gutter: 0.08,
-    fill: 0.86,
-    depth: 0.15,
-    trail: 0.5
+    gutter: 0.23,
+    fill: 0.65,
+    depth: 0.29,
+    trail: 0.37
   },
 
   colors: {
-    huePhase: 200,
+    huePhase: 161,
     hueSpread: 0.6,
     faceHueShift: 55,
     cellHueShift: 60,
-    tintPhase: 0,
+    tintPhase: 215,
     hueSpeed: 1,
     saturation: 55,
     brightness: 1,
@@ -239,7 +240,7 @@ export const formConfiguration: Record<string, any> = {
           min: 0.005,
           max: 0.2,
           step: 0.005,
-          default: 0.05
+          default: 0.035
         }
       }
     }

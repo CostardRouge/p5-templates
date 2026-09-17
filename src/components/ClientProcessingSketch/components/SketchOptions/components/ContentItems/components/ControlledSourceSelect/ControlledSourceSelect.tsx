@@ -14,12 +14,18 @@ import {
   BarLabelSegment
 } from "../ControlChrome";
 import {
-  BUILTIN_SOURCES, flattenKeys, groupKeyPaths
+  BUILTIN_SOURCES, POINT_BUILTIN_SOURCES, flattenKeys, flattenPointKeys, groupKeyPaths
 } from "@/p5/utils/hud/keyPaths";
 
 type Props = {
   name: string;
   label?: string;
+  /**
+   * The value shape the consuming widget can act on. "point" narrows the list
+   * to the `{ x, y }` key-paths and the point built-ins; anything else lists
+   * the scalars, as before.
+   */
+  kind?: "scalar" | "point";
   isModified?: boolean;
   onReset?: ( event: React.MouseEvent ) => void;
 };
@@ -36,6 +42,7 @@ type Props = {
 export default function ControlledSourceSelect( {
   name,
   label,
+  kind = "scalar",
   isModified,
   onReset
 }: Props ) {
@@ -54,12 +61,16 @@ export default function ControlledSourceSelect( {
     name: "sketch"
   } );
 
-  const keys = flattenKeys( sketch ?? {} );
+  const isPointPicker = kind === "point";
+  const builtins = isPointPicker ? POINT_BUILTIN_SOURCES : BUILTIN_SOURCES;
+  const keys = isPointPicker
+    ? flattenPointKeys( sketch ?? {} )
+    : flattenKeys( sketch ?? {} );
   const {
     rootOptions, groups
   } = groupKeyPaths( keys );
   const currentValue = typeof field.value === "string" ? field.value : "";
-  const builtin = BUILTIN_SOURCES.find( ( source ) => source.value === currentValue );
+  const builtin = builtins.find( ( source ) => source.value === currentValue );
   const displayLabel = builtin?.label ?? ( currentValue || "—" );
 
   return (
@@ -84,7 +95,7 @@ export default function ControlledSourceSelect( {
         onBlur={ field.onBlur }
       >
         <optgroup label="Live / built-in">
-          {BUILTIN_SOURCES.map( ( source ) => (
+          {builtins.map( ( source ) => (
             <option key={ source.value } value={ source.value }>
               {source.label}
             </option>
@@ -99,7 +110,7 @@ export default function ControlledSourceSelect( {
         )}
 
         {rootOptions.length > 0 && (
-          <optgroup label="Sketch parameters">
+          <optgroup label={ isPointPicker ? "Sketch vectors" : "Sketch parameters" }>
             {rootOptions.map( ( option ) => (
               <option key={ option.value } value={ option.value }>
                 {option.label}

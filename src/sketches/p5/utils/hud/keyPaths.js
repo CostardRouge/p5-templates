@@ -92,6 +92,14 @@ export const BUILTIN_SOURCES = [
 
 export const BUILTIN_SOURCE_KEYS = BUILTIN_SOURCES.map( ( source ) => source.value );
 
+// The subset of the built-ins that resolve to a point ({ x, y }) — the only
+// ones a point-consuming widget (crosshairs, vector map) can use. Both are in
+// canvas pixels, which is why those widgets carry a `space` setting.
+export const POINT_BUILTIN_SOURCES = BUILTIN_SOURCES.filter( ( source ) =>
+  source.value === "center" || source.value === "mouse" );
+
+export const POINT_BUILTIN_SOURCE_KEYS = POINT_BUILTIN_SOURCES.map( ( source ) => source.value );
+
 // Overlay-config keys that live alongside sketch params but are not data.
 const SKIP_TOP_LEVEL = new Set( [
   "hud",
@@ -248,6 +256,55 @@ export function flattenKeys(
       typeof value === "boolean"
     ) {
       out.push( path );
+    }
+  }
+
+  return out;
+}
+
+/**
+ * Whether a value is a 2D point: an { x, y } pair of finite numbers. Sketch
+ * vector params store that shape (it is what the vector2d pad writes); arrays
+ * are deliberately not accepted here — a two-number array in the settings tree
+ * is far more likely a colour or a size pair than a point.
+ */
+export function isPointValue( value ) {
+  return Boolean( value ) &&
+    typeof value === "object" &&
+    !Array.isArray( value ) &&
+    Number.isFinite( value.x ) &&
+    Number.isFinite( value.y );
+}
+
+/**
+ * Flatten a sketch-settings object into the key-paths whose value is a point —
+ * the bindable sources for the point-consuming widgets (crosshairs, the vector
+ * map). A point is a leaf: the walk stops there instead of descending into its
+ * `x` / `y`, which is exactly what `flattenKeys` does the opposite of.
+ */
+export function flattenPointKeys(
+  obj, prefix = "", out = []
+) {
+  if ( !obj || typeof obj !== "object" ) {
+    return out;
+  }
+
+  for ( const key of Object.keys( obj ) ) {
+    if ( !prefix && SKIP_TOP_LEVEL.has( key ) ) {
+      continue;
+    }
+
+    const value = obj[ key ];
+    const path = prefix ? `${ prefix }.${ key }` : key;
+
+    if ( isPointValue( value ) ) {
+      out.push( path );
+    } else if ( value && typeof value === "object" && !Array.isArray( value ) ) {
+      flattenPointKeys(
+        value,
+        path,
+        out
+      );
     }
   }
 
