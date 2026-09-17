@@ -107,7 +107,22 @@ cc80 on its MIDI port and cc23 on its DAW port, and only `knob.3` is true on
 both. Two rules the gesture follows: on an already-bound field it replaces the
 **source only**, keeping the range, curve and smoothing that were set by hand;
 and since the context menu closes on click, the **field itself** has to show it
-is listening, or a knob that does nothing reads as a fault.
+is listening, or a knob that does nothing reads as a fault. It stays a shortcut
+for the one tedious step and never a second editor — easing, smoothing and the
+rest are still only in the popover, which is also the only way to reach a
+generator, since a learn can capture a channel and nothing else.
+
+**Arming a learn means switching the source on FIRST — `armLearnForField` before
+`learn.arm()`, never the reverse.** Enabling on capture cannot work: without
+`interaction.midi.enabled` the handler never calls `requestMIDIAccess()` at all,
+so no CC channel is ever published and there is nothing to diff. It is invisible
+on any document where MIDI was already on, which is every document one tests on
+after the first. Two neighbouring traps, both of which read as that same "learn
+is broken": `seenSignal` flips on the first frame published **whatever it
+contains** — `sampleChannels` always emits `mouse` — so it says "frames are
+arriving", never "a learnable channel exists"; and the affordance must be hidden
+for `vector2d`, because `observeForLearn` returns only scalars, so a 2D pad arms
+and waits forever. The popover hides its own crosshair for that kind.
 
 **Declared ones resolve at read time and are NEVER written to the document.**
 `effectiveInteractive` (`options.js`) appends them inside the ephemeral array it

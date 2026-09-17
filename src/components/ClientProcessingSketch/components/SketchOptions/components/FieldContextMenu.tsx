@@ -7,11 +7,52 @@ import {
   createPortal
 } from "react-dom";
 
-export type FieldContextMenuItem = {
+export type FieldContextMenuAction = {
   label: string;
   icon?: React.ComponentType<{ className?: string }>;
   onClick: () => void;
 };
+
+export type FieldContextMenuSeparator = {
+  separator: true;
+};
+
+export type FieldContextMenuItem = FieldContextMenuAction | FieldContextMenuSeparator;
+
+function isSeparator( item: FieldContextMenuItem ): item is FieldContextMenuSeparator {
+  return "separator" in item;
+}
+
+/**
+ * Drop every separator that would render as a floating rule.
+ *
+ * A menu is assembled by conditional spreads, so any group can be entirely
+ * absent — and its divider would then sit at the head, at the tail, or doubled
+ * up against the next one. Normalising here keeps the caller free to write the
+ * separators between its groups unconditionally.
+ */
+export function withoutDanglingSeparators( items: FieldContextMenuItem[] ): FieldContextMenuItem[] {
+  const kept: FieldContextMenuItem[] = [];
+
+  for ( const item of items ) {
+    if ( !isSeparator( item ) ) {
+      kept.push( item );
+      continue;
+    }
+
+    const previous = kept[ kept.length - 1 ];
+
+    if ( previous && !isSeparator( previous ) ) {
+      kept.push( item );
+    }
+  }
+
+  while ( kept.length > 0 && isSeparator( kept[ kept.length - 1 ] ) ) {
+    kept.pop();
+  }
+
+  return kept;
+}
 
 type Position = {
   x: number;
@@ -138,12 +179,25 @@ export default function FieldContextMenu( {
         } }
         onClick={ ( event ) => event.stopPropagation() }
       >
-        {items.map( ( item ) => {
+        {/* Keyed by index on purpose: a separator has no label, and two
+            entries may legitimately share one. */}
+        {withoutDanglingSeparators( items ).map( (
+          item, index
+        ) => {
+          if ( isSeparator( item ) ) {
+            return (
+              <div
+                key={ index }
+                className="my-1 h-px bg-border"
+              />
+            );
+          }
+
           const Icon = item.icon;
 
           return (
             <button
-              key={ item.label }
+              key={ index }
               type="button"
               onClick={ () => {
                 item.onClick();

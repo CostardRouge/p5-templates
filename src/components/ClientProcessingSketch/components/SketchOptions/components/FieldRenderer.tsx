@@ -67,7 +67,7 @@ import {
   useChannelLearn
 } from "./ContentItems/components/BindingAffordance/useLiveChannels";
 import {
-  applyLearnedChannel, canLearnBindingFor
+  applyLearnedChannel, armLearnForField, canLearnBindingFor
 } from "../utils/learnBindingForField";
 import {
   interactionBindingsEnabled
@@ -887,6 +887,12 @@ export default function FieldRenderer( {
                 }
               ]
               : [] ),
+            // Three groups — propagate this value, modulate this field,
+            // visualise it. The separators are written unconditionally; the
+            // menu drops the ones a missing group would leave dangling.
+            {
+              separator: true
+            } as const,
             ...( canLearn
               ? [
                 {
@@ -894,10 +900,23 @@ export default function FieldRenderer( {
                     ? `Learn a control for "${ config.label }"`
                     : "Learn a control",
                   icon: Crosshair,
-                  onClick: learn.arm
+                  onClick: () => {
+                    // Order matters: MIDI has to be switched on BEFORE
+                    // listening, or the handler never requests access, no CC
+                    // is ever published, and the knob turns into nothing.
+                    void armLearnForField(
+                      getValues,
+                      setValue,
+                      registeredName
+                    );
+                    learn.arm();
+                  }
                 }
               ]
               : [] ),
+            {
+              separator: true
+            } as const,
             ...quickAddKinds.map( ( kind ) => ( {
               label: config.label
                 ? `Add a ${ ITEM_META[ kind ].label.toLowerCase() } for "${ config.label }"`

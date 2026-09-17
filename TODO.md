@@ -170,13 +170,14 @@ lighting message on the static channel is also what stops a flash or a pulse.
 | Port-keyed controller map | `interaction/controllerMap.js` resolves a port name + abstract control to a channel id | The same knob sends different CCs per port; the port is the only stable key | low | ✅ #360 |
 | Control declared on a field | `binding: { control: "knob.1" }` in a sketch's `options.ts` | The sketch states intent, the app resolves the hardware | medium | ✅ #360 |
 | Port name exposed to the engine | `getMidiDeviceName()`, empty while listening to every input | No map can apply without it, and an ambiguous name would address the wrong knob | low | ✅ #360 |
+| Learn from the context menu | Right-click a field → "Learn a control…" → move it. A shortcut for assigning the source, not a second editor: easing, smoothing and generators stay in the popover | Four clicks down to two, on the one step that was tedious | low | ✅ #360 |
+| Abstract control on a learned binding | The document keeps `knob.3`, not `midi.cc23` | The binding survives a MIDI ↔ DAW port switch, and would travel to another controller | low | ✅ #360 |
 
 ### Next
 
 | Feature | What it does | Why it matters | Complexity | Worth |
 | --- | --- | --- | --- | --- |
-| **Learn from the context menu** | Right-click a field → "Learn a control…" → move it | Four clicks down to two. `useChannelLearn` is already a standalone tested hook and `FieldContextMenu` a flat item array, so this is mostly wiring | **low** | ✅ best ratio |
-| Store the abstract control on a learned binding | The document keeps `knob.3`, not `midi.cc23` | The binding then survives a MIDI ↔ DAW port switch, and would travel to another controller | low — an inverse lookup plus resolving stored controls | ✅ |
+| Context menu on a checkbox | The checkbox branch of `FieldRenderer` returns before the wrapper carrying `onContextMenu`, so no boolean field has a context menu at all — and "Learn a control" is unreachable there although the `boolean` kind is bindable | A pad is the natural control for a toggle, and that is exactly the field it cannot be learned on | low, but it touches a branch every form shares | ⚠️ |
 | MIDI output: arm / disarm DAW mode | Send `9F 0C 7F` on connect, `9F 0C 00` on teardown | Nothing in `src/` writes MIDI yet, and this gates the LEDs. Leaving the keyboard armed after the tab closes is the trap | medium | ✅ |
 | Pad LEDs | Light a pad from the palette; flash and pulse | Visual feedback on the hardware itself | medium | ⚠️ comfort |
 | `component: "action"` field type | A field that triggers rather than edits a value | **Pads cannot drive anything without it** — selecting an effect is an action, not a value. Already filed under Options / Form System | **high** | ✅ but its own job |

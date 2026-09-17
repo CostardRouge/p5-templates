@@ -26,17 +26,58 @@ type GetValues = ( path?: string ) => any;
 type SetValue = ( path: string, value: unknown, options?: Record<string, unknown> ) => void;
 
 /**
- * Whether a field can host "learn a control" — the same three conditions the
+ * Whether a field can host "learn a control" — the same conditions the
  * modulation pastille itself is gated on, so the menu entry never appears where
  * the affordance would not.
+ *
+ * A 2D pad is excluded: `observeForLearn` only ever returns a SCALAR channel,
+ * so a vector2d target would arm and then wait forever. The binding popover
+ * hides its own learn button for that kind, for that same reason.
  */
 export function canLearnBindingFor(
   registeredName: string, config: FieldConfig
 ): boolean {
+  const kind = bindingKindFor( config.component );
+
   return (
     interactionBindingsEnabled() &&
     getSketchScope( registeredName ) !== null &&
-    bindingKindFor( config.component ) !== null
+    kind !== null &&
+    kind !== "vector2d"
+  );
+}
+
+/**
+ * Switch MIDI on, then let the caller start listening — in that order.
+ *
+ * Nothing about a learn works until `interaction.midi.enabled` is set: the
+ * handler only requests MIDI access from that flag, so without it
+ * `requestMIDIAccess()` is never even called, no CC channel is ever published,
+ * and the observer has nothing to diff. Moving a knob does literally nothing.
+ * The binding popover enables the same way before arming (`onArmLearn()` then
+ * `learn.arm()`); this is that sequence, written once so a caller cannot get it
+ * backwards.
+ *
+ * `midi.ccLast` stands in for every CC — a `midi.*` id asks for the same two
+ * flags, there is no per-CC feature flag.
+ */
+export async function armLearnForField(
+  getValues: GetValues,
+  setValue: SetValue,
+  registeredName: string
+): Promise<void> {
+  const scope = getSketchScope( registeredName );
+
+  if ( !scope ) {
+    return;
+  }
+
+  await enableSourceInputs(
+    getValues,
+    setValue,
+    scope,
+    interactiveScopeFor( scope ),
+    "midi.ccLast"
   );
 }
 

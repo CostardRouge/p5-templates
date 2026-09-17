@@ -8,7 +8,7 @@ import type {
   FieldConfig
 } from "../../components/ContentItems/constants/field-config";
 import {
-  applyLearnedChannel, canLearnBindingFor
+  applyLearnedChannel, armLearnForField, canLearnBindingFor
 } from "../learnBindingForField";
 
 jest.mock(
@@ -85,6 +85,78 @@ describe(
             component: "text"
           } as unknown as FieldConfig
         ) ).toBe( false );
+      }
+    );
+
+    it(
+      "refuses a 2D pad, which can arm but never capture",
+      () => {
+        // `observeForLearn` only ever returns a scalar channel.
+        expect( canLearnBindingFor(
+          "sketch.offset",
+          {
+            component: "vector2d"
+          } as unknown as FieldConfig
+        ) ).toBe( false );
+      }
+    );
+  }
+);
+
+describe(
+  "armLearnForField",
+  () => {
+    it(
+      "switches MIDI on, so the handler requests access before anyone listens",
+      async() => {
+        const form = fakeForm();
+
+        await armLearnForField(
+          form.getValues,
+          form.setValue,
+          "sketch.speed"
+        );
+
+        // Without these the handler never calls requestMIDIAccess(), no CC is
+        // ever published, and the learn has nothing to diff.
+        expect( form.store[ "interactive.interaction.enabled" ] ).toBe( true );
+        expect( form.store[ "interactive.interaction.midi.enabled" ] ).toBe( true );
+        expect( form.store[ "interactive.interaction" ] ).toBeDefined();
+      }
+    );
+
+    it(
+      "writes into the sketch's own interaction block when it declares one",
+      async() => {
+        const form = fakeForm( {
+          "sketch.interaction": {
+            enabled: false
+          }
+        } );
+
+        await armLearnForField(
+          form.getValues,
+          form.setValue,
+          "sketch.speed"
+        );
+
+        expect( form.store[ "sketch.interaction.midi.enabled" ] ).toBe( true );
+        expect( form.store[ "interactive.interaction" ] ).toBeUndefined();
+      }
+    );
+
+    it(
+      "does nothing for a path outside the sketch scope",
+      async() => {
+        const form = fakeForm();
+
+        await armLearnForField(
+          form.getValues,
+          form.setValue,
+          "size.width"
+        );
+
+        expect( Object.keys( form.store ) ).toHaveLength( 0 );
       }
     );
   }
