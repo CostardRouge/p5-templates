@@ -90,7 +90,9 @@ const OFFSET_DRAGGABLE_TYPES = new Set( [
   "hud-gauge",
   "hud-sparkline",
   "hud-counter",
-  "hud-swatch"
+  "hud-swatch",
+  "hud-readout",
+  "hud-vector"
 ] );
 
 // Per-type offset defaults (mirroring the Hud*ItemSchema defaults) so an
@@ -115,6 +117,14 @@ const OFFSET_DEFAULTS = {
   "hud-swatch": {
     x: 0.95,
     y: 0.2
+  },
+  "hud-readout": {
+    x: 0.05,
+    y: 0.12
+  },
+  "hud-vector": {
+    x: 0.95,
+    y: 0.75
   }
 };
 

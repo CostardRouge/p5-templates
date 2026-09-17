@@ -15,6 +15,8 @@ import {
   Hash as CounterIcon,
   Crosshair as CrosshairsIcon,
   Palette as SwatchIcon,
+  Text as ReadoutIcon,
+  SquareDot as VectorIcon,
   Scan as BoundingBoxIcon
 } from "lucide-react";
 import {
@@ -40,11 +42,13 @@ export const ITEM_ORDER: ItemKind[] = [
   "hud-counter",
   "hud-crosshairs",
   "hud-swatch",
+  "hud-readout",
+  "hud-vector",
   "hud-bounding-box"
 ];
 
-// Palette sections: 17 flat tiles read as a wall, so the popover groups the
-// telemetry family under its own eyebrow.
+// Palette sections: nineteen flat tiles read as a wall, so the popover groups
+// the telemetry family under its own eyebrow.
 export const ITEM_GROUPS: ItemKindGroup[] = [
   {
     label: "Content",
@@ -70,6 +74,8 @@ export const ITEM_GROUPS: ItemKindGroup[] = [
       "hud-counter",
       "hud-crosshairs",
       "hud-swatch",
+      "hud-readout",
+      "hud-vector",
       "hud-bounding-box"
     ]
   }
@@ -130,6 +136,16 @@ export const ITEM_META: Record<ItemKind, ItemKindMeta> = {
     label: "Swatch",
     Icon: SwatchIcon,
     description: "Live colour chip bound to a colour source"
+  },
+  "hud-readout": {
+    label: "Readout",
+    Icon: ReadoutIcon,
+    description: "Label + a live text value (a font, a preset, any parameter)"
+  },
+  "hud-vector": {
+    label: "Vector",
+    Icon: VectorIcon,
+    description: "Mini x/y map of a point, in relative or absolute coordinates"
   },
   "hud-bounding-box": {
     label: "Bounding box",

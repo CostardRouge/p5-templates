@@ -6,34 +6,9 @@ import {
 import {
   getFont,
   toColor,
+  toPoint,
   withHudTransform
 } from "./common.js";
-
-/**
- * Coerce a probe/built-in value into a 2D point. Accepts { x, y }, p5.Vector,
- * or an [x, y] array.
- */
-function toPoint( value ) {
-  if ( !value ) {
-    return null;
-  }
-
-  if ( typeof value.x === "number" && typeof value.y === "number" ) {
-    return {
-      x: value.x,
-      y: value.y
-    };
-  }
-
-  if ( Array.isArray( value ) && value.length >= 2 ) {
-    return {
-      x: value[ 0 ],
-      y: value[ 1 ]
-    };
-  }
-
-  return null;
-}
 
 /**
  * Crosshairs widget: full-canvas guide lines through a tracked point, a rotating

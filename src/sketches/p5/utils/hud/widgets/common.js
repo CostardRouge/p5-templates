@@ -162,6 +162,34 @@ export function anchoredRect(
 }
 
 /**
+ * Coerce a resolved source value into a 2D point. Accepts { x, y } (what a
+ * vector2d sketch param and the point built-ins carry), a p5.Vector, or an
+ * [x, y] array. Returns null for anything else — a point widget bound to a
+ * scalar draws nothing rather than plotting a guess.
+ */
+export function toPoint( value ) {
+  if ( !value ) {
+    return null;
+  }
+
+  if ( typeof value.x === "number" && typeof value.y === "number" ) {
+    return {
+      x: value.x,
+      y: value.y
+    };
+  }
+
+  if ( Array.isArray( value ) && value.length >= 2 ) {
+    return {
+      x: value[ 0 ],
+      y: value[ 1 ]
+    };
+  }
+
+  return null;
+}
+
+/**
  * Report a widget's drawn rectangle (canvas pixels), so the on-canvas content
  * drag can grab and move the element by its visible body. Each HUD element is
  * its own content item now, so this is plain item bounds; a no-op outside a
