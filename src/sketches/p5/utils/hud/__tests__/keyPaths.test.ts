@@ -5,7 +5,7 @@
  */
 
 import {
-  collectBranchPaths, groupKeyPaths
+  collectBranchPaths, flattenKeys, flattenPointKeys, groupKeyPaths
 } from "../keyPaths.js";
 
 describe(
@@ -149,6 +149,75 @@ describe(
           "seed",
           "count"
         ] ) ).toEqual( [] );
+      }
+    );
+  }
+);
+
+describe(
+  "flattenPointKeys",
+  () => {
+    const settings = {
+      count: 12,
+      font: "spaceMonoRegular",
+      position: {
+        x: 0.5,
+        y: 0.25
+      },
+      grid: {
+        origin: {
+          x: 0,
+          y: 0
+        },
+        cell: {
+          size: 40
+        }
+      },
+      colors: {
+        text: [
+          255,
+          255,
+          255
+        ]
+      },
+      // Overlay config, skipped at the top level like flattenKeys does.
+      hud: {
+        anchor: {
+          x: 1,
+          y: 1
+        }
+      }
+    };
+
+    it(
+      "collects the { x, y } key-paths and stops there",
+      () => {
+        expect( flattenPointKeys( settings ) ).toEqual( [
+          "position",
+          "grid.origin"
+        ] );
+      }
+    );
+
+    it(
+      "is the complement of flattenKeys, which walks into a point's axes",
+      () => {
+        const scalars = flattenKeys( settings );
+
+        expect( scalars ).toContain( "position.x" );
+        expect( scalars ).not.toContain( "position" );
+      }
+    );
+
+    it(
+      "ignores arrays, whose two numbers are far likelier a colour than a point",
+      () => {
+        expect( flattenPointKeys( {
+          pair: [
+            0.5,
+            0.25
+          ]
+        } ) ).toEqual( [] );
       }
     );
   }

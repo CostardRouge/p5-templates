@@ -1151,6 +1151,75 @@ const hudSwatchFields = {
   ...hudWindow
 };
 
+// How a readout lays its label out against its value: the counter's stacked
+// pair (small caption over a big value) or one "LABEL  value" line.
+export const HUD_READOUT_LAYOUTS = [
+  "stacked",
+  "inline"
+] as const;
+
+const hudReadoutFields = {
+  // Any source that resolves to something printable — a string parameter (the
+  // sketch's font, a preset name), a boolean, an enum, or one of the identity
+  // built-ins. Defaults to the sketch name so a fresh readout prints something.
+  source: z.string().default( "name" ),
+  anchor: HudAnchor.default( "top-left" ),
+  offset: hudOffset(
+    0.05,
+    0.12
+  ),
+  size: z.number().positive()
+    .default( 20 ),
+  label: z.string().default( "" ),
+  layout: z.enum( HUD_READOUT_LAYOUTS ).default( "stacked" ),
+  uppercase: z.boolean().default( false ),
+  ...hudWindow
+};
+
+// What a point source's numbers mean. `value` = the parameter's own units,
+// plotted over [min, max]; `canvas` = canvas pixels, plotted over the canvas
+// itself — which is what lets one widget map a normalized sketch vector and
+// the pixel-space built-ins (mouse / center) without a second type.
+export const HUD_VECTOR_SPACES = [
+  "value",
+  "canvas"
+] as const;
+
+// Which pair of numbers the map prints under its plot. "relative" is the
+// point in parameter space (what the vector pad shows), "absolute" is where it
+// lands on the canvas, in pixels.
+export const HUD_COORDINATE_MODES = [
+  "relative",
+  "absolute",
+  "none"
+] as const;
+
+const hudVectorFields = {
+  // Point-valued source: a sketch vector2d parameter, or `mouse` / `center`.
+  source: z.string().default( "mouse" ),
+  anchor: HudAnchor.default( "bottom-right" ),
+  offset: hudOffset(
+    0.95,
+    0.75
+  ),
+  size: z.number().positive()
+    .default( 16 ),
+  space: z.enum( HUD_VECTOR_SPACES ).default( "canvas" ),
+  min: z.number().default( 0 ),
+  max: z.number().default( 1 ),
+  // Screen orientation of the vertical axis: with yDown the top of the map is
+  // the minimum, matching a canvas position. Mirrors the vector2d pad's own
+  // flag, which the quick-add copies from the control it was created from.
+  yDown: z.boolean().default( true ),
+  coordinates: z.enum( HUD_COORDINATE_MODES ).default( "relative" ),
+  decimals: z.number().int()
+    .min( 0 )
+    .max( 4 )
+    .default( 2 ),
+  label: z.string().default( "" ),
+  ...hudWindow
+};
+
 const hudBoundingBoxFields = {
   source: z.string().default( "" ),
   size: z.number().positive()
@@ -1228,6 +1297,22 @@ export const HudSwatchItemSchema = z.object( {
   type: z.literal( "hud-swatch" ),
   enabled: hudEnabled,
   ...hudSwatchFields,
+  ...hudElementStyle,
+  ...hudBoxStyle
+} );
+
+export const HudReadoutItemSchema = z.object( {
+  type: z.literal( "hud-readout" ),
+  enabled: hudEnabled,
+  ...hudReadoutFields,
+  ...hudElementStyle,
+  ...hudBoxStyle
+} );
+
+export const HudVectorItemSchema = z.object( {
+  type: z.literal( "hud-vector" ),
+  enabled: hudEnabled,
+  ...hudVectorFields,
   ...hudElementStyle,
   ...hudBoxStyle
 } );
@@ -1348,6 +1433,8 @@ export const ContentItemSchema = z.discriminatedUnion(
     HudCounterItemSchema,
     HudCrosshairsItemSchema,
     HudSwatchItemSchema,
+    HudReadoutItemSchema,
+    HudVectorItemSchema,
     HudBoundingBoxItemSchema
   ]
 );

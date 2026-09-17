@@ -676,6 +676,7 @@ export default function FieldRenderer( {
           <ControlledSourceSelect
             name={ registeredName }
             label={ inlineLabel }
+            kind={ config.kind }
             isModified={ isModified }
             onReset={ handleReset }
           />

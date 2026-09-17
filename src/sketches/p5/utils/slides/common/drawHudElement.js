@@ -3,8 +3,10 @@ import boundingBox from "../../hud/widgets/boundingBox.js";
 import counter from "../../hud/widgets/counter.js";
 import crosshairs from "../../hud/widgets/crosshairs.js";
 import gauge from "../../hud/widgets/gauge.js";
+import readout from "../../hud/widgets/readout.js";
 import sparkline from "../../hud/widgets/sparkline.js";
 import swatch from "../../hud/widgets/swatch.js";
+import vector from "../../hud/widgets/vector.js";
 import {
   withinWindow
 } from "../../hud/widgets/common.js";
@@ -29,6 +31,8 @@ const RENDERERS = {
   "hud-counter": counter,
   "hud-crosshairs": crosshairs,
   "hud-swatch": swatch,
+  "hud-readout": readout,
+  "hud-vector": vector,
   "hud-bounding-box": boundingBox
 };
 

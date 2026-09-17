@@ -145,6 +145,8 @@ export default function describeContentItem( item: unknown ): ContentItemDescrip
       case "hud-counter":
       case "hud-crosshairs":
       case "hud-swatch":
+      case "hud-readout":
+      case "hud-vector":
       case "hud-bounding-box":
         return firstNonEmpty(
           record.label,

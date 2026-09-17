@@ -11,6 +11,8 @@ export type ItemKind =
   | "hud-counter"
   | "hud-crosshairs"
   | "hud-swatch"
+  | "hud-readout"
+  | "hud-vector"
   | "hud-bounding-box"
   | "image"
   | "images-stack"

@@ -278,6 +278,8 @@ const slides = {
         case "hud-counter":
         case "hud-crosshairs":
         case "hud-swatch":
+        case "hud-readout":
+        case "hud-vector":
         case "hud-bounding-box":
           drawHudElement( item );
           break;

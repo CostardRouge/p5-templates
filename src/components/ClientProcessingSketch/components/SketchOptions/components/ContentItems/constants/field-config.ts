@@ -222,6 +222,14 @@ export interface Vector2DConfig extends BaseConfig {
 // live sketch settings + built-in keys (see ControlledSourceSelect).
 interface SourceSelectConfig extends BaseConfig {
   component: "source-select";
+  /**
+   * Which value shape the widget consumes, which decides what the picker
+   * lists. "scalar" (the default) offers every scalar key-path plus the live
+   * built-ins; "point" offers only the `{ x, y }` key-paths and the point
+   * built-ins — a crosshair or a vector map bound to a number draws nothing,
+   * so offering numbers there is offering a dead end.
+   */
+  kind?: "scalar" | "point";
 }
 
 // Parameter-key picker for key lists (breakdown snap / exclude): the sketch's
@@ -372,6 +380,14 @@ const hudOffsetField: FieldConfig = {
 const hudSourceField: FieldConfig = {
   label: "Source",
   component: "source-select"
+};
+
+// Source picker restricted to the point-valued sources (the sketch's vector
+// parameters, plus mouse / center) — for the widgets that plot a position.
+const hudPointSourceField: FieldConfig = {
+  label: "Source",
+  component: "source-select",
+  kind: "point"
 };
 
 const hudFillField: FieldConfig = {
@@ -1281,10 +1297,95 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
   },
   "hud-crosshairs": {
     enabled: hudEnabledField,
-    source: hudSourceField,
+    source: hudPointSourceField,
     size: hudSizeField( 48 ),
     ...hudWindowFields,
     ...hudElementStyleFields
+  },
+  "hud-readout": {
+    enabled: hudEnabledField,
+    source: hudSourceField,
+    anchor: hudAnchorField,
+    offset: hudOffsetField,
+    size: hudSizeField( 160 ),
+    label: hudLabelField,
+    layout: {
+      label: "Layout",
+      component: "select",
+      options: [
+        {
+          value: "stacked",
+          label: "Stacked (label above)"
+        },
+        {
+          value: "inline",
+          label: "Inline (label before)"
+        }
+      ]
+    },
+    uppercase: {
+      label: "Uppercase value",
+      component: "checkbox"
+    },
+    ...hudWindowFields,
+    ...hudElementStyleFields,
+    ...hudBoxStyleFields
+  },
+  "hud-vector": {
+    enabled: hudEnabledField,
+    source: hudPointSourceField,
+    anchor: hudAnchorField,
+    offset: hudOffsetField,
+    size: hudSizeField( 48 ),
+    space: {
+      label: "Value space",
+      component: "select",
+      options: [
+        {
+          value: "value",
+          label: "Parameter units (min–max)"
+        },
+        {
+          value: "canvas",
+          label: "Canvas pixels"
+        }
+      ]
+    },
+    min: {
+      label: "Domain min",
+      component: "number"
+    },
+    max: {
+      label: "Domain max",
+      component: "number"
+    },
+    yDown: {
+      label: "Y grows downward",
+      component: "checkbox"
+    },
+    coordinates: {
+      label: "Coordinates",
+      component: "select",
+      options: [
+        {
+          value: "relative",
+          label: "Relative (parameter units)"
+        },
+        {
+          value: "absolute",
+          label: "Absolute (canvas pixels)"
+        },
+        {
+          value: "none",
+          label: "None"
+        }
+      ]
+    },
+    decimals: hudDecimalsField,
+    label: hudLabelField,
+    ...hudWindowFields,
+    ...hudElementStyleFields,
+    ...hudBoxStyleFields
   },
   "hud-swatch": {
     enabled: hudEnabledField,

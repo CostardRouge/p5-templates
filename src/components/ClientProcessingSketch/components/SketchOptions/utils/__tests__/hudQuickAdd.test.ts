@@ -25,6 +25,16 @@ const colorConfig = {
   component: "color"
 } as FieldConfig;
 
+const vectorConfig = {
+  label: "Position",
+  component: "vector2d",
+  allowNegative: false,
+  min: 0,
+  max: 1,
+  step: 0.01,
+  yDown: true
+} as FieldConfig;
+
 // A minimal RHF stand-in: getValues reads a plain tree, setValue records the
 // last write.
 function makeForm( tree: Record<string, unknown> ) {
@@ -92,11 +102,44 @@ describe(
     );
 
     it(
-      "offers nothing outside the sketch scope or on other components",
+      "offers the vector map on vector2d fields",
       () => {
-        // A content-item field, a canvas setting, and a vector2d sketch param
-        // (crosshairs consumes canvas-pixel points, sketch vectors are
-        // normalized — a misleading entry is worse than none).
+        expect( hudQuickAddKinds(
+          "sketch.position",
+          vectorConfig
+        ) ).toEqual( [
+          "hud-vector"
+        ] );
+      }
+    );
+
+    it(
+      "offers a readout on the non-numeric value kinds",
+      () => {
+        for ( const component of [
+          "select",
+          "text",
+          "textarea",
+          "checkbox"
+        ] ) {
+          expect( hudQuickAddKinds(
+            "sketch.font",
+            {
+              label: "Font",
+              component
+            } as FieldConfig
+          ) ).toEqual( [
+            "hud-readout"
+          ] );
+        }
+      }
+    );
+
+    it(
+      "offers nothing outside the sketch scope, or on a kind nothing can read",
+      () => {
+        // A content-item field, a canvas setting, and a component with no
+        // value a widget could show.
         expect( hudQuickAddKinds(
           "content.0.size",
           sliderConfig
@@ -106,10 +149,10 @@ describe(
           sliderConfig
         ) ).toEqual( [] );
         expect( hudQuickAddKinds(
-          "sketch.position",
+          "sketch.photos",
           {
-            label: "Position",
-            component: "vector2d"
+            label: "Photos",
+            component: "image"
           } as FieldConfig
         ) ).toEqual( [] );
       }
@@ -232,6 +275,67 @@ describe(
         expect( items[ 0 ] ).not.toHaveProperty( "min" );
         expect( items[ 0 ] ).not.toHaveProperty( "max" );
         expect( items[ 0 ].source ).toBe( "magnitude.start" );
+      }
+    );
+
+    it(
+      "seeds a vector map with the pad's resolved domain and orientation",
+      () => {
+        const form = makeForm( {
+          content: []
+        } );
+
+        addHudElementForControl(
+          form.getValues,
+          form.setValue,
+          "sketch.position",
+          vectorConfig,
+          "hud-vector"
+        );
+
+        const items = form.writes[ 0 ].value as Array<Record<string, unknown>>;
+
+        expect( items[ 0 ] ).toMatchObject( {
+          type: "hud-vector",
+          source: "position",
+          // The parameter's own units, not canvas pixels: that is the whole
+          // reason a vector2d can be quick-added at all.
+          space: "value",
+          min: 0,
+          max: 1,
+          yDown: true,
+          coordinates: "relative"
+        } );
+      }
+    );
+
+    it(
+      "resolves a bare vector2d config to the pad's own [-1, 1] default",
+      () => {
+        const form = makeForm( {
+          content: []
+        } );
+
+        addHudElementForControl(
+          form.getValues,
+          form.setValue,
+          "sketch.wind",
+          {
+            label: "Wind",
+            component: "vector2d"
+          } as FieldConfig,
+          "hud-vector"
+        );
+
+        const items = form.writes[ 0 ].value as Array<Record<string, unknown>>;
+
+        expect( items[ 0 ] ).toMatchObject( {
+          min: -1,
+          max: 1,
+          // The pad's own default orientation (top = max), so the map reads
+          // like the control it came from rather than like a canvas position.
+          yDown: false
+        } );
       }
     );
 
