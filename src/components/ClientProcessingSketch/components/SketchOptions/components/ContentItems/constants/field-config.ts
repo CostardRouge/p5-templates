@@ -34,6 +34,22 @@ interface BaseConfig {
    * unconditionally.
    */
   managed?: boolean;
+  /**
+   * A control this field follows by default, declared by the sketch rather than
+   * authored by the user: `binding: { control: "knob.1" }`.
+   *
+   * `control` is an ABSTRACT address — it names no device, no port and no CC
+   * number, so the same vocabulary can later address a gamepad axis
+   * (`axis.left-x`), an audio band (`band.bass`) or a generator (`lfo`). What it
+   * resolves to depends on which controller is plugged in, which is why the
+   * sketch must not spell it out: see `@/p5/utils/interaction/controllerMap`.
+   *
+   * Resolved at read time and never written to the document, so a field keeps
+   * working as an ordinary control when no controller is connected.
+   */
+  binding?: {
+    control: string;
+  };
 }
 
 // Step 2: Define the config shape for each component type

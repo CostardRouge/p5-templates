@@ -194,6 +194,23 @@ function _collectMidiChannels(
   );
 }
 
+/**
+ * The name of the MIDI input the handler is listening to, or "" when none is
+ * picked, the handler has not loaded yet, or every input is being listened to
+ * at once.
+ *
+ * Re-exported through here rather than imported from `index.js` directly:
+ * `options.js` consumes it, and a static import of the handler would pull
+ * MediaPipe into the core module-eval chain (see `_ensureInteractionModule`).
+ * The handler loads on the first `sampleChannels` call, so the first few frames
+ * answer "" — the same lazy start `_collectMidi` already has.
+ *
+ * @returns {string}
+ */
+export function midiPortName() {
+  return _interaction?.getMidiDeviceName?.() ?? "";
+}
+
 // Semantic hand/face gesture scalar channels from getInteractionMetrics()
 // (each already normalized 0..1 by gestureChannelValues). The metrics read the
 // same MediaPipe results the pointer collectors already drive, so this only

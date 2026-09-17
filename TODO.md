@@ -113,12 +113,12 @@ What's left requires actions only the repo owner can take, in this order:
   - [ ] `useHands` — high-level hand state from MediaPipe
   - [ ] `useFace` — high-level face state
   - [ ] `useBody` — full-body pose state
-  - [ ] `useMidi` — WebMidi note/CC events (WebMidi.js already bundled). The *events* are handled: `interaction/index.js` keeps held notes and held control-change values, surfaced as the `midi` vector2d channel and the `midi.cc1 … midi.cc8` / `midi.ccLast` scalars (`docs/memory/interaction-bindings.md`). What is left here is the hook surface, if it is still wanted
+  - [ ] `useMidi` — WebMidi note/CC events (WebMidi.js already bundled). The *events* are handled: `interaction/index.js` keeps held notes and held control-change values, surfaced as the `midi` vector2d channel plus one `midi.cc<n>` scalar **minted per CC actually received** (there is no fixed cc1…cc8 set — that guess caught nothing on real hardware) and `midi.ccLast`. What is left here is the hook surface, if it is still wanted. See the MIDI controllers section below
   - [ ] `useAudio` — Web Audio API analyser data
   - [ ] `useOrbit` — 3D orbit camera controls
   - [ ] `usePerlinNoise` — seeded Perlin/Simplex noise with optional animated offset
 - [x] **MIDI learn as a gesture** — the crosshair button beside the source picker: arm, move a control, it is assigned. A frame-to-frame diff of the channel snapshot (`observeForLearn` + `useChannelLearn`), so it learns a fader, an audio band or a hand gesture just as well as a knob; derived channels are excluded or a mirror like `midi.ccLast` wins every time. See `docs/memory/interaction-bindings.md`
-- [ ] **MIDI monitor panel** — a debug surface listing the decoded messages, every CC number seen with its raw and normalised value, the notes held, and the channel snapshot the resolver actually gets. Mocked up in full (a published artifact, Sept 2026) and worth porting behind `INTERACTION_BINDINGS`: without it, "which CC is this knob" is unanswerable from inside the app
+- [ ] **MIDI monitor panel** — a debug surface listing the decoded messages, every CC number seen with its raw and normalised value, the notes held, and the channel snapshot the resolver actually gets. Mocked up in full (a published artifact, Sept 2026) and worth porting behind `INTERACTION_BINDINGS`: without it, "which CC is this knob" is unanswerable from inside the app. The mock-up is what produced the measured Launchkey map in the MIDI controllers section below — guided capture of the eight encoders and sixteen pads per port, a DAW-mode arm button and a JSON dump
 - [ ] **Bind the exotic value types** — modulation covers number, 2D pad, boolean, select and colour (see `docs/memory/interaction-bindings.md`); the rest still has no `kind`
   - [ ] **Generators for the 2D pad** — it can only follow a live vector2d channel today (Orbit and Perlin noise animate without a device; everything else needs one). One generator per axis on a shared clock, with a phase offset, would give circles / figure-eights / drifts
   - [ ] **Easing** — an ordered list of easing keys, so it maps like the enum family
@@ -132,6 +132,76 @@ What's left requires actions only the repo owner can take, in this order:
   - [ ] Phase 3 (hold) — `probe.each` array probes and indexed addressing, for staggering off a per-element progression; wait for a real sketch to need it
 - [ ] **Fake mouse pointer** — custom cursor overlay on the canvas (circle or crosshair) that follows pointer; useful when the system cursor isn't visible in recordings
 - [ ] **Switch webcam ID** — re-initialize `getUserMedia` with new `deviceId` without reloading the sketch when the user changes webcam in the picker
+
+---
+
+## 🎚️ MIDI controllers
+
+Playing a sketch from hardware. The measured truth about the Launchkey, the
+decisions and the traps live in `docs/memory/interaction-bindings.md`; this is
+the task register. **Complexity** is the cost of the change, **Worth** whether
+it earns that cost.
+
+### Ground truth (measured on a Launchkey Mini MK3, not read off the manual)
+
+Both ports are published permanently and **the port — not a mode — decides the
+map**. The DAW port is silent until armed with `9F 0C 7F` (a plain Note On; no
+SysEx, so no extra permission prompt). Disarm with `9F 0C 00`.
+
+| | `… MIDI Port` | `… DAW Port` |
+| --- | --- | --- |
+| Encoders | CC 29, 79, 80, 104, 109, 108, 113, 112 (ch 1) | CC 21 → 28 (ch 16) |
+| Pads, top / bottom | 40-43, 48-51 / 36-39, 44-47 | 96 → 103 / **112** → 119 (ch 1) |
+| LEDs | untested | ch 1 static · ch 2 flash · ch 3 pulse |
+
+`104` is a *round pad* the Mini MK3 does not have, which is why the DAW rows are
+not contiguous. LED colour is an index into a **128-entry palette** carried by
+velocity, never free RGB; the channel follows the pad LAYOUT (session vs drum).
+**Flashing alternates between the colour already on the pad and the one in the
+message** and follows a MIDI clock, so a lone channel-2 message looks erratic; a
+lighting message on the static channel is also what stops a flash or a pulse.
+
+### Shipped
+
+| Feature | What it does | Why it matters | Complexity | Worth |
+| --- | --- | --- | --- | --- |
+| Control change parsing | `0xB0` kept in a Map, one `midi.cc<n>` channel minted per CC actually received | Without it a knob produces nothing at all | — | done |
+| MIDI learn as a gesture | The crosshair beside the source picker: arm, move a control, it is assigned | Works on any hardware without a table | — | done |
+| Port-keyed controller map | `interaction/controllerMap.js` resolves a port name + abstract control to a channel id | The same knob sends different CCs per port; the port is the only stable key | low | ✅ #360 |
+| Control declared on a field | `binding: { control: "knob.1" }` in a sketch's `options.ts` | The sketch states intent, the app resolves the hardware | medium | ✅ #360 |
+| Port name exposed to the engine | `getMidiDeviceName()`, empty while listening to every input | No map can apply without it, and an ambiguous name would address the wrong knob | low | ✅ #360 |
+| Learn from the context menu | Right-click a field → "Learn a control…" → move it. A shortcut for assigning the source, not a second editor: easing, smoothing and generators stay in the popover | Four clicks down to two, on the one step that was tedious | low | ✅ #360 |
+| Abstract control on a learned binding | The document keeps `knob.3`, not `midi.cc23` | The binding survives a MIDI ↔ DAW port switch, and would travel to another controller | low | ✅ #360 |
+
+### Next
+
+| Feature | What it does | Why it matters | Complexity | Worth |
+| --- | --- | --- | --- | --- |
+| Context menu on a checkbox | The checkbox branch of `FieldRenderer` returns before the wrapper carrying `onContextMenu`, so no boolean field has a context menu at all — and "Learn a control" is unreachable there although the `boolean` kind is bindable | A pad is the natural control for a toggle, and that is exactly the field it cannot be learned on | low, but it touches a branch every form shares | ⚠️ |
+| MIDI output: arm / disarm DAW mode | Send `9F 0C 7F` on connect, `9F 0C 00` on teardown | Nothing in `src/` writes MIDI yet, and this gates the LEDs. Leaving the keyboard armed after the tab closes is the trap | medium | ✅ |
+| Pad LEDs | Light a pad from the palette; flash and pulse | Visual feedback on the hardware itself | medium | ⚠️ comfort |
+| `component: "action"` field type | A field that triggers rather than edits a value | **Pads cannot drive anything without it** — selecting an effect is an action, not a value. Already filed under Options / Form System | **high** | ✅ but its own job |
+
+### Later
+
+| Feature | What it does | Why it matters | Complexity | Worth |
+| --- | --- | --- | --- | --- |
+| **LFO as a declared control** | `control: "lfo"` resolves to a generator, not a channel | **The only `control` family that survives a headless capture** — every device source is silent in an export, a generator is a pure function of the loop clock. A parameter that breathes by default without breaking determinism | low | ✅ |
+| Other control families | `axis.left-x`, `band.bass`, `pinch`, `tilt.x` | The vocabulary is already device-agnostic; each is a map entry, not a redesign | low each | ⚠️ on demand |
+| Soft takeover for absolute pots | A knob stays inert until it crosses the stored value | Kills the jump when a bank switch re-points a knob. Only matters once banks exist | medium | ⚠️ if banks |
+| Machine-level controller preference | Remember the port outside the document | "Open a sketch and it plays", without enabling MIDI inside every document | medium | ⚠️ |
+| Pads driving actions | A pad selects or bypasses an effect | The performance gesture the whole thing is for; blocked on `component: "action"` | medium | ⚠️ after the action type |
+
+### Rejected, and why
+
+Keeping these so they are not re-proposed:
+
+- **A `midi-slider` component kind** — here `component` describes the CONTROL, never a data source. It would have needed `midi-number`, `midi-color`, `midi-vector2d`… one per field type. A `binding` key on `BaseConfig` composes instead.
+- **Alias channels** (`midi.knob1` mirroring `midi.cc21`) — a mirror moves exactly as much as its source, so it would need `derived: true`, which is the flag excluding a channel from MIDI learn. The alias would be unlearnable. The map resolves instead of minting.
+- **Writing auto-wired bindings into the document** — one machine's CC numbers would reach the saved JSON, the export and `/embed`, the form would go dirty on every reconnect, and `mergeChangedInPlace` treats arrays as leaves so the next form push would wipe them anyway.
+- **Inferring the port mode from traffic** — unnecessary: the port is deterministic, and the DAW port is simply silent until armed.
+- **Fuzzy device-name matching** — "Launchkey" would claim an MK4 whose numbers nobody has measured. Exact, then case-insensitive, never a prefix.
+- **A fixed `midi.cc1 … midi.cc8` set** — tried on `main` and caught nothing: the factory bank is neither contiguous nor in panel order.
 
 ---
 

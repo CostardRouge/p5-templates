@@ -1,9 +1,9 @@
 import {
-  ChevronDown, CopyPlus, RotateCcw
+  ChevronDown, CopyPlus, Crosshair, RotateCcw
 } from "lucide-react";
 import clsx from "clsx";
 import {
-  useRef
+  useCallback, useRef
 } from "react";
 import {
   get, useFormContext, useWatch
@@ -63,6 +63,12 @@ import BindingAffordance
 import {
   bindingKindFor
 } from "./ContentItems/components/BindingAffordance/bindingUtils";
+import {
+  useChannelLearn
+} from "./ContentItems/components/BindingAffordance/useLiveChannels";
+import {
+  applyLearnedChannel, armLearnForField, canLearnBindingFor
+} from "../utils/learnBindingForField";
 import {
   interactionBindingsEnabled
 } from "@/lib/interactionBindings";
@@ -178,6 +184,33 @@ export default function FieldRenderer( {
   // is added to each row.
   const contextMenu = useFieldContextMenu();
 
+  // Learn a control without opening the modulation popover: arm from the
+  // context menu, move a knob, the field is pointed at it. The mechanism is the
+  // popover's own — `useChannelLearn` diffs the channel snapshot frame to
+  // frame — so a fader, an audio band or a hand gesture learn just as well.
+  const canLearn = canLearnBindingFor(
+    registeredName,
+    config
+  );
+
+  const learn = useChannelLearn( useCallback(
+    ( channelId: string ) => {
+      void applyLearnedChannel(
+        getValues,
+        setValue,
+        registeredName,
+        config,
+        channelId
+      );
+    },
+    [
+      getValues,
+      setValue,
+      registeredName,
+      config
+    ]
+  ) );
+
   const canApply = canApplyToAllSlides(
     getValues,
     registeredName
@@ -201,7 +234,7 @@ export default function FieldRenderer( {
   // entry applies, and not over an editable input (whose native menu and
   // pointer behaviour we leave alone).
   const canContextApply = ( target: EventTarget | null ): boolean => {
-    if ( !canApply && !canApplyHud && quickAddKinds.length === 0 ) {
+    if ( !canApply && !canApplyHud && !canLearn && quickAddKinds.length === 0 ) {
       return false;
     }
 
@@ -794,11 +827,35 @@ export default function FieldRenderer( {
 
   return (
     <div
-      className="text-sm md:text-xs"
+      className={ clsx(
+        "text-sm md:text-xs",
+        learn.armed && "rounded-md outline outline-1 outline-focus outline-offset-2"
+      ) }
       onPointerDownCapture={ handleSecondaryButtonCapture }
       onMouseDownCapture={ handleSecondaryButtonCapture }
       onContextMenu={ handleFieldContextMenu }
     >
+      {/*
+        The context menu closes on click, so the field itself has to say it is
+        listening — a control that does nothing otherwise reads as a fault. It
+        also reports when no frames are arriving, which is the one case where
+        moving a knob genuinely cannot be seen: a paused sketch publishes no
+        snapshot to diff against.
+      */}
+      {learn.armed && (
+        <button
+          type="button"
+          onClick={ learn.disarm }
+          className="mb-1 flex w-full items-center gap-1.5 text-left text-focus"
+        >
+          <Crosshair className="h-3 w-3 shrink-0" />
+          <span>
+            { learn.seenSignal
+              ? "Move a control to assign it"
+              : "Waiting for frames — is the sketch paused?" }
+          </span>
+        </button>
+      )}
       {contextMenu.position && (
         <FieldContextMenu
           position={ contextMenu.position }
@@ -830,6 +887,36 @@ export default function FieldRenderer( {
                 }
               ]
               : [] ),
+            // Three groups — propagate this value, modulate this field,
+            // visualise it. The separators are written unconditionally; the
+            // menu drops the ones a missing group would leave dangling.
+            {
+              separator: true
+            } as const,
+            ...( canLearn
+              ? [
+                {
+                  label: config.label
+                    ? `Learn a control for "${ config.label }"`
+                    : "Learn a control",
+                  icon: Crosshair,
+                  onClick: () => {
+                    // Order matters: MIDI has to be switched on BEFORE
+                    // listening, or the handler never requests access, no CC
+                    // is ever published, and the knob turns into nothing.
+                    void armLearnForField(
+                      getValues,
+                      setValue,
+                      registeredName
+                    );
+                    learn.arm();
+                  }
+                }
+              ]
+              : [] ),
+            {
+              separator: true
+            } as const,
             ...quickAddKinds.map( ( kind ) => ( {
               label: config.label
                 ? `Add a ${ ITEM_META[ kind ].label.toLowerCase() } for "${ config.label }"`

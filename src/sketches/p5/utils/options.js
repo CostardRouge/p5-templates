@@ -46,8 +46,20 @@ import {
   resolveBindings, computeBindingSignals
 } from "./interaction/bindings.js";
 import {
-  sampleChannels
+  sampleChannels, midiPortName
 } from "./interaction/channels.js";
+
+import {
+  resolveControl
+} from "./interaction/controllerMap.js";
+
+import {
+  getDeclaredBindings
+} from "@/lib/declaredBindings";
+
+import {
+  publishMidiPortName
+} from "@/lib/channelBridge";
 import {
   publishChannels, publishBindingSignals
 } from "@/lib/channelBridge";
@@ -644,11 +656,95 @@ function effectiveInteractive(
 ) {
   const root = live?.interactive;
   const slide = liveCurrentSlide()?.interactive;
+  const stored = slide?.bindings ?? root?.bindings ?? base?.bindings;
 
   return {
-    bindings: slide?.bindings ?? root?.bindings ?? base?.bindings,
+    bindings: withResolvedControls( stored ),
     interaction: base?.interaction ?? slide?.interaction ?? root?.interaction
   };
+}
+
+// Resolve every abstract control in play for this frame: the ones a sketch
+// DECLARED on its fields, and the ones a LEARNED binding stored in place of a
+// raw channel. Both name a control like `knob.1` and let the connected port say
+// what that is, which is what makes either survive a port switch.
+//
+// The result is a fresh array handed straight to `resolveBindings` and dropped
+// after the frame — nothing is written back, so none of this reaches the form,
+// the saved JSON or `/embed`.
+function withResolvedControls( stored ) {
+  const list = Array.isArray( stored ) ? stored : [];
+  const declared = getDeclaredBindings().bindings;
+  const storedNeedsPort = list.some( ( binding ) => typeof binding?.control === "string" );
+
+  // Nothing abstract in play: hand back the original array untouched, so the
+  // overwhelmingly common case costs one `some` and no allocation.
+  if ( declared.length === 0 && !storedNeedsPort ) {
+    return stored;
+  }
+
+  // "" when no port is picked, or when every input is being heard at once and
+  // no single name can answer. resolveControl then yields null throughout and
+  // every abstract binding goes inert — which is what unplugging should do.
+  const port = midiPortName();
+
+  const resolvedStored = storedNeedsPort
+    ? list.map( ( binding ) => {
+      if ( typeof binding?.control !== "string" ) {
+        return binding;
+      }
+
+      // No source means bindingValue reads no channel and foldTarget leaves
+      // the parameter on its own value: inert rather than wrong.
+      return {
+        ...binding,
+        source: resolveControl(
+          port,
+          binding.control
+        ) ?? undefined
+      };
+    } )
+    : list;
+
+  if ( declared.length === 0 ) {
+    return resolvedStored;
+  }
+
+  const fromDeclared = [];
+
+  for ( const entry of declared ) {
+    const source = resolveControl(
+      port,
+      entry.control
+    );
+
+    // An unknown controller, or a control this one does not carry, leaves the
+    // parameter alone rather than pinning it to a channel that never publishes.
+    if ( !source ) {
+      continue;
+    }
+
+    fromDeclared.push( {
+      // Derived, never minted: smoothing and trigger state is keyed by id, so a
+      // fresh uuid per frame would reset it on every frame.
+      id: `declared:${ entry.control }:${ entry.target }`,
+      source,
+      target: entry.target,
+      kind: entry.kind,
+      mapping: entry.mapping,
+      smoothing: entry.smoothing,
+      enabled: true,
+      weight: 1,
+      blend: "replace"
+    } );
+  }
+
+  // Declared first: foldTarget layers by target in list order, so a binding the
+  // user authored by hand lands last and wins. A declaration is a default.
+  return fromDeclared.length > 0 ? [
+    ...fromDeclared,
+    ...resolvedStored
+  ] : resolvedStored;
 }
 
 // The generator context: the loop-normalized progression (deterministic during
@@ -676,6 +772,12 @@ function publishChannelsFrame() {
   if ( !BINDINGS_ENABLED ) {
     return;
   }
+
+  // The editor needs the port name to turn a learned channel back into an
+  // abstract control, and it must not import the interaction handler to get it
+  // (that drags MediaPipe into the editor bundle). It rides the bridge that
+  // already carries a snapshot every frame.
+  publishMidiPortName( midiPortName() );
 
   try {
     const live = getSketchOptions();

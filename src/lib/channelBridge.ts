@@ -180,6 +180,25 @@ export function publishBindingSignals( signals: Record<string, number> ): void {
 }
 
 /** Subscribe to per-frame channel snapshots. Returns an unsubscribe function. */
+/**
+ * The name of the MIDI input the engine is listening to, or "" when none is
+ * picked (or every input is, which is the same as none for a controller map).
+ *
+ * Published here rather than imported from the interaction handler because the
+ * editor bundle must not pull that module in — it drags MediaPipe behind it.
+ * The engine already publishes a channel snapshot through this bridge every
+ * frame; the port name rides along on the same path.
+ */
+let midiPort = "";
+
+export function publishMidiPortName( name: string ): void {
+  midiPort = typeof name === "string" ? name : "";
+}
+
+export function getMidiPortName(): string {
+  return midiPort;
+}
+
 export function subscribeChannels( cb: Subscriber ): () => void {
   subscribers.add( cb );
 

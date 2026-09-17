@@ -205,6 +205,12 @@ let _midiLastControl = -1;
 // The input id the layer currently listens to ("" = every input). Tracked so a
 // runtime change of the picker re-wires the message handlers without a reload.
 let _midiDeviceId = "";
+// The NAME of that input, which is what a known-controller map is keyed on — a
+// device exposes several ports and they do not agree on which CC a knob sends,
+// so the port name is the identity that matters. Empty while listening to every
+// input: with two ports open there is no single name to answer, and a map
+// applied to the wrong one would silently address the wrong knob.
+let _midiDeviceName = "";
 
 // Audio state
 let _audioInitialized = false;
@@ -469,9 +475,19 @@ function _wireMidiInputs() {
 
   // With no device picked ("") listen to every input; otherwise only the
   // selected one fires, so the other controllers are ignored.
+  _midiDeviceName = "";
+
   _midiAccess.inputs.forEach( ( input ) => {
-    input.onmidimessage =
-      !_midiDeviceId || input.id === _midiDeviceId ? _onMidiMessage : null;
+    const listening = !_midiDeviceId || input.id === _midiDeviceId;
+
+    input.onmidimessage = listening ? _onMidiMessage : null;
+
+    // Only a specific pick yields a name: this is the one place that sees the
+    // input objects, and it re-runs on every `onstatechange`, so the name
+    // follows a device being unplugged without any extra bookkeeping.
+    if ( listening && _midiDeviceId ) {
+      _midiDeviceName = input.name || "";
+    }
   } );
 }
 
@@ -508,6 +524,7 @@ function _clearMidiState() {
   _midiNotes.clear();
   _midiControls.clear();
   _midiLastControl = -1;
+  _midiDeviceName = "";
 }
 
 async function _initMidi( opts ) {
@@ -2541,6 +2558,21 @@ export function getMidiControls() {
  */
 export function getMidiLastControl() {
   return _midiLastControl;
+}
+
+/**
+ * The NAME of the MIDI input currently listened to, or "" when none is picked.
+ *
+ * Empty is deliberate rather than a best guess: with `deviceId` left at "" the
+ * layer listens to every port at once, and a Launchkey publishes two whose
+ * knobs send different CC numbers — so there is no single name to answer, and a
+ * controller map applied to the wrong one would address the wrong knob without
+ * any visible error. Callers treat "" as "no known controller".
+ *
+ * @returns {string}
+ */
+export function getMidiDeviceName() {
+  return _midiDeviceName;
 }
 
 /**
