@@ -38,6 +38,13 @@ import {
   getRawMouse,
   getRawTouches
 } from "@/p5/utils/interaction/pointerTracking.js";
+import {
+  freshGyroState,
+  normalizeGyroOptions,
+  recalibrate as recalibrateGyroState,
+  stepGyroscope,
+  toCanvas as gyroToCanvas
+} from "@/p5/utils/interaction/gyroMath.js";
 
 // Re-exported so existing consumers keep one import site; the implementation
 // lives in pointerTracking.js (kept MediaPipe-free so lightweight layers can
@@ -181,14 +188,41 @@ const _smoothedMouse = {
   y: 0
 };
 let _smoothedMouseFrame = -1;
+// Gyroscope state. The listeners only STORE what the sensors report; the
+// per-frame maths (modes, calibration, inversion, smoothing) is the pure
+// state machine in gyroMath.js, driven from _collectGyroscope.
 const _gyro = {
-  beta: 0,
-  gamma: 0
+  // off | unsupported | awaiting-gesture | denied | listening | active
+  state: "off",
+  // Latest orientation angles, null until a real reading arrives — desktop
+  // Chrome fires ONE deviceorientation event with null angles on load, and
+  // that must not read as "the phone is flat".
+  orientation: null,
+  // A devicemotion event carried acceleration or rotation data at least once
+  // (the acceleration / rotation modes need those, orientation alone won't do).
+  motion: false,
+  // Peak linear acceleration since the frame that last consumed it: motion
+  // events arrive at ~60 Hz and a slow sketch would otherwise miss the spike.
+  accelPeak: {
+    x: 0,
+    y: 0
+  },
+  // The peak handed to the current frame (consumed once per frameCount).
+  accelFrame: null,
+  peakFrame: -1,
+  rotationRate: null,
+  // An event with null angles was seen: the API exists but no sensor does.
+  sawNull: false,
+  // The last frame the collector ran on — a gap means the source was toggled
+  // off and on, which re-centres on the pose the phone is held in now.
+  lastFrame: -1,
+  step: freshGyroState()
 };
 
 // Listeners
 let _gyroInitialized = false;
-let _gyroListener = null;
+let _gyroOrientationListener = null;
+let _gyroMotionListener = null;
 let _gyroPermissionListener = null;
 
 // MIDI state
@@ -375,15 +409,69 @@ function _clientToCanvas(
 
 // ── Gyroscope helpers ──────────────────────────────────────────────────────
 
-function _wireGyroListener() {
-  _gyroListener = ( e ) => {
-    _gyro.beta = e.beta ?? 0;
-    _gyro.gamma = e.gamma ?? 0;
+const GYRO_GESTURE_EVENTS = [
+  "click",
+  "touchend"
+];
+
+function _onDeviceOrientation( e ) {
+  if ( typeof e.beta !== "number" || typeof e.gamma !== "number" ) {
+    _gyro.sawNull = true;
+
+    return;
+  }
+
+  _gyro.orientation = {
+    beta: e.beta,
+    gamma: e.gamma
   };
+  _gyro.state = "active";
+}
+
+function _onDeviceMotion( e ) {
+  const acceleration = e.acceleration;
+
+  if ( acceleration && typeof acceleration.x === "number" && typeof acceleration.y === "number" ) {
+    _gyro.motion = true;
+    _gyro.state = "active";
+
+    if ( Math.abs( acceleration.x ) > Math.abs( _gyro.accelPeak.x ) ) {
+      _gyro.accelPeak.x = acceleration.x;
+    }
+
+    if ( Math.abs( acceleration.y ) > Math.abs( _gyro.accelPeak.y ) ) {
+      _gyro.accelPeak.y = acceleration.y;
+    }
+  }
+
+  const rate = e.rotationRate;
+
+  if ( rate && typeof rate.beta === "number" && typeof rate.gamma === "number" ) {
+    _gyro.motion = true;
+    _gyro.state = "active";
+    _gyro.rotationRate = {
+      beta: rate.beta,
+      gamma: rate.gamma
+    };
+  }
+}
+
+function _wireGyroListeners() {
+  if ( _gyroOrientationListener ) {
+    return;
+  }
+
+  _gyroOrientationListener = _onDeviceOrientation;
+  _gyroMotionListener = _onDeviceMotion;
   window.addEventListener(
     "deviceorientation",
-    _gyroListener
+    _gyroOrientationListener
   );
+  window.addEventListener(
+    "devicemotion",
+    _gyroMotionListener
+  );
+  _gyro.state = "listening";
 }
 
 function _removeGyroPermissionListener() {
@@ -391,24 +479,94 @@ function _removeGyroPermissionListener() {
     return;
   }
 
-  window.removeEventListener(
-    "click",
-    _gyroPermissionListener
-  );
-  window.removeEventListener(
-    "touchend",
-    _gyroPermissionListener
-  );
+  for ( const type of GYRO_GESTURE_EVENTS ) {
+    window.removeEventListener(
+      type,
+      _gyroPermissionListener,
+      {
+        capture: true
+      }
+    );
+  }
+
   _gyroPermissionListener = null;
 }
 
-// Lazily wire the deviceorientation listener the first time the gyroscope
-// collector runs. The listener used to be wired only from initInteraction()
-// when gyroscope.enabled was already true at setup, so toggling it on at
-// runtime never attached anything and the pointer stayed glued to the canvas
-// centre (beta/gamma stuck at 0). iOS 13+ additionally gates the events behind
-// DeviceOrientationEvent.requestPermission(), which must be called from a user
-// gesture — so there we arm a one-shot tap/click handler that requests it.
+// iOS 13+ gates BOTH event families behind a static requestPermission() —
+// one prompt covers orientation and motion, but each constructor has to be
+// asked, and the calls must be made synchronously inside the user gesture.
+// Resolves true when at least one of them is granted.
+function _requestGyroPermissions() {
+  const requests = [];
+
+  for ( const Ctor of [
+    window.DeviceOrientationEvent,
+    window.DeviceMotionEvent
+  ] ) {
+    if ( Ctor && typeof Ctor.requestPermission === "function" ) {
+      requests.push( Ctor.requestPermission() );
+    }
+  }
+
+  if ( requests.length === 0 ) {
+    return Promise.resolve( {
+      granted: true,
+      denied: false
+    } );
+  }
+
+  return Promise.allSettled( requests ).then( ( results ) => ( {
+    granted: results.some( ( r ) => r.status === "fulfilled" && r.value === "granted" ),
+    denied: results.some( ( r ) => r.status === "fulfilled" && r.value === "denied" )
+  } ) );
+}
+
+function _armGyroPermissionGesture() {
+  if ( _gyroPermissionListener ) {
+    return;
+  }
+
+  const requestOnGesture = () => {
+    _removeGyroPermissionListener();
+    _requestGyroPermissions()
+      .then( ( {
+        granted
+      } ) => {
+        if ( granted ) {
+          _wireGyroListeners();
+        } else {
+          _gyro.state = "denied";
+        }
+      } )
+      .catch( () => {
+        _gyro.state = "denied";
+      } );
+  };
+
+  _gyroPermissionListener = requestOnGesture;
+  _gyro.state = "awaiting-gesture";
+
+  // Capture phase, so a control that stops propagation (a menu, a popover)
+  // cannot swallow the one tap the permission prompt is waiting for.
+  for ( const type of GYRO_GESTURE_EVENTS ) {
+    window.addEventListener(
+      type,
+      requestOnGesture,
+      {
+        capture: true,
+        passive: true
+      }
+    );
+  }
+}
+
+// Lazily wire the sensor listeners the first time the gyroscope collector
+// runs (or from initInteraction when the source is already on at setup, so a
+// paused sketch still gets armed). iOS 13+ gates the events behind
+// requestPermission(), which needs a user gesture — but resolves without one
+// once granted in this page session, so it is tried first: a source switched
+// off and on again then costs no extra tap. Only when that attempt rejects is
+// a one-shot tap/click handler armed to ask from inside the gesture.
 function _initGyro() {
   if ( _gyroInitialized || typeof window === "undefined" ) {
     return;
@@ -416,34 +574,41 @@ function _initGyro() {
 
   _gyroInitialized = true;
 
-  const OrientationEvent = window.DeviceOrientationEvent;
+  const hasApi = typeof window.DeviceOrientationEvent !== "undefined" || typeof window.DeviceMotionEvent !== "undefined";
 
-  if ( OrientationEvent && typeof OrientationEvent.requestPermission === "function" ) {
-    const requestOnGesture = () => {
-      _removeGyroPermissionListener();
-      OrientationEvent.requestPermission()
-        .then( ( state ) => {
-          if ( state === "granted" ) {
-            _wireGyroListener();
-          }
-        } )
-        .catch( () => {
-          // Permission denied — leave beta/gamma at 0
-        } );
-    };
+  if ( !hasApi ) {
+    _gyro.state = "unsupported";
 
-    _gyroPermissionListener = requestOnGesture;
-    window.addEventListener(
-      "click",
-      requestOnGesture
-    );
-    window.addEventListener(
-      "touchend",
-      requestOnGesture
-    );
-  } else {
-    _wireGyroListener();
+    return;
   }
+
+  const needsPermission = [
+    window.DeviceOrientationEvent,
+    window.DeviceMotionEvent
+  ].some( ( Ctor ) => Ctor && typeof Ctor.requestPermission === "function" );
+
+  if ( !needsPermission ) {
+    _wireGyroListeners();
+
+    return;
+  }
+
+  _gyro.state = "awaiting-gesture";
+  _requestGyroPermissions()
+    .then( ( {
+      granted, denied
+    } ) => {
+      if ( granted ) {
+        _wireGyroListeners();
+      } else if ( denied ) {
+        _gyro.state = "denied";
+      } else {
+        _armGyroPermissionGesture();
+      }
+    } )
+    .catch( () => {
+      _armGyroPermissionGesture();
+    } );
 }
 
 function _disposeGyro() {
@@ -453,17 +618,47 @@ function _disposeGyro() {
 
   _removeGyroPermissionListener();
 
-  if ( _gyroListener ) {
+  if ( _gyroOrientationListener ) {
     window.removeEventListener(
       "deviceorientation",
-      _gyroListener
+      _gyroOrientationListener
     );
-    _gyroListener = null;
+    _gyroOrientationListener = null;
+  }
+
+  if ( _gyroMotionListener ) {
+    window.removeEventListener(
+      "devicemotion",
+      _gyroMotionListener
+    );
+    _gyroMotionListener = null;
   }
 
   _gyroInitialized = false;
-  _gyro.beta = 0;
-  _gyro.gamma = 0;
+  _gyro.state = "off";
+  _gyro.orientation = null;
+  _gyro.motion = false;
+  _gyro.accelPeak.x = 0;
+  _gyro.accelPeak.y = 0;
+  _gyro.accelFrame = null;
+  _gyro.peakFrame = -1;
+  _gyro.rotationRate = null;
+  _gyro.sawNull = false;
+  _gyro.lastFrame = -1;
+  _gyro.step = freshGyroState();
+}
+
+function _readScreenAngle() {
+  const angle = window.screen?.orientation?.angle;
+
+  if ( typeof angle === "number" ) {
+    return angle;
+  }
+
+  // Legacy iOS: -90 / 0 / 90 / 180.
+  const legacy = window.orientation;
+
+  return typeof legacy === "number" ? legacy : 0;
 }
 
 // ── MIDI helpers ───────────────────────────────────────────────────────────
@@ -653,7 +848,14 @@ export async function initInteraction( opts = {} ) {
   _smoothedMouseFrame = -1;
 
   // ── Gyroscope reset (lazy init triggered by _collectGyroscope) ───────────
+  // Armed right away when the source is already on, so a sketch that sits
+  // paused while the form is edited still gets its permission prompt on the
+  // next tap instead of waiting for a frame that never comes.
   _disposeGyro();
+
+  if ( opts.gyroscope?.enabled ) {
+    _initGyro();
+  }
 
   // ── Raw mouse / touch tracking ───────────────────────────────────────────
   // Raw clientX/Y is tracked (in pointerTracking.js) so _clientToCanvas() can
@@ -2278,33 +2480,63 @@ function _collectGyroscope(
     _initGyro();
   }
 
-  const clamp = gyro.clampAngle ?? 45;
-  const ox = gyro.offset?.x ?? 0;
-  const oy = gyro.offset?.y ?? 0;
+  const frame = p.frameCount ?? -1;
+
+  // A gap in the frames this ran on means the source was switched off and
+  // back on (a paused sketch does not advance frameCount): the pose the phone
+  // is held in NOW becomes the centre again.
+  if ( _gyro.lastFrame >= 0 && frame - _gyro.lastFrame > 1 ) {
+    recalibrateGyroState( _gyro.step );
+  }
+
+  _gyro.lastFrame = frame;
+
+  const options = normalizeGyroOptions( gyro );
+
+  // Hand the acceleration peak to the frame once, then start a new one.
+  if ( frame !== _gyro.peakFrame ) {
+    _gyro.peakFrame = frame;
+    _gyro.accelFrame = _gyro.motion
+      ? {
+        x: _gyro.accelPeak.x,
+        y: _gyro.accelPeak.y
+      }
+      : null;
+    _gyro.accelPeak.x = 0;
+    _gyro.accelPeak.y = 0;
+  }
+
+  const unit = stepGyroscope(
+    _gyro.step,
+    {
+      orientation: _gyro.orientation,
+      acceleration: _gyro.accelFrame,
+      rotationRate: _gyro.rotationRate,
+      screenAngle: options.screenRotation ? _readScreenAngle() : 0
+    },
+    options,
+    frame,
+    ( p.deltaTime ?? 0 ) / 1000
+  );
+
+  // No reading yet (permission pending, no sensor, headless capture): publish
+  // nothing rather than a pointer parked at the centre — see channels.js.
+  if ( !unit ) {
+    return;
+  }
+
+  const {
+    x, y
+  } = gyroToCanvas(
+    unit,
+    p.width,
+    p.height,
+    options.offset
+  );
 
   out.push( p.createVector(
-    p.constrain(
-      p.map(
-        _gyro.gamma,
-        -clamp,
-        clamp,
-        0,
-        p.width
-      ),
-      0,
-      p.width
-    ) + ox,
-    p.constrain(
-      p.map(
-        _gyro.beta,
-        -clamp,
-        clamp,
-        0,
-        p.height
-      ),
-      0,
-      p.height
-    ) + oy
+    x,
+    y
   ) );
 }
 
@@ -2540,6 +2772,73 @@ function _runAudioFeatures( audio ) {
  */
 export function getAudio() {
   return _audioFeatures;
+}
+
+/**
+ * Where the gyroscope source stands, for the debug overlay and any UI that
+ * wants to say WHY no pointer is arriving: a permission still waiting for a
+ * tap (iOS), a page served over HTTP (browsers block motion events there), a
+ * device with no sensor, or a mode whose sensor never reported.
+ *
+ * `hint` is null once readings the current mode can use are arriving.
+ *
+ * @param {object} [gyro] - the `interaction.gyroscope` block (for its mode)
+ * @returns {{ state: string, hint: string | null, secure: boolean,
+ *   orientation: { beta: number, gamma: number } | null,
+ *   rotationRate: { beta: number, gamma: number } | null }}
+ */
+export function getGyroscopeStatus( gyro ) {
+  const secure = typeof window === "undefined" ? true : window.isSecureContext !== false;
+  const mode = normalizeGyroOptions( gyro ?? {} ).mode;
+  const needsMotion = mode === "acceleration" || mode === "rotation";
+  let hint = null;
+
+  switch ( _gyro.state ) {
+    case "unsupported":
+      hint = "no motion sensor API in this browser";
+      break;
+    case "awaiting-gesture":
+      hint = "tap the page to allow motion access";
+      break;
+    case "denied":
+      hint = "motion access denied — reload the page to be asked again";
+      break;
+    case "listening":
+      if ( _gyro.sawNull ) {
+        hint = "no motion sensor on this device";
+      } else if ( !secure ) {
+        hint = "waiting for the sensor — not HTTPS, browsers block motion events here";
+      } else {
+        hint = "waiting for the first sensor reading…";
+      }
+      break;
+    case "active":
+      if ( needsMotion && !_gyro.motion ) {
+        hint = `${ mode } needs devicemotion events, none arrived — try the tilt mode`;
+      } else if ( !needsMotion && !_gyro.orientation ) {
+        hint = "no orientation reading yet — try the acceleration or rotation mode";
+      }
+      break;
+    default:
+      break;
+  }
+
+  return {
+    state: _gyro.state,
+    hint,
+    secure,
+    orientation: _gyro.orientation,
+    rotationRate: _gyro.rotationRate
+  };
+}
+
+/**
+ * Make the pose the phone is held in right now the canvas centre again (tilt
+ * and gravity modes, `auto` calibration). The collector does this itself when
+ * the source is toggled off and on; a sketch can offer it on a tap.
+ */
+export function recalibrateGyroscope() {
+  recalibrateGyroState( _gyro.step );
 }
 
 /**

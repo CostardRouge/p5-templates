@@ -16,7 +16,8 @@ import {
 } from "@/p5/utils/sketch.js";
 import {
   getPointersDebug,
-  getPointerGroups
+  getPointerGroups,
+  getGyroscopeStatus
 } from "./index.js";
 
 // Per-source colour palette (RGB). Shared so the legend dot, the crosshair,
@@ -408,6 +409,30 @@ export function drawInteractionLegend( opts ) {
 
     y += lineH;
   } );
+
+  // Gyroscope status: why no pointer is arriving (permission tap, HTTPS, no
+  // sensor) — the one source whose silence is otherwise indistinguishable
+  // from a phone held still.
+  if ( opts?.gyroscope?.enabled ) {
+    const gyro = getGyroscopeStatus( opts.gyroscope );
+
+    if ( gyro.hint ) {
+      p.textSize( 11 );
+      p.fill(
+        251,
+        188,
+        4,
+        180
+      );
+      p.text(
+        `gyroscope: ${ gyro.hint }`,
+        startX,
+        y + 8
+      );
+      y += lineH;
+      p.textSize( 12 );
+    }
+  }
 
   // Vision status: starting hint, then live inference stats once running.
   const vision = opts?.vision;

@@ -244,7 +244,7 @@ export default function SketchShareDialog() {
     `<iframe\n  src="${ link.replace(
       /&/g,
       "&amp;"
-    ) }"\n  style="width:100%; aspect-ratio:${ frame.width }/${ frame.height }; border:0"\n  allow="camera; microphone"\n  loading="lazy"\n></iframe>`;
+    ) }"\n  style="width:100%; aspect-ratio:${ frame.width }/${ frame.height }; border:0"\n  allow="camera; microphone; gyroscope; accelerometer"\n  loading="lazy"\n></iframe>`;
 
   const changedCount = Object.keys( delta ).length;
 
@@ -518,8 +518,8 @@ export default function SketchShareDialog() {
           />
 
           <p className="text-xs text-foreground/50">
-            <code className="rounded bg-hover/50 px-1">allow=&quot;camera; microphone&quot;</code>{" "}
-            lets interactive (camera/mic) sketches work inside the frame — keep it for those, drop it otherwise.
+            <code className="rounded bg-hover/50 px-1">allow=&quot;camera; microphone; gyroscope; accelerometer&quot;</code>{" "}
+            lets interactive (camera/mic/motion) sketches work inside the frame — keep it for those, drop it otherwise.
           </p>
         </div>
       </div>

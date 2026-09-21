@@ -88,11 +88,13 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 - A grid sculpt whose tubes are the subject keeps them in their own module (`_mesh.js`): each cell owns four links, the whole field travels as two data textures addressed per cell, and a letter stays readable through the rasterised-ink mask plus the "link midpoint on the ink" rule, never an outline chain → `sketches.md`.
 - Raymarched sketches take the tangible camera rig — tilt, spin, distance, eye offset and target as bindable sliders, `fit` per export aspect, whole-cycle motion — instead of a bespoke orbit → `sketches.md`.
 - A new sculpt that wants the scatter takes `_lattice.js` and `_wave.js` and extends them (`skin`, `max`, `budget`) rather than shipping its own sampler and wave; a parallel build that did was rebuilt on them at rebase time → `sketches.md`.
+- The gyroscope pointer is a calibrated pose (auto / flat / custom) driving one of four signals (tilt, gravity, acceleration, rotation), publishes nothing until the sensor speaks, and says why in the overlay legend (permission tap, HTTPS, no sensor) → `interaction-sources.md`.
 
 - A session that changes code reports this project's state to `PROJETS.md`, at the root of the private `second-brain` repo: the register is that file, never Claude's memory and never `git log` → CLAUDE.md rule 4
 
 ## Open items (dated; remove when done)
 
+- 2026-09-21 — The gyroscope's product choices are still the maintainer's to confirm on a phone: which of the four signals is the default (shipped: tilt, marble mapping, auto calibration, smoothing 0.5), whether the "aim" inversion should be the default instead, and the landscape mapping sign (`rotateForScreen`, derived on paper). The decision page built for it lives in the session's artifact; adjust `interactionFormValues.gyroscope` in `interaction/defaults.js` once decided.
 - 2026-09-21 — Open in `sculpt`: four sketches now. A scattered lattice, a sheet of heights and a mesh of links are different data, so nothing is folded together between them; the fourth variant (`sculpt-v4-sphere`) wanted the lattice and the wave and took them, which is the test for any fifth — and each module is named for its content, never for the shape it draws, because two sessions independently reached for `_sheet.js`. Left out of `sculpt-v2-letter-relief` by choice: a 12-cell neighbourhood (three more link channels), a `both` mask mode, a residual wobble on raised points, rings-v10's virtual cursors. `sculpt-v4-sphere`'s thumbnail and previews were captured on its pre-rebase build, and its 128-link budget has not been measured on a phone GPU.
 - 2026-09-16, revised 2026-09-21 — Open in `flip`: v3 caps at 8 single glyphs and 64 cells by construction (see `sketches.md`) — a deeper board would need the capsules in a data texture after all, which `noiseFieldGpu`'s `render({ textures })` now supports; and quad (4-way) subdivision is still unexplored, v2 and v3 both splitting in two on alternating axes on purpose, because that is what gives 1 → 2 → 4 → 8. (Thumbnails and previews: every sketch that lacked one has since been captured from the studio; nothing in the repo generates them.)
 
@@ -116,6 +118,7 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 | `docs/memory/local-development.md` | Running the app locally, infra services, `setup.sh`, dev-server config |
 | `docs/memory/studio-ui.md` | The sketch page's panels and layouts (inspector, content rail, filmstrip, export, mobile drawer) |
 | `docs/memory/canvas-interaction.md` | The on-canvas drag/selection layer, item-bounds reporting, a renderer's grab surface, the viewport's pan/zoom gestures (wheel vs pinch) |
-| `docs/memory/interaction-bindings.md` | Modulating a parameter: the binding resolver, its kinds, the pastille/popover, the interaction sources |
+| `docs/memory/interaction-bindings.md` | Modulating a parameter: the binding resolver, its kinds, the pastille/popover, the channel manifest |
+| `docs/memory/interaction-sources.md` | How a sensor, camera or controller becomes a pointer: the collectors in `interaction/index.js`, the gyroscope's modes/calibration/permission, verifying a source without hardware |
 | `docs/memory/home-and-seo.md` | The home page and its studio tour, the capture assets, site metadata, JSON-LD, the sitemap |
 | `docs/analytics.md` | Umami config, why auto-track is off, the pageview queue, how to verify tracking (maintained, unlike the rest of `docs/`) |

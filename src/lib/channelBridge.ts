@@ -73,12 +73,46 @@ export function channelVarName(
   return `--ch-${ cssId( source ) }`;
 }
 
-function writeCssVars( snapshot: ChannelSnapshot ): void {
+// A channel that stops publishing (a device unplugged, a source switched to
+// a mode whose sensor has nothing yet) must take its meters with it: a live
+// channel that is not there publishes NOTHING, and a var left at its last value
+// would show that absence as a frozen reading instead.
+function clearCssVars(
+  root: CSSStyleDeclaration, previous: ChannelSnapshot, next: ChannelSnapshot
+): void {
+  for ( const rawId of Object.keys( previous ) ) {
+    if ( rawId in next ) {
+      continue;
+    }
+
+    const id = cssId( rawId );
+
+    for ( const suffix of [
+      "",
+      "-x",
+      "-y",
+      "-mag",
+      "-angle"
+    ] ) {
+      root.removeProperty( `--ch-${ id }${ suffix }` );
+    }
+  }
+}
+
+function writeCssVars(
+  snapshot: ChannelSnapshot, previous: ChannelSnapshot
+): void {
   if ( typeof document === "undefined" ) {
     return;
   }
 
   const root = document.documentElement.style;
+
+  clearCssVars(
+    root,
+    previous,
+    snapshot
+  );
 
   for ( const [
     rawId,
@@ -129,8 +163,13 @@ function writeCssVars( snapshot: ChannelSnapshot ): void {
  * Writes CSS vars (for the pure-CSS meters) and notifies any JS subscribers.
  */
 export function publishChannels( snapshot: ChannelSnapshot ): void {
+  const previous = latest;
+
   latest = snapshot ?? {};
-  writeCssVars( latest );
+  writeCssVars(
+    latest,
+    previous
+  );
 
   for ( const subscriber of subscribers ) {
     try {
