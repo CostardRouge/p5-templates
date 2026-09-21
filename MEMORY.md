@@ -80,10 +80,13 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 - A cascade's tree is a pure function of the clock, or it cannot be captured → `sketches.md`.
 - A `conditional-group` branch switch rebuilds the whole object from each field's `default`, falling back to a slider's `min` → `sketches.md`.
 - A sketch's mutable module-level state goes through `sketch.state()` (one record per page/layer instance, drift-tested), GPU helpers keep GL resources per surface, and layer imports are serialised because there is one registration capture → `architecture.md`, `sketches.md`.
+- The gyroscope pointer is a calibrated pose (auto / flat / custom) driving one of four signals (tilt, gravity, acceleration, rotation), publishes nothing until the sensor speaks, and says why in the overlay legend (permission tap, HTTPS, no sensor) → `interaction-sources.md`.
 
 - A session that changes code reports this project's state to `PROJETS.md`, at the root of the private `second-brain` repo: the register is that file, never Claude's memory and never `git log` → CLAUDE.md rule 4
 
 ## Open items (dated; remove when done)
+
+- 2026-09-21 — The gyroscope's product choices are still the maintainer's to confirm on a phone: which of the four signals is the default (shipped: tilt, marble mapping, auto calibration, smoothing 0.5), whether the "aim" inversion should be the default instead, and the landscape mapping sign (`rotateForScreen`, derived on paper). The decision page built for it lives in the session's artifact; adjust `interactionFormValues.gyroscope` in `interaction/defaults.js` once decided.
 
 - 2026-09-16 — `flip-v2-grid-cascade` and `flip-v3-tube-cascade` ship without thumbnails or previews (`hasThumbnail`/`hasPreview` false, so their gallery cards are blank); nothing in the repo generates them, they are captured from the studio. Open in the category: v3 caps at 8 single glyphs and 64 cells by construction (see `sketches.md`) — a deeper board would need the capsules in a data texture after all; and quad (4-way) subdivision is still unexplored, v2 and v3 both splitting in two on alternating axes on purpose, because that is what gives 1 → 2 → 4 → 8.
 
@@ -107,6 +110,7 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 | `docs/memory/local-development.md` | Running the app locally, infra services, `setup.sh`, dev-server config |
 | `docs/memory/studio-ui.md` | The sketch page's panels and layouts (inspector, content rail, filmstrip, export, mobile drawer) |
 | `docs/memory/canvas-interaction.md` | The on-canvas drag/selection layer, item-bounds reporting, a renderer's grab surface, the viewport's pan/zoom gestures (wheel vs pinch) |
-| `docs/memory/interaction-bindings.md` | Modulating a parameter: the binding resolver, its kinds, the pastille/popover, the interaction sources |
+| `docs/memory/interaction-bindings.md` | Modulating a parameter: the binding resolver, its kinds, the pastille/popover, the channel manifest |
+| `docs/memory/interaction-sources.md` | How a sensor, camera or controller becomes a pointer: the collectors in `interaction/index.js`, the gyroscope's modes/calibration/permission, verifying a source without hardware |
 | `docs/memory/home-and-seo.md` | The home page and its studio tour, the capture assets, site metadata, JSON-LD, the sitemap |
 | `docs/analytics.md` | Umami config, why auto-track is off, the pageview queue, how to verify tracking (maintained, unlike the rest of `docs/`) |
