@@ -242,6 +242,7 @@ export const sketchModuleLoaders: Record<string, SketchModuleLoader> = {
   "p5:rings/rings-v8-morph-hyper-interactive": () => import( "@/p5/sketches/rings/rings-v8-morph-hyper-interactive/index.js" ),
   "p5:rings/rings-v9-flick-reveal": () => import( "@/p5/sketches/rings/rings-v9-flick-reveal/index.js" ),
   "p5:sculpt/sculpt-v1-scatter-lattice": () => import( "@/p5/sketches/sculpt/sculpt-v1-scatter-lattice/index.js" ),
+  "p5:sculpt/sculpt-v3-vision-relief": () => import( "@/p5/sketches/sculpt/sculpt-v3-vision-relief/index.js" ),
   "p5:semaphore/semaphore-v0-dots": () => import( "@/p5/sketches/semaphore/semaphore-v0-dots/index.js" ),
   "p5:semaphore/semaphore-v1-lines": () => import( "@/p5/sketches/semaphore/semaphore-v1-lines/index.js" ),
   "p5:shader-loops/shader-loops-v1-hypnotic": () => import( "@/p5/sketches/shader-loops/shader-loops-v1-hypnotic/index.js" ),
