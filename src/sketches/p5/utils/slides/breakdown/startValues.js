@@ -61,11 +61,18 @@ function numericRange(
     return null;
   }
 
-  if ( fieldConfig.component === "vector2d" && axis ) {
+  if (
+    ( fieldConfig.component === "vector2d" || fieldConfig.component === "vector3d" ) &&
+    axis
+  ) {
     const allowNegative = fieldConfig.allowNegative ?? true;
     const min = fieldConfig.min ?? ( allowNegative ? -1 : 0 );
     const max = fieldConfig.max ?? 1;
-    const perAxis = axis === "x" ? fieldConfig.xAxis : fieldConfig.yAxis;
+    const perAxis = axis === "x"
+      ? fieldConfig.xAxis
+      : axis === "y"
+        ? fieldConfig.yAxis
+        : fieldConfig.zAxis;
 
     return {
       min: perAxis?.min ?? min,
@@ -237,14 +244,14 @@ function buildLevel(
     );
     let axis;
 
-    // A number under a vector2d pad has its config on the PARENT path.
-    if ( !fieldConfig && prefix && ( key === "x" || key === "y" ) ) {
+    // A number under a vector pad has its config on the PARENT path.
+    if ( !fieldConfig && prefix && ( key === "x" || key === "y" || key === "z" ) ) {
       const parent = formConfigAt(
         context.formConfiguration,
         prefix
       );
 
-      if ( parent?.component === "vector2d" ) {
+      if ( parent?.component === "vector2d" || parent?.component === "vector3d" ) {
         fieldConfig = parent;
         axis = key;
       }

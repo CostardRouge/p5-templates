@@ -27,6 +27,8 @@ import ControlledEasingInput
   from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/ControlledEasingInput/ControlledEasingInput";
 import ControlledVector2DInput
   from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/ControlledVector2DInput/ControlledVector2DInput";
+import ControlledVector3DInput
+  from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/ControlledVector3DInput/ControlledVector3DInput";
 import ControlledSliderInput
   from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/ControlledSliderInput/ControlledSliderInput";
 import ControlledWebcamDeviceSelect
@@ -704,6 +706,14 @@ export default function FieldRenderer( {
           />
         );
 
+      case "vector3d":
+        return (
+          <ControlledVector3DInput
+            name={ registeredName }
+            config={ config }
+          />
+        );
+
       case "source-select":
         return (
           <ControlledSourceSelect
@@ -762,10 +772,12 @@ export default function FieldRenderer( {
     />
   ) : null;
   // One-line bar controls take the pastille beside the bar; the checkbox row
-  // and the 2D pad place it themselves, below.
+  // and the vector pads place it themselves, below.
+  const isVectorPad =
+    config.component === "vector2d" || config.component === "vector3d";
   const inlineBinding =
     bindable &&
-    config.component !== "vector2d" &&
+    !isVectorPad &&
     config.component !== "checkbox";
 
   // Checkbox: label and switch share a single row — denser, and the whole
@@ -815,11 +827,11 @@ export default function FieldRenderer( {
     );
   }
 
-  // Components whose label can't live inside the control itself: the 2D pad
-  // and the asset pickers keep the classic label row above. Everything else
-  // renders its label inline (bar segment or card header).
+  // Components whose label can't live inside the control itself: the vector
+  // pads and the asset pickers keep the classic label row above. Everything
+  // else renders its label inline (bar segment or card header).
   const needsOuterLabel =
-    config.component === "vector2d" ||
+    isVectorPad ||
     config.component === "image" ||
     config.component === "images-stack" ||
     config.component === "asset" ||
@@ -960,11 +972,12 @@ export default function FieldRenderer( {
               </button>
             )}
           </div>
-          {/* The pad's per-field actions, as one cluster: redraw the pair,
-              then modulate it. Both are hidden with the label (an item-list
-              row passes hideLabel), which is where the pad has no room for
-              them anyway. */}
-          {config.component === "vector2d" && (
+          {/* The pad's per-field actions, as one cluster: redraw the pair
+              (or triple), then modulate it. Both are hidden with the label
+              (an item-list row passes hideLabel), which is where the pad has
+              no room for them anyway. The 3D pad is not bindable yet, so its
+              cluster is the shuffle alone. */}
+          {isVectorPad && (
             <div className="flex shrink-0 items-center gap-1">
               <RandomizeFieldButton
                 name={ registeredName }

@@ -4134,6 +4134,19 @@
     "ctime": "2026-09-16T22:58:57.815Z"
   },
   {
+    "name": "vector3d-demo",
+    "engine": "p5",
+    "category": "interactive",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": true,
+    "hiddenFromGallery": false,
+    "asyncDraw": false,
+    "mtime": "2026-09-21T17:47:29.746Z",
+    "ctime": "2026-09-21T17:46:53.742Z"
+  },
+  {
     "name": "sculpt-v1-scatter-lattice",
     "engine": "p5",
     "category": "sculpt",

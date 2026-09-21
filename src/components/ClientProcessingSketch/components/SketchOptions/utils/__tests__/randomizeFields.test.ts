@@ -104,6 +104,55 @@ describe(
     );
 
     it(
+      "writes a vector3d as one { x, y, z } inside its own box, keeping siblings",
+      () => {
+        const form = makeForm( {
+          sketch: {
+            position: {
+              x: 0.1,
+              y: 0.2,
+              z: 0.3,
+              locked: true
+            }
+          }
+        } );
+
+        randomizeField(
+          {
+            label: "Position",
+            component: "vector3d",
+            min: -1,
+            max: 1,
+            step: 0.01,
+            zAxis: {
+              min: 0,
+              max: 4
+            }
+          } as FieldConfig,
+          "sketch.position",
+          form
+        );
+
+        expect( form.writes ).toHaveLength( 1 );
+
+        const value = form.writes[ 0 ].value as {
+          x: number;
+          y: number;
+          z: number;
+          locked: boolean;
+        };
+
+        expect( value.locked ).toBe( true );
+        expect( value.x ).toBeGreaterThanOrEqual( -1 );
+        expect( value.x ).toBeLessThanOrEqual( 1 );
+        expect( value.y ).toBeGreaterThanOrEqual( -1 );
+        expect( value.y ).toBeLessThanOrEqual( 1 );
+        expect( value.z ).toBeGreaterThanOrEqual( 0 );
+        expect( value.z ).toBeLessThanOrEqual( 4 );
+      }
+    );
+
+    it(
       "leaves a kind it cannot draw from untouched",
       () => {
         const form = makeForm();

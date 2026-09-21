@@ -4,6 +4,9 @@ import {
 import {
   randomVector2D
 } from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/ControlledVector2DInput/utils/vector2dMath";
+import {
+  randomVector3D
+} from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/ControlledVector3DInput/utils/vector3dMath";
 
 /**
  * The slice of react-hook-form the randomizer needs. Structural on purpose: it
@@ -56,6 +59,19 @@ export function randomizeField(
         {
           ...( current && typeof current === "object" ? current : {} ),
           ...randomVector2D( field )
+        }
+      );
+      break;
+    }
+    // Same for a vector3d: one { x, y, z } drawn uniformly inside its box.
+    case "vector3d": {
+      const current = form.getValues( path );
+
+      form.setValue(
+        path,
+        {
+          ...( current && typeof current === "object" ? current : {} ),
+          ...randomVector3D( field )
         }
       );
       break;

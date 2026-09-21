@@ -234,6 +234,49 @@ export interface Vector2DConfig extends BaseConfig {
   yDown?: boolean;
 }
 
+// For 3D vector inputs: three number fields over an orbitable 3D box that
+// edits one { x, y, z } at once — drag the arrow's tip, Shift for depth, hold
+// an axis letter to slide along it. Same range ladder as the 2D pad, extended
+// to z; the stored shape is always cartesian.
+export interface Vector3DConfig extends BaseConfig {
+  component: "vector3d";
+  /** Defaults to true: a centred [min, max] box. False → [0, max] on every axis. */
+  allowNegative?: boolean;
+  /** Shared lower bound. Defaults to -1 (or 0 when `allowNegative` is false). */
+  min?: number;
+  /** Shared upper bound. Defaults to 1. */
+  max?: number;
+  /** Shared snapping increment. Defaults to 0.01. */
+  step?: number;
+  /** Per-axis overrides, merged over the shared min/max/step. */
+  xAxis?: {
+    min?: number;
+    max?: number;
+    step?: number;
+  };
+  yAxis?: {
+    min?: number;
+    max?: number;
+    step?: number;
+  };
+  zAxis?: {
+    min?: number;
+    max?: number;
+    step?: number;
+  };
+  /**
+   * Draw +y downward, as p5's WEBGL canvas does (Three.js has +y up). Rendering
+   * only — the stored value is the same either way.
+   */
+  yDown?: boolean;
+  /**
+   * What the triple means. A "position" (the default) gets the floor and the
+   * dropped shadow that make depth readable; a "direction" skips them, since
+   * a direction has no place to stand.
+   */
+  kind?: "position" | "direction";
+}
+
 // Source picker for HUD widgets: options are derived at render time from the
 // live sketch settings + built-in keys (see ControlledSourceSelect).
 interface SourceSelectConfig extends BaseConfig {
@@ -319,6 +362,7 @@ export type FieldConfig =
   | SketchPickerConfig
   | EasingConfig
   | Vector2DConfig
+  | Vector3DConfig
   | SourceSelectConfig
   | KeySelectConfig
   | AssetInputConfig
