@@ -1,8 +1,16 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// The sculpt category's logic, shared by every sketch in it.
+// The SHEET: a sculpt whose points are a grid rather than a scattered lattice.
 //
-// A sculpt sketch is a field of points joined by tubes, and something — a
-// letter, a wave, a hand — decides which points rise. Everything that decides
+// The category's other shape is `_lattice.js` + `_wave.js` — seeded points in a
+// volume, joined by k-nearest links. A sheet is the opposite choice: the points
+// are a jittered GRID, so neighbours are implicit (each cell owns four links,
+// nothing is searched for), the whole field fits one texel per cell, and the
+// shader can address it by cell instead of unrolling a uniform array. Neither
+// module can describe the other's geometry, and they are deliberately not
+// merged; see docs/memory/sketches.md.
+//
+// A sheet sketch is that field of points joined by tubes, with something — a
+// letter, a wave, a hand — deciding which points rise. Everything that decides
 // lives here, in plain JavaScript over typed arrays, with no p5 and no GL:
 //
 //   • the field of points (a jittered grid, a seed, a drift on the loop clock),
@@ -15,16 +23,17 @@
 //   • the PACKING of all that into RGBA8 data textures the shader reads.
 //
 // The shader only ever reads the textures: it finds the cell under a sample
-// point, scans the 3×3 around it, and sphere-traces beads and capsules. Every
-// frame is a pure function of the loop progression, so headless capture
-// renders the same frames as the preview — the one exception is a cursor,
-// which is absent in capture by construction.
+// point, traces everything that can touch the 3×3 block around it, and bounds
+// its step by one cell past that block's walls. Every frame is a pure function
+// of the loop progression, so headless capture renders the same frames as the
+// preview — the one exception is a cursor, which is absent in capture by
+// construction.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const TAU = Math.PI * 2;
 
 // Offsets are stored in cell units. A point never leaves the middle 90 % of
-// its own cell: the shader's wall clamp and its 3×3 scan are exact only while
+// its own cell: the shader's cell bound and its block scan are exact only while
 // every point stays inside the cell that owns it (see the sketch header).
 export const MAX_OFFSET = 0.45;
 
@@ -65,10 +74,12 @@ export function linkCountForReach( reach ) {
 }
 
 /**
- * Deterministic [0, 1) from two integers and a seed — the same hash everywhere
- * in the category, so a seed reproduces a field across sketches and sessions.
+ * Deterministic [0, 1) from a cell's two integer coordinates and a seed, so a
+ * seed reproduces a sheet across sessions and in capture. Named apart from
+ * `_lattice.js`'s `hash01( seed, ...parts )`, which takes its arguments in the
+ * other order — one category, two hashes, and a silent mix-up otherwise.
  */
-export function hash01(
+export function cellHash01(
   i, j, seed
 ) {
   let h = ( Math.imul(
@@ -101,22 +112,22 @@ export function valueNoise2(
   const fy = y - yi;
   const sx = fx * fx * ( 3 - 2 * fx );
   const sy = fy * fy * ( 3 - 2 * fy );
-  const a = hash01(
+  const a = cellHash01(
     xi,
     yi,
     seed
   );
-  const b = hash01(
+  const b = cellHash01(
     xi + 1,
     yi,
     seed
   );
-  const c = hash01(
+  const c = cellHash01(
     xi,
     yi + 1,
     seed
   );
-  const d = hash01(
+  const d = cellHash01(
     xi + 1,
     yi + 1,
     seed
@@ -187,7 +198,7 @@ export function buildGrid( {
     for ( let i = 0; i < c; i++ ) {
       const n = j * c + i;
       const ox = clamp(
-        hexShift + ( hash01(
+        hexShift + ( cellHash01(
           i,
           j,
           seed
@@ -196,7 +207,7 @@ export function buildGrid( {
         MAX_OFFSET
       );
       const oz = clamp(
-        ( hash01(
+        ( cellHash01(
           i,
           j,
           seed + 31
@@ -415,7 +426,7 @@ export function orderValues(
         );
         break;
       case "random":
-        value = hash01(
+        value = cellHash01(
           n,
           17,
           seed

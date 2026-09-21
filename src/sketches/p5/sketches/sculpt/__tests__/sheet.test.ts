@@ -1,6 +1,7 @@
 /**
- * The sculpt category's logic is what decides which points rise, when, and
- * which tubes may join them. Every claim the sketches make about readability
+ * The SHEET's logic (`_sheet.js`, the grid-shaped sculpt — `sculpt.test.ts`
+ * covers the lattice-shaped one) is what decides which points rise, when, and
+ * which tubes may join them. Every claim the sketch makes about readability
  * and loop closure is a property of these functions, so it is checked here on
  * a synthetic ring mask (an "o": ink between two radii, a hole in the middle)
  * with no canvas involved.
@@ -15,14 +16,14 @@ import {
   computeHeights,
   cursorField,
   driftOffsets,
-  hash01,
+  cellHash01,
   linkWeights,
   orderValues,
   packField,
   textUnits,
   unpackHeight,
   valueNoise2
-} from "../_shared.js";
+} from "../_sheet.js";
 
 const ASPECT = 1;
 
@@ -119,13 +120,13 @@ describe(
 );
 
 describe(
-  "hash01 / valueNoise2",
+  "cellHash01 / valueNoise2",
   () => {
     it(
       "stay in range and repeat exactly",
       () => {
         for ( let k = 0; k < 200; k++ ) {
-          const h = hash01(
+          const h = cellHash01(
             k,
             k * 7,
             11
