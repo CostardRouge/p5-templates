@@ -65,7 +65,11 @@ const browser = await chromium.launch( {
   `reducedMotion: "reduce"`** when measuring anything positioned by a
   transition: `motion-reduce:transition-none` then puts it at its final place
   immediately, and the reading is about the layout rather than about the frame
-  rate.
+  rate. The same starvation eats **events the browser schedules against a
+  frame**: setting `scrollLeft` does not deliver a `scroll` event for seconds,
+  so a listener that looks broken usually is not — `dispatchEvent( new Event(
+  "scroll" ) )` after the assignment tests its arithmetic rather than its
+  timing.
 - Form edits are debounced — wait a few seconds after changing an option
   before capturing, or the frame predates the change.
 - Simple option probes: visible `input[type='number']` fields (e.g. the

@@ -85,9 +85,10 @@ export function NotApplicable() {
 /**
  * Every control a variant owns, once.
  *
- * They live apart from any one layout because there are two: a row of grid
- * cells on a desktop dialog, a card on a phone. A control copied into both is
- * a control that gets fixed in one of them.
+ * They live apart from the row that lays them out so that each file has one
+ * job: `VariantTableRow` is about the grid, the progress wipe and the phase
+ * meter; this is about what a variant can be set to. The split is what kept
+ * the row readable once progress moved into it.
  */
 export type VariantFieldProps = {
   variant: ExportVariant;

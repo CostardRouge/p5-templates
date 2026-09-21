@@ -118,7 +118,11 @@ export default function VariantTableRow( {
         VARIANT_GRID,
         // `isolate` keeps the wipe's blend inside this row, and the opaque
         // background is what it inverts against.
-        "relative isolate h-[38px] items-center border-b border-theme bg-background last:border-b-0"
+        //
+        // Taller on a phone, which gets this same table: 52px puts every cell's
+        // control within a thumb's reach. Fixed either way — a row whose height
+        // depends on what it is saying is a row that jumps mid-run.
+        "relative isolate h-[52px] items-center border-b border-theme bg-background last:border-b-0 md:h-[38px]"
       ) }
     >
       <div role="cell" className={ CELL }>
@@ -221,18 +225,18 @@ export default function VariantTableRow( {
           disabled={ running }
           aria-label={ `Duplicate ${ variant.name }` }
           onClick={ onDuplicate }
-          className="rounded-md p-1 text-label transition-colors hover:bg-hover hover:text-foreground disabled:opacity-30"
+          className="rounded-md p-2 text-label transition-colors hover:bg-hover hover:text-foreground disabled:opacity-30 md:p-1"
         >
-          <Copy className="h-3 w-3" />
+          <Copy className="h-3.5 w-3.5 md:h-3 md:w-3" />
         </button>
         <button
           type="button"
           disabled={ running || !removable }
           aria-label={ `Remove ${ variant.name }` }
           onClick={ onRemove }
-          className="rounded-md p-1 text-label transition-colors hover:bg-hover hover:text-foreground disabled:opacity-30"
+          className="rounded-md p-2 text-label transition-colors hover:bg-hover hover:text-foreground disabled:opacity-30 md:p-1"
         >
-          <Trash2 className="h-3 w-3" />
+          <Trash2 className="h-3.5 w-3.5 md:h-3 md:w-3" />
         </button>
       </div>
 

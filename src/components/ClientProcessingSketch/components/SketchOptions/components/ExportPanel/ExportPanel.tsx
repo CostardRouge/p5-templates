@@ -37,10 +37,8 @@ import {
   VARIANT_PRESETS,
   type ExportVariant
 } from "@/lib/export/variants";
-import useMediaQuery from "@/hooks/useMediaQuery";
 import useSketch from "../../../SketchProvider/hooks/useSketch";
 import ExportPreview from "./components/ExportPreview";
-import VariantCard from "./components/VariantCard";
 import VariantTableRow, {
   VARIANT_GRID
 } from "./components/VariantTableRow";
@@ -97,8 +95,9 @@ const SAVE_NOTICE: Record<string, string> = {
  * so what is happening is attached to the variant it happens to. The footer's
  * own 2px bar is the batch's, which a per-row reading cannot answer.
  *
- * Below `md` the same variants render as `VariantCard`s instead: the grid's
- * fixed tracks need ~700px, and a phone got them by scrolling sideways.
+ * The same table serves every viewport — a phone scrolls it sideways rather
+ * than folding into cards, so there is one layout to reason about and one set
+ * of controls. Its rows grow to a thumb's height below `md`.
  *
  * **The panel also owns delivery**, which the runner used to do itself. On a
  * device with a share sheet nothing is delivered automatically: the run ends
@@ -117,10 +116,6 @@ export default function ExportPanel( {
       engine, engineId
     }
   ] = useSketch();
-
-  // Same breakpoint the studio uses for "desktop": below it the variants are
-  // cards rather than grid rows.
-  const wide = useMediaQuery( "( min-width: 768px )" );
 
   const sketchKey = `${ engineId }/${ name }`;
 
@@ -171,6 +166,58 @@ export default function ExportPanel( {
     setPreviewing
   ] = useState<string | null>( null );
   const abortRef = useRef<AbortController | null>( null );
+  const scrollRef = useRef<HTMLDivElement | null>( null );
+
+  /**
+   * Publish how much of the table is off to the sides, as a `data-more`
+   * attribute the edge fades key off.
+   *
+   * Written straight to the DOM rather than held in state: it fires on every
+   * scroll frame, and a re-render per frame is precisely the cost this panel
+   * has just been rid of. A `ResizeObserver` covers the other way the answer
+   * changes — the dialog resizing, or a variant being added or removed.
+   */
+  useEffect(
+    () => {
+      const element = scrollRef.current;
+
+      if ( !element ) {
+        return;
+      }
+
+      const update = () => {
+        const overflow = element.scrollWidth - element.clientWidth;
+        const atStart = element.scrollLeft <= 1;
+        const atEnd = element.scrollLeft >= overflow - 1;
+
+        element.dataset.more = overflow <= 1
+          ? "none"
+          : atStart ? "right" : atEnd ? "left" : "both";
+      };
+
+      update();
+
+      const observer = new ResizeObserver( update );
+
+      observer.observe( element );
+      element.addEventListener(
+        "scroll",
+        update,
+        {
+          passive: true
+        }
+      );
+
+      return () => {
+        observer.disconnect();
+        element.removeEventListener(
+          "scroll",
+          update
+        );
+      };
+    },
+    []
+  );
 
   /**
    * Whether this run holds its files back, decided ONCE from the first
@@ -479,8 +526,21 @@ export default function ExportPanel( {
           mono values with a sketch showing through is unreadable, and this is
           the region you actually read. The glass stays on the title bar and
           the footer, where it still frames the dialog against the canvas. */}
-      <div className="min-h-0 flex-1 overflow-auto bg-background">
-        {wide ? (
+      {/* The one table, every viewport. A phone scrolls it sideways rather
+          than folding it into cards: the six settings are the same on both,
+          and the edge fades say when more of them are off to the side — which
+          is the part a bare sideways scroll never admitted to.
+
+          The fades are siblings of the scrolling region, not children of it:
+          an absolutely positioned child of a scroll container is placed
+          against that container's UNSCROLLED origin, so it would slide away
+          with the content it is meant to be marking. */}
+      <div className="relative flex min-h-0 flex-1">
+        <div
+          ref={ scrollRef }
+          data-more="none"
+          className="peer min-h-0 flex-1 overflow-auto bg-background"
+        >
           <div role="table" aria-label="Export variants" className="min-w-[700px]">
             <div
               role="row"
@@ -503,23 +563,27 @@ export default function ExportPanel( {
               <VariantTableRow key={ variant.id } { ...rowProps( variant ) } />
             ) )}
           </div>
-        ) : (
-          // A phone gets the same variants as cards. See VariantCard: the
-          // table's sideways scroll put half of every row off-screen.
-          <div className="flex flex-col gap-2 p-2">
-            {snapshot.variants.map( ( variant ) => (
-              <VariantCard key={ variant.id } { ...rowProps( variant ) } />
-            ) )}
-          </div>
-        )}
+        </div>
 
-        {/* Adding a variant starts from a preset, never a blank row: a new
-            variant needing four fields filled in before it does anything is
-            not a starting point. */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-background to-transparent opacity-0 transition-opacity motion-reduce:transition-none peer-data-[more=both]:opacity-100 peer-data-[more=left]:opacity-100"
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-background to-transparent opacity-0 transition-opacity motion-reduce:transition-none peer-data-[more=both]:opacity-100 peer-data-[more=right]:opacity-100"
+        />
+      </div>
+
+      {/* Adding a variant starts from a preset, never a blank row: a new
+          variant needing four fields filled in before it does anything is not
+          a starting point. Kept out of the scrolling region so it stays put
+          while the table is scrolled sideways. */}
+      <div className="border-t border-dashed border-theme">
         <Menu as="div" className="relative">
           <MenuButton
             disabled={ running }
-            className="flex min-h-[44px] w-full items-center gap-1.5 border-t border-dashed border-theme px-2.5 py-2 text-left text-[11px] text-label transition-colors hover:bg-hover hover:text-foreground disabled:opacity-40 md:min-h-0"
+            className="flex min-h-[44px] w-full items-center gap-1.5 px-2.5 py-2 text-left text-[11px] text-label transition-colors hover:bg-hover hover:text-foreground disabled:opacity-40 md:min-h-0"
           >
             <Plus className="h-3 w-3 shrink-0" />
             Add a variant
