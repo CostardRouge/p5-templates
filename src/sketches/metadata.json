@@ -4132,5 +4132,18 @@
     "asyncDraw": false,
     "mtime": "2026-09-16T22:59:45.759Z",
     "ctime": "2026-09-16T22:58:57.815Z"
+  },
+  {
+    "name": "sculpt-v1-scatter-lattice",
+    "engine": "p5",
+    "category": "sculpt",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "asyncDraw": false,
+    "mtime": "2026-09-21T18:00:11.271Z",
+    "ctime": "2026-09-21T17:59:05.667Z"
   }
 ]
