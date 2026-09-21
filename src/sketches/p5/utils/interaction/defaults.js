@@ -109,7 +109,33 @@ export const interactionFormValues = {
 
   gyroscope: {
     enabled: false,
-    clampAngle: 45,
+    // What the pointer follows (see gyroMath.js): the tilt angles, the
+    // gravity vector they imply (a marble), the linear acceleration (a shake)
+    // or the rotation rate integrated (a joystick). `range` is in the mode's
+    // own unit — the excursion that reaches the canvas edge.
+    source: {
+      mode: "tilt",
+      range: 30
+    },
+    // Which pose reads as the centre: the pose the phone is held in when the
+    // source is enabled, flat on a table, or the custom angles below.
+    calibration: "auto",
+    // Custom neutral pose, degrees: x = roll (gamma), y = pitch (beta). 40°
+    // is a phone held in the hand at reading height.
+    neutral: {
+      x: 0,
+      y: 40
+    },
+    // Per-axis flip. Off, the pointer rolls toward the low edge like a marble
+    // (raise the top edge → pointer down); `y` on gives the "aim" feel.
+    invert: {
+      x: false,
+      y: false
+    },
+    smoothing: 0.5,
+    // Re-express the device axes in the viewport's frame when the phone is
+    // held in landscape.
+    screenRotation: true,
     offset: {
       x: 0,
       y: 0
@@ -719,12 +745,143 @@ export const interactionFormConfiguration = {
           component: "checkbox",
           label: "Enabled"
         },
-        clampAngle: {
-          component: "slider",
-          label: "Clamp angle (°)",
-          min: 5,
+        // Each branch's `default`s mirror GYRO_MODE_DEFAULTS in gyroMath.js —
+        // a mode switch rebuilds the object from them.
+        source: {
+          component: "conditional-group",
+          label: "Signal",
+          conditionalOn: "mode",
+          hideNone: true,
+          typeSelector: {
+            label: "Mode",
+            options: [
+              {
+                label: "Tilt (angles)",
+                value: "tilt"
+              },
+              {
+                label: "Gravity (marble)",
+                value: "gravity"
+              },
+              {
+                label: "Acceleration (shake)",
+                value: "acceleration"
+              },
+              {
+                label: "Rotation (joystick)",
+                value: "rotation"
+              }
+            ]
+          },
+          configs: {
+            tilt: {
+              range: {
+                component: "slider",
+                label: "Range (° to the edge)",
+                min: 5,
+                max: 90,
+                step: 5,
+                default: 30
+              }
+            },
+            gravity: {
+              range: {
+                component: "slider",
+                label: "Range (g to the edge)",
+                min: 0.1,
+                max: 1,
+                step: 0.05,
+                default: 0.5
+              }
+            },
+            acceleration: {
+              range: {
+                component: "slider",
+                label: "Range (m/s² to the edge)",
+                min: 1,
+                max: 30,
+                step: 1,
+                default: 8
+              },
+              release: {
+                component: "slider",
+                label: "Release (0 = instant, 0.99 = hold)",
+                min: 0,
+                max: 0.99,
+                step: 0.01,
+                default: 0.9
+              }
+            },
+            rotation: {
+              range: {
+                component: "slider",
+                label: "Speed (°/s for centre → edge in 1 s)",
+                min: 30,
+                max: 720,
+                step: 10,
+                default: 180
+              },
+              deadzone: {
+                component: "slider",
+                label: "Dead zone (°/s)",
+                min: 0,
+                max: 30,
+                step: 1,
+                default: 3
+              }
+            }
+          }
+        },
+        calibration: {
+          component: "select",
+          label: "Neutral pose",
+          options: [
+            {
+              label: "Auto (pose when enabled)",
+              value: "auto"
+            },
+            {
+              label: "Flat (lying on a table)",
+              value: "flat"
+            },
+            {
+              label: "Custom angles",
+              value: "custom"
+            }
+          ]
+        },
+        neutral: {
+          component: "vector2d",
+          label: "Custom neutral (° roll, ° pitch)",
+          min: -90,
           max: 90,
-          step: 5
+          step: 1,
+          yDown: true
+        },
+        invert: {
+          component: "nested-object",
+          label: "Invert",
+          fields: {
+            x: {
+              component: "checkbox",
+              label: "Horizontal (X)"
+            },
+            y: {
+              component: "checkbox",
+              label: "Vertical (Y)"
+            }
+          }
+        },
+        smoothing: {
+          component: "slider",
+          label: "Smoothing",
+          min: 0,
+          max: 0.95,
+          step: 0.05
+        },
+        screenRotation: {
+          component: "checkbox",
+          label: "Follow screen rotation (landscape)"
         },
         offset: {
           component: "vector2d",
