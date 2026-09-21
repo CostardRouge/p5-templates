@@ -1,10 +1,10 @@
 /**
- * The SHEET's logic (`_sheet.js`, the grid-shaped sculpt — `sculpt.test.ts`
- * covers the lattice-shaped one) is what decides which points rise, when, and
- * which tubes may join them. Every claim the sketch makes about readability
- * and loop closure is a property of these functions, so it is checked here on
- * a synthetic ring mask (an "o": ink between two radii, a hole in the middle)
- * with no canvas involved.
+ * The MESH's logic (`_mesh.js`, the grid of points and the tubes between them
+ * — `sculpt.test.ts` covers the category's scattered lattice) is what decides
+ * which points rise, when, and which tubes may join them. Every claim the
+ * sketch makes about readability and loop closure is a property of these
+ * functions, so it is checked here on a synthetic ring mask (an "o": ink
+ * between two radii, a hole in the middle) with no canvas involved.
  */
 
 import {
@@ -23,7 +23,7 @@ import {
   textUnits,
   unpackHeight,
   valueNoise2
-} from "../_sheet.js";
+} from "../_mesh.js";
 
 const ASPECT = 1;
 

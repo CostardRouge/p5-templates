@@ -41,14 +41,14 @@ import {
   HEIGHT_MIN,
   HEIGHT_MAX,
   WEIGHT_MAX
-} from "../_sheet.js";
+} from "../_mesh.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // sculpt v2 — letter relief.
 //
 // v1 scatters its points through a volume and joins them to their nearest
 // neighbours; this one lays them out as a SHEET — a jittered grid, where the
-// neighbours are implicit and the whole field fits a texture (../_sheet.js).
+// neighbours are implicit and the whole field fits a texture (../_mesh.js).
 //
 // A sheet of points covers the canvas, joined by the rings family's tubes at
 // their thinnest. Under the sheet is a text: each beat, the points that fall
@@ -60,7 +60,7 @@ import {
 // letters stay up and only the difference moves.
 //
 // ── Where the logic lives ────────────────────────────────────────────────────
-// Everything that DECIDES is CPU-side JavaScript in ../_sheet.js, over typed
+// Everything that DECIDES is CPU-side JavaScript in ../_mesh.js, over typed
 // arrays: the grid, the order, the envelope, the links. The shader only reads
 // two RGBA8 data textures of one texel per cell — (offset x, offset z, height
 // hi, height lo) and (E, S, SE, SW link weights) — and never sees a letter.

@@ -1,15 +1,19 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// The SHEET: a sculpt whose points are a grid rather than a scattered lattice.
+// The MESH: a grid of points and the tubes strung between them.
 //
-// The category's other shape is `_lattice.js` + `_wave.js` — seeded points in a
-// volume, joined by k-nearest links. A sheet is the opposite choice: the points
-// are a jittered GRID, so neighbours are implicit (each cell owns four links,
-// nothing is searched for), the whole field fits one texel per cell, and the
-// shader can address it by cell instead of unrolling a uniform array. Neither
-// module can describe the other's geometry, and they are deliberately not
-// merged; see docs/memory/sketches.md.
+// The category's other geometry is `_lattice.js` + `_wave.js` — seeded points
+// in a volume, joined to their k nearest neighbours. This is the opposite
+// choice: the points are a jittered GRID, so the neighbours are implicit (each
+// cell owns four links, nothing is searched for), the whole field fits one
+// texel per cell, and the shader addresses it by cell instead of unrolling a
+// uniform array. Neither module can describe the other's geometry and they are
+// deliberately not merged; see docs/memory/sketches.md.
 //
-// A sheet sketch is that field of points joined by tubes, with something — a
+// The module is named for the LINKS, because they are what it uniquely holds —
+// a sibling module may well hold a grid of heights without any (see the
+// category's other sheet-shaped sculpts).
+//
+// A mesh sketch is that field of points joined by tubes, with something — a
 // letter, a wave, a hand — deciding which points rise. Everything that decides
 // lives here, in plain JavaScript over typed arrays, with no p5 and no GL:
 //
