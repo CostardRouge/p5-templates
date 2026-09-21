@@ -55,6 +55,21 @@ const browser = await chromium.launch( {
   input proves text clipping without any picture.
 - Software GL is slow (~2 fps on heavy raymarchers). Wait 10–20 s after load
   before the first capture; frames advance, just slowly.
+- **A CSS transition takes as long as the renderer needs to deliver frames**,
+  which is not what its `duration` says. Measured on the export dialog's
+  200 ms `transition-transform`: 1.5 s after opening it had not moved at all,
+  and 13.5 s in it was still two thirds of the way there — so a panel reads as
+  "not open" in any geometry probe long after `aria-hidden` and its classes say
+  it is. Playwright hides this, because its actionability checks retry for 30 s
+  and the element does arrive. **Launch the context with
+  `reducedMotion: "reduce"`** when measuring anything positioned by a
+  transition: `motion-reduce:transition-none` then puts it at its final place
+  immediately, and the reading is about the layout rather than about the frame
+  rate. The same starvation eats **events the browser schedules against a
+  frame**: setting `scrollLeft` does not deliver a `scroll` event for seconds,
+  so a listener that looks broken usually is not — `dispatchEvent( new Event(
+  "scroll" ) )` after the assignment tests its arithmetic rather than its
+  timing.
 - Form edits are debounced — wait a few seconds after changing an option
   before capturing, or the frame predates the change.
 - Simple option probes: visible `input[type='number']` fields (e.g. the

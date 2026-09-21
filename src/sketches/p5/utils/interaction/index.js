@@ -1587,6 +1587,14 @@ function _desiredVisionTasks( opts ) {
     tasks.push( "faceMesh" );
   }
 
+  // The DeepLab category mask (`mediapipe.tasks.segmenter`). Not in the shared
+  // form: a sketch that wants a silhouette rather than landmarks sets
+  // `vision.segmenter.enabled` on the options it hands the interaction layer
+  // (sculpt-v3-vision-relief's mask mode), and reads the result itself.
+  if ( vision.segmenter?.enabled ) {
+    tasks.push( "segmenter" );
+  }
+
   return tasks;
 }
 

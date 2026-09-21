@@ -19,6 +19,9 @@ import type {
 import {
   applyExportOverrides, type OverrideHandle
 } from "./overrideScope";
+import {
+  phaseFraction, phasesFor, type ExportPhase
+} from "./progress";
 import nextFrame from "./nextFrame";
 import {
   resolveFrameIndices
@@ -44,8 +47,27 @@ export type ExportItemState = {
   status: ExportItemStatus;
   /** 0-100 across the whole variant, slides included. */
   percentage: number;
-  /** What the variant is doing right now, e.g. "Encoding…". */
-  stage: string;
+  /** Which phase the variant is in right now. */
+  phase: ExportPhase;
+  /**
+   * How far into that phase, 0-1 — what the panel's phase meter fills.
+   *
+   * `null` means the phase reports nothing: the encoder hands back one
+   * "encoding" event and then blocks inside `finalize()`, so there is no
+   * number to show. The meter renders that segment as an indeterminate sweep
+   * rather than inventing a percentage, which is exactly the case where the
+   * old bar sat pinned at 100% and read as a hang.
+   */
+  phaseProgress: number | null;
+  /**
+   * Frames captured out of the slide's total, while a phase counts them.
+   *
+   * Two numbers, never a formatted string: the panel pads the count to the
+   * total's width, and a pre-formatted `38% (172/450)` changing width on every
+   * captured frame is what made the table re-measure its columns mid-run.
+   */
+  frame?: number;
+  totalFrames?: number;
   /** 1-based, for multi-slide variants. */
   slide?: number;
   slideCount?: number;
@@ -228,6 +250,36 @@ function recordToBlob( args: {
 }
 
 /**
+ * A recorder event, as a phase the panel can draw.
+ *
+ * Only `capturing` carries a usable number. The recorder emits exactly one
+ * `encoding` event and then blocks inside the encoder's `finalize()`, and one
+ * `finalizing` event once that returns — so those two report `null` and the
+ * meter sweeps instead of pretending to advance. What they replace is worse
+ * than nothing: the bar used to be pinned at 100% for the whole encode, over a
+ * label that never changed, which is indistinguishable from a hang.
+ */
+function recorderPhase( progress: RecorderProgress ): StageUpdate {
+  if ( progress.stage === "capturing" ) {
+    return {
+      phase: "capturing",
+      within: progress.totalFrames > 0
+        ? progress.frame / progress.totalFrames
+        : null,
+      frame: progress.frame,
+      totalFrames: progress.totalFrames
+    };
+  }
+
+  return {
+    phase: progress.stage === "encoding" ? "encoding" : "saving",
+    within: null,
+    frame: progress.totalFrames,
+    totalFrames: progress.totalFrames
+  };
+}
+
+/**
  * Run a list of export variants against the live sketch.
  *
  * Each variant pushes its own canvas size and framerate into the engine, is
@@ -255,7 +307,8 @@ export async function runExportBatch( {
     variantId: variant.id,
     status: "queued",
     percentage: 0,
-    stage: "Queued"
+    phase: "preparing",
+    phaseProgress: 0
   } ) );
 
   const emit = () => onProgress?.( items.map( ( item ) => ( {
@@ -277,10 +330,16 @@ export async function runExportBatch( {
         throw abortError();
       }
 
+      // Indeterminate from the first instant, not a dead 0%: `Preparing` polls
+      // the engine for a settled resize and has no number of its own, and a run
+      // that shows nothing at all until the first frame lands is the "no start
+      // of progress" the studio reported outside dev.
       item.status = "running";
-      item.stage = "Preparing…";
+      item.phase = "preparing";
+      item.phaseProgress = null;
       emit();
 
+      const phases = phasesFor( variant.kind );
       const slideIndices = resolveSlideIndices(
         variant,
         slideCount,
@@ -331,12 +390,28 @@ export async function runExportBatch( {
           handle: scope,
           signal,
           selectSlide,
-          onStage: (
-            stage, percentage, slide
-          ) => {
-            item.stage = stage;
-            item.percentage = percentage;
-            item.slide = slide;
+          report: ( update ) => {
+            const span = update.slideTotal ?? 1;
+            const position = update.slidePosition ?? 0;
+
+            item.phase = update.phase;
+            item.phaseProgress = update.within;
+            item.frame = update.frame;
+            item.totalFrames = update.totalFrames;
+            item.slide = update.slidePosition === undefined
+              ? undefined
+              : position + 1;
+            // Slides are folded in HERE rather than in each runner, so one
+            // formula covers them all — and the combined-video path, which
+            // spans every slide in a single recording, simply reports no
+            // position and is not divided by a slide count it never had.
+            item.percentage = ( (
+              position + phaseFraction(
+                phases,
+                update.phase,
+                update.within ?? 0
+              )
+            ) / span ) * 100;
             emit();
           }
         } );
@@ -359,7 +434,8 @@ export async function runExportBatch( {
 
         item.status = "done";
         item.percentage = 100;
-        item.stage = "Done";
+        item.phase = phases[ phases.length - 1 ];
+        item.phaseProgress = 1;
         item.bytes = artifacts.reduce(
           (
             sum, artifact
@@ -372,7 +448,6 @@ export async function runExportBatch( {
 
         if ( isAbort( error ) || signal?.aborted ) {
           item.status = "cancelled";
-          item.stage = "Cancelled";
           emit();
           throw abortError();
         }
@@ -380,7 +455,6 @@ export async function runExportBatch( {
         // One variant failing is not the batch failing — a 4K mp4 the encoder
         // refuses should not cost the user the square post queued behind it.
         item.status = "failed";
-        item.stage = "Failed";
         item.error = error instanceof Error ? error.message : String( error );
         emit();
       }
@@ -397,7 +471,6 @@ export async function runExportBatch( {
     for ( const item of items ) {
       if ( item.status === "queued" || item.status === "running" ) {
         item.status = "cancelled";
-        item.stage = "Cancelled";
       }
     }
 
@@ -418,9 +491,28 @@ type RunVariantArgs = {
   handle: OverrideHandle;
   signal?: AbortSignal;
   selectSlide: ( slideIndex: number ) => Promise<void>;
-  onStage: (
-    stage: string, percentage: number, slide?: number
-  ) => void;
+  report: ( update: StageUpdate ) => void;
+};
+
+/**
+ * One progress tick from a variant runner, before slides are folded in.
+ *
+ * A runner says what it is doing and how far into it — never a percentage of
+ * the whole variant, and never a formatted label. Both of those are the
+ * caller's to derive: the fold over slides belongs in one place (`runExportBatch`
+ * does it), and a label built here would be a string the panel could only print,
+ * not lay out.
+ */
+type StageUpdate = {
+  phase: ExportPhase;
+  /** 0-1 inside `phase` for the slide in hand; `null` when it cannot be known. */
+  within: number | null;
+  /** 0-based position in `slideIndices`; omitted when the run is not per-slide. */
+  slidePosition?: number;
+  /** How many slides the fold divides by; omitted alongside `slidePosition`. */
+  slideTotal?: number;
+  frame?: number;
+  totalFrames?: number;
 };
 
 /** Capture one variant, returning its artifacts without downloading them. */
@@ -465,7 +557,7 @@ async function gotoSlide(
 
 async function runImageVariant( args: RunVariantArgs ): Promise<ExportArtifact[]> {
   const {
-    engine, variant, sketchName, slideIndices, runSize, onStage
+    engine, variant, sketchName, slideIndices, runSize, report
   } = args;
   const artifacts: ExportArtifact[] = [];
 
@@ -483,17 +575,25 @@ async function runImageVariant( args: RunVariantArgs ): Promise<ExportArtifact[]
       );
     }
 
-    onStage(
-      "Capturing…",
-      ( position / slideIndices.length ) * 100,
-      position + 1
-    );
+    report( {
+      phase: "capturing",
+      within: null,
+      slidePosition: position,
+      slideTotal: slideIndices.length
+    } );
 
     const blob = await captureFreshPngBlob( engine );
 
     if ( !blob ) {
       throw new Error( "Could not read a frame from the sketch." );
     }
+
+    report( {
+      phase: "saving",
+      within: null,
+      slidePosition: position,
+      slideTotal: slideIndices.length
+    } );
 
     artifacts.push( {
       fileName: variantFileName(
@@ -513,7 +613,7 @@ async function runImageVariant( args: RunVariantArgs ): Promise<ExportArtifact[]
 
 async function runFramesVariant( args: RunVariantArgs ): Promise<ExportArtifact[]> {
   const {
-    engine, options, variant, sketchName, slideIndices, runSize, onStage
+    engine, options, variant, sketchName, slideIndices, runSize, report
   } = args;
   const artifacts: ExportArtifact[] = [];
 
@@ -598,18 +698,24 @@ async function runFramesVariant( args: RunVariantArgs ): Promise<ExportArtifact[
           data: await blobToBytes( await canvasToPngBlob( scratch ) )
         } );
 
-        onStage(
-          `${ ( ( ( frame + 1 ) / indices.length ) * 100 ).toFixed( 0 ) }% (${ frame + 1 }/${ indices.length })`,
-          ( ( position + ( frame + 1 ) / indices.length ) / slideIndices.length ) * 100,
-          position + 1
-        );
+        report( {
+          phase: "capturing",
+          within: ( frame + 1 ) / indices.length,
+          slidePosition: position,
+          slideTotal: slideIndices.length,
+          frame: frame + 1,
+          totalFrames: indices.length
+        } );
       }
 
-      onStage(
-        "Zipping…",
-        100,
-        position + 1
-      );
+      report( {
+        phase: "saving",
+        within: null,
+        slidePosition: position,
+        slideTotal: slideIndices.length,
+        frame: indices.length,
+        totalFrames: indices.length
+      } );
 
       artifacts.push( {
         fileName: variantFileName(
@@ -632,7 +738,7 @@ async function runFramesVariant( args: RunVariantArgs ): Promise<ExportArtifact[
 
 async function runVideoVariant( args: RunVariantArgs ): Promise<ExportArtifact[]> {
   const {
-    engine, options, variant, sketchName, slideIndices, runSize, framerate, onStage
+    engine, options, variant, sketchName, slideIndices, runSize, framerate, report
   } = args;
   const artifacts: ExportArtifact[] = [];
 
@@ -664,19 +770,11 @@ async function runVideoVariant( args: RunVariantArgs ): Promise<ExportArtifact[]
       variant,
       audio: true,
       signal: args.signal,
-      onProgress: ( progress ) => {
-        const within = progress.stage === "capturing"
-          ? progress.percentage
-          : 100;
-
-        onStage(
-          progress.stage === "capturing"
-            ? `${ progress.percentage.toFixed( 0 ) }% (${ progress.frame }/${ progress.totalFrames })`
-            : progress.stage === "encoding" ? "Encoding…" : "Finalising…",
-          ( ( position + within / 100 ) / slideIndices.length ) * 100,
-          position + 1
-        );
-      }
+      onProgress: ( progress ) => report( {
+        ...recorderPhase( progress ),
+        slidePosition: position,
+        slideTotal: slideIndices.length
+      } )
     } );
 
     artifacts.push( {
@@ -705,7 +803,7 @@ async function runVideoVariant( args: RunVariantArgs ): Promise<ExportArtifact[]
  */
 async function runCombinedVideoVariant( args: RunVariantArgs ): Promise<ExportArtifact[]> {
   const {
-    engine, options, variant, sketchName, slideIndices, runSize, framerate, onStage
+    engine, options, variant, sketchName, slideIndices, runSize, framerate, report
   } = args;
 
   const host = createSlidePlaylistHost( {
@@ -726,20 +824,15 @@ async function runCombinedVideoVariant( args: RunVariantArgs ): Promise<ExportAr
     variant,
     audio: false,
     signal: args.signal,
-    onProgress: ( progress ) => {
-      onStage(
-        progress.stage === "capturing"
-          ? `${ progress.percentage.toFixed( 0 ) }% (${ progress.frame }/${ progress.totalFrames })`
-          : progress.stage === "encoding" ? "Encoding…" : "Finalising…",
-        progress.stage === "capturing" ? progress.percentage : 100
-      );
-    }
+    // No slide position: every slide feeds one encoder here, so this IS the
+    // whole variant. Folding it over a slide count would cap it at 1/N.
+    onProgress: ( progress ) => report( recorderPhase( progress ) )
   } );
 
-  onStage(
-    "Done",
-    100
-  );
+  report( {
+    phase: "saving",
+    within: 1
+  } );
 
   return [
     {

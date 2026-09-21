@@ -70,7 +70,7 @@ type MobileStudioDrawerProps = {
  * the settings drawer — nor scrolling the panel that holds them.
  *
  * Recording and export are NOT a tab: they live in `CaptureDialog`, opened as a
- * bottom sheet by the transport's record dot — the same single home the desktop
+ * full screen by the transport's record dot — the same single home the desktop
  * layouts use.
  */
 export default function MobileStudioDrawer( {
