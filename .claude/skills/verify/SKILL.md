@@ -60,5 +60,10 @@ const browser = await chromium.launch( {
 - Simple option probes: visible `input[type='number']` fields (e.g. the
   vector2d x/y) accept `fill()` + `Enter`; selects accept `selectOption()`
   after expanding their group.
+- `page.mouse.move/down/up` gestures do **not** scroll the options rail the
+  way `locator.click()` does: a drag aimed at a control below the fold lands
+  on whatever is painted at those coordinates and silently does nothing.
+  `locator.scrollIntoViewIfNeeded()` before the gesture, and when in doubt
+  log `document.elementFromPoint( x, y )` for the start point.
 - Watch `console` events for `[error]` — GLSL compile failures surface there,
   not in the build.

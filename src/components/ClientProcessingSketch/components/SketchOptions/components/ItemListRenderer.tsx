@@ -548,6 +548,17 @@ function getDefaultValueForConfig( config: FieldConfig ): any {
         y: center
       };
     }
+    case "vector3d": {
+      const min = config.min ?? ( config.allowNegative === false ? 0 : -1 );
+      const max = config.max ?? 1;
+      const center = ( min + max ) / 2;
+
+      return {
+        x: center,
+        y: center,
+        z: center
+      };
+    }
     case "nested-object": {
       const obj: Record<string, any> = {};
 

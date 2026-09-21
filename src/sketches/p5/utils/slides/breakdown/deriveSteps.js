@@ -96,7 +96,7 @@ export function classifyLeaf(
     return "colors";
   }
 
-  if ( fieldConfig?.component === "vector2d" ) {
+  if ( fieldConfig?.component === "vector2d" || fieldConfig?.component === "vector3d" ) {
     return "vectors";
   }
 

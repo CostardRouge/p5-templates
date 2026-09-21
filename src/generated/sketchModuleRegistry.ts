@@ -114,6 +114,7 @@ export const sketchModuleLoaders: Record<string, SketchModuleLoader> = {
   "p5:hand-capture/hand-tracking-v9-smear": () => import( "@/p5/sketches/hand-capture/hand-tracking-v9-smear/index.js" ),
   "p5:interactive/interaction-test": () => import( "@/p5/sketches/interactive/interaction-test/index.js" ),
   "p5:interactive/interactive-binding-demo": () => import( "@/p5/sketches/interactive/interactive-binding-demo/index.js" ),
+  "p5:interactive/vector3d-demo": () => import( "@/p5/sketches/interactive/vector3d-demo/index.js" ),
   "p5:kinetic/kinetic-grid-spheres": () => import( "@/p5/sketches/kinetic/kinetic-grid-spheres/index.js" ),
   "p5:kinetic/kinetic-letters": () => import( "@/p5/sketches/kinetic/kinetic-letters/index.js" ),
   "p5:kinetic/kinetic-plane": () => import( "@/p5/sketches/kinetic/kinetic-plane/index.js" ),

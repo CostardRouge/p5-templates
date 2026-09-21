@@ -79,11 +79,14 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 - Baked cards on WEBGL quads remain the cheap board (v2), at the cost of lighting that no longer turns; the GPU renderer's `offscreen` mode is what bakes them → `sketches.md`.
 - A cascade's tree is a pure function of the clock, or it cannot be captured → `sketches.md`.
 - A `conditional-group` branch switch rebuilds the whole object from each field's `default`, falling back to a slider's `min` → `sketches.md`.
+- A 3D vector is one `vector3d` field kind storing `{ x, y, z }` with four switchable views (orbitable box, front·top pads, pad + z, trackball sphere); a view changes the gesture, never the value's shape, and p5 pads set `yDown` → `studio-ui.md`, `docs/vector3d-control.md`.
 - A sketch's mutable module-level state goes through `sketch.state()` (one record per page/layer instance, drift-tested), GPU helpers keep GL resources per surface, and layer imports are serialised because there is one registration capture → `architecture.md`, `sketches.md`.
 
 - A session that changes code reports this project's state to `PROJETS.md`, at the root of the private `second-brain` repo: the register is that file, never Claude's memory and never `git log` → CLAUDE.md rule 4
 
 ## Open items (dated; remove when done)
+
+- 2026-09-21 — `vector3d` shipped as four comparable views on purpose; the maintainer has not yet picked a default or asked for the choice to be remembered. Not wired: a `vector3d` binding kind (`bindingKindFor` returns `null`), a HUD widget over a triple, HUD quick-add, unit-sphere randomization for `kind: "direction"`, and converting `dragon-corridor`'s `camera.x/y/z` (a stored-shape change). Candidates and sources in `docs/vector3d-control.md` §4.
 
 - 2026-09-16 — `flip-v2-grid-cascade` and `flip-v3-tube-cascade` ship without thumbnails or previews (`hasThumbnail`/`hasPreview` false, so their gallery cards are blank); nothing in the repo generates them, they are captured from the studio. Open in the category: v3 caps at 8 single glyphs and 64 cells by construction (see `sketches.md`) — a deeper board would need the capsules in a data texture after all; and quad (4-way) subdivision is still unexplored, v2 and v3 both splitting in two on alternating axes on purpose, because that is what gives 1 → 2 → 4 → 8.
 
