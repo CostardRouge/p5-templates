@@ -10,12 +10,6 @@ export type {
   AxisRange
 } from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/ControlledVector2DInput/utils/vector2dMath";
 
-export {
-  fractionToValue,
-  stepDecimals,
-  valueToFraction
-};
-
 export type Vector3DValue = {
   x: number;
   y: number;
@@ -24,31 +18,10 @@ export type Vector3DValue = {
 
 /**
  * What the three numbers mean. It does not change the stored shape — always a
- * cartesian `{ x, y, z }` — only which view the control opens on and how the
- * views talk about the value (a direction has an azimuth and an elevation, a
- * position has a floor to cast a shadow on).
+ * cartesian `{ x, y, z }` — only how the box draws it: a position gets a floor
+ * and a dropped shadow, a direction does not.
  */
 export type Vector3DKind = "position" | "direction";
-
-/**
- * The presentations the control can switch between. Every view edits the same
- * `{ x, y, z }`; they differ in the gesture that moves it:
- *  - `gizmo`     — an orbitable axonometric box with the vector as an arrow;
- *                  drag the tip in the screen plane, Shift for depth, hold
- *                  x / y / z for one axis.
- *  - `planes`    — two orthographic pads, front (x·y) and top (x·z).
- *  - `pad-depth` — the 2D pad for x·y beside a vertical strip for z.
- *  - `orbit`     — a virtual trackball: drag rotates the vector about the
- *                  origin, a strip sets its length.
- */
-export type Vector3DView = "gizmo" | "planes" | "pad-depth" | "orbit";
-
-export const VECTOR3D_VIEWS: readonly Vector3DView[] = [
-  "gizmo",
-  "planes",
-  "pad-depth",
-  "orbit"
-];
 
 /**
  * Subset of the field config understood by the 3D control. Kept independent
@@ -75,10 +48,8 @@ export interface Vector3DInputConfig {
    * stored value is the same either way.
    */
   yDown?: boolean;
-  /** What the value means; picks the default view. Defaults to "position". */
+  /** What the value means; decides the floor and shadow. Defaults to "position". */
   kind?: Vector3DKind;
-  /** The view the control opens on. Defaults to `orbit` for a direction, `gizmo` otherwise. */
-  view?: Vector3DView;
 }
 
 export interface Axes3D {
@@ -123,11 +94,6 @@ export function axisRange(
   axes: Axes3D, axis: AxisName
 ): AxisRange {
   return axis === "x" ? axes.xAxis : axis === "y" ? axes.yAxis : axes.zAxis;
-}
-
-/** The view a config opens on: explicit, else by kind. */
-export function defaultViewFor( config: Vector3DInputConfig ): Vector3DView {
-  return config.view ?? ( config.kind === "direction" ? "orbit" : "gizmo" );
 }
 
 /**
@@ -211,14 +177,6 @@ export function randomVector3D(
 
 /* ───────────────────────── plain vector algebra ───────────────────────── */
 
-export function length3( v: Vector3DValue ): number {
-  return Math.hypot(
-    v.x,
-    v.y,
-    v.z
-  );
-}
-
 export function scale3(
   v: Vector3DValue, s: number
 ): Vector3DValue {
@@ -239,175 +197,7 @@ export function add3(
   };
 }
 
-export function dot3(
-  a: Vector3DValue, b: Vector3DValue
-): number {
-  return a.x * b.x + a.y * b.y + a.z * b.z;
-}
-
-export function cross3(
-  a: Vector3DValue, b: Vector3DValue
-): Vector3DValue {
-  return {
-    x: a.y * b.z - a.z * b.y,
-    y: a.z * b.x - a.x * b.z,
-    z: a.x * b.y - a.y * b.x
-  };
-}
-
-/** Unit vector, or `fallback` (default +z, "toward the viewer") for a zero vector. */
-export function normalize3(
-  v: Vector3DValue, fallback: Vector3DValue = {
-    x: 0,
-    y: 0,
-    z: 1
-  }
-): Vector3DValue {
-  const len = length3( v );
-
-  return len > 1e-12 ? scale3(
-    v,
-    1 / len
-  ) : fallback;
-}
-
-/** Rodrigues' rotation of `v` by `angle` radians about the unit `axis`. */
-export function rotateAroundAxis(
-  v: Vector3DValue, axis: Vector3DValue, angle: number
-): Vector3DValue {
-  const c = Math.cos( angle );
-  const s = Math.sin( angle );
-  const k = axis;
-  const kCrossV = cross3(
-    k,
-    v
-  );
-  const kDotV = dot3(
-    k,
-    v
-  );
-
-  return {
-    x: v.x * c + kCrossV.x * s + k.x * kDotV * ( 1 - c ),
-    y: v.y * c + kCrossV.y * s + k.y * kDotV * ( 1 - c ),
-    z: v.z * c + kCrossV.z * s + k.z * kDotV * ( 1 - c )
-  };
-}
-
-/* ─────────────────────────── spherical form ───────────────────────────── */
-
-/**
- * Azimuth is the turn about +y measured from +z toward +x, in (-π, π];
- * elevation the lift from the x·z plane toward +y, in [-π/2, π/2]. The zero
- * vector reads as azimuth 0, elevation 0, length 0.
- */
-export interface Spherical {
-  azimuth: number;
-  elevation: number;
-  length: number;
-}
-
-export function toSpherical( v: Vector3DValue ): Spherical {
-  const length = length3( v );
-
-  if ( length < 1e-12 ) {
-    return {
-      azimuth: 0,
-      elevation: 0,
-      length: 0
-    };
-  }
-
-  return {
-    azimuth: Math.atan2(
-      v.x,
-      v.z
-    ),
-    elevation: Math.atan2(
-      v.y,
-      Math.hypot(
-        v.x,
-        v.z
-      )
-    ),
-    length
-  };
-}
-
-export function fromSpherical( {
-  azimuth, elevation, length
-}: Spherical ): Vector3DValue {
-  const flat = Math.cos( elevation ) * length;
-
-  return {
-    x: flat * Math.sin( azimuth ),
-    y: Math.sin( elevation ) * length,
-    z: flat * Math.cos( azimuth )
-  };
-}
-
-/* ───────────────────────── virtual trackball ──────────────────────────── */
-
-/**
- * Bell's virtual trackball (the variant Holroyd formalised): a point of the
- * disc, in [-1, 1]² with y up, lifted onto the unit sphere inside r² ≤ ½ and
- * onto the hyperbolic sheet z = 1 / (2r) outside it. The blend is C¹ at the
- * seam, so a drag that crosses the rim keeps rotating smoothly instead of
- * clamping the way Shoemake's pure arcball does.
- */
-export function trackballPoint(
-  fx: number, fy: number
-): Vector3DValue {
-  const r2 = fx * fx + fy * fy;
-  const z = r2 <= 0.5 ? Math.sqrt( 1 - r2 ) : 0.5 / Math.sqrt( r2 );
-
-  return normalize3( {
-    x: fx,
-    y: fy,
-    z
-  } );
-}
-
-/**
- * Applies to `v` the rotation carrying unit `from` onto unit `to` — the
- * incremental step of a trackball drag. Coincident points leave `v` as is.
- */
-export function rotateBetween(
-  v: Vector3DValue, from: Vector3DValue, to: Vector3DValue
-): Vector3DValue {
-  const axis = cross3(
-    from,
-    to
-  );
-  const sine = length3( axis );
-
-  if ( sine < 1e-9 ) {
-    return v;
-  }
-
-  const cosine = clamp(
-    dot3(
-      from,
-      to
-    ),
-    -1,
-    1
-  );
-
-  return rotateAroundAxis(
-    v,
-    scale3(
-      axis,
-      1 / sine
-    ),
-    Math.atan2(
-      sine,
-      cosine
-    )
-  );
-}
-
-/* ───────────────────────── the gizmo's camera ─────────────────────────── */
+/* ───────────────────────── the box's camera ───────────────────────────── */
 
 /** The orbitable view's orientation: yaw about +y, then pitch about the screen's x. */
 export interface ViewOrientation {
@@ -483,7 +273,7 @@ export function transposeMat3( m: Mat3 ): Mat3 {
 /**
  * Cube space: each axis' [min, max] mapped to [-1, 1], so the drawn box is a
  * cube whatever the ranges, and `yDown` mirrors y so the top of the box is the
- * canvas's top. Everything the gizmo projects and drags lives in this space.
+ * canvas's top. Everything the box projects and drags lives in this space.
  */
 export function toCube(
   v: Vector3DValue, axes: Axes3D, yDown = false
@@ -606,7 +396,11 @@ export const UNIT_AXES: Record<AxisName, Vector3DValue> = {
   }
 };
 
-/** Radians → degrees, rounded to the whole degree, for readouts. */
-export function toDegrees( radians: number ): number {
-  return Math.round( radians * 180 / Math.PI );
+/** Length of a vector — the tests' way of asserting a rotation preserves it. */
+export function length3( v: Vector3DValue ): number {
+  return Math.hypot(
+    v.x,
+    v.y,
+    v.z
+  );
 }

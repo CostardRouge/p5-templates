@@ -13,26 +13,133 @@ import {
   fromCube,
   projectPoint,
   scale3,
+  snapToAxis,
   toCube,
   unprojectScreenDelta,
   viewDepthAxis,
+  type Axes3D,
   type AxisName,
+  type Vector3DKind,
   type Vector3DValue,
   type ViewOrientation
-} from "../utils/vector3dMath";
-import {
-  AXIS_LABEL_CLASS,
-  VIEW_FRAME_CLASS,
-  clampCube,
-  nudgeFromKey,
-  type ViewProps
-} from "./shared";
+} from "./utils/vector3dMath";
+
+type Props = {
+  /** Complete, snapped value — what the form holds. */
+  current: Vector3DValue;
+  axes: Axes3D;
+  yDown: boolean;
+  kind: Vector3DKind;
+  /** Writes a whole vector; the pad snaps and clamps it per axis. */
+  commit: ( next: Vector3DValue ) => void;
+  ariaLabel: string;
+};
+
+/** The 2D pad's frame, so the two controls read as one family. */
+const FRAME_CLASS =
+  "relative touch-none select-none overflow-hidden rounded-lg border border-theme bg-background/50 focus:outline-none focus:ring-1 focus:ring-theme";
+
+/** Tiny corner caption naming an axis, as on the 2D pad. */
+const AXIS_LABEL_CLASS =
+  "pointer-events-none absolute bg-background/70 px-px font-mono text-[7px] leading-none text-gray-400";
 
 /** Cube-space units → SVG units around the 50,50 centre. √3 · 27 < 48, so a full cube fits the frame. */
 const SCALE = 27;
 /** Radians of orbit per pixel dragged on the background. */
 const ORBIT_RATE = Math.PI / 220;
 const MAX_PITCH = Math.PI / 2 - 0.05;
+
+/** Clamps a cube-space coordinate into the box. */
+function clampCube( c: Vector3DValue ): Vector3DValue {
+  return {
+    x: clamp(
+      c.x,
+      -1,
+      1
+    ),
+    y: clamp(
+      c.y,
+      -1,
+      1
+    ),
+    z: clamp(
+      c.z,
+      -1,
+      1
+    )
+  };
+}
+
+/**
+ * Keyboard nudge: arrows move x / y (Up is "up on the canvas", which `yDown`
+ * decides), PageUp / PageDown move z, Shift multiplies the step by ten.
+ * Returns null for any other key so the caller can let it through.
+ */
+function nudgeFromKey(
+  event: {
+    key: string;
+    shiftKey: boolean;
+  },
+  current: Vector3DValue,
+  axes: Axes3D,
+  yDown: boolean
+): Vector3DValue | null {
+  const moves: Record<string, Vector3DValue> = {
+    ArrowLeft: {
+      x: -1,
+      y: 0,
+      z: 0
+    },
+    ArrowRight: {
+      x: 1,
+      y: 0,
+      z: 0
+    },
+    ArrowUp: {
+      x: 0,
+      y: yDown ? -1 : 1,
+      z: 0
+    },
+    ArrowDown: {
+      x: 0,
+      y: yDown ? 1 : -1,
+      z: 0
+    },
+    PageUp: {
+      x: 0,
+      y: 0,
+      z: 1
+    },
+    PageDown: {
+      x: 0,
+      y: 0,
+      z: -1
+    }
+  };
+
+  const move = moves[ event.key ];
+
+  if ( !move ) {
+    return null;
+  }
+
+  const factor = event.shiftKey ? 10 : 1;
+
+  return {
+    x: snapToAxis(
+      current.x + move.x * factor * ( axes.xAxis.step ?? 0.01 ),
+      axes.xAxis
+    ),
+    y: snapToAxis(
+      current.y + move.y * factor * ( axes.yAxis.step ?? 0.01 ),
+      axes.yAxis
+    ),
+    z: snapToAxis(
+      current.z + move.z * factor * ( axes.zAxis.step ?? 0.01 ),
+      axes.zAxis
+    )
+  };
+}
 
 type Session =
   | {
@@ -106,12 +213,15 @@ const BOX_EDGES: [Vector3DValue, Vector3DValue][] = ( () => {
  * plane of the screen; hold Shift to push it in depth; hold x, y or z to slide
  * along one axis (Blender's G-then-axis); Ctrl snaps to the quarter grid and
  * Escape cancels. Drag the background to orbit the view, double-click it to
- * reset. The one view where the three numbers are seen as a point in space
- * rather than as three readings.
+ * reset.
+ *
+ * This is the whole 3D control: it is the one presentation where the three
+ * numbers are seen as a point in space rather than as three readings, which
+ * is why it won over the flat pads and the trackball (`docs/vector3d-control.md`).
  */
-export default function GizmoView( {
+export default function Vector3DBox( {
   current, axes, yDown, kind, commit, ariaLabel
-}: ViewProps ) {
+}: Props ) {
   const frameRef = useRef<HTMLDivElement>( null );
   const sessionRef = useRef<Session | null>( null );
   const heldAxisRef = useRef<AxisName | null>( null );
@@ -374,7 +484,7 @@ export default function GizmoView( {
       onDoubleClick={ () => setView( DEFAULT_VIEW ) }
       onKeyDown={ handleKeyDown }
       onKeyUp={ handleKeyUp }
-      className={ `${ VIEW_FRAME_CLASS } aspect-square w-full cursor-grab active:cursor-grabbing` }
+      className={ `${ FRAME_CLASS } aspect-square w-full cursor-grab active:cursor-grabbing` }
       title="Drag the tip to move it · Shift: depth · hold x / y / z: one axis · Ctrl: snap to the grid · Esc cancels · drag elsewhere to orbit · double-click resets the view"
     >
       <svg

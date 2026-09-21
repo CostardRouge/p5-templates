@@ -1,34 +1,25 @@
 "use client";
 
 import {
-  Axis3d, Columns2, Orbit, PanelRight
-} from "lucide-react";
-import clsx from "clsx";
-import {
-  useRef, useState
+  useRef
 } from "react";
 
 import clamp from "@/utils/clamp";
 import {
-  VECTOR3D_VIEWS,
+  AXIS_NAMES,
   axisRange,
   completeVector,
-  defaultViewFor,
   resolveAxes3D,
   snapVector,
   type AxisName,
   type AxisRange,
   type Vector3DInputConfig,
-  type Vector3DValue,
-  type Vector3DView
+  type Vector3DValue
 } from "./utils/vector3dMath";
-import GizmoView from "./views/GizmoView";
-import OrbitView from "./views/OrbitView";
-import PadDepthView from "./views/PadDepthView";
-import PlanesView from "./views/PlanesView";
+import Vector3DBox from "./Vector3DBox";
 
 export type {
-  Vector3DInputConfig, Vector3DValue, Vector3DView
+  Vector3DInputConfig, Vector3DValue
 } from "./utils/vector3dMath";
 
 type Props = {
@@ -37,46 +28,24 @@ type Props = {
   /** Always emits a complete `{ x, y, z }`; callers merge it back as they see fit. */
   onChange: ( value: Vector3DValue ) => void;
   config?: Vector3DInputConfig;
-  /** Accessible name prefix for the x / y / z inputs and the views. Defaults to "vector". */
+  /** Accessible name prefix for the x / y / z inputs and the box. Defaults to "vector". */
   ariaLabel?: string;
   /** Overrides the wrapper sizing. Defaults to a compact 176px-wide column. */
   className?: string;
 };
 
-const VIEW_META: Record<Vector3DView, {
-  label: string;
-  title: string;
-  Icon: typeof Axis3d;
-}> = {
-  gizmo: {
-    label: "3D",
-    title: "3D view — drag the tip, Shift for depth, hold x/y/z for one axis, drag around to orbit",
-    Icon: Axis3d
-  },
-  planes: {
-    label: "front · top",
-    title: "Two orthographic pads: front (x·y) and top (x·z)",
-    Icon: Columns2
-  },
-  "pad-depth": {
-    label: "pad + z",
-    title: "The x·y pad with a z fader beside it",
-    Icon: PanelRight
-  },
-  orbit: {
-    label: "sphere",
-    title: "Trackball: drag to turn the direction, the strip sets its length",
-    Icon: Orbit
-  }
-};
-
 /**
  * Presentational 3D vector control: three number fields (drag their letter to
- * scrub) over one of four interchangeable views, each a different answer to
- * "how do you point at a place in space with a flat pointer". The value model
- * is always cartesian `{ x, y, z }`; the views only change the gesture.
- * Fully controlled and form-agnostic — {@link ControlledVector3DInput} wires
- * it to react-hook-form.
+ * scrub) over {@link Vector3DBox}, an orbitable axonometric box where the
+ * value reads as a point in space. Fully controlled and form-agnostic —
+ * {@link ControlledVector3DInput} wires it to react-hook-form.
+ *
+ * Three other presentations were built and compared against this one (two
+ * orthographic pads, the 2D pad plus a z fader, a trackball sphere) and then
+ * dropped: the box does what they do and shows depth while doing it, and one
+ * control means one gesture to learn instead of a picker. They are written up
+ * as proposals in `docs/vector3d-control.md`; do not reintroduce a view
+ * switcher without that conversation happening again.
  */
 export default function Vector3DPad( {
   value, onChange, config = {}, ariaLabel = "vector", className
@@ -84,10 +53,6 @@ export default function Vector3DPad( {
   const axes = resolveAxes3D( config );
   const yDown = config.yDown ?? false;
   const kind = config.kind ?? "position";
-  const [
-    view,
-    setView
-  ] = useState<Vector3DView>( () => defaultViewFor( config ) );
 
   const current = completeVector(
     value,
@@ -123,33 +88,12 @@ export default function Vector3DPad( {
     } );
   };
 
-  const viewProps = {
-    current,
-    axes,
-    yDown,
-    kind,
-    commit,
-    ariaLabel
-  };
-
-  const View = view === "gizmo"
-    ? GizmoView
-    : view === "planes"
-      ? PlanesView
-      : view === "pad-depth"
-        ? PadDepthView
-        : OrbitView;
-
   return (
     // 176px: three signed two-decimal fields need ~52px each (see the 2D pad's
-    // 140px note), and the views follow the same width.
+    // 140px note), and the box follows the same width.
     <div className={ className ?? "flex w-full max-w-[176px] flex-col gap-1" }>
       <div className="flex items-center gap-1">
-        {( [
-          "x",
-          "y",
-          "z"
-        ] as AxisName[] ).map( ( axis ) => (
+        {AXIS_NAMES.map( ( axis ) => (
           <AxisNumberField
             key={ axis }
             axis={ axis }
@@ -177,45 +121,14 @@ export default function Vector3DPad( {
         ) )}
       </div>
 
-      <div className="flex items-center justify-between gap-1">
-        <span className="truncate font-mono text-[9px] uppercase tracking-wide text-label/70">
-          {VIEW_META[ view ].label}
-        </span>
-        <div
-          role="tablist"
-          aria-label={ `${ ariaLabel } view` }
-          className="flex shrink-0 items-center gap-0.5"
-        >
-          {VECTOR3D_VIEWS.map( ( candidate ) => {
-            const {
-              Icon, title
-            } = VIEW_META[ candidate ];
-            const active = candidate === view;
-
-            return (
-              <button
-                key={ candidate }
-                type="button"
-                role="tab"
-                aria-selected={ active }
-                tabIndex={ -1 }
-                title={ title }
-                onClick={ () => setView( candidate ) }
-                className={ clsx(
-                  "grid h-5 w-5 place-items-center rounded border transition-colors",
-                  active
-                    ? "border-theme bg-foreground/10 text-foreground"
-                    : "border-transparent text-label/60 hover:bg-hover hover:text-foreground"
-                ) }
-              >
-                <Icon className="h-3 w-3" />
-              </button>
-            );
-          } )}
-        </div>
-      </div>
-
-      <View { ...viewProps } />
+      <Vector3DBox
+        current={ current }
+        axes={ axes }
+        yDown={ yDown }
+        kind={ kind }
+        commit={ commit }
+        ariaLabel={ ariaLabel }
+      />
     </div>
   );
 }

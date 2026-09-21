@@ -234,10 +234,10 @@ export interface Vector2DConfig extends BaseConfig {
   yDown?: boolean;
 }
 
-// For 3D vector inputs: three number fields over a switchable view (an
-// orbitable 3D box, two orthographic pads, the 2D pad + a z fader, or a
-// trackball sphere) that edit one { x, y, z } at once. Same range ladder as
-// the 2D pad, extended to z; the stored shape is always cartesian.
+// For 3D vector inputs: three number fields over an orbitable 3D box that
+// edits one { x, y, z } at once — drag the arrow's tip, Shift for depth, hold
+// an axis letter to slide along it. Same range ladder as the 2D pad, extended
+// to z; the stored shape is always cartesian.
 export interface Vector3DConfig extends BaseConfig {
   component: "vector3d";
   /** Defaults to true: a centred [min, max] box. False → [0, max] on every axis. */
@@ -270,12 +270,11 @@ export interface Vector3DConfig extends BaseConfig {
    */
   yDown?: boolean;
   /**
-   * What the triple means. A "direction" opens on the trackball sphere and
-   * skips the floor shadow; a "position" (the default) opens on the 3D box.
+   * What the triple means. A "position" (the default) gets the floor and the
+   * dropped shadow that make depth readable; a "direction" skips them, since
+   * a direction has no place to stand.
    */
   kind?: "position" | "direction";
-  /** The view the control opens on; the user can switch at any time. */
-  view?: "gizmo" | "planes" | "pad-depth" | "orbit";
 }
 
 // Source picker for HUD widgets: options are derived at render time from the

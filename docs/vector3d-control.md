@@ -85,60 +85,86 @@ with Shift+RMB in the viewport. Sketchfab: Alt-drag rotates the light.
    Esc, right-click reset, rounded values on demand.
 8. **Touch and keyboard are afterthoughts that break** — plan them in.
 
-## 3. What shipped: one field kind, four views
+## 3. What shipped: one field kind, one view
 
 `component: "vector3d"` stores a cartesian `{ x, y, z }` (like `vector2d`
 stores `{ x, y }`), with the same range ladder (`allowNegative` →
 `min`/`max`/`step` → `xAxis`/`yAxis`/`zAxis`) plus `zAxis`, `yDown` (p5's
-WEBGL has +y down), `kind: "position" | "direction"` and `view`. The
-value never changes shape whatever the view: the views only change the
-gesture. All four sit under one row of three scrub fields (Alt slides all
-three, Shift ×10) and a view switcher, so they can be compared live on the same
-parameter — which is the point of shipping variants rather than one answer.
+WEBGL has +y down) and `kind: "position" | "direction"`. Above the control sit
+three scrub fields (1 px = 1 step, Shift ×10, Alt slides all three); below them,
+the one view:
 
-| View | Pattern(s) | Gesture | Best for |
-| --- | --- | --- | --- |
-| **3D box** (`gizmo`, default for positions) | in-scene gizmo brought into the panel; view cube's drag-to-orbit; Blender's G-then-axis | drag the tip in the screen plane; Shift = depth; hold x / y / z = one axis; Ctrl = quarter grid; drag the background to orbit, double-click resets; a dropped shadow on the floor reads depth | seeing the three numbers as a point; asymmetric ranges (the box is the ranges) |
-| **front · top** (`planes`) | CAD tri-view minus its third panel (x is shared); Tweakpane #102's "pick a pair of axes" | two 2D pads, front (x·y) and top (x·z, +z downward as on a map with the camera at the bottom) | exactness — no depth ambiguity at all |
-| **pad + z** (`pad-depth`) | Tweakpane #102's first proposal, Unity plane handle + one axis | the 2D pad for x·y and a vertical fader for z | continuity with the 2D pad |
-| **sphere** (`orbit`, default for directions) | Blender's normal sphere + Bell's trackball | drag turns the direction (no jump; keeps turning past the rim onto the far side, drawn hollow); Ctrl snaps 45°, Ctrl+Shift 15°; Esc cancels; a strip sets the length; az / el readout | lights, normals, axes |
+**The orbitable box** (`Vector3DBox.tsx`) — an axonometric box drawn from the
+axis ranges, the value as an arrow from the true origin, and for a position a
+shadow dropped on the floor. Drag the tip in the screen plane; Shift pushes it
+in depth; holding x, y or z slides along that axis alone (Blender's
+G-then-axis); Ctrl snaps to the quarter grid; Escape cancels the drag. Drag the
+background to orbit the view, double-click to reset it. Arrows nudge x / y,
+PageUp / PageDown nudge z, Shift ×10.
 
-Everything shared is in `utils/vector3dMath.ts` and unit-tested: the range
-ladder, snapping, spherical ↔ cartesian, Bell's trackball mapping and the
-rotation between two sphere points, the orbitable view's rotation matrix,
-screen-plane and single-axis unprojection, and the "cube space" that maps each
-axis' range onto [−1, 1] so the drawn box is a cube whatever the ranges.
-Keyboard on every view: arrows = x / y, PageUp / PageDown = z, Shift ×10.
+It draws on the in-scene gizmo (three.js `TransformControls`, drei
+`PivotControls`), the view cube's drag-to-orbit, and Blender's axis-constrained
+move — brought into a 176 px panel column rather than onto the canvas.
 
-Deliberate choices:
+`utils/vector3dMath.ts` holds everything the view needs, unit-tested without
+React: the range ladder, snapping, the "cube space" that maps each axis' range
+onto [−1, 1] so the drawn box is a cube whatever the ranges, the view's
+rotation matrix, and the screen-plane / depth / single-axis unprojection.
+
+### Why one view
+
+Four were built and compared live on the same parameter (the bench artifact,
+2026-09-21): the box, two orthographic pads (front x·y + top x·z), the 2D pad
+plus a z fader, and Bell's trackball sphere. The maintainer picked the box and
+asked for the rest to go. The reasoning that held up at the bench:
+
+- **The box does what the flat variants do, and shows depth while doing it.**
+  "Pad + z" is the clearest case — every gesture it offers, the box offers,
+  minus the depth cue.
+- **One control means one gesture to learn**, no switcher, no per-control view
+  state to persist, and roughly 900 fewer lines.
+- The cost, accepted: a **direction** (a light, a spin axis) is edited in a box
+  whose bounds do not really apply to it, where a trackball would turn it
+  directly. The box still reaches every direction; it just does not say
+  "sphere". If that becomes annoying, the trackball is §4's first candidate.
+
+Two more choices, unchanged by the cut:
 
 - **Monochrome.** Every tool colour-codes x / y / z red / green / blue; the
   studio's visual language reserves colour (red is recording) and the axis
   letters do the job at this size. If colour is wanted later it is one token
-  per axis, not a redesign.
-- **Trackball, not Blender's fold-back disc.** Both avoid the jump on click;
-  the trackball is also transitive and reaches the back hemisphere without a
-  discontinuity at the rim. The cost: a click cannot "point there" — the
-  number fields and the snap do precision.
-- **Length is a strip, not normalisation.** A direction edited as three numbers
-  must be re-normalised somewhere; the control does not force it (ImGui #2811's
-  zero-vector trap) — the sketch normalises, the strip shows `|v|` and sets it.
-- **The view is a per-control choice**, seeded by `view` / `kind`, not a global
-  preference — the comparison is the feature for now.
+  per axis, not a redesign — and the bench's three-way toggle (none / letters /
+  full) is the fastest way to settle it.
+- **No forced normalisation.** A direction edited as three numbers must be
+  re-normalised somewhere; the control does not force it (ImGui #2811's
+  zero-vector trap) — the sketch normalises.
 
 ## 4. Proposals not built (candidates for a next round)
 
-- **Colour-coded axes** behind a CSS token (`--axis-x/y/z`), off by default.
-- **Fold-back disc as a fifth view** (Blender's exact gesture: absolute
-  mapping from the current position, rim folds to the back) for people who
-  want click-to-point.
+The three cut views come first — they were written, driven headlessly and
+compared, so bringing one back is recovering a known quantity rather than
+starting over. The code is in the history of the branch that introduced the
+control (`Add a vector3d control`, four-view revision), and all four are still
+playable on the bench artifact.
+
+- **The trackball sphere**, if editing a light in a box starts to grate. Bell's
+  mapping (sphere inside `r² ≤ ½`, hyperbolic sheet outside), conservative and
+  transitive, Ctrl snapping to 45° / 15°, a strip for the length, az / el
+  readout.
+- **Front · top pads**, if a sketch ever needs exact placement more than it
+  needs depth.
+- **Colour-coded axes** behind a CSS token (`--axis-x/y/z`), off by default;
+  letters-only is the cheap version.
+- **Fold-back disc** (Blender's exact gesture: absolute mapping from the
+  current position, rim folds to the back) for people who want click-to-point.
 - **Spherical dials** (azimuth ring + elevation arc + length) with **presets**
   for lights (rim / kick / fill…), Unity Light Anchor style; possibly
   camera-relative for a sketch that exposes its camera.
 - **Ratio lock** on the number row (Leva `lock`, Godot "linked").
 - **View cube snaps** in the 3D box: click an axis letter to snap the vector
   to that axis (drei `GizmoViewport` gesture).
-- **Remember the chosen view** per sketch in `usePanelState`.
+- **Remember the chosen view** per sketch in `usePanelState` — only relevant if
+  a second view ever comes back.
 - **Bindings**: `bindingKindFor( "vector3d" )` is `null`, so a 3D field cannot
   yet be modulated from a channel; a `vector3d` kind would need a third
   projection in `interaction/bindings.js`.

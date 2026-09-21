@@ -4,20 +4,14 @@ import {
   applyMat3,
   axisDragAmount,
   completeVector,
-  defaultViewFor,
   fromCube,
-  fromSpherical,
   length3,
   projectPoint,
   randomVector3D,
   resolveAxes3D,
-  rotateAroundAxis,
-  rotateBetween,
   snapToAxis,
   snapVector,
   toCube,
-  toSpherical,
-  trackballPoint,
   transposeMat3,
   unprojectScreenDelta,
   viewDepthAxis,
@@ -90,25 +84,6 @@ describe(
             step: 1
           }
         } );
-      }
-    );
-  }
-);
-
-describe(
-  "defaultViewFor",
-  () => {
-    it(
-      "opens a direction on the trackball and a position on the gizmo, unless told otherwise",
-      () => {
-        expect( defaultViewFor( {} ) ).toBe( "gizmo" );
-        expect( defaultViewFor( {
-          kind: "direction"
-        } ) ).toBe( "orbit" );
-        expect( defaultViewFor( {
-          kind: "direction",
-          view: "planes"
-        } ) ).toBe( "planes" );
       }
     );
   }
@@ -215,201 +190,6 @@ describe(
 );
 
 describe(
-  "spherical form",
-  () => {
-    it(
-      "reads +z as azimuth 0, +x as azimuth π/2 and +y as elevation π/2",
-      () => {
-        expect( toSpherical( UNIT_AXES.z ) ).toEqual( {
-          azimuth: 0,
-          elevation: 0,
-          length: 1
-        } );
-        expect( toSpherical( UNIT_AXES.x ).azimuth ).toBeCloseTo( Math.PI / 2 );
-        expect( toSpherical( UNIT_AXES.y ).elevation ).toBeCloseTo( Math.PI / 2 );
-      }
-    );
-
-    it(
-      "round-trips an arbitrary vector",
-      () => {
-        const v = {
-          x: 0.3,
-          y: -0.8,
-          z: 2.1
-        };
-
-        close(
-          fromSpherical( toSpherical( v ) ),
-          v
-        );
-      }
-    );
-
-    it(
-      "treats the zero vector as azimuth 0 / elevation 0 / length 0",
-      () => {
-        expect( toSpherical( {
-          x: 0,
-          y: 0,
-          z: 0
-        } ) ).toEqual( {
-          azimuth: 0,
-          elevation: 0,
-          length: 0
-        } );
-      }
-    );
-  }
-);
-
-describe(
-  "trackball",
-  () => {
-    it(
-      "lifts the disc centre to +z and stays on the unit sphere everywhere",
-      () => {
-        close(
-          trackballPoint(
-            0,
-            0
-          ),
-          UNIT_AXES.z
-        );
-
-        for ( const [
-          fx,
-          fy
-        ] of [
-            [
-              0.5,
-              0.2
-            ],
-            [
-              0.9,
-              0.9
-            ],
-            [
-              -3,
-              1
-            ]
-          ] ) {
-          expect( length3( trackballPoint(
-            fx,
-            fy
-          ) ) ).toBeCloseTo( 1 );
-        }
-      }
-    );
-
-    it(
-      "is continuous across the sphere / hyperbola seam",
-      () => {
-        const r = Math.sqrt( 0.5 );
-        const inside = trackballPoint(
-          r - 1e-6,
-          0
-        );
-        const outside = trackballPoint(
-          r + 1e-6,
-          0
-        );
-
-        close(
-          inside,
-          outside,
-          4
-        );
-      }
-    );
-
-    it(
-      "keeps dragging past the rim instead of clamping",
-      () => {
-        const nearRim = trackballPoint(
-          1.5,
-          0
-        );
-        const farOut = trackballPoint(
-          3,
-          0
-        );
-
-        expect( farOut.z ).toBeLessThan( nearRim.z );
-        expect( farOut.z ).toBeGreaterThan( 0 );
-      }
-    );
-
-    it(
-      "rotateBetween carries `from` exactly onto `to`",
-      () => {
-        const from = trackballPoint(
-          0.2,
-          -0.3
-        );
-        const to = trackballPoint(
-          -0.4,
-          0.5
-        );
-
-        close(
-          rotateBetween(
-            from,
-            from,
-            to
-          ),
-          to
-        );
-      }
-    );
-
-    it(
-      "rotateBetween preserves length and is the identity for coincident points",
-      () => {
-        const v = {
-          x: 1,
-          y: 2,
-          z: 3
-        };
-        const from = trackballPoint(
-          0.1,
-          0.1
-        );
-        const to = trackballPoint(
-          0.6,
-          -0.2
-        );
-
-        expect( length3( rotateBetween(
-          v,
-          from,
-          to
-        ) ) ).toBeCloseTo( length3( v ) );
-        expect( rotateBetween(
-          v,
-          from,
-          from
-        ) ).toEqual( v );
-      }
-    );
-
-    it(
-      "rotateAroundAxis turns +x into +y about +z by a quarter turn",
-      () => {
-        close(
-          rotateAroundAxis(
-            UNIT_AXES.x,
-            UNIT_AXES.z,
-            Math.PI / 2
-          ),
-          UNIT_AXES.y
-        );
-      }
-    );
-  }
-);
-
-describe(
   "cube space",
   () => {
     const axes = resolveAxes3D( {
@@ -489,7 +269,7 @@ describe(
 );
 
 describe(
-  "the gizmo's camera",
+  "the box's camera",
   () => {
     it(
       "viewMatrix is a rotation (its transpose inverts it)",

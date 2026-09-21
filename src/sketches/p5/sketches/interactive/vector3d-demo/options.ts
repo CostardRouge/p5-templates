@@ -1,8 +1,8 @@
 // ── Vector3D control demo — options ─────────────────────────────────────────
 // Three 3D parameters, one per way the `vector3d` control is used:
 //   object.position  — a position inside a box with asymmetric bounds
-//   light.direction  — a unit-ish direction (opens on the trackball sphere)
-//   spin.axis        — an axis of rotation (a direction, opened on the 3D box)
+//   light.direction  — a unit-ish direction (no floor, no shadow)
+//   spin.axis        — an axis of rotation, also a direction
 // p5's WEBGL canvas has +y pointing DOWN, so every pad sets `yDown` — "up in
 // the control" then means "up on the canvas". The position bounds below are
 // mirrored by `POSITION_BOX` in index.js, which draws them.
@@ -131,7 +131,6 @@ export const formConfiguration: Record<string, any> = {
         component: "vector3d",
         label: "Spin axis",
         kind: "direction",
-        view: "gizmo",
         min: -1,
         max: 1,
         step: 0.01,
