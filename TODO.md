@@ -84,7 +84,7 @@ What's left requires actions only the repo owner can take, in this order:
   - [ ] Noise — LOD detail, seed, noise type selector
   - [x] Easing — `ControlledEasingInput`, `easing` field type
   - [x] Vector (2D) — `ControlledVector2DInput` + `Vector2DPad`, `vector2d` field type (a 3D variant is still open, file it when a sketch needs one)
-  - [ ] Camera — rotation and translate controls
+  - [ ] Camera — rotation and translate controls. The sketch side exists: `src/sketches/p5/utils/cameraRig.js` is a shared `camera` group (tilt, spin, distance, an eye offset and a target, every field a bindable slider; `sculpt-v4-sphere` uses it). What is left here is a dedicated control — a 3D pad or an on-canvas orbit gesture writing into that group
   - [ ] Global animation curve — waveform picker (sine, square, linear, triangle) + multiplier + speed. Interaction bindings already give any *single* sketch parameter a generator with a wave, speed and curve (`docs/memory/interaction-bindings.md`), so what is left here is the **global** one — one curve several fields follow — not a per-field wave
   - [x] Webcam picker — dropdown of available `videoDeviceId`s
   - [x] Joypad picker — list connected gamepads

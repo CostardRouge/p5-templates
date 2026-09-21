@@ -4145,5 +4145,57 @@
     "asyncDraw": false,
     "mtime": "2026-09-21T17:47:29.746Z",
     "ctime": "2026-09-21T17:46:53.742Z"
+  },
+  {
+    "name": "sculpt-v1-scatter-lattice",
+    "engine": "p5",
+    "category": "sculpt",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "asyncDraw": false,
+    "mtime": "2026-09-21T18:00:11.271Z",
+    "ctime": "2026-09-21T17:59:05.667Z"
+  },
+  {
+    "name": "sculpt-v3-vision-relief",
+    "engine": "p5",
+    "category": "sculpt",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "asyncDraw": false,
+    "mtime": "2026-09-21T19:07:50.022Z",
+    "ctime": "2026-09-21T19:06:48.610Z"
+  },
+  {
+    "name": "sculpt-v2-letter-relief",
+    "engine": "p5",
+    "category": "sculpt",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "asyncDraw": false,
+    "mtime": "2026-09-21T20:04:43.348Z",
+    "ctime": "2026-09-21T18:41:54.535Z"
+  },
+  {
+    "name": "sculpt-v4-sphere",
+    "engine": "p5",
+    "category": "sculpt",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "asyncDraw": false,
+    "mtime": "2026-09-21T20:47:22.877Z",
+    "ctime": "2026-09-21T20:42:17.073Z"
   }
 ]
