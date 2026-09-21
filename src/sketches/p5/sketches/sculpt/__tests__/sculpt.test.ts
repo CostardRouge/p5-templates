@@ -140,6 +140,94 @@ describe(
         expect( disc.every( ( pt ) => pt.z === 0 ) ).toBe( true );
       }
     );
+
+    it(
+      "puts a `skin` share exactly on the unit sphere and keeps the rest short of it",
+      () => {
+        const points = buildPoints( {
+          ...base,
+          flatten: 1,
+          skin: 0.5
+        } );
+        const onSkin = points.filter( ( pt ) => Math.abs( Math.hypot(
+          pt.x,
+          pt.y,
+          pt.z
+        ) - 1 ) < 1e-9 );
+        const inside = points.filter( ( pt ) => Math.hypot(
+          pt.x,
+          pt.y,
+          pt.z
+        ) < 0.9 + 1e-9 );
+
+        expect( points ).toHaveLength( 40 );
+        expect( onSkin ).toHaveLength( 20 );
+        expect( inside ).toHaveLength( 20 );
+        expect( buildPoints( {
+          ...base,
+          flatten: 1,
+          skin: 1
+        } ).every( ( pt ) => Math.abs( Math.hypot(
+          pt.x,
+          pt.y,
+          pt.z
+        ) - 1 ) < 1e-9 ) ).toBe( true );
+      }
+    );
+
+    it(
+      "a skin of 0 leaves the cloud exactly as it was, and `max` lifts the ceiling",
+      () => {
+        expect( buildPoints( {
+          ...base,
+          skin: 0
+        } ) ).toEqual( buildPoints( base ) );
+        expect( buildPoints( {
+          ...base,
+          count: 200,
+          max: 72
+        } ) ).toHaveLength( 72 );
+        expect( buildPoints( {
+          ...base,
+          count: 200
+        } ) ).toHaveLength( MAX_POINTS );
+      }
+    );
+
+    it(
+      "spacing evens the skin's spiral too: full spacing is the bare spiral",
+      () => {
+        const even = buildPoints( {
+          ...base,
+          flatten: 1,
+          skin: 1,
+          spacing: 1
+        } );
+        const loose = buildPoints( {
+          ...base,
+          flatten: 1,
+          skin: 1,
+          spacing: 0
+        } );
+
+        expect( minPairDistance( even ) ).toBeGreaterThan( minPairDistance( loose ) );
+        // The bare spiral does not depend on the seed; the jittered one does.
+        expect( buildPoints( {
+          ...base,
+          seed: 9,
+          flatten: 1,
+          skin: 1,
+          spacing: 1
+        } ) ).toEqual( even );
+        expect( buildPoints( {
+          ...base,
+          seed: 9,
+          flatten: 1,
+          skin: 1,
+          spacing: 0
+        } ) ).not.toEqual( loose );
+      }
+    );
   }
 );
 
@@ -153,6 +241,37 @@ describe(
       volume: "sphere",
       flatten: 0.35
     } );
+
+    it(
+      "`budget` caps the link count, keeping the shortest",
+      () => {
+        const capped = buildLinks(
+          points,
+          {
+            neighbours: 3,
+            reach: 2,
+            density: 1,
+            seed: 7,
+            budget: 16
+          }
+        );
+        const free = buildLinks(
+          points,
+          {
+            neighbours: 3,
+            reach: 2,
+            density: 1,
+            seed: 7,
+            budget: 1000
+          }
+        );
+        const longest = Math.max( ...capped.map( ( link ) => link.length ) );
+
+        expect( capped ).toHaveLength( 16 );
+        expect( free.length ).toBeGreaterThan( 16 );
+        expect( free.filter( ( link ) => link.length < longest ).length ).toBeLessThan( 16 );
+      }
+    );
 
     it(
       "links every point to its nearest neighbours, once per pair, within reach",

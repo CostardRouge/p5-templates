@@ -35,6 +35,9 @@ export const VOLUMES = [
 ];
 
 const TAU = Math.PI * 2;
+const GOLDEN_ANGLE = Math.PI * ( 3 - Math.sqrt( 5 ) );
+// Inner points stay this far inside a skin, as a fraction of the unit radius.
+const SKIN_CLEARANCE = 0.9;
 
 function clamp(
   value, min, max
@@ -125,17 +128,25 @@ function sampleVolume(
 // closer than that are rejected. When a point runs out of tries the floor is
 // relaxed rather than the count reduced, so the slider always yields `count`
 // points and `spacing` still reads as "more even".
+//
+// `skin` (sphere and shell volumes) puts that share of the points EXACTLY on
+// the unit sphere, on a Fibonacci spiral — even by construction, disordered by
+// `1 − spacing` — before the rest is thrown inside; the inner points then keep
+// short of the skin so the two populations read as two. `max` lifts the count
+// ceiling for a sketch whose uniform arrays are sized for more than v1's.
 export function buildPoints( {
   count,
   seed,
   spacing,
   volume,
-  flatten
+  flatten,
+  skin = 0,
+  max = MAX_POINTS
 } ) {
   const n = clamp(
     Math.round( count ),
     1,
-    MAX_POINTS
+    max
   );
   const flat = volume === "disc" ? 0 : clamp(
     flatten,
@@ -144,13 +155,54 @@ export function buildPoints( {
   );
   const dims = volume === "disc" || flat < 0.05 ? 2 : 3;
   const cell = dims === 2 ? 2 / Math.sqrt( n ) : 2 / Math.cbrt( n );
-  let minDist = clamp(
+  const evenness = clamp(
     spacing,
     0,
     1
-  ) * cell;
+  );
+  let minDist = evenness * cell;
 
   const points = [];
+  const skinCount = volume === "sphere" || volume === "shell"
+    ? Math.round( n * clamp(
+      skin,
+      0,
+      1
+    ) )
+    : 0;
+  const skinJitter = 1 - evenness;
+
+  for ( let i = 0; i < skinCount; i++ ) {
+    const jPhi = ( hash01(
+      seed,
+      i,
+      4
+    ) - 0.5 ) * skinJitter * 1.6;
+    const jY = ( hash01(
+      seed,
+      i,
+      5
+    ) - 0.5 ) * skinJitter * 0.45;
+    const y = clamp(
+      1 - 2 * ( i + 0.5 ) / skinCount + jY,
+      -1,
+      1
+    );
+    const r = Math.sqrt( Math.max(
+      0,
+      1 - y * y
+    ) );
+    const phi = i * GOLDEN_ANGLE + jPhi;
+
+    points.push( {
+      x: r * Math.cos( phi ),
+      y,
+      z: r * Math.sin( phi ) * flat,
+      id: points.length
+    } );
+  }
+
+  const inner = skinCount > 0 ? SKIN_CLEARANCE : 1;
   let candidate = 0;
   let tries = 0;
 
@@ -161,9 +213,9 @@ export function buildPoints( {
       candidate
     );
     const pt = {
-      x: raw[ 0 ],
-      y: raw[ 1 ],
-      z: raw[ 2 ] * flat,
+      x: raw[ 0 ] * inner,
+      y: raw[ 1 ] * inner,
+      z: raw[ 2 ] * flat * inner,
       id: points.length
     };
 
@@ -193,14 +245,16 @@ export function buildPoints( {
 // Build the links: each point reaches for its `neighbours` nearest points
 // within `reach` (unit-radius units), duplicates are merged, `density` thins
 // the result with a seeded coin per link, and the longest links are dropped
-// past MAX_LINKS so the graph stays local rather than truncated arbitrarily.
-// Each link carries a stable `u` in [0, 1) for per-link variation.
+// past `budget` (MAX_LINKS unless the sketch sizes its arrays larger) so the
+// graph stays local rather than truncated arbitrarily. Each link carries a
+// stable `u` in [0, 1) for per-link variation.
 export function buildLinks(
   points, {
     neighbours,
     reach,
     density,
-    seed
+    seed,
+    budget = MAX_LINKS
   }
 ) {
   const k = clamp(
@@ -261,7 +315,7 @@ export function buildLinks(
         i,
         j
       );
-      const key = a * MAX_POINTS + b;
+      const key = a * points.length + b;
 
       if ( seen.has( key ) ) {
         continue;
@@ -292,11 +346,16 @@ export function buildLinks(
     }
   }
 
-  if ( links.length > MAX_LINKS ) {
+  const cap = Math.max(
+    1,
+    Math.round( budget )
+  );
+
+  if ( links.length > cap ) {
     links.sort( (
       x, y
     ) => x.length - y.length );
-    links.length = MAX_LINKS;
+    links.length = cap;
   }
 
   return links.map( (
@@ -322,7 +381,10 @@ export function getLattice( cfg ) {
     cfg.flatten,
     cfg.neighbours,
     cfg.reach,
-    cfg.density
+    cfg.density,
+    cfg.skin ?? 0,
+    cfg.max ?? MAX_POINTS,
+    cfg.budget ?? MAX_LINKS
   ].join( "|" );
   const cached = latticeMemo.get( key );
 

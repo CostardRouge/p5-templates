@@ -4171,5 +4171,18 @@
     "asyncDraw": false,
     "mtime": "2026-09-21T20:04:43.348Z",
     "ctime": "2026-09-21T18:41:54.535Z"
+  },
+  {
+    "name": "sculpt-v4-sphere",
+    "engine": "p5",
+    "category": "sculpt",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "asyncDraw": false,
+    "mtime": "2026-09-21T20:47:22.877Z",
+    "ctime": "2026-09-21T20:42:17.073Z"
   }
 ]
