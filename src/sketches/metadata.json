@@ -4158,5 +4158,18 @@
     "asyncDraw": false,
     "mtime": "2026-09-21T19:07:50.022Z",
     "ctime": "2026-09-21T19:06:48.610Z"
+  },
+  {
+    "name": "sculpt-v2-letter-relief",
+    "engine": "p5",
+    "category": "sculpt",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "asyncDraw": false,
+    "mtime": "2026-09-21T20:04:43.348Z",
+    "ctime": "2026-09-21T18:41:54.535Z"
   }
 ]

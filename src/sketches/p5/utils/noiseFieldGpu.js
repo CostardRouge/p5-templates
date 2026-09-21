@@ -867,6 +867,15 @@ export default function createNoiseFieldRenderer( fragmentSource ) {
       gl.UNPACK_FLIP_Y_WEBGL,
       false
     );
+    // p5 turns premultiplied alpha ON for its own image uploads, and it is GL
+    // state that persists. Left on, every RGB byte is multiplied by the alpha
+    // byte on upload — which silently corrupts any texture whose alpha channel
+    // carries data rather than opacity (a 16-bit value split across two
+    // channels, a packed flag). These carry numbers, so it stays off.
+    gl.pixelStorei(
+      gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,
+      false
+    );
 
     if ( entry.width !== spec.width || entry.height !== spec.height || entry.format !== format ) {
       gl.texImage2D(
@@ -1139,6 +1148,10 @@ export default function createNoiseFieldRenderer( fragmentSource ) {
         value
       );
     }
+
+    // A data texture leaves its own unit active; p5 assumes unit 0 when it
+    // binds the buffer to composite it.
+    gl.activeTexture( gl.TEXTURE0 );
 
     gl.bindBuffer(
       gl.ARRAY_BUFFER,
