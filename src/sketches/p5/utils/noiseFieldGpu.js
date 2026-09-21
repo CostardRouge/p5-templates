@@ -499,120 +499,6 @@ function getLocationOn(
   return locs[ name ];
 }
 
-// A data texture registry: one WebGLTexture per uniform name, each pinned to
-// its own texture unit above the Perlin table's unit 0. Kept per renderer
-// state because textures belong to a GL context, and rebuilt with the program
-// when the context changes (see ensureProgram).
-function createDataTextures() {
-  return {
-    byName: new Map(),
-    nextUnit: 1
-  };
-}
-
-// Upload `{ data, width, height }` (RGBA8 bytes, width * height * 4 of them)
-// into the texture registered under `name`, binding it on its unit and
-// pointing the sampler at that unit. A texture of the same size is refreshed
-// in place (texSubImage2D); a size change reallocates. NEAREST + CLAMP, so a
-// texel is read exactly — these carry packed numbers, never pictures. This is
-// how a sketch hands the shader a field of per-cell values too large for a
-// uniform array: `texture2D` has no constant-index restriction, so the shader
-// may look a cell up by any computed coordinate.
-function bindDataTexture(
-  gl, loc, textures, name, spec
-) {
-  const {
-    data,
-    width,
-    height
-  } = spec;
-
-  let entry = textures.byName.get( name );
-
-  if ( !entry ) {
-    entry = {
-      texture: gl.createTexture(),
-      unit: textures.nextUnit++,
-      width: 0,
-      height: 0
-    };
-    textures.byName.set(
-      name,
-      entry
-    );
-  }
-
-  gl.activeTexture( gl.TEXTURE0 + entry.unit );
-  gl.bindTexture(
-    gl.TEXTURE_2D,
-    entry.texture
-  );
-
-  // p5 flips these for its own image uploads; a packed-number texture must
-  // land byte for byte, un-premultiplied and with row 0 at t = 0.
-  gl.pixelStorei(
-    gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,
-    false
-  );
-  gl.pixelStorei(
-    gl.UNPACK_FLIP_Y_WEBGL,
-    false
-  );
-
-  if ( entry.width === width && entry.height === height ) {
-    gl.texSubImage2D(
-      gl.TEXTURE_2D,
-      0,
-      0,
-      0,
-      width,
-      height,
-      gl.RGBA,
-      gl.UNSIGNED_BYTE,
-      data
-    );
-  } else {
-    gl.texImage2D(
-      gl.TEXTURE_2D,
-      0,
-      gl.RGBA,
-      width,
-      height,
-      0,
-      gl.RGBA,
-      gl.UNSIGNED_BYTE,
-      data
-    );
-    gl.texParameteri(
-      gl.TEXTURE_2D,
-      gl.TEXTURE_MIN_FILTER,
-      gl.NEAREST
-    );
-    gl.texParameteri(
-      gl.TEXTURE_2D,
-      gl.TEXTURE_MAG_FILTER,
-      gl.NEAREST
-    );
-    gl.texParameteri(
-      gl.TEXTURE_2D,
-      gl.TEXTURE_WRAP_S,
-      gl.CLAMP_TO_EDGE
-    );
-    gl.texParameteri(
-      gl.TEXTURE_2D,
-      gl.TEXTURE_WRAP_T,
-      gl.CLAMP_TO_EDGE
-    );
-    entry.width = width;
-    entry.height = height;
-  }
-
-  gl.uniform1i(
-    loc,
-    entry.unit
-  );
-}
-
 // Set a uniform, inferring its kind from the JS value:
 //   number              -> float
 //   { int: n }          -> int / sampler
@@ -621,13 +507,10 @@ function bindDataTexture(
 //   { vec2v:  [...] }   -> vec2[]   uniform2fv  (flattened x0,y0,x1,y1,…)
 //   { vec4v:  [...] }   -> vec4[]   uniform4fv  (flattened x0,y0,z0,w0,…)
 //   { intv:   [...] }   -> int[]    uniform1iv
-//   { texture: { data, width, height } }
-//                       -> sampler2D over an RGBA8 data texture (see
-//                          bindDataTexture; needs the renderer's registry)
 // The *v forms upload a whole GLSL uniform array in one call; query the array's
 // base name (e.g. "uPoints", not "uPoints[0]") for its location.
 function setUniformOn(
-  gl, program, locs, name, value, textures = null
+  gl, program, locs, name, value
 ) {
   const loc = getLocationOn(
     gl,
@@ -641,24 +524,6 @@ function setUniformOn(
   }
 
   if ( value !== null && typeof value === "object" && !Array.isArray( value ) ) {
-    if ( "texture" in value ) {
-      if ( !textures ) {
-        console.warn( `noiseFieldGpu: uniform "${ name }" is a data texture but this renderer has no texture registry.` );
-
-        return;
-      }
-
-      bindDataTexture(
-        gl,
-        loc,
-        textures,
-        name,
-        value.texture
-      );
-
-      return;
-    }
-
     if ( "floatv" in value ) {
       gl.uniform1fv(
         loc,
@@ -852,7 +717,8 @@ export default function createNoiseFieldRenderer( fragmentSource ) {
       aPosLoc: -1,
       perlinTexture: null,
       perlinSeed: null,
-      dataTextures: null,
+      // Sketch-supplied data textures (render()'s `textures`), by uniform name.
+      textures: {},
       locs: {},
       ctxRef: null
     } )
@@ -893,8 +759,9 @@ export default function createNoiseFieldRenderer( fragmentSource ) {
     state.locs = {};
     state.perlinTexture = null;
     state.perlinSeed = null;
-    // Data textures belong to the context the program was built on.
-    state.dataTextures = createDataTextures();
+    // GL objects belong to the context that made them: a new context means
+    // every data texture is re-created on its next upload.
+    state.textures = {};
     state.ctxRef = gl;
 
     if ( !state.program ) {
@@ -963,8 +830,109 @@ export default function createNoiseFieldRenderer( fragmentSource ) {
       state.program,
       state.locs,
       name,
-      value,
-      state.dataTextures
+      value
+    );
+  }
+
+  // (Re)upload one sketch-supplied data texture on `unit` and point the
+  // sampler `name` at it. Allocated on first use or when its size or format
+  // changes, sub-updated otherwise; NEAREST + CLAMP so a texel is read exactly
+  // (these carry packed numbers, not pictures).
+  function uploadDataTexture(
+    gl, name, spec, unit
+  ) {
+    const format = spec.format === "luminance" ? gl.LUMINANCE : gl.RGBA;
+    let entry = state.textures[ name ];
+
+    if ( !entry ) {
+      entry = state.textures[ name ] = {
+        texture: gl.createTexture(),
+        width: 0,
+        height: 0,
+        format: null
+      };
+    }
+
+    gl.activeTexture( gl.TEXTURE0 + unit );
+    gl.bindTexture(
+      gl.TEXTURE_2D,
+      entry.texture
+    );
+    // Rows are byte-tight (odd widths, LUMINANCE): alignment 1 is always right.
+    gl.pixelStorei(
+      gl.UNPACK_ALIGNMENT,
+      1
+    );
+    gl.pixelStorei(
+      gl.UNPACK_FLIP_Y_WEBGL,
+      false
+    );
+    // p5 turns premultiplied alpha ON for its own image uploads, and it is GL
+    // state that persists. Left on, every RGB byte is multiplied by the alpha
+    // byte on upload — which silently corrupts any texture whose alpha channel
+    // carries data rather than opacity (a 16-bit value split across two
+    // channels, a packed flag). These carry numbers, so it stays off.
+    gl.pixelStorei(
+      gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,
+      false
+    );
+
+    if ( entry.width !== spec.width || entry.height !== spec.height || entry.format !== format ) {
+      gl.texImage2D(
+        gl.TEXTURE_2D,
+        0,
+        format,
+        spec.width,
+        spec.height,
+        0,
+        format,
+        gl.UNSIGNED_BYTE,
+        spec.data
+      );
+      gl.texParameteri(
+        gl.TEXTURE_2D,
+        gl.TEXTURE_MIN_FILTER,
+        gl.NEAREST
+      );
+      gl.texParameteri(
+        gl.TEXTURE_2D,
+        gl.TEXTURE_MAG_FILTER,
+        gl.NEAREST
+      );
+      gl.texParameteri(
+        gl.TEXTURE_2D,
+        gl.TEXTURE_WRAP_S,
+        gl.CLAMP_TO_EDGE
+      );
+      gl.texParameteri(
+        gl.TEXTURE_2D,
+        gl.TEXTURE_WRAP_T,
+        gl.CLAMP_TO_EDGE
+      );
+
+      entry.width = spec.width;
+      entry.height = spec.height;
+      entry.format = format;
+    } else {
+      gl.texSubImage2D(
+        gl.TEXTURE_2D,
+        0,
+        0,
+        0,
+        spec.width,
+        spec.height,
+        format,
+        gl.UNSIGNED_BYTE,
+        spec.data
+      );
+    }
+
+    setUniform(
+      gl,
+      name,
+      {
+        int: unit
+      }
     );
   }
 
@@ -994,6 +962,12 @@ export default function createNoiseFieldRenderer( fragmentSource ) {
    *   The buffer is the renderer's own and is reused by the next call, so the
    *   caller must consume it immediately (blit it into a graphic it owns)
    *   rather than hold on to it.
+   * @param {Object<string, {data: Uint8Array, width: number, height: number, format?: "rgba"|"luminance"}>} [params.textures]
+   *   data textures to upload and bind, keyed by the `sampler2D` uniform they
+   *   feed (units 1 and up; unit 0 is the Perlin table). Re-uploaded every
+   *   call, so per-frame data (a height field, a grid of cell states) simply
+   *   comes back each render. NEAREST-filtered: the shader reads texels as
+   *   packed numbers, `texture2D( u, ( cell + 0.5 ) / size )`.
    * @returns {p5.Graphics|undefined} the buffer, in offscreen mode only.
    */
   function render( params ) {
@@ -1008,7 +982,8 @@ export default function createNoiseFieldRenderer( fragmentSource ) {
       center,
       resolutionScale = 1,
       offscreen = null,
-      uniforms = {}
+      uniforms = {},
+      textures = {}
     } = params;
 
     const p = getP5();
@@ -1147,6 +1122,22 @@ export default function createNoiseFieldRenderer( fragmentSource ) {
       }
     );
 
+    Object.entries( textures ).forEach( (
+      [
+        name,
+        spec
+      ], index
+    ) => {
+      if ( spec?.data && spec.width > 0 && spec.height > 0 ) {
+        uploadDataTexture(
+          gl,
+          name,
+          spec,
+          index + 1
+        );
+      }
+    } );
+
     for ( const [
       name,
       value
@@ -1158,7 +1149,8 @@ export default function createNoiseFieldRenderer( fragmentSource ) {
       );
     }
 
-    // A data-texture upload leaves its own unit active; p5 assumes unit 0.
+    // A data texture leaves its own unit active; p5 assumes unit 0 when it
+    // binds the buffer to composite it.
     gl.activeTexture( gl.TEXTURE0 );
 
     gl.bindBuffer(

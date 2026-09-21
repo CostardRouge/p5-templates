@@ -1109,22 +1109,22 @@ sketch.draw( () => {
     columns: 1,
     rows: 1,
     resolutionScale: rendering.resolutionScale ?? 0.7,
-    uniforms: {
-      uT: t,
+    // One texel per cell, re-uploaded every frame: the offsets and the 16-bit
+    // height in one, the four link weights the cell owns in the other.
+    textures: {
       uField: {
-        texture: {
-          data: state.field,
-          width: grid.cols,
-          height: grid.rows
-        }
+        data: state.field,
+        width: grid.cols,
+        height: grid.rows
       },
       uLinks: {
-        texture: {
-          data: state.links,
-          width: grid.cols,
-          height: grid.rows
-        }
-      },
+        data: state.links,
+        width: grid.cols,
+        height: grid.rows
+      }
+    },
+    uniforms: {
+      uT: t,
       uGrid: [
         grid.cols,
         grid.rows
