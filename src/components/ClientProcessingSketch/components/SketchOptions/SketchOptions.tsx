@@ -912,10 +912,10 @@ export default function SketchOptions( {
             )}
 
             {/* Recording and export, for all three layouts: a centred dialog on
-                desktop, a bottom sheet on mobile — where it replaces the Export
-                drawer tab. Rendered last so its z-[70] surface really is on top,
-                and unconditionally so `captureActionsRef` (the autosave handle)
-                exists whatever the viewport. */}
+                desktop, the whole screen on mobile — where it replaces the
+                Export drawer tab. Rendered last so its z-[70] surface really is
+                on top, and unconditionally so `captureActionsRef` (the autosave
+                handle) exists whatever the viewport. */}
             <CaptureDialog
               open={ captureOpen }
               onClose={ () => setCaptureOpen( false ) }
@@ -924,7 +924,7 @@ export default function SketchOptions( {
               captureActionsRef={ captureActionsRef }
               recordingSupported={ recordingSupported }
               browserExportSupported={ browserRecordingSupported }
-              bottomSheet={ !isDesktop }
+              fullScreen={ !isDesktop }
             />
           </ContentSelectionProvider>
         </CollapsibleProvider>

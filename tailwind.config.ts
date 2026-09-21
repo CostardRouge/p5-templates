@@ -86,6 +86,16 @@ export default {
             "background-position": "100% 50%"
           }
         },
+        // An export phase that reports no number (the encoder emits one event
+        // and then blocks) sweeps its segment instead of faking a percentage.
+        "phase-sweep": {
+          "0%": {
+            transform: "translateX(-100%)"
+          },
+          "100%": {
+            transform: "translateX(300%)"
+          }
+        },
         marquee: {
           "0%": {
             transform: "translateX(0)"
@@ -186,6 +196,7 @@ export default {
         highlightFade: "highlightFade 1s ease-out",
         "select-pulse": "select-pulse 0.6s ease-in-out 2",
         "gradient-shift": "gradient-shift 8s ease-in-out infinite",
+        "phase-sweep": "phase-sweep 1.2s ease-in-out infinite",
         marquee: "marquee 30s linear infinite",
         "marquee-slow": "marquee 60s linear infinite",
         "marquee-reverse": "marquee-reverse 40s linear infinite",

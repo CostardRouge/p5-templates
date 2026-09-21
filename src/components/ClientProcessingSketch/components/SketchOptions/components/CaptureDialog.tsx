@@ -39,9 +39,9 @@ type CaptureDialogProps = {
   recordingSupported: boolean;
   /** Whether the browser can run the in-page export pipeline at all. */
   browserExportSupported: boolean;
-  /** Present as a bottom sheet instead of a centred dialog — the mobile shape,
-   *  where a centred dialog would float in the middle of a phone. */
-  bottomSheet?: boolean;
+  /** Take the whole surface instead of floating in the middle of it — the
+   *  mobile shape. */
+  fullScreen?: boolean;
 };
 
 /**
@@ -50,9 +50,17 @@ type CaptureDialogProps = {
  *
  * It is the single home for that stack on EVERY layout — opened by the
  * transport bar's record dot and, in the docked layout, the top bar's Export
- * button. A centred dialog on desktop, a bottom sheet on mobile, where the
- * drawer has no Export tab: a surface over the sketch keeps a running export
- * visible once the drawer is dismissed.
+ * button. A centred dialog on desktop, the whole screen on mobile, where the
+ * drawer has no Export tab.
+ *
+ * **Why full screen and not a bottom sheet** (2026-09-21): the sheet capped
+ * itself at 85svh and sat on the bottom edge, so an export ran with the live
+ * sketch drawing above it behind a `backdrop-filter` blur. That blur is a
+ * full-screen GPU pass recomposited on every frame the sketch draws — paid for
+ * during the capture, on the device least able to afford it — to show a sketch
+ * nobody is looking at while they watch an export. Full screen removes the
+ * blur along with the reason for it, and hands the variant list the height it
+ * needed anyway.
  *
  * The content stays MOUNTED while closed (visibility only, not conditional
  * rendering): `captureActionsRef` is the autosave handle the form calls into,
@@ -66,7 +74,7 @@ export default function CaptureDialog( {
   captureActionsRef,
   recordingSupported,
   browserExportSupported,
-  bottomSheet = false
+  fullScreen = false
 }: CaptureDialogProps ) {
   const {
     devActionsVisible
@@ -138,61 +146,84 @@ export default function CaptureDialog( {
     <div
       className={ clsx(
         "absolute inset-0 z-[70] flex justify-center",
-        bottomSheet ? "items-end" : "items-center p-4",
+        fullScreen ? "items-stretch" : "items-center p-4",
         !open && "pointer-events-none"
       ) }
       aria-hidden={ !open }
     >
       {/* Backdrop: only painted (and clickable) while open, so the mounted-but-
-          hidden dialog never swallows pointer events over the sketch. */}
-      <div
-        className={ clsx(
-          "absolute inset-0 bg-background/60 backdrop-blur-sm transition-opacity",
-          open ? "opacity-100" : "opacity-0"
-        ) }
-        onClick={ requestClose }
-      />
+          hidden dialog never swallows pointer events over the sketch. It is not
+          drawn at all full screen — nothing shows through an opaque panel that
+          covers the surface, and a blur there is a per-frame GPU pass spent on
+          pixels nobody sees. */}
+      {!fullScreen && (
+        <div
+          className={ clsx(
+            "absolute inset-0 bg-background/60 backdrop-blur-sm transition-opacity",
+            open ? "opacity-100" : "opacity-0"
+          ) }
+          onClick={ requestClose }
+        />
+      )}
 
       <div
         role="dialog"
         aria-modal={ open }
         aria-label="Export"
         className={ clsx(
-          "relative flex flex-col overflow-hidden border border-theme glass shadow-lg",
-          bottomSheet
-            // A sheet slides: interpolating opacity alone reads as a flash on
-            // a full-width panel, so it moves on transform and the bottom
-            // corners meet the screen edge.
+          "relative flex flex-col overflow-hidden",
+          fullScreen
+            // Opaque and edge to edge: no glass, no radius, no backdrop. It
+            // slides up, because interpolating opacity alone reads as a flash
+            // on a panel this size.
             ? clsx(
-              "w-full max-h-[85svh] rounded-2xl rounded-b-none border-b-0 transition-transform duration-200 ease-out motion-reduce:transition-none pb-[max(0.75rem,env(safe-area-inset-bottom))]",
+              "h-full w-full bg-background pb-[env(safe-area-inset-bottom)] transition-transform duration-200 ease-out motion-reduce:transition-none",
               open ? "translate-y-0" : "translate-y-full"
             )
             // The export table needs room the old 320px card never did, so the
             // centred shape is a wide dialog rather than a narrow one.
             : clsx(
-              "w-full max-w-3xl max-h-full rounded-2xl transition-opacity",
+              "glass w-full max-w-3xl max-h-full rounded-2xl border border-theme shadow-lg transition-opacity",
               open ? "opacity-100" : "opacity-0"
             )
         ) }
       >
-        {bottomSheet && (
-          <div className="flex justify-center pt-2">
-            <div className="h-1 w-10 rounded-full bg-foreground/20" />
-          </div>
-        )}
-
-        <div className="flex items-center gap-2 border-b border-theme px-3 py-2">
+        <div
+          className={ clsx(
+            "flex items-center gap-2 border-b border-theme px-3",
+            fullScreen
+              ? "pb-2 pt-[max(0.625rem,env(safe-area-inset-top))]"
+              : "py-2"
+          ) }
+        >
           <Download className="h-3.5 w-3.5 shrink-0 text-foreground" />
-          <span className="text-xs font-medium text-foreground">Export</span>
-          <span className="truncate text-xs text-label">{capture.name}</span>
+          <span className={ clsx(
+            "font-medium text-foreground",
+            fullScreen ? "text-sm" : "text-xs"
+          ) }
+          >
+            Export
+          </span>
+          <span className={ clsx(
+            "truncate text-label",
+            fullScreen ? "text-sm" : "text-xs"
+          ) }
+          >
+            {capture.name}
+          </span>
 
           <button
             type="button"
             onClick={ requestClose }
             aria-label="Close"
-            className="ml-auto rounded-lg p-1 text-label transition-colors hover:bg-hover hover:text-foreground"
+            className={ clsx(
+              "ml-auto flex items-center justify-center rounded-lg text-label transition-colors hover:bg-hover hover:text-foreground",
+              // A real thumb target on a phone, where this is the only way out
+              // now that there is no backdrop to tap.
+              fullScreen ? "-mr-2 h-11 w-11" : "p-1"
+            ) }
           >
-            <X className="h-3.5 w-3.5" />
+            <X className={ fullScreen ? "h-4 w-4" : "h-3.5 w-3.5" } />
           </button>
         </div>
 

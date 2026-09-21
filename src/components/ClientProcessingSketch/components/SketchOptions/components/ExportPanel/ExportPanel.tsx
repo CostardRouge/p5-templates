@@ -37,9 +37,13 @@ import {
   VARIANT_PRESETS,
   type ExportVariant
 } from "@/lib/export/variants";
+import useMediaQuery from "@/hooks/useMediaQuery";
 import useSketch from "../../../SketchProvider/hooks/useSketch";
 import ExportPreview from "./components/ExportPreview";
-import VariantTableRow from "./components/VariantTableRow";
+import VariantCard from "./components/VariantCard";
+import VariantTableRow, {
+  VARIANT_GRID
+} from "./components/VariantTableRow";
 import type {
   RecordingFormat
 } from "@/engines/recording";
@@ -69,7 +73,7 @@ const FALLBACK_FORMATS: RecordingFormat[] = [
 ];
 
 const HEAD_CELL =
-  "px-2.5 py-2 text-left text-[9.5px] font-semibold uppercase tracking-[0.09em] text-label";
+  "px-2.5 text-left text-[9.5px] font-semibold uppercase tracking-[0.09em] text-label";
 
 /** What to say when a save did not put anything anywhere. */
 const SAVE_NOTICE: Record<string, string> = {
@@ -88,9 +92,13 @@ const SAVE_NOTICE: Record<string, string> = {
  * nothing is stated twice, and a column that does not apply to a variant says
  * so with a dash instead of offering a control that would be ignored.
  *
- * The row doubles as the run queue: its name cell carries the progress fill
- * and its output cell the live stage, so "62% · slide 2/7" is attached to the
- * variant it belongs to rather than to a single global bar.
+ * The row doubles as the run queue: progress is the row inverting under an ink
+ * wipe, a phase meter under its status and a slide counter in its Slides cell,
+ * so what is happening is attached to the variant it happens to. The footer's
+ * own 2px bar is the batch's, which a per-row reading cannot answer.
+ *
+ * Below `md` the same variants render as `VariantCard`s instead: the grid's
+ * fixed tracks need ~700px, and a phone got them by scrolling sideways.
  *
  * **The panel also owns delivery**, which the runner used to do itself. On a
  * device with a share sheet nothing is delivered automatically: the run ends
@@ -109,6 +117,10 @@ export default function ExportPanel( {
       engine, engineId
     }
   ] = useSketch();
+
+  // Same breakpoint the studio uses for "desktop": below it the variants are
+  // cards rather than grid rows.
+  const wide = useMediaQuery( "( min-width: 768px )" );
 
   const sketchKey = `${ engineId }/${ name }`;
 
@@ -373,10 +385,31 @@ export default function ExportPanel( {
 
   const stateFor = ( id: string ) => items.find( ( item ) => item.variantId === id );
 
+  /**
+   * How far the whole batch has got, 0-100.
+   *
+   * Averaging the variants' own percentages rather than counting finished ones
+   * is what keeps it moving during the long one: a three-variant run that sat
+   * at 0 / 33 / 67 told you nothing for minutes at a time.
+   */
+  const batchPercentage = items.length === 0
+    ? 0
+    : items.reduce(
+      (
+        sum, item
+      ) => sum + ( item.status === "done" ? 100 : item.percentage ),
+      0
+    ) / items.length;
+
+  const runningIndex = Math.max(
+    0,
+    items.findIndex( ( item ) => item.status === "running" )
+  );
+
   const previewed = previewing ? outputs[ previewing ] : undefined;
 
-  // The preview takes over the table's region rather than opening a second
-  // modal: the dialog is already a bottom sheet on mobile, and stacking a
+  // The preview takes over the list's region rather than opening a second
+  // modal: on a phone the dialog already owns the whole screen, and stacking a
   // surface over that fights the chrome instead of using it.
   if ( previewing && previewed && previewed.artifacts.length > 0 ) {
     return (
@@ -400,76 +433,85 @@ export default function ExportPanel( {
     );
   }
 
+  const rowProps = ( variant: ExportVariant ) => ( {
+    variant,
+    nativeSize: nativeSizeFor(
+      options,
+      activeSlideIndex
+    ),
+    nativeFramerate: nativeFramerateFor(
+      options,
+      activeSlideIndex
+    ),
+    slideCount,
+    slideSpan: slidesOf( variant ).length,
+    mixedSizes: hasMixedSlideSizes(
+      variant,
+      options,
+      slidesOf( variant )
+    ),
+    supportedFormats,
+    state: stateFor( variant.id ),
+    running,
+    delivered: isDelivered( saved[ variant.id ] ?? "failed" ),
+    onPreview: outputs[ variant.id ]?.artifacts.length
+      ? () => setPreviewing( variant.id )
+      : undefined,
+    removable: snapshot.variants.length > 1,
+    onPatch: ( patch: Partial<ExportVariant> ) => patchVariant(
+      sketchKey,
+      variant.id,
+      patch
+    ),
+    onDuplicate: () => duplicateVariantById(
+      sketchKey,
+      variant.id
+    ),
+    onRemove: () => removeVariant(
+      sketchKey,
+      variant.id
+    )
+  } );
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      {/* The table keeps a floor width and the container scrolls: crushing
-          six editable columns into a phone would be worse than a sideways
-          scroll inside the dialog. */}
       {/* Opaque, unlike the dialog's glass chrome around it: a table of small
           mono values with a sketch showing through is unreadable, and this is
           the region you actually read. The glass stays on the title bar and
           the footer, where it still frames the dialog against the canvas. */}
       <div className="min-h-0 flex-1 overflow-auto bg-background">
-        <table className="w-full min-w-[600px] border-collapse">
-          <thead className="sticky top-0 z-10 bg-background">
-            <tr className="border-b border-theme">
-              <th scope="col" className={ HEAD_CELL }>Variant</th>
-              <th scope="col" className={ HEAD_CELL }>Size</th>
-              <th scope="col" className={ HEAD_CELL }>Output</th>
-              <th scope="col" className={ HEAD_CELL }>Rate</th>
-              <th scope="col" className={ HEAD_CELL }>Slides</th>
-              <th scope="col" className={ `${ HEAD_CELL } text-right` }>Delivers</th>
-              <th scope="col" className="w-0 px-2">
+        {wide ? (
+          <div role="table" aria-label="Export variants" className="min-w-[700px]">
+            <div
+              role="row"
+              className={ `${ VARIANT_GRID } sticky top-0 z-10 h-8 items-center border-b border-theme bg-background` }
+            >
+              <div role="columnheader" className={ HEAD_CELL }>Variant</div>
+              <div role="columnheader" className={ HEAD_CELL }>Size</div>
+              <div role="columnheader" className={ HEAD_CELL }>Output</div>
+              <div role="columnheader" className={ HEAD_CELL }>Rate</div>
+              <div role="columnheader" className={ HEAD_CELL }>Slides</div>
+              <div role="columnheader" className={ `${ HEAD_CELL } text-right` }>
+                Delivers
+              </div>
+              <div role="columnheader" className="px-2">
                 <span className="sr-only">Row actions</span>
-              </th>
-            </tr>
-          </thead>
+              </div>
+            </div>
 
-          <tbody>
             {snapshot.variants.map( ( variant ) => (
-              <VariantTableRow
-                key={ variant.id }
-                variant={ variant }
-                nativeSize={ nativeSizeFor(
-                  options,
-                  activeSlideIndex
-                ) }
-                nativeFramerate={ nativeFramerateFor(
-                  options,
-                  activeSlideIndex
-                ) }
-                slideCount={ slideCount }
-                slideSpan={ slidesOf( variant ).length }
-                mixedSizes={ hasMixedSlideSizes(
-                  variant,
-                  options,
-                  slidesOf( variant )
-                ) }
-                supportedFormats={ supportedFormats }
-                state={ stateFor( variant.id ) }
-                running={ running }
-                delivered={ isDelivered( saved[ variant.id ] ?? "failed" ) }
-                onPreview={ outputs[ variant.id ]?.artifacts.length
-                  ? () => setPreviewing( variant.id )
-                  : undefined }
-                removable={ snapshot.variants.length > 1 }
-                onPatch={ ( patch ) => patchVariant(
-                  sketchKey,
-                  variant.id,
-                  patch
-                ) }
-                onDuplicate={ () => duplicateVariantById(
-                  sketchKey,
-                  variant.id
-                ) }
-                onRemove={ () => removeVariant(
-                  sketchKey,
-                  variant.id
-                ) }
-              />
+              <VariantTableRow key={ variant.id } { ...rowProps( variant ) } />
             ) )}
-          </tbody>
-        </table>
+          </div>
+        ) : (
+          // A phone gets the same variants as cards. See VariantCard: the
+          // table's sideways scroll put half of every row off-screen.
+          <div className="flex flex-col gap-2 p-2">
+            {snapshot.variants.map( ( variant ) => (
+              <VariantCard key={ variant.id } { ...rowProps( variant ) } />
+            ) )}
+          </div>
+        )}
 
         {/* Adding a variant starts from a preset, never a blank row: a new
             variant needing four fields filled in before it does anything is
@@ -477,7 +519,7 @@ export default function ExportPanel( {
         <Menu as="div" className="relative">
           <MenuButton
             disabled={ running }
-            className="flex w-full items-center gap-1.5 border-t border-dashed border-theme px-2.5 py-2 text-left text-[11px] text-label transition-colors hover:bg-hover hover:text-foreground disabled:opacity-40"
+            className="flex min-h-[44px] w-full items-center gap-1.5 border-t border-dashed border-theme px-2.5 py-2 text-left text-[11px] text-label transition-colors hover:bg-hover hover:text-foreground disabled:opacity-40 md:min-h-0"
           >
             <Plus className="h-3 w-3 shrink-0" />
             Add a variant
@@ -509,16 +551,35 @@ export default function ExportPanel( {
         </Menu>
       </div>
 
+      {/* The batch's own progress, along the footer's top edge: a row says how
+          far ITS variant has got, and on a three-variant run that is not the
+          question being asked. Two pixels, no label — the footer already names
+          which variant is in hand. */}
+      <div className={ running ? "h-0.5 w-full bg-foreground/15" : "h-0.5 w-full" }>
+        <div
+          aria-hidden="true"
+          className="h-full bg-foreground transition-[width] duration-300 ease-out motion-reduce:transition-none"
+          style={ {
+            width: `${ running ? batchPercentage : 0 }%`
+          } }
+        />
+      </div>
+
       <div className="flex items-center gap-2 border-t border-theme px-3 py-2">
         <span className="min-w-0 flex-1 truncate text-[10px] text-label">
           {error && <span className="text-red-500">{error}</span>}
           {!error && notice && <span className="text-red-500">{notice}</span>}
-          {!error && !notice && unsavedFileCount > 0 && (
+          {!error && !notice && running && (
+            <span className="tabular-nums text-foreground/80">
+              Variant {runningIndex + 1} of {snapshot.variants.length}
+            </span>
+          )}
+          {!error && !notice && !running && unsavedFileCount > 0 && (
             <span className="text-foreground/80">
               {unsavedFileCount} file{unsavedFileCount === 1 ? "" : "s"} ready · not saved yet
             </span>
           )}
-          {!error && !notice && unsavedFileCount === 0 && (
+          {!error && !notice && !running && unsavedFileCount === 0 && (
             `${ snapshot.variants.length } variant${ snapshot.variants.length === 1 ? "" : "s" } · ${ fileCount } file${ fileCount === 1 ? "" : "s" }`
           )}
         </span>
@@ -543,9 +604,13 @@ export default function ExportPanel( {
               type="button"
               onClick={ handleExport }
               disabled={ !engine || snapshot.variants.length === 0 || saving }
+              // Every footer button carries a border, transparent on the
+              // filled ones: without it the ink-filled Export is 2px shorter
+              // than the outlined Stop it swaps with, and the dialog — which is
+              // centred — jumps by a pixel each time a run starts or ends.
               className={ unsavedFileCount > 0
                 ? "shrink-0 rounded-lg border border-theme bg-background px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-hover disabled:opacity-40"
-                : "shrink-0 rounded-lg bg-foreground px-3 py-1.5 text-xs font-medium text-background transition-opacity hover:opacity-85 disabled:opacity-40" }
+                : "shrink-0 rounded-lg border border-transparent bg-foreground px-3 py-1.5 text-xs font-medium text-background transition-opacity hover:opacity-85 disabled:opacity-40" }
             >
               Export {snapshot.variants.length === 1
                 ? "variant"
@@ -557,7 +622,7 @@ export default function ExportPanel( {
                 type="button"
                 onClick={ handleSaveAll }
                 disabled={ saving }
-                className="shrink-0 rounded-lg bg-foreground px-3 py-1.5 text-xs font-medium text-background transition-opacity hover:opacity-85 disabled:opacity-40"
+                className="shrink-0 rounded-lg border border-transparent bg-foreground px-3 py-1.5 text-xs font-medium text-background transition-opacity hover:opacity-85 disabled:opacity-40"
               >
                 {saving ? "Saving…" : `Save ${ unsavedFileCount } file${ unsavedFileCount === 1 ? "" : "s" }`}
               </button>
