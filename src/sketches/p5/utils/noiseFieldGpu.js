@@ -499,6 +499,120 @@ function getLocationOn(
   return locs[ name ];
 }
 
+// A data texture registry: one WebGLTexture per uniform name, each pinned to
+// its own texture unit above the Perlin table's unit 0. Kept per renderer
+// state because textures belong to a GL context, and rebuilt with the program
+// when the context changes (see ensureProgram).
+function createDataTextures() {
+  return {
+    byName: new Map(),
+    nextUnit: 1
+  };
+}
+
+// Upload `{ data, width, height }` (RGBA8 bytes, width * height * 4 of them)
+// into the texture registered under `name`, binding it on its unit and
+// pointing the sampler at that unit. A texture of the same size is refreshed
+// in place (texSubImage2D); a size change reallocates. NEAREST + CLAMP, so a
+// texel is read exactly — these carry packed numbers, never pictures. This is
+// how a sketch hands the shader a field of per-cell values too large for a
+// uniform array: `texture2D` has no constant-index restriction, so the shader
+// may look a cell up by any computed coordinate.
+function bindDataTexture(
+  gl, loc, textures, name, spec
+) {
+  const {
+    data,
+    width,
+    height
+  } = spec;
+
+  let entry = textures.byName.get( name );
+
+  if ( !entry ) {
+    entry = {
+      texture: gl.createTexture(),
+      unit: textures.nextUnit++,
+      width: 0,
+      height: 0
+    };
+    textures.byName.set(
+      name,
+      entry
+    );
+  }
+
+  gl.activeTexture( gl.TEXTURE0 + entry.unit );
+  gl.bindTexture(
+    gl.TEXTURE_2D,
+    entry.texture
+  );
+
+  // p5 flips these for its own image uploads; a packed-number texture must
+  // land byte for byte, un-premultiplied and with row 0 at t = 0.
+  gl.pixelStorei(
+    gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,
+    false
+  );
+  gl.pixelStorei(
+    gl.UNPACK_FLIP_Y_WEBGL,
+    false
+  );
+
+  if ( entry.width === width && entry.height === height ) {
+    gl.texSubImage2D(
+      gl.TEXTURE_2D,
+      0,
+      0,
+      0,
+      width,
+      height,
+      gl.RGBA,
+      gl.UNSIGNED_BYTE,
+      data
+    );
+  } else {
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,
+      gl.RGBA,
+      width,
+      height,
+      0,
+      gl.RGBA,
+      gl.UNSIGNED_BYTE,
+      data
+    );
+    gl.texParameteri(
+      gl.TEXTURE_2D,
+      gl.TEXTURE_MIN_FILTER,
+      gl.NEAREST
+    );
+    gl.texParameteri(
+      gl.TEXTURE_2D,
+      gl.TEXTURE_MAG_FILTER,
+      gl.NEAREST
+    );
+    gl.texParameteri(
+      gl.TEXTURE_2D,
+      gl.TEXTURE_WRAP_S,
+      gl.CLAMP_TO_EDGE
+    );
+    gl.texParameteri(
+      gl.TEXTURE_2D,
+      gl.TEXTURE_WRAP_T,
+      gl.CLAMP_TO_EDGE
+    );
+    entry.width = width;
+    entry.height = height;
+  }
+
+  gl.uniform1i(
+    loc,
+    entry.unit
+  );
+}
+
 // Set a uniform, inferring its kind from the JS value:
 //   number              -> float
 //   { int: n }          -> int / sampler
@@ -507,10 +621,13 @@ function getLocationOn(
 //   { vec2v:  [...] }   -> vec2[]   uniform2fv  (flattened x0,y0,x1,y1,…)
 //   { vec4v:  [...] }   -> vec4[]   uniform4fv  (flattened x0,y0,z0,w0,…)
 //   { intv:   [...] }   -> int[]    uniform1iv
+//   { texture: { data, width, height } }
+//                       -> sampler2D over an RGBA8 data texture (see
+//                          bindDataTexture; needs the renderer's registry)
 // The *v forms upload a whole GLSL uniform array in one call; query the array's
 // base name (e.g. "uPoints", not "uPoints[0]") for its location.
 function setUniformOn(
-  gl, program, locs, name, value
+  gl, program, locs, name, value, textures = null
 ) {
   const loc = getLocationOn(
     gl,
@@ -524,6 +641,24 @@ function setUniformOn(
   }
 
   if ( value !== null && typeof value === "object" && !Array.isArray( value ) ) {
+    if ( "texture" in value ) {
+      if ( !textures ) {
+        console.warn( `noiseFieldGpu: uniform "${ name }" is a data texture but this renderer has no texture registry.` );
+
+        return;
+      }
+
+      bindDataTexture(
+        gl,
+        loc,
+        textures,
+        name,
+        value.texture
+      );
+
+      return;
+    }
+
     if ( "floatv" in value ) {
       gl.uniform1fv(
         loc,
@@ -717,6 +852,7 @@ export default function createNoiseFieldRenderer( fragmentSource ) {
       aPosLoc: -1,
       perlinTexture: null,
       perlinSeed: null,
+      dataTextures: null,
       locs: {},
       ctxRef: null
     } )
@@ -757,6 +893,8 @@ export default function createNoiseFieldRenderer( fragmentSource ) {
     state.locs = {};
     state.perlinTexture = null;
     state.perlinSeed = null;
+    // Data textures belong to the context the program was built on.
+    state.dataTextures = createDataTextures();
     state.ctxRef = gl;
 
     if ( !state.program ) {
@@ -825,7 +963,8 @@ export default function createNoiseFieldRenderer( fragmentSource ) {
       state.program,
       state.locs,
       name,
-      value
+      value,
+      state.dataTextures
     );
   }
 
@@ -1018,6 +1157,9 @@ export default function createNoiseFieldRenderer( fragmentSource ) {
         value
       );
     }
+
+    // A data-texture upload leaves its own unit active; p5 assumes unit 0.
+    gl.activeTexture( gl.TEXTURE0 );
 
     gl.bindBuffer(
       gl.ARRAY_BUFFER,
