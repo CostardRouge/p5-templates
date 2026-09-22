@@ -35,6 +35,8 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 ## Decisions at a glance (details in the topic files)
 
 - Every rendering back-end implements `SketchEngine`; nothing special-cases an engine → `architecture.md`.
+- Every engine extends `BaseSketchEngine` and is only the part that differs; the listener map, the performance loop, the frame maths and the capture waits live once, in the base → `architecture.md`.
+- A canvas engine's `seekAndDraw` yields one task and never waits a display frame: the frame is drawn when `seek()` returns, a rAF capped exports at the refresh rate and never came in a hidden tab → `recording.md`.
 - Deterministic capture is a constraint on sketches: animate from the loop clock, never wall-clock time → `architecture.md`.
 - Optional features are compile-time `NEXT_PUBLIC_*` flags, default off, baked in at build time → `architecture.md`.
 - Prisma models were renamed Template → Preset behind `@@map`, so the database columns still say "template" → `architecture.md`.

@@ -1,12 +1,8 @@
+import {
+  BaseSketchEngine
+} from "@/engines/BaseSketchEngine";
 import type {
-  SketchEngine,
-  EngineEventName,
-  EngineEventMap,
-  EnginePerformanceSample
-} from "@/engines/types";
-import type {
-  CaptureSource,
-  RecorderCapabilities
+  CaptureSource
 } from "@/engines/recording/types";
 import {
   createCanvasCaptureSource
@@ -19,24 +15,22 @@ import type {
   SketchOption
 } from "@/types/sketch.types";
 import {
-  getEffectiveSlideSettings
-} from "@/lib/effectiveSlideSettings";
-import {
-  resolveAnimation, totalFramesFor
-} from "@/lib/animationConfig";
-import {
   resolveSketchPath
 } from "@/engines/metadata";
 import {
   registerAnimationBridge,
-  unregisterAnimationBridge,
-  getAnimationBridge
+  unregisterAnimationBridge
 } from "@/lib/animationBridge";
 
 // Type-only — the concrete runtime (which pulls in three.js + WebGL) is
 // dynamically imported inside `init()` so it never lands in the server bundle
 // or the sketch route's initial compile.
 type ThreeRuntime = ( typeof import( "@/threejs/utils/sketch.js" ) )[ "default" ];
+
+type SketchFns = {
+  setupFn: ( ( ...args: any[] ) => any ) | null;
+  drawFn: ( ( ...args: any[] ) => any ) | null;
+};
 
 /**
  * Three.js implementation of `SketchEngine`.
@@ -47,7 +41,7 @@ type ThreeRuntime = ( typeof import( "@/threejs/utils/sketch.js" ) )[ "default" 
  * Three.js paints into a live `<canvas>`, it reuses the canvas `CaptureSource`
  * and canvas server-capture kind unchanged (same path as p5).
  */
-export class ThreeEngine implements SketchEngine {
+export class ThreeEngine extends BaseSketchEngine {
   readonly engineId = "threejs";
 
   // ES modules are cached after first import, so a sketch module's top-level
@@ -55,36 +49,12 @@ export class ThreeEngine implements SketchEngine {
   // resolved callbacks per sketch path and restore them on revisit — otherwise
   // returning to a previously-seen sketch would render the last sketch's
   // callbacks (identical fix to P5Engine).
-  private static readonly _sketchModuleCache = new Set<string>();
-  private static readonly _sketchFnCache = new Map<string, {
-    setupFn: ( ( ...args: any[] ) => any ) | null;
-    drawFn: ( ( ...args: any[] ) => any ) | null;
-  }>();
+  private static readonly sketchFnCache = new Map<string, SketchFns>();
 
-  private _isReady = false;
-  // Set by destroy(). init() re-checks it after every await — see the note in
-  // P5Engine: a strict-mode double-mount would otherwise resume a destroyed
-  // engine's pending init alongside the replacement's and start the shared
-  // runtime twice (two stacked canvases).
-  private destroyed = false;
-  private container: HTMLElement | null = null;
   private runtime: ThreeRuntime | null = null;
-  private listeners = new Map<string, Set<( payload: any ) => void>>();
-  private unsubscribeProgression: ( () => void ) | null = null;
   // Saved `window.setSlide` so switching back to a p5/GSAP sketch restores its
   // binding (mirrors GsapEngine — p5 registers the global once at module load).
   private previousSetSlide: ( ( index: number ) => void ) | undefined;
-
-  private perfLoopId: number | null = null;
-  private perfSample = {
-    paused: false,
-    fps: 0,
-    lastEmitTime: 0
-  };
-
-  get isReady(): boolean {
-    return this._isReady;
-  }
 
   /* ---- lifecycle ------------------------------------------------- */
 
@@ -154,23 +124,19 @@ export class ThreeEngine implements SketchEngine {
 
     // Restore/cache the sketch's callbacks per path (see the static cache note).
     const runtime = this.runtime as any;
+    const cached = ThreeEngine.sketchFnCache.get( sketchPath );
 
-    if ( !ThreeEngine._sketchModuleCache.has( sketchPath ) ) {
-      ThreeEngine._sketchModuleCache.add( sketchPath );
-      ThreeEngine._sketchFnCache.set(
+    if ( cached ) {
+      runtime._setupFn = cached.setupFn;
+      runtime._drawFn = cached.drawFn;
+    } else {
+      ThreeEngine.sketchFnCache.set(
         sketchPath,
         {
           setupFn: runtime._setupFn,
           drawFn: runtime._drawFn
         }
       );
-    } else {
-      const cached = ThreeEngine._sketchFnCache.get( sketchPath );
-
-      if ( cached ) {
-        runtime._setupFn = cached.setupFn;
-        runtime._drawFn = cached.drawFn;
-      }
     }
 
     await this.runtime.start( container );
@@ -178,14 +144,6 @@ export class ThreeEngine implements SketchEngine {
     if ( this.destroyed || !this.runtime ) {
       return;
     }
-
-    this._isReady = true;
-
-    this.perfSample = {
-      paused: false,
-      fps: 0,
-      lastEmitTime: performance.now()
-    };
 
     // Expose progression to the shared UI (progression bar, scrubbing).
     registerAnimationBridge( {
@@ -214,17 +172,10 @@ export class ThreeEngine implements SketchEngine {
       window.setSlide = ( index: number ) => this.runtime?.setSlide( index );
     }
 
-    this.emit(
-      "ready",
-      undefined as any
-    );
+    this.becomeReady();
   }
 
-  destroy(): void {
-    // Cancel any still-pending init (see the field's note).
-    this.destroyed = true;
-
-    this.stopPerformanceLoop();
+  protected teardown(): void {
     unregisterServerCaptureController();
     unregisterAnimationBridge();
 
@@ -234,26 +185,14 @@ export class ThreeEngine implements SketchEngine {
     }
     this.previousSetSlide = undefined;
 
-    this.unsubscribeProgression?.();
-    this.unsubscribeProgression = null;
-
     this.runtime?.reset();
     this.runtime = null;
-
-    this._isReady = false;
-    this.container = null;
-    this.listeners.clear();
   }
 
   /* ---- options --------------------------------------------------- */
 
   updateOptions( partial: Partial<SketchOption> ): void {
-    import( "@/lib/syncSketchOptions" ).then( ( {
-      setSketchOptions
-    } ) => setSketchOptions(
-      partial,
-      "react"
-    ) );
+    super.updateOptions( partial );
 
     // Reflect the change immediately when the loop is paused.
     if ( this.runtime?.isPaused() ) {
@@ -265,24 +204,22 @@ export class ThreeEngine implements SketchEngine {
 
   play(): void {
     this.runtime?.play();
-    this.perfSample.paused = false;
-    this.emitPerformanceSample();
+    this.reportPlaying();
   }
 
   pause(): void {
     this.runtime?.pause();
-    this.perfSample.paused = true;
-    this.emitPerformanceSample();
+    this.reportPaused();
   }
 
   stop(): void {
     this.runtime?.stop();
-    this.perfSample.paused = true;
-    this.perfSample.fps = 0;
-    this.emitPerformanceSample();
+    this.reportStopped();
   }
 
   seek( frame: number ): void {
+    // stepFrame renders synchronously into a renderer created with
+    // preserveDrawingBuffer, so the frame is readable when this returns.
     this.runtime?.stepFrame( frame );
   }
 
@@ -292,84 +229,12 @@ export class ThreeEngine implements SketchEngine {
 
   /* ---- capture --------------------------------------------------- */
 
-  async captureFrame( frame: number ): Promise<string> {
-    await this.seekAndDraw( frame );
-
-    const canvas = this.getCanvas();
-
-    if ( !canvas ) {
-      throw new Error( "ThreeEngine: no canvas available for capture." );
-    }
-
-    return canvas.toDataURL( "image/png" );
-  }
-
-  async seekAndDraw( frame: number ): Promise<void> {
-    this.runtime?.stepFrame( frame );
-
-    // Allow one rAF so the composited frame is on the canvas before it's read.
-    await new Promise( ( r ) => requestAnimationFrame( r ) );
-  }
-
-  async resetToStart(): Promise<void> {
-    // Explicitly zero the clock — outside deterministic capture mode
-    // (i.e. the realtime recording path) seekAndDraw(0) alone only pins the
-    // *rendered* frame to 0 without resetting the elapsed-time clock that
-    // free-runs on wall-clock, so a realtime recording would otherwise start
-    // mid-loop instead of at phase 0. Mirrors P5Engine.resetToStart().
-    getAnimationBridge()?.setProgression( 0 );
-    await this.seekAndDraw( 0 );
-  }
-
   beginDeterministicCapture(): void {
     this.runtime?.enterRecordingMode();
   }
 
   endDeterministicCapture(): void {
     this.runtime?.exitRecordingMode();
-  }
-
-  getRecordingCapabilities(
-    _options: SketchOption,
-    _slideIndex?: number
-  ): RecorderCapabilities {
-    return {
-      supportsDeterministicCapture: true,
-      defaultMode: "async-loop",
-      supportedFormats: [
-        "webm",
-        "gif",
-        "mp4"
-      ]
-    };
-  }
-
-  getTotalFrames(
-    options: SketchOption,
-    slideIndex?: number
-  ): number {
-    const {
-      animation
-    } = getEffectiveSlideSettings(
-      options,
-      slideIndex
-    );
-
-    return totalFramesFor( animation );
-  }
-
-  getFrameRate(
-    options: SketchOption,
-    slideIndex?: number
-  ): number {
-    const {
-      animation
-    } = getEffectiveSlideSettings(
-      options,
-      slideIndex
-    );
-
-    return resolveAnimation( animation ).framerate;
   }
 
   getCanvas(): HTMLCanvasElement | null {
@@ -403,93 +268,9 @@ export class ThreeEngine implements SketchEngine {
     };
   }
 
-  /* ---- events ---------------------------------------------------- */
+  /* ---- performance ----------------------------------------------- */
 
-  on<E extends EngineEventName>(
-    event: E,
-    handler: ( payload: EngineEventMap[ E ] ) => void
-  ): void {
-    if ( !this.listeners.has( event ) ) {
-      this.listeners.set(
-        event,
-        new Set()
-      );
-    }
-
-    this.listeners.get( event )!.add( handler );
-
-    if ( event === "performance" ) {
-      this.startPerformanceLoop();
-      this.emitPerformanceSample();
-    }
-  }
-
-  off<E extends EngineEventName>(
-    event: E,
-    handler: ( payload: EngineEventMap[ E ] ) => void
-  ): void {
-    this.listeners.get( event )?.delete( handler );
-
-    if ( event === "performance" && !this.hasPerformanceListeners() ) {
-      this.stopPerformanceLoop();
-    }
-  }
-
-  private emit<E extends EngineEventName>(
-    event: E,
-    payload: EngineEventMap[ E ]
-  ): void {
-    this.listeners.get( event )?.forEach( ( h ) => h( payload ) );
-  }
-
-  private hasPerformanceListeners(): boolean {
-    return ( this.listeners.get( "performance" )?.size ?? 0 ) > 0;
-  }
-
-  private startPerformanceLoop(): void {
-    if ( this.perfLoopId !== null ) {
-      return;
-    }
-
-    const tick = ( now: number ) => {
-      if ( !this.hasPerformanceListeners() ) {
-        this.perfLoopId = null;
-        return;
-      }
-
-      if ( this._isReady && now - this.perfSample.lastEmitTime >= 500 ) {
-        this.perfSample.fps = this.runtime?.getMeasuredFps() ?? 0;
-        this.perfSample.lastEmitTime = now;
-        this.emitPerformanceSample();
-      }
-
-      this.perfLoopId = requestAnimationFrame( tick );
-    };
-
-    this.perfLoopId = requestAnimationFrame( tick );
-  }
-
-  private stopPerformanceLoop(): void {
-    if ( this.perfLoopId === null ) {
-      return;
-    }
-
-    cancelAnimationFrame( this.perfLoopId );
-    this.perfLoopId = null;
-  }
-
-  private emitPerformanceSample(): void {
-    const payload: EnginePerformanceSample = {
-      fps: Number.isFinite( this.perfSample.fps )
-        ? this.perfSample.fps
-        : 0,
-      paused: this.perfSample.paused,
-      timestamp: performance.now()
-    };
-
-    this.emit(
-      "performance",
-      payload
-    );
+  protected measureFps(): number {
+    return this.runtime?.getMeasuredFps() ?? 0;
   }
 }

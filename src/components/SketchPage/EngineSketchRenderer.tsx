@@ -52,9 +52,18 @@ export default function EngineSketchRenderer() {
         engineRef.current?.pause();
       } );
 
-      // Listen for the engine's ready event to know when the first frame
-      // has been rendered and the canvas is ready to be measured/centered.
+      // The engine's ready event is the one signal that the first frame is on
+      // screen and the canvas can be measured/centered. It is also the moment
+      // the engine is handed to the rest of the studio — not `init()`
+      // resolving: a destroyed engine's pending init resolves too (it bails
+      // out after its next await) and used to be dispatched into the context
+      // for a render, where the fps readout subscribed to a dead instance.
+      // `ready` never fires on a destroyed engine, so it needs no guard.
       const handleReady = () => {
+        dispatch( {
+          type: "SET_ENGINE",
+          payload: instance
+        } );
         dispatch( {
           type: "SET_LOADED",
           payload: true
@@ -93,12 +102,6 @@ export default function EngineSketchRenderer() {
           name,
           mountOptionsRef.current
         )
-        .then( () => {
-          dispatch( {
-            type: "SET_ENGINE",
-            payload: instance
-          } );
-        } )
         .catch( ( error ) => {
           console.error(
             `[EngineSketchRenderer] init failed for "${ engineId }"`,

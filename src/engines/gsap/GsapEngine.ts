@@ -1,23 +1,13 @@
 import type React from "react";
+import {
+  BaseSketchEngine
+} from "@/engines/BaseSketchEngine";
 import type {
-  SketchEngine,
-  EngineEventName,
-  EngineEventMap,
-  EnginePerformanceSample
-} from "@/engines/types";
-import type {
-  CaptureSource,
-  RecorderCapabilities
+  CaptureSource
 } from "@/engines/recording/types";
 import type {
   SketchOption
 } from "@/types/sketch.types";
-import {
-  getEffectiveSlideSettings
-} from "@/lib/effectiveSlideSettings";
-import {
-  resolveAnimation, totalFramesFor
-} from "@/lib/animationConfig";
 import {
   resolveSketchPath
 } from "@/engines/metadata";
@@ -25,6 +15,7 @@ import {
   registerServerCaptureController,
   unregisterServerCaptureController
 } from "@/engines/recording/serverCapture";
+import nextFrame from "@/lib/export/nextFrame";
 
 // Type-only — does NOT pull the client-only runtime (react-dom/gsap) into the
 // server bundle. The real module is dynamically imported inside `init()`.
@@ -39,32 +30,18 @@ type TemplateComponent = React.ComponentType<{ options: Record<string, any> }>;
  * deterministic playback + capture, and exposes a DOM-backed `CaptureSource`
  * so the same recorder that drives p5 works here unchanged.
  */
-export class GsapEngine implements SketchEngine {
+export class GsapEngine extends BaseSketchEngine {
   readonly engineId = "gsap";
 
-  private _isReady = false;
-  // Set by destroy(). init() re-checks it after every await — see the note in
-  // P5Engine: a strict-mode double-mount would otherwise resume a destroyed
-  // engine's pending init alongside the replacement's and start the shared
-  // runtime twice (two stacked stages).
-  private destroyed = false;
-  private container: HTMLElement | null = null;
+  // The runtime already measures its achieved playback rate over a window, so
+  // the sample is read more often and lightly smoothed rather than timed here.
+  protected readonly performanceEmitIntervalMs = 250;
+
   private runtime: GsapRuntime | null = null;
-  private listeners = new Map<string, Set<( payload: any ) => void>>();
   // Saved `window.setSlide` so switching back to a p5 sketch restores its
   // binding (p5 registers the global once at module load and never re-sets it).
   private previousSetSlide: ( ( index: number ) => void ) | undefined;
-
-  private perfLoopId: number | null = null;
-  private perfSample = {
-    paused: false,
-    smoothedFps: 0,
-    lastEmitTime: 0
-  };
-
-  get isReady(): boolean {
-    return this._isReady;
-  }
+  private smoothedFps = 0;
 
   /* ---- lifecycle ------------------------------------------------- */
 
@@ -144,8 +121,6 @@ export class GsapEngine implements SketchEngine {
       return;
     }
 
-    this._isReady = true;
-
     registerServerCaptureController( {
       captureKind: "dom",
       surfaceSelector: "[data-capture-surface]",
@@ -162,17 +137,10 @@ export class GsapEngine implements SketchEngine {
       window.setSlide = ( index: number ) => this.runtime?.setSlide( index );
     }
 
-    this.emit(
-      "ready",
-      undefined as any
-    );
+    this.becomeReady();
   }
 
-  destroy(): void {
-    // Cancel any still-pending init (see the field's note).
-    this.destroyed = true;
-
-    this.stopPerformanceLoop();
+  protected teardown(): void {
     unregisterServerCaptureController();
 
     if ( typeof window !== "undefined" &&
@@ -183,42 +151,24 @@ export class GsapEngine implements SketchEngine {
 
     this.runtime?.reset();
     this.runtime = null;
-
-    this._isReady = false;
-    this.container = null;
-    this.listeners.clear();
-  }
-
-  /* ---- options --------------------------------------------------- */
-
-  updateOptions( partial: Partial<SketchOption> ): void {
-    import( "@/lib/syncSketchOptions" ).then( ( {
-      setSketchOptions
-    } ) => setSketchOptions(
-      partial,
-      "react"
-    ) );
   }
 
   /* ---- playback -------------------------------------------------- */
 
   play(): void {
     this.runtime?.play();
-    this.perfSample.paused = false;
-    this.emitPerformanceSample();
+    this.reportPlaying();
   }
 
   pause(): void {
     this.runtime?.pause();
-    this.perfSample.paused = true;
-    this.emitPerformanceSample();
+    this.reportPaused();
   }
 
   stop(): void {
     this.runtime?.stop();
-    this.perfSample.paused = true;
-    this.perfSample.smoothedFps = 0;
-    this.emitPerformanceSample();
+    this.smoothedFps = 0;
+    this.reportStopped();
   }
 
   seek( frame: number ): void {
@@ -231,23 +181,13 @@ export class GsapEngine implements SketchEngine {
 
   /* ---- capture --------------------------------------------------- */
 
-  async captureFrame( frame: number ): Promise<string> {
-    await this.seekAndDraw( frame );
-
-    const canvas = await this.runtime?.rasterize();
-
-    if ( !canvas ) {
-      throw new Error( "GsapEngine: no canvas available for capture." );
-    }
-
-    return canvas.toDataURL( "image/png" );
-  }
-
   async seekAndDraw( frame: number ): Promise<void> {
-    this.runtime?.seekFrame( frame );
+    this.seek( frame );
 
-    // Allow one rAF for the GSAP-applied inline styles to lay out.
-    await new Promise( ( r ) => requestAnimationFrame( r ) );
+    // A DOM surface: the GSAP-applied inline styles have to lay out before
+    // the stage is rasterised, so this one does wait for a frame — raced
+    // against a timer, so a hidden tab slows the export rather than hanging it.
+    await nextFrame();
   }
 
   async resetToStart(): Promise<void> {
@@ -263,51 +203,6 @@ export class GsapEngine implements SketchEngine {
 
   endDeterministicCapture(): void {
     this.runtime?.exitRecordingMode();
-  }
-
-  getRecordingCapabilities(
-    _options: SketchOption,
-    _slideIndex?: number
-  ): RecorderCapabilities {
-    return {
-      supportsDeterministicCapture: true,
-      // DOM rasterisation is async, so the deterministic loop is the natural
-      // default for this engine (realtime is still offered).
-      defaultMode: "async-loop",
-      supportedFormats: [
-        "webm",
-        "gif",
-        "mp4"
-      ]
-    };
-  }
-
-  getTotalFrames(
-    options: SketchOption,
-    slideIndex?: number
-  ): number {
-    const {
-      animation
-    } = getEffectiveSlideSettings(
-      options,
-      slideIndex
-    );
-
-    return totalFramesFor( animation );
-  }
-
-  getFrameRate(
-    options: SketchOption,
-    slideIndex?: number
-  ): number {
-    const {
-      animation
-    } = getEffectiveSlideSettings(
-      options,
-      slideIndex
-    );
-
-    return resolveAnimation( animation ).framerate;
   }
 
   getCanvas(): HTMLCanvasElement | null {
@@ -337,101 +232,15 @@ export class GsapEngine implements SketchEngine {
     };
   }
 
-  /* ---- events ---------------------------------------------------- */
+  /* ---- performance ----------------------------------------------- */
 
-  on<E extends EngineEventName>(
-    event: E,
-    handler: ( payload: EngineEventMap[ E ] ) => void
-  ): void {
-    if ( !this.listeners.has( event ) ) {
-      this.listeners.set(
-        event,
-        new Set()
-      );
-    }
+  protected measureFps(): number {
+    const measured = this.runtime?.getMeasuredFps() ?? 0;
 
-    this.listeners.get( event )!.add( handler );
+    this.smoothedFps = this.smoothedFps > 0
+      ? this.smoothedFps * 0.6 + measured * 0.4
+      : measured;
 
-    if ( event === "performance" ) {
-      this.startPerformanceLoop();
-      this.emitPerformanceSample();
-    }
-  }
-
-  off<E extends EngineEventName>(
-    event: E,
-    handler: ( payload: EngineEventMap[ E ] ) => void
-  ): void {
-    this.listeners.get( event )?.delete( handler );
-
-    if ( event === "performance" && !this.hasPerformanceListeners() ) {
-      this.stopPerformanceLoop();
-    }
-  }
-
-  private emit<E extends EngineEventName>(
-    event: E,
-    payload: EngineEventMap[ E ]
-  ): void {
-    this.listeners.get( event )?.forEach( ( h ) => h( payload ) );
-  }
-
-  private hasPerformanceListeners(): boolean {
-    return ( this.listeners.get( "performance" )?.size ?? 0 ) > 0;
-  }
-
-  private startPerformanceLoop(): void {
-    if ( this.perfLoopId !== null ) {
-      return;
-    }
-
-    const tick = ( now: number ) => {
-      if ( !this.hasPerformanceListeners() ) {
-        this.perfLoopId = null;
-        return;
-      }
-
-      // The runtime already measures the achieved playback fps (actual frame
-      // steps per second, which tracks the configured framerate) over a window,
-      // so we just sample + lightly smooth it rather than timing rAF callbacks.
-      if ( now - this.perfSample.lastEmitTime >= 250 ) {
-        const measured = this.runtime?.getMeasuredFps() ?? 0;
-
-        this.perfSample.smoothedFps = this.perfSample.smoothedFps > 0
-          ? this.perfSample.smoothedFps * 0.6 + measured * 0.4
-          : measured;
-
-        this.perfSample.lastEmitTime = now;
-        this.emitPerformanceSample();
-      }
-
-      this.perfLoopId = requestAnimationFrame( tick );
-    };
-
-    this.perfLoopId = requestAnimationFrame( tick );
-  }
-
-  private stopPerformanceLoop(): void {
-    if ( this.perfLoopId === null ) {
-      return;
-    }
-
-    cancelAnimationFrame( this.perfLoopId );
-    this.perfLoopId = null;
-  }
-
-  private emitPerformanceSample(): void {
-    const payload: EnginePerformanceSample = {
-      fps: Number.isFinite( this.perfSample.smoothedFps )
-        ? this.perfSample.smoothedFps
-        : 0,
-      paused: this.perfSample.paused,
-      timestamp: performance.now()
-    };
-
-    this.emit(
-      "performance",
-      payload
-    );
+    return this.smoothedFps;
   }
 }
