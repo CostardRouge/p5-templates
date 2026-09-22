@@ -71,6 +71,34 @@ node scripts/test-frame-capture.mjs
 ╚════════════════════════════════════════════════════════╝
 ```
 
+### `bench-sketch.mjs`
+
+Times a sketch's frames headlessly, dumps them, and diffs two dumps — the tool for "is this shader change faster, and does it still draw the same picture".
+
+**Usage:**
+```bash
+# Production server first: the numbers of `next dev` include HMR and React overhead
+npm run build && npm start
+
+# Time 24 deterministic frames (after 4 warm-up frames) and keep their pixels
+node scripts/bench-sketch.mjs --sketch p5/sculpt/sculpt-v2-letter-relief \
+  --size 540x675 --frames 24 \
+  --options '{"interaction":{"mouse":{"enabled":false}}}' \
+  --dump tmp/bench/v2-before
+
+# ...change the shader, rebuild, restart, dump again, then compare pixel for pixel
+node scripts/bench-sketch.mjs --diff tmp/bench/v2-before tmp/bench/v2-after
+```
+
+**What it does:**
+- Opens the `/embed` route with the option delta in `#o=` and the canvas size in `#s=`
+- Renders frames through the engine's headless-capture controller (`window.__sketchCapture`), so frame *k* is the same pixels in every build
+- Reports min / median / mean ms per frame (the canvas read after each frame waits for the GPU) and the lit-pixel fraction
+- `--dump` writes `frame_NNNN.png` + raw `.rgba` per frame; `--diff` reports differing pixels, the largest channel delta and the lit fraction per frame
+- Fails (non-zero exit) on any console or page error — a GLSL compile failure only logs one, after which the canvas stays black — and on a run with no lit pixel
+
+**Software GL vs a real GPU:** by default the browser runs SwiftShader, which prices texture fetches higher than a GPU does relative to arithmetic; its numbers are before/after ratios, not desktop frame times. `--gpu` drops the software-GL flags to time the machine's own GPU. Headless Chromium parks the mouse at (0, 0), which the interaction layer reports as a real pointer: pass `interaction.mouse.enabled false` in `--options` for a sketch that reacts to the cursor.
+
 ### `create-placeholder-icons.mjs`
 
 Creates placeholder icons for PWA.
