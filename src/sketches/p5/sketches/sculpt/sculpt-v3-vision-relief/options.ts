@@ -57,6 +57,12 @@ export const formValues = {
   },
 
   material: {
+    // tube: the lit material · fringe: only the rainbow bands every tube
+    // carries at its silhouette — the artefact, kept on purpose.
+    look: "tube" as "tube" | "fringe",
+    fringeWidth: 1,
+    fringeGlow: 3,
+    fringeBody: 0.1,
     thickness: 0.14,
     thicknessLift: 0.115,
     fusion: 0.154,
@@ -489,8 +495,22 @@ export const formConfiguration: Record<string, any> = {
 
   material: {
     component: "nested-object",
-    label: "Material (tube)",
+    label: "Material",
     fields: {
+      look: {
+        label: "Look",
+        component: "select",
+        options: [
+          {
+            value: "tube",
+            label: "Tube — the lit material"
+          },
+          {
+            value: "fringe",
+            label: "Fringe — the silhouette bands alone"
+          }
+        ]
+      },
       thickness: {
         label: "Tube radius (cells)",
         component: "slider",
@@ -528,6 +548,27 @@ export const formConfiguration: Record<string, any> = {
       },
       taper: {
         label: "Taper (each end its own radius)",
+        component: "slider",
+        min: 0,
+        max: 1,
+        step: 0.01
+      },
+      fringeWidth: {
+        label: "Fringe width (0.25 wide → 12 a hairline)",
+        component: "slider",
+        min: 0.25,
+        max: 12,
+        step: 0.05
+      },
+      fringeGlow: {
+        label: "Fringe glow",
+        component: "slider",
+        min: 0,
+        max: 5,
+        step: 0.05
+      },
+      fringeBody: {
+        label: "Fringe body (0 = black inside the bands)",
         component: "slider",
         min: 0,
         max: 1,

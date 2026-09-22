@@ -197,7 +197,8 @@ const FRAGMENT = `
   }
 
   ${ braidShadingGlsl( {
-    maxSteps: MAX_STEPS
+    maxSteps: MAX_STEPS,
+    look: true
   } ) }
 
   ${ CAMERA_RIG_MAIN_GLSL }
@@ -922,6 +923,16 @@ sketch.draw( () => {
       uSpecPower: light.specPower ?? 42,
       uFresnelPower: light.fresnelPower ?? 2.2,
       uRimStrength: light.rimStrength ?? 0.6,
+      // The look: tube (the material above) or fringe (its rim term alone).
+      uLook: {
+        int: ( material.look ?? "tube" ) === "fringe" ? 1 : 0
+      },
+      uFringeWidth: Math.max(
+        material.fringeWidth ?? 1,
+        0.05
+      ),
+      uFringeGlow: material.fringeGlow ?? 3,
+      uFringeBody: material.fringeBody ?? 0.1,
       uShadowSoft: light.shadowSoftness ?? 0,
       // Fog starts at the front of the sphere, so the far side sinks into the
       // background — the depth cue that makes the volume read.
