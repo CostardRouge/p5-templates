@@ -33,6 +33,19 @@ const browser = await chromium.launch( {
 } );
 ```
 
+## Timing a change, and proving it draws the same picture
+
+`node scripts/bench-sketch.mjs --sketch p5/<category>/<name> --size 540x675
+--frames 24 --dump <dir>` renders deterministic frames through the engine's
+headless-capture controller (`window.__sketchCapture`: the recording clock is
+pinned to the frame index, so frame *k* is the same pixels in every build),
+reports ms per frame and the lit fraction, and keeps the pixels; `--diff <a>
+<b>` compares two dumps pixel for pixel. Bench a production build, pass
+`interaction.mouse.enabled false` in `--options` for anything that reacts to
+the pointer, and read SwiftShader's numbers as ratios (it over-prices texture
+fetches); `--gpu` is for a machine with a real one. `scripts/README.md` has
+the full usage.
+
 ## Gotchas
 
 - **`page.screenshot()` times out** — and it is the SwiftShader launch flags,

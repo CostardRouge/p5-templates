@@ -19,8 +19,10 @@ import {
   cellHash01,
   linkWeights,
   orderValues,
+  packBounds,
   packField,
   textUnits,
+  unpackBounds,
   unpackHeight,
   valueNoise2
 } from "../_mesh.js";
@@ -904,6 +906,170 @@ describe(
         ) ).toEqual( [
           ""
         ] );
+      }
+    );
+  }
+);
+
+describe(
+  "packBounds / unpackBounds",
+  () => {
+    const grid = buildGrid( {
+      cols: 12,
+      aspect: 0.8,
+      jitter: 0.3,
+      seed: 3
+    } );
+
+    function heightsFor( seed: number ) {
+      const heights = new Float32Array( grid.count );
+
+      for ( let n = 0; n < grid.count; n++ ) {
+        heights[ n ] = cellHash01(
+          n,
+          seed,
+          11
+        ) * 2.4 - 0.7;
+      }
+
+      return heights;
+    }
+
+    function blockExtreme(
+      heights: Float32Array, n: number, reach: number, pick: ( a: number, b: number ) => number
+    ) {
+      const i = n % grid.cols;
+      const j = Math.floor( n / grid.cols );
+      let best = heights[ n ];
+
+      for ( let dj = -reach; dj <= reach; dj++ ) {
+        for ( let di = -reach; di <= reach; di++ ) {
+          const ii = i + di;
+          const jj = j + dj;
+
+          if ( ii >= 0 && jj >= 0 && ii < grid.cols && jj < grid.rows ) {
+            best = pick(
+              best,
+              heights[ jj * grid.cols + ii ]
+            );
+          }
+        }
+      }
+
+      return Math.min(
+        HEIGHT_MAX,
+        Math.max(
+          HEIGHT_MIN,
+          best
+        )
+      );
+    }
+
+    it(
+      "decodes to a ceiling at or above the 5 × 5 max and a floor at or below the 5 × 5 min, each within one byte",
+      () => {
+        const heights = heightsFor( 5 );
+        const out = new Uint8Array( grid.count * 4 );
+        const step = ( HEIGHT_MAX - HEIGHT_MIN ) / 255;
+
+        packBounds(
+          grid,
+          heights,
+          out
+        );
+
+        for ( let n = 0; n < grid.count; n++ ) {
+          const {
+            top,
+            bottom
+          } = unpackBounds(
+            out,
+            n
+          );
+          const trueTop = blockExtreme(
+            heights,
+            n,
+            2,
+            Math.max
+          );
+          const trueBottom = blockExtreme(
+            heights,
+            n,
+            2,
+            Math.min
+          );
+
+          expect( top ).toBeGreaterThanOrEqual( trueTop - 1e-6 );
+          expect( top ).toBeLessThanOrEqual( trueTop + step + 1e-6 );
+          expect( bottom ).toBeLessThanOrEqual( trueBottom + 1e-6 );
+          expect( bottom ).toBeGreaterThanOrEqual( trueBottom - step - 1e-6 );
+          expect( out[ n * 4 + 3 ] ).toBe( 255 );
+        }
+      }
+    );
+
+    it(
+      "returns the sheet's clamped extremes, so a height past the packable range is bounded where it is drawn",
+      () => {
+        const heights = heightsFor( 9 );
+
+        heights[ 0 ] = 7;
+        heights[ 1 ] = -3;
+
+        const extremes = packBounds(
+          grid,
+          heights,
+          new Uint8Array( grid.count * 4 )
+        );
+
+        expect( extremes.max ).toBe( HEIGHT_MAX );
+        expect( extremes.min ).toBe( HEIGHT_MIN );
+
+        const rest = new Float32Array( grid.count ).fill( 0 );
+        const flat = packBounds(
+          grid,
+          rest,
+          new Uint8Array( grid.count * 4 )
+        );
+
+        expect( flat.max ).toBe( 0 );
+        expect( flat.min ).toBe( 0 );
+      }
+    );
+
+    it(
+      "honours the reach: reach 0 is the cell's own height",
+      () => {
+        const heights = heightsFor( 2 );
+        const out = new Uint8Array( grid.count * 4 );
+
+        packBounds(
+          grid,
+          heights,
+          out,
+          0
+        );
+
+        for ( let n = 0; n < grid.count; n += 7 ) {
+          const {
+            top,
+            bottom
+          } = unpackBounds(
+            out,
+            n
+          );
+          const own = Math.min(
+            HEIGHT_MAX,
+            Math.max(
+              HEIGHT_MIN,
+              heights[ n ]
+            )
+          );
+
+          expect( top ).toBeGreaterThanOrEqual( own - 1e-6 );
+          expect( bottom ).toBeLessThanOrEqual( own + 1e-6 );
+          expect( top - bottom ).toBeLessThan( 2 * ( HEIGHT_MAX - HEIGHT_MIN ) / 255 + 1e-6 );
+        }
       }
     );
   }

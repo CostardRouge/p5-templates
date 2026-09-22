@@ -37,6 +37,7 @@ import {
   spreadTargets,
   integrateHeights,
   packSheet,
+  packTops,
   sheetDriftAt,
   rateFor
 } from "../_sheet.js";
@@ -116,7 +117,9 @@ const FRAGMENT = `
   uniform int   uLinkMode;       // 0 four neighbours, 1 eight, 2 hex
   uniform float uSmoothK;        // smooth-union fillet
   uniform float uTaper;          // 0 = uniform tube, 1 = each end its own radius
-  uniform float uBoundR;         // widest primitive (box bound)
+  uniform float uBoundR;         // widest primitive + fillet + drift + slack (the box)
+  uniform sampler2D uTops;       // per node: the highest height within two cells (rounded up)
+  uniform float uSheetTop;       // the sheet's highest point this frame, world
 
   // ── Camera: an explicit basis, top-down and tilted ──
   uniform vec3  uRo;
@@ -130,6 +133,11 @@ const FRAGMENT = `
 
   // A bound must never read as a surface: kept above SURF_EPS.
   const float SLACK = 0.006;
+  // Thinner than twice the hit threshold is not drawn at all: anything within
+  // SURF_EPS of a near-zero axis counts as a hit whenever a march step happens
+  // to land there, so a link fading in below this rendered as a hairline that
+  // came and went with the step sequence (the v2 lesson, MIN_RADIUS).
+  const float MIN_RADIUS = ${ ( 2 * SURF_EPS ).toFixed( 4 ) };
 
   float smin(float a, float b, float k) {
     float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0);
@@ -174,6 +182,13 @@ const FRAGMENT = `
   float linkDist(vec3 p, vec4 a, vec2 cellB) {
     if (!inGrid(cellB)) { return EMPTY; }
 
+    // With both ends required and no rest tube, a link whose near end is
+    // below the threshold is dark whatever the far end reads: the gate is the
+    // lower of the two, smoothstep gives 0, both radii collapse to uTubeRest.
+    // Decided before the far node is fetched — on a resting sheet that is
+    // most of the fetches.
+    if (uLinkAny < 0.5 && uTubeRest <= MIN_RADIUS && a.w < uLinkThreshold) { return EMPTY; }
+
     vec4 b = nodeAt(cellB);
     float lo = min(a.w, b.w);
     float gate = uLinkAny > 0.5 ? max(a.w, b.w) : lo;
@@ -181,7 +196,7 @@ const FRAGMENT = `
     float ra = uTubeRest + s * (uTubeOn + uTubeLift * mix(lo, a.w, uTaper));
     float rb = uTubeRest + s * (uTubeOn + uTubeLift * mix(lo, b.w, uTaper));
 
-    if (ra <= 0.0005 && rb <= 0.0005) { return EMPTY; }
+    if (max(ra, rb) <= MIN_RADIUS) { return EMPTY; }
 
     return capsuleDist(p, a.xyz, b.xyz, ra, rb);
   }
@@ -189,7 +204,7 @@ const FRAGMENT = `
   float mapScene(vec3 p) {
     // Box bound around the whole sheet: outside it, the distance to it.
     vec3 lo = vec3(-1.0, -uBoundR, -uRowScale);
-    vec3 hi = vec3(uGrid.x, uHeightMax + uBoundR, uGrid.y * uRowScale);
+    vec3 hi = vec3(uGrid.x, uSheetTop + uBoundR, uGrid.y * uRowScale);
     vec3 q = max(lo - p, p - hi);
     float outside = length(max(q, 0.0));
 
@@ -198,6 +213,25 @@ const FRAGMENT = `
     vec2 c = vec2(floor(p.x), floor(p.z / uRowScale));
     vec2 f = vec2(p.x - c.x, p.z / uRowScale - c.y);
     float wall = min(min(f.x, 1.0 - f.x), min(f.y, 1.0 - f.y) * uRowScale);
+
+    // Above the highest node within two cells, plus the widest primitive a
+    // node THAT high can carry — radii grow with height, so a resting
+    // neighbourhood's ceiling sits at its bead, not at the sketch-wide
+    // maximum — plus the fillet and the slack, the vertical gap is a distance
+    // to everything the 3 × 3 scan could trace, and the scan is skipped for
+    // one texel. Nothing hangs below a bead either (heights are >= 0), so the
+    // same margin is a floor. The wall clamp still holds on both sides: what
+    // lies beyond the window is not in the ceiling.
+    vec2 cc = clamp(c, vec2(0.0), uGrid - 1.0);
+    float top = texture2D(uTops, (cc + 0.5) / uGrid).r;
+    float gateTop = smoothstep(uLinkThreshold, uLinkThreshold + uLinkFade, top);
+    float rTop = max(uBeadRest + uBeadLift * top, uTubeRest + gateTop * (uTubeOn + uTubeLift * top));
+    float airMargin = rTop + uSmoothK + SLACK;
+    float airTop = top * uHeightMax + airMargin;
+
+    if (p.y > airTop) { return max(min(p.y - airTop, wall + SLACK), SLACK); }
+    if (p.y < -airMargin) { return max(min(-airMargin - p.y, wall + SLACK), SLACK); }
+
     float d = EMPTY;
 
     for (int dj = -1; dj <= 1; dj++) {
@@ -209,7 +243,7 @@ const FRAGMENT = `
         vec4 n = nodeAt(cell);
         float br = uBeadRest + uBeadLift * n.w;
 
-        if (br > 0.0005) { d = join(d, length(p - n.xyz) - br); }
+        if (br > MIN_RADIUS) { d = join(d, length(p - n.xyz) - br); }
 
         // Each node owns its links east and south — and, when diagonals are
         // on, south-east and north-east. A hex row owns its diagonals only on
@@ -255,7 +289,8 @@ const FRAGMENT = `
 
   ${ braidShadingGlsl( {
     maxSteps: MAX_STEPS,
-    surfEps: SURF_EPS
+    surfEps: SURF_EPS,
+    look: true
   } ) }
 
   void main() {
@@ -310,6 +345,7 @@ const state = sketch.state( () => ( {
   ranks: null,
   spread: null,
   packed: null,
+  tops: null,
   driftX: null,
   driftZ: null,
   lastNow: null,
@@ -930,6 +966,7 @@ sketch.draw( () => {
     state.ranks = new Float32Array( n );
     state.spread = new Float32Array( n );
     state.packed = new Uint8Array( n * 4 );
+    state.tops = new Uint8Array( n );
     state.driftX = new Float32Array( n );
     state.driftZ = new Float32Array( n );
   }
@@ -1234,6 +1271,13 @@ sketch.draw( () => {
     state.driftZ
   );
 
+  // The air ceiling per node, and the sheet's real top for the box.
+  const tops = packTops(
+    sheet,
+    hs.heights,
+    state.tops
+  );
+
   // ── Palette / lighting / render ────────────────────────────────────────────
   const hueSpread = colors.hueSpread ?? 2;
   const hueCycles = Math.round( ( colors.hueSpeed ?? 0.5 ) * p.TAU * hueSpread );
@@ -1253,6 +1297,12 @@ sketch.draw( () => {
         data: state.packed,
         width: sheet.columns,
         height: sheet.rows
+      },
+      uTops: {
+        data: state.tops,
+        width: sheet.columns,
+        height: sheet.rows,
+        format: "luminance"
       }
     },
     uniforms: {
@@ -1288,6 +1338,7 @@ sketch.draw( () => {
         1
       ),
       uBoundR: maxRadius + driftAmplitude + 0.05,
+      uSheetTop: tops.max * heightMax,
       uRo: rig.ro,
       uFwd: rig.fwd,
       uRight: rig.right,
@@ -1314,6 +1365,16 @@ sketch.draw( () => {
       uSpecPower: light.specPower ?? 42,
       uFresnelPower: light.fresnelPower ?? 2.2,
       uRimStrength: light.rimStrength ?? 0.6,
+      // The look: tube (the material above) or fringe (its rim term alone).
+      uLook: {
+        int: ( material.look ?? "tube" ) === "fringe" ? 1 : 0
+      },
+      uFringeWidth: Math.max(
+        material.fringeWidth ?? 1,
+        0.05
+      ),
+      uFringeGlow: material.fringeGlow ?? 3,
+      uFringeBody: material.fringeBody ?? 0.1,
       uShadowSoft: light.shadowSoftness ?? 0,
       uFogDensity: camera.fog ?? 0,
       uFogStart: rig.dist - rig.extent,

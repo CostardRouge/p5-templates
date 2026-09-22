@@ -83,6 +83,30 @@ export const IRIDESCENT_GLSL = `
   }
 `;
 
+// The look switch a sketch may opt into (`braidShadingGlsl({ look: true })`):
+// `tube` is the material below, unchanged; `fringe` keeps only the artefact
+// every tube carries at its silhouette — the rainbow bands the fresnel slides
+// the hue through at grazing angles — and drops the lit body. The sketch sets
+// the four uniforms; a sketch that does not opt in gets the exact chunk it
+// always had (guarded by utils/__tests__/braidShader.test.ts).
+const LOOK_UNIFORMS_GLSL = `
+  uniform int   uLook;         // 0 = tube (the lit material), 1 = fringe (the silhouette bands alone)
+  uniform float uFringeWidth;  // exponent on the grazing term: 1 wide, 12 a hairline
+  uniform float uFringeGlow;   // gain of the band
+  uniform float uFringeBody;   // the body's floor (0 = black inside the bands)
+`;
+
+const FRINGE_BRANCH_GLSL = `
+    // The fringe look: the hue is the rim's own fresnel slide (base, above),
+    // the band alone lights it, the body keeps a floor. No diffuse, specular,
+    // occlusion or shadow — the artefact, kept on purpose.
+    if (uLook == 1) {
+      float band = pow(1.0 - clamp(dot(n, -rd), 0.0, 1.0), uFringeWidth);
+
+      return base * (uFringeBody + uFringeGlow * band);
+    }
+`;
+
 /**
  * Normal estimation, ambient occlusion, surface shading and the sphere-trace
  * loop — everything between "I have an SDF" and "I have a shaded pixel".
@@ -94,14 +118,18 @@ export const IRIDESCENT_GLSL = `
  * @param {object} [config]
  * @param {number} [config.maxSteps=96]   sphere-trace iterations per ray
  * @param {number} [config.surfEps=0.001] hit threshold (world units)
+ * @param {boolean} [config.look=false]   declare uLook / uFringe* and branch
+ *   shade() on them (see LOOK_UNIFORMS_GLSL); off, the chunk is unchanged
  * @returns {string} GLSL chunk
  */
 export function braidShadingGlsl( {
   maxSteps = 96,
-  surfEps = 0.001
+  surfEps = 0.001,
+  look = false
 } = {} ) {
   return `
   const float SURF_EPS = ${ surfEps.toFixed( 4 ) }; // hit threshold (world units)
+  ${ look ? LOOK_UNIFORMS_GLSL : "" }
 
   float mapScene(vec3 p);
   float nearestPipe(vec3 p);
@@ -167,7 +195,7 @@ export function braidShadingGlsl( {
       + k * uPipeHueShift;
 
     vec3 base = iridescent(phase + uShimmer * fres);
-
+    ${ look ? FRINGE_BRANCH_GLSL : "" }
     // Lighting — diffuse + a glossy spec for the wet-tube sheen.
     float diff = max(dot(n, uLightDir), 0.0);
     vec3  hlf = normalize(uLightDir - rd);
