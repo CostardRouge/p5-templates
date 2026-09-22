@@ -34,6 +34,7 @@ import {
   computeHeights,
   cursorField,
   linkWeights,
+  packBounds,
   packField,
   textUnits,
   valueNoise2,
@@ -97,6 +98,19 @@ import {
 // min, never smin: a smooth minimum dips below both operands and would put a
 // bound under the hit threshold (the flip-v3 lesson).
 //
+// ── The air above the sheet is a distance, not a march ──────────────────────
+// Everything the block scan traces has its endpoints within two cells of the
+// sample, so "the highest point within two cells, plus the widest radius and
+// the fillet" is a ceiling: a sample above it is at least that far from
+// anything the scan would find, and the scan is skipped for the price of one
+// texel (`uBounds`, packed by `packBounds` with the ceiling rounded up and the
+// floor rounded down). The lateral cell bound still applies in the air —
+// geometry three cells away is beyond the window — and the box itself is the
+// frame's real extremes, so on a resting sheet every ray reaches the plane in
+// a step or two instead of crawling down through the whole slab, cell by
+// cell, with the full scan at every step (540 × 675 under SwiftShader:
+// 2466 → 1412 ms a frame, the picture unchanged).
+//
 // ── The camera is parameters ─────────────────────────────────────────────────
 // utils/cameraRig.js: tilt, spin, distance, eye offset, target — one slider
 // each, so the binding system can drive any of them, plus whole-cycle motion
@@ -131,6 +145,8 @@ const FRAGMENT = `
   uniform float uCellBound;      // one cell: how far past its walls a step may go
   uniform float uSlabTop;        // y above which nothing exists
   uniform float uSlabBottom;     // y below which nothing exists
+  uniform sampler2D uBounds;     // per cell: R = highest, G = lowest height within two cells
+  uniform float uAirMargin;      // widest radius + fillet + slack, world
 
   ${ IRIDESCENT_GLSL }
 
@@ -141,6 +157,9 @@ const FRAGMENT = `
   // zero-radius axis would render as a hairline, and a height of 0 decodes
   // from 16 bits to a few 1e-6, not to 0.
   const float MIN_RADIUS = 0.002;
+  // An air bound must never read as a surface either: kept above SURF_EPS,
+  // and folded into uAirMargin on the CPU so the ceiling stays rigorous.
+  const float AIR_SLACK = 0.003;
 
   float smin(float a, float b, float k) {
     float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0);
@@ -252,6 +271,16 @@ const FRAGMENT = `
       min(local.y, 1.0 - local.y) * uCell.y
     );
     float bound = max(wall, 0.0) + uCellBound;
+
+    // Above the highest (or below the lowest) point within two cells, the
+    // vertical gap is a distance to everything the scan could find; the
+    // lateral bound still guards what lies beyond the window.
+    vec2 hb = texture2D(uBounds, (cellI + 0.5) / uGrid).xy;
+    float airTop = (HEIGHT_MIN + hb.x * HEIGHT_RANGE) * uHeight + uAirMargin;
+    float airBottom = (HEIGHT_MIN + hb.y * HEIGHT_RANGE) * uHeight - uAirMargin;
+
+    if (p.y > airTop) { return max(min(p.y - airTop, bound), AIR_SLACK); }
+    if (p.y < airBottom) { return max(min(airBottom - p.y, bound), AIR_SLACK); }
 
     float d = 1e9;
 
@@ -713,6 +742,7 @@ const state = sketch.state( () => ( {
   heights: null,
   field: null,
   links: null,
+  bounds: null,
   cursorTarget: null,
   cursorLag: null,
   fallOrders: []
@@ -748,6 +778,7 @@ function ensureGrid(
   state.heights = new Float32Array( grid.count );
   state.field = new Uint8Array( grid.count * 4 );
   state.links = new Uint8Array( grid.count * 4 );
+  state.bounds = new Uint8Array( grid.count * 4 );
   state.cursorTarget = new Float32Array( grid.count );
   state.cursorLag = new Float32Array( grid.count );
 
@@ -1075,6 +1106,14 @@ sketch.draw( () => {
     state.field
   );
 
+  // The air ceiling / floor per cell, and the sheet's real extremes for the
+  // box — after the cursor has had its say on the heights.
+  const extremes = packBounds(
+    grid,
+    state.heights,
+    state.bounds
+  );
+
   // ── Material, in world units derived from the cell ───────────────────────
   const cellX = ( 2 * aspect ) / grid.cols;
   const cellZ = 2 / grid.rows;
@@ -1090,7 +1129,11 @@ sketch.draw( () => {
     cellMin * ( material.fusion ?? 0.3 ),
     1e-4
   );
-  const height = relief.height ?? 0.7;
+  // Clamped once, so the slab, the air planes and the decode agree on the sign.
+  const height = Math.max(
+    relief.height ?? 0.7,
+    0
+  );
   const maxRadius = Math.max(
     bead,
     tubeRest + tubeGain * WEIGHT_MAX
@@ -1121,6 +1164,11 @@ sketch.draw( () => {
         data: state.links,
         width: grid.cols,
         height: grid.rows
+      },
+      uBounds: {
+        data: state.bounds,
+        width: grid.cols,
+        height: grid.rows
       }
     },
     uniforms: {
@@ -1143,14 +1191,11 @@ sketch.draw( () => {
       uTubeGain: tubeGain,
       uSmoothK: smoothK,
       uCellBound: cellMin,
-      uSlabTop: HEIGHT_MAX * Math.max(
-        height,
-        0
-      ) + maxRadius,
-      uSlabBottom: HEIGHT_MIN * Math.max(
-        height,
-        0
-      ) - maxRadius,
+      // The fillet can bulge a quarter of smoothK past the primitives; the
+      // whole of it goes into every bound.
+      uAirMargin: maxRadius + smoothK + 0.003,
+      uSlabTop: extremes.max * height + maxRadius + smoothK,
+      uSlabBottom: extremes.min * height - maxRadius - smoothK,
       ...cameraUniforms( basis ),
       uHueSpeed: hueSpread ? hueCycles / ( p.TAU * hueSpread ) : 0,
       uHueSpread: hueSpread,

@@ -2,6 +2,9 @@ import {
   hash01,
   valueNoise3
 } from "./_lattice.js";
+import {
+  windowMax
+} from "./_extremes.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // The sheet a "relief" sculpt runs on: a regular lattice of nodes in the plane,
@@ -651,6 +654,63 @@ export function unpackHeight(
   packed, k
 ) {
   return ( packed[ k * 4 ] * 256 + packed[ k * 4 + 1 ] ) / 65535;
+}
+
+// Scratch for packTops' window pass, sized on first use per sheet.
+let topsScratch = null;
+
+/**
+ * Pack, per node, the highest height within `reach` cells, as one byte
+ * rounded UP: the shader reads it as a ceiling over its 3 × 3 scan block
+ * (whose links end within two cells of the sample) and drops a ray straight
+ * to it instead of stepping a cell at a time through empty air. Heights are
+ * clamped to 0 → 1 like packSheet, so the ceiling covers the drawn height.
+ *
+ * @param {ReturnType<typeof buildSheet>} sheet
+ * @param {Float32Array} heights 0 → 1 per node
+ * @param {Uint8Array} out columns × rows bytes (a luminance texture)
+ * @param {number} [reach=2] cells each way
+ * @returns {{ max: number }} the clamped highest height on the sheet
+ */
+export function packTops(
+  sheet, heights, out, reach = 2
+) {
+  const {
+    columns,
+    rows
+  } = sheet;
+  const n = columns * rows;
+
+  if ( !topsScratch || topsScratch.length !== n ) {
+    topsScratch = new Float32Array( n );
+  }
+
+  const tops = windowMax(
+    heights,
+    columns,
+    rows,
+    reach,
+    topsScratch
+  );
+  let max = 0;
+
+  for ( let k = 0; k < n; k++ ) {
+    const top = clamp(
+      tops[ k ],
+      0,
+      1
+    );
+
+    out[ k ] = Math.ceil( top * 255 );
+
+    if ( top > max ) {
+      max = top;
+    }
+  }
+
+  return {
+    max
+  };
 }
 
 /** Whether both ends of a link (or either, `any`) clear the threshold. */

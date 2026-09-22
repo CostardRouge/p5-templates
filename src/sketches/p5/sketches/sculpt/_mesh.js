@@ -34,6 +34,11 @@
 // construction.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import {
+  windowMax,
+  windowMin
+} from "./_extremes.js";
+
 const TAU = Math.PI * 2;
 
 // Offsets are stored in cell units. A point never leaves the middle 90 % of
@@ -789,6 +794,101 @@ export function unpackHeight(
   hi, lo
 ) {
   return HEIGHT_MIN + ( ( hi * 256 + lo ) / 65535 ) * ( HEIGHT_MAX - HEIGHT_MIN );
+}
+
+// Scratch for packBounds' two window passes, sized on first use per grid.
+const boundsScratch = {
+  max: null,
+  min: null
+};
+
+/**
+ * Pack, per cell, the highest and lowest height within `reach` cells: the
+ * shader reads R as a ceiling and G as a floor for the air above and below
+ * its scan block, and skips the block scan while the sample is outside them.
+ * Rounded conservatively — the ceiling up, the floor down — so a decoded bound
+ * never lies inside the geometry; and clamped like packField, so a height
+ * beyond the packable range is bounded where it is drawn, not where it is.
+ *
+ * @param {object} grid
+ * @param {Float32Array} heights
+ * @param {Uint8Array} out count * 4 bytes (R = max, G = min, B unused, A = 255)
+ * @param {number} [reach=2] cells each way — the shader's 5 × 5 scan
+ * @returns {{ min: number, max: number }} the clamped extremes over the sheet
+ */
+export function packBounds(
+  grid, heights, out, reach = 2
+) {
+  const {
+    cols,
+    rows,
+    count
+  } = grid;
+  const range = HEIGHT_MAX - HEIGHT_MIN;
+
+  if ( !boundsScratch.max || boundsScratch.max.length !== count ) {
+    boundsScratch.max = new Float32Array( count );
+    boundsScratch.min = new Float32Array( count );
+  }
+
+  const tops = windowMax(
+    heights,
+    cols,
+    rows,
+    reach,
+    boundsScratch.max
+  );
+  const bottoms = windowMin(
+    heights,
+    cols,
+    rows,
+    reach,
+    boundsScratch.min
+  );
+  let min = HEIGHT_MAX;
+  let max = HEIGHT_MIN;
+
+  for ( let n = 0; n < count; n++ ) {
+    const top = clamp(
+      tops[ n ],
+      HEIGHT_MIN,
+      HEIGHT_MAX
+    );
+    const bottom = clamp(
+      bottoms[ n ],
+      HEIGHT_MIN,
+      HEIGHT_MAX
+    );
+
+    out[ n * 4 ] = Math.ceil( ( ( top - HEIGHT_MIN ) / range ) * 255 );
+    out[ n * 4 + 1 ] = Math.floor( ( ( bottom - HEIGHT_MIN ) / range ) * 255 );
+    out[ n * 4 + 2 ] = 0;
+    out[ n * 4 + 3 ] = 255;
+
+    if ( top > max ) {
+      max = top;
+    }
+    if ( bottom < min ) {
+      min = bottom;
+    }
+  }
+
+  return {
+    min,
+    max
+  };
+}
+
+/** The ceiling / floor a packed bounds quad decodes to (the shader's arithmetic). */
+export function unpackBounds(
+  packed, n
+) {
+  const range = HEIGHT_MAX - HEIGHT_MIN;
+
+  return {
+    top: HEIGHT_MIN + ( packed[ n * 4 ] / 255 ) * range,
+    bottom: HEIGHT_MIN + ( packed[ n * 4 + 1 ] / 255 ) * range
+  };
 }
 
 /**

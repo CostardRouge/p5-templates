@@ -19,6 +19,7 @@ import {
   liftRank,
   linkGate,
   packSheet,
+  packTops,
   rateFor,
   sheetDriftAt,
   sheetFrame,
@@ -810,6 +811,100 @@ describe(
           0.2,
           "both"
         ) ).toBe( true );
+      }
+    );
+  }
+);
+
+describe(
+  "packTops",
+  () => {
+    const sheet = buildSheet( {
+      columns: 12,
+      rows: 9,
+      layout: "hex",
+      jitter: 0.1,
+      seed: 4,
+      maxRadius: 0.2
+    } );
+    const n = sheet.columns * sheet.rows;
+
+    function blockMax(
+      heights: Float32Array, k: number, reach: number
+    ) {
+      const i = k % sheet.columns;
+      const j = Math.floor( k / sheet.columns );
+      let best = 0;
+
+      for ( let dj = -reach; dj <= reach; dj++ ) {
+        for ( let di = -reach; di <= reach; di++ ) {
+          const ii = i + di;
+          const jj = j + dj;
+
+          if ( ii >= 0 && jj >= 0 && ii < sheet.columns && jj < sheet.rows ) {
+            best = Math.max(
+              best,
+              Math.min(
+                1,
+                heights[ jj * sheet.columns + ii ]
+              )
+            );
+          }
+        }
+      }
+
+      return best;
+    }
+
+    it(
+      "packs a ceiling at or above the 5 × 5 max, within one byte, and reports the sheet's max",
+      () => {
+        const heights = new Float32Array( n );
+
+        for ( let k = 0; k < n; k++ ) {
+          heights[ k ] = ( ( k * 37 ) % 101 ) / 100;
+        }
+        heights[ 5 ] = 1.4;
+
+        const out = new Uint8Array( n );
+        const {
+          max
+        } = packTops(
+          sheet,
+          heights,
+          out
+        );
+
+        expect( max ).toBe( 1 );
+
+        for ( let k = 0; k < n; k++ ) {
+          const top = out[ k ] / 255;
+          const trueTop = blockMax(
+            heights,
+            k,
+            2
+          );
+
+          expect( top ).toBeGreaterThanOrEqual( trueTop - 1e-6 );
+          expect( top ).toBeLessThanOrEqual( trueTop + 1 / 255 + 1e-6 );
+        }
+      }
+    );
+
+    it(
+      "is all zero on a resting sheet",
+      () => {
+        const out = new Uint8Array( n ).fill( 9 );
+        const {
+          max
+        } = packTops(
+          sheet,
+          new Float32Array( n ),
+          out
+        );
+
+        expect( max ).toBe( 0 );
+        expect( out.every( ( v ) => v === 0 ) ).toBe( true );
       }
     );
   }
