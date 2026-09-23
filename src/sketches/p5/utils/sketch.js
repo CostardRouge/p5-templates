@@ -495,12 +495,24 @@ const sketch = {
           // changing the duration rescales the live preview and the recording
           // identically. At the default duration it equals the old real-seconds
           // value, so existing sketches are unchanged there.
-          await sketch._drawFn?.(
-            time.drawSeconds(),
-            sketch.getCanvasCenter(),
-            sketch.favoriteColors.purple,
-            p
-          );
+          try {
+            await sketch._drawFn?.(
+              time.drawSeconds(),
+              sketch.getCanvasCenter(),
+              sketch.favoriteColors.purple,
+              p
+            );
+          } catch( error ) {
+            // p5 1.x never awaited this async draw, so a throwing frame
+            // surfaced as an unhandled rejection and the next frame ran
+            // anyway. p5 2 awaits it and schedules the next frame only after,
+            // so one throw ended the loop for good — a sketch that throws
+            // while an asset is still arriving froze instead of healing.
+            // Report it the same way 1.x did and skip post-draw (as 1.x did).
+            Promise.reject( error );
+
+            return;
+          }
 
           events.handle( "post-draw" );
 

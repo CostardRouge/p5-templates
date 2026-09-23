@@ -1,10 +1,14 @@
 # p5 runtime — the 2.x upgrade, its compat layer, and the traps it left
 
-Read before touching `src/sketches/p5/utils/sketch.js` (`loadP5Class`), `assetLoaders.js`, text geometry (`string.js`, anything calling `textToPoints`/`textBounds`), curves, or before adding a font.
+Read before touching `src/sketches/p5/utils/sketch.js` (`loadP5Class`, the draw wrapper), `assetLoaders.js`, text geometry (`string.js`, anything calling `textToPoints`/`textBounds`), curves, or before adding a font.
 
 ## The compat layer lives in one place, on purpose
 
 2026-09-23 — p5 is 2.x (`^2.3.0`, was 1.x). Sketches were not rewritten for it: `loadP5Class()` patches the class once at load so 1.x idioms keep working. **Graphics backfill**: 2.x `p5.Graphics` delegates only a subset of `p5.prototype` (no `createVector`, `constrain`, `dist`, no constants like `LEFT`/`WORD`); every missing member is copied onto `Graphics.prototype`. The sketch-layer proxy (`nestedSketch.js`, see `architecture.md`) depends on this — its "a Graphics carries every `p5.prototype` method" premise is only true because of the backfill. **`Color.levels`** (0–255 RGBA, removed in 2.x, destructured by ~20 sketches) is a getter over `_array`, memoised per instance. **`p5.disableFriendlyErrors = true`**: 2.x zod-validates the arguments of *every* prototype call; that dominated draw-loop profiles (a 2D sketch ran at ~half its 1.x frame rate). **How to apply**: fix a 2.x incompatibility in `loadP5Class` if it is generic, in the sketch if it is not; never re-enable friendly errors globally.
+
+## A throwing frame must not end the loop
+
+2026-09-23 — 2.x awaits the async draw and schedules the next frame only afterwards, so one throw froze a sketch for good; 1.x never awaited it, so the throw was an unhandled rejection and the next frame ran. The engine's `p.draw` catches, re-reports as a rejection and skips `post-draw` — 1.x behaviour. Verified: a sketch dereferencing a failed image throws once per frame (1,464 times in 25 s) instead of once. **How to apply**: keep the catch; a sketch that throws while an asset is still arriving then heals on the next frame.
 
 ## Loaders are promises; the wrappers hand out placeholders
 

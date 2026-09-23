@@ -87,7 +87,7 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 - A 3D vector is one `vector3d` field kind storing `{ x, y, z }`, edited in an orbitable box: four presentations were built, compared live and cut to that one, and p5 pads set `yDown` → `studio-ui.md`, `docs/vector3d-control.md`.
 - A control whose shape is genuinely open is settled by building the variants, publishing them bound to ONE value, and letting the maintainer drive them — not by arguing in a document → `studio-ui.md`.
 - A sketch's mutable module-level state goes through `sketch.state()` (one record per page/layer instance, drift-tested), GPU helpers keep GL resources per surface, and layer imports are serialised because there is one registration capture → `architecture.md`, `sketches.md`.
-- p5 is 2.x; 1.x idioms keep working through one compat layer in `loadP5Class` (Graphics backfill, `Color.levels`, friendly errors off); text geometry reads `font.data` and takes its size from the renderer, curves are `splineVertex` with `ends: EXCLUDE`, and fonts must parse under Typr → `p5-runtime.md`.
+- p5 is 2.x; 1.x idioms keep working through one compat layer in `loadP5Class` (Graphics backfill, `Color.levels`, friendly errors off) plus a draw wrapper that survives a throwing frame; text geometry reads `font.data` and takes its size from the renderer, curves are `splineVertex` with `ends: EXCLUDE`, and fonts must parse under Typr → `p5-runtime.md`.
 - A `sculpt` is a seeded lattice (rest points + k-nearest links, shared `_lattice.js`) that a wave (shared `_wave.js`) lays tubes on: links from rest positions, the wave in the sculpture's own frame, no p5 noise, the cursor the only state → `sketches.md`.
 - A relief sculpt is a GRID sheet (`_sheet.js`) raymarched by domain repetition with a per-node data texture, so it has no link ceiling; the camera's silhouette is a SURFACE traced from landmarks (`_silhouette.js`), tubes only join lifted neighbours (the O stays an O), and the dynamics run on dt in seconds → `sketches.md`.
 - A grid sculpt's empty air is a distance, not a march: a per-cell 5 × 5 ceiling texture (`_extremes.js`) lets a ray drop to the sheet for one texel, the wall clamp stays, the margin holds the radius + the whole fillet + the slack; the exact `smin` skip for the uniform-array lattices measured SLOWER and is not shipped → `sketches.md`.
@@ -121,7 +121,7 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 | --- | --- |
 | `docs/memory/architecture.md` | The engine abstraction, feature flags, `next.config.ts`, bundling, the Prisma models |
 | `docs/memory/sketches.md` | Adding, renaming or editing a sketch; the generated catalogue; sketch routes |
-| `docs/memory/p5-runtime.md` | The p5 2.x compat layer in `loadP5Class`, `assetLoaders.js`, text geometry (`textToPoints`/`textBounds`), curves, adding a font |
+| `docs/memory/p5-runtime.md` | The p5 2.x compat layer in `loadP5Class`, the draw wrapper, `assetLoaders.js`, text geometry (`textToPoints`/`textBounds`), curves, adding a font |
 | `docs/memory/recording.md` | Capture, the BullMQ queue, Playwright/FFmpeg, multi-slide output |
 | `docs/memory/assets.md` | Uploading a file, asset paths, the blob registry, the p5 image cache |
 | `docs/memory/tooling.md` | TypeScript, ESLint, git hooks, merge drivers, `.gitignore` traps |
