@@ -77,23 +77,23 @@ class V {
 
 // Deterministic fake font: point count grows as sampleFactor shrinks, geometry
 // depends on (text, size, sampleFactor) so distinct params give distinct clouds.
+// Mirrors the p5 v2 Font shape: readiness flag on `data`, family on `name`,
+// and textToPoints reads the size from the renderer state (graphics.textSize)
+// instead of a positional argument.
 const font = {
-  font: {
-    names: {
-      fontFamily: {
-        en: "test"
-      }
-    }
-  },
+  name: "test",
+  data: {},
   textToPoints: (
     text: string,
     _x: number,
     _y: number,
-    size: number,
     {
-      sampleFactor
-    }: { sampleFactor: number }
+      sampleFactor,
+      graphics
+    }: { sampleFactor: number;
+      graphics: { _textSize: number } }
   ) => {
+    const size = graphics._textSize;
     const count = Math.max(
       2,
       Math.round( 5 / sampleFactor )
@@ -128,7 +128,18 @@ const p = {
   TAU: Math.PI * 2,
   lerp: (
     a: number, b: number, t: number
-  ) => a + ( b - a ) * t
+  ) => a + ( b - a ) * t,
+  // Renderer state stubs used by string.textToPoints' p5 v2 compat path.
+  LEFT: "left",
+  BASELINE: "alphabetic",
+  _textSize: 0,
+  push: () => {},
+  pop: () => {},
+  textFont: () => {},
+  textAlign: () => {},
+  textSize: ( v: number ) => {
+    p._textSize = v;
+  }
 };
 
 jest.mock(

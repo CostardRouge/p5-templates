@@ -120,7 +120,7 @@ function ensureLayout(
   const fontKey = textOptions.font ?? "martian";
   const font = string.fonts[ fontKey ] ?? string.fonts.martian;
 
-  if ( !font?.font ) {
+  if ( !font?.data ) {
     return null;
   }
 

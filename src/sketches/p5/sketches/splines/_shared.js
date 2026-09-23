@@ -32,7 +32,7 @@ const TWO_PI = Math.PI * 2;
  *   - quadratic  → quadratic Béziers whose anchors are the edge midpoints and
  *                  whose control points are the original points themselves, so
  *                  there is nothing extra to invent.
- *   - catmull-rom → p5's built-in `curveVertex()` (a Catmull-Rom spline). You
+ *   - catmull-rom → p5's built-in `splineVertex()` (a Catmull-Rom spline). You
  *                  only feed it the points to pass through; p5 derives the
  *                  tangents internally.
  */
@@ -289,7 +289,7 @@ function chaikinStepFlat(
 }
 
 /**
- * Emit a Catmull-Rom spline through `points` using p5's `curveVertex()`.
+ * Emit a Catmull-Rom spline through `points` using p5's `splineVertex()`.
  * Caller is responsible for stroke / fill styling.
  */
 export function emitCatmullRom(
@@ -297,39 +297,60 @@ export function emitCatmullRom(
 ) {
   const p = getP5();
   const count = points.length;
+  // p5 2 replaced curveVertex()/curveTightness() with splineVertex() and
+  // spline properties. `ends: EXCLUDE` keeps 1.x semantics — the first and
+  // last vertices are control points only — so the duplicated end points
+  // below still shape the tangents exactly as before.
+  const previousTightness = p.splineProperty( "tightness" );
+  const previousEnds = p.splineProperty( "ends" );
 
-  p.curveTightness( tension );
+  p.splineProperty(
+    "tightness",
+    tension
+  );
+  p.splineProperty(
+    "ends",
+    p.EXCLUDE
+  );
   p.beginShape();
 
   if ( closed ) {
     for ( let i = -1; i <= count + 1; i++ ) {
       const v = points[ ( i % count + count ) % count ];
 
-      p.curveVertex(
+      p.splineVertex(
         v.x,
         v.y
       );
     }
   } else {
-    p.curveVertex(
+    p.splineVertex(
       points[ 0 ].x,
       points[ 0 ].y
     );
 
     for ( const v of points ) {
-      p.curveVertex(
+      p.splineVertex(
         v.x,
         v.y
       );
     }
 
-    p.curveVertex(
+    p.splineVertex(
       points[ count - 1 ].x,
       points[ count - 1 ].y
     );
   }
 
   p.endShape();
+  p.splineProperty(
+    "tightness",
+    previousTightness
+  );
+  p.splineProperty(
+    "ends",
+    previousEnds
+  );
 }
 
 /**
@@ -349,6 +370,11 @@ export function emitQuadraticMidpoint(
     ( a.y + b.y ) / 2
   );
 
+  // p5 2 replaced quadraticVertex() with order-2 Bézier segments: after an
+  // anchor vertex, each bezierVertex() pair is (control, anchor).
+  const previousOrder = p.bezierOrder();
+
+  p.bezierOrder( 2 );
   p.beginShape();
 
   if ( closed ) {
@@ -369,9 +395,11 @@ export function emitQuadraticMidpoint(
         points[ ( i + 1 ) % count ]
       );
 
-      p.quadraticVertex(
+      p.bezierVertex(
         ctrl.x,
-        ctrl.y,
+        ctrl.y
+      );
+      p.bezierVertex(
         anchor.x,
         anchor.y
       );
@@ -391,9 +419,11 @@ export function emitQuadraticMidpoint(
         points[ i + 1 ]
       );
 
-      p.quadraticVertex(
+      p.bezierVertex(
         ctrl.x,
-        ctrl.y,
+        ctrl.y
+      );
+      p.bezierVertex(
         anchor.x,
         anchor.y
       );
@@ -406,6 +436,8 @@ export function emitQuadraticMidpoint(
 
     p.endShape();
   }
+
+  p.bezierOrder( previousOrder );
 }
 
 /**

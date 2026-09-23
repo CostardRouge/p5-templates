@@ -234,7 +234,8 @@ export function getCapMesh(
   }
 
   const mesh = g.buildGeometry( () => {
-    g.beginShape( p.TESS );
+    // p5 v2 removed TESS; the default shape mode tessellates automatically.
+    g.beginShape();
 
     const outer = geometry.contours[ 0 ];
 
@@ -299,7 +300,8 @@ export function drawExtrudedGlyph(
   );
 
   // Top cap (with holes).
-  g.beginShape( p.TESS );
+  // p5 v2 removed TESS; the default shape mode tessellates automatically.
+  g.beginShape();
 
   const outer = geometry.contours[ 0 ];
 
@@ -395,7 +397,8 @@ export function fillOutline(
     return;
   }
 
-  g.beginShape( p.TESS );
+  // p5 v2 removed TESS; the default shape mode tessellates automatically.
+  g.beginShape();
 
   const outer = geometry.contours[ 0 ];
 

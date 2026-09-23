@@ -20,7 +20,7 @@ sketch.draw( () => {
   const text = "Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit";
   const font = string.fonts.martian;
 
-  if ( !font?.font ) {
+  if ( !font?.data ) {
     return;
   }
 
@@ -44,7 +44,7 @@ sketch.draw( () => {
     cache.key(
       horizontalMargin,
       verticalMargin,
-      font?.font,
+      font?.name,
       text
     ),
     () => {
@@ -86,7 +86,8 @@ sketch.draw( () => {
 
         result.push( {
           text: currentBlock,
-          box: font?.textBounds(
+          box: string.textBounds(
+            font,
             paddedBlock,
             p.width * horizontalMargin,
             p.height * verticalMargin,

@@ -505,11 +505,12 @@ function getMask( cfg ) {
   const font = string.fonts[ cfg.fontName ] ?? string.fonts.sans;
 
   // Font still loading: no mask, no caching of the miss.
-  if ( !font?.font ) {
+  // p5 v2: glyph data readiness lives on `font.data` (was `font.font`).
+  if ( !font?.data ) {
     return null;
   }
 
-  const fontFamily = font.font?.names?.fontFamily?.en || cfg.fontName;
+  const fontFamily = font?.name || font?.face?.family || cfg.fontName;
   const key = [
     cfg.unit,
     fontFamily,

@@ -156,7 +156,7 @@ function ensureLayout( {
   const size = textCfg.size ?? 120;
   const lineHeight = size * ( textCfg.lineHeight ?? 1.25 );
   const maxWidth = ( textCfg.maxWidth ?? 0.8 ) * p.width;
-  const fontFamily = font?.font?.names?.fontFamily?.en || "unknown";
+  const fontFamily = font?.name || font?.face?.family || "unknown";
   const key = [
     content,
     fontFamily,
@@ -176,7 +176,7 @@ function ensureLayout( {
     return;
   }
 
-  if ( !font?.font ) {
+  if ( !font?.data ) {
     // Font not loaded yet — try again next frame instead of caching an empty
     // layout.
     return;
@@ -245,7 +245,7 @@ function drawBackgroundText( {
   size,
   activeAlpha
 } ) {
-  if ( !font?.font || ( textCfg.visible ?? true ) === false ) {
+  if ( !font?.data || ( textCfg.visible ?? true ) === false ) {
     return;
   }
 
@@ -275,11 +275,15 @@ function drawBackgroundText( {
   words.forEach( (
     word, index
   ) => {
+    // p5 v2: size comes from the renderer state set above; a 4th
+    // positional number would be treated as a wrap width.
     const bounds = font.textBounds(
       word.text,
       0,
       0,
-      size
+      {
+        graphics: p
+      }
     );
     const cx = bounds.x + bounds.w / 2;
     const cy = bounds.y + bounds.h / 2;

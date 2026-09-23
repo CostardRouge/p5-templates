@@ -459,7 +459,7 @@ export default function drawMontageTitle(
   const p = getP5();
   const font = getFont( title.font );
 
-  if ( !font?.font ) {
+  if ( !font?.data ) {
     return; // font still loading
   }
 
