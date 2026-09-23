@@ -131,6 +131,7 @@ export const sketchModuleLoaders: Record<string, SketchModuleLoader> = {
   "p5:metaballs/metaballs-v2-marching-squares": () => import( "@/p5/sketches/metaballs/metaballs-v2-marching-squares/index.js" ),
   "p5:metaballs/metaballs-v3-blobs": () => import( "@/p5/sketches/metaballs/metaballs-v3-blobs/index.js" ),
   "p5:metaballs/metaballs-v4-contours": () => import( "@/p5/sketches/metaballs/metaballs-v4-contours/index.js" ),
+  "p5:midi/pad-rack-v1-launchkey": () => import( "@/p5/sketches/midi/pad-rack-v1-launchkey/index.js" ),
   "p5:neon-graffiti": () => import( "@/p5/sketches/neon-graffiti/index.js" ),
   "p5:neon/neon-v0-legacy": () => import( "@/p5/sketches/neon/neon-v0-legacy/index.js" ),
   "p5:neon/neon-v1-graffiti": () => import( "@/p5/sketches/neon/neon-v1-graffiti/index.js" ),

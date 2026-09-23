@@ -172,3 +172,21 @@ Measured headless (SwiftShader, 240×300 at resolution 0.5, 24 columns, tilt 0, 
 ## `snapKeys` / `excludeKeys`: one matching rule, in `slides/keyMatch.js`
 
 2026-08-30 — The breakdown's key lists and the montage's `lerpParams` snap check now share `matchesKeyList` (`src/sketches/p5/utils/slides/keyMatch.js`, re-exported from `breakdown/deriveSteps.js` for existing importers). An entry matches a leaf by **full dotted path, bare leaf name, or ancestor path** — the ancestor rule is new and is what makes "colors" a legal entry covering `colors.*`. Before it, a group name pruned the step walk in `deriveSteps` (which tests each node on the way down) but was silently ignored by `startValues` and by `lerpParams` (both of which only ever see leaf paths), so a group typed into `excludeKeys` dropped the step yet still animated the values. A bare mid-path segment is deliberately *not* an ancestor match ("cell" does not cover `grid.cell.size`): a group is addressed by its path. **How to apply**: any new consumer of a user-supplied key list imports this helper rather than re-implementing the two-line comparison — that is how the three copies drifted.
+
+## A field can be a button, and a select can be a row of them
+
+2026-09-23 — `component: "button"` is a field with no value: `effect: { kind,
+target, … }` names ONE ordinary write to another field by sketch-relative
+path — `set` a value, `toggle` a boolean, `cycle` a list, `randomize` from
+the target's own range, `reset` to its declared `default` (else the loaded
+value). Decided against "a named callback into the sketch": nothing in the
+engine is callable from the form, every existing one-shot (`Randomize…`,
+the reset arrow, learn) is already a `setValue`, and a write reaches the
+document, the export and `/embed` like any hand edit, so no capture policy is
+needed. `select` gains `display: "buttons"` — every option as a pressed/unpressed
+button in the bar, wrapping on a phone — for a short list a performer switches
+between. **How to apply**: `randomize`/`reset` need the target's config, which
+`FieldRenderer` reads through `SketchFormConfigProvider` (`useSketchFormConfig`)
++ `findFieldConfig` (follows nested groups and the LIVE conditional branch); a
+button outside that provider is a no-op. The pads that press these live in
+`docs/memory/interaction-bindings.md`.

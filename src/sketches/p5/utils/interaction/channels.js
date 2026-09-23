@@ -35,7 +35,7 @@ import {
   AUDIO_BANDS
 } from "./sources.js";
 import {
-  clamp01, buildChannelsFromDebug, midiControlChannels
+  clamp01, buildChannelsFromDebug, midiControlChannels, midiNoteChannels
 } from "./channelsAdapter.js";
 import {
   gestureChannelValues
@@ -190,7 +190,10 @@ function _collectMidiChannels(
     midiControlChannels(
       _interaction.getMidiControls(),
       _interaction.getMidiLastControl()
-    )
+    ),
+    // One `midi.note<n>` per note ever hit — the pads. Optional-called: an
+    // older handler build without the getter simply publishes no pads.
+    midiNoteChannels( _interaction.getMidiNoteLevels?.() )
   );
 }
 

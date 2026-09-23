@@ -178,5 +178,93 @@ describe(
         ) ).toEqual( [] );
       }
     );
+
+    it(
+      "lays a declared mapping over the derived one, key by key",
+      () => {
+        const config = {
+          hiss: {
+            component: "checkbox",
+            binding: {
+              control: "pad.9",
+              mapping: {
+                mode: "toggle"
+              }
+            }
+          }
+        } as unknown as Record<string, FieldConfig>;
+
+        const [
+          declared
+        ] = collectDeclaredBindings(
+          config,
+          noValues
+        );
+        const mapping = declared.mapping as Record<string, unknown>;
+
+        // The pad flips the layer instead of holding it down…
+        expect( mapping.mode ).toBe( "toggle" );
+        // …and the threshold the template derived is still there.
+        expect( mapping.threshold ).toBe( 0.5 );
+      }
+    );
+
+    it(
+      "declares nothing for a select laid out as buttons, or for a button — the pads own those",
+      () => {
+        // An enum binding folds ONE continuous channel onto the option list;
+        // a pad row is many channels, one per option, driven elsewhere.
+        const config = {
+          effect: {
+            component: "select",
+            display: "buttons",
+            options: [
+              {
+                label: "A",
+                value: "a"
+              },
+              {
+                label: "B",
+                value: "b"
+              }
+            ],
+            binding: {
+              control: "pad.1"
+            }
+          },
+          reset: {
+            component: "button",
+            effect: {
+              kind: "reset",
+              target: "effect"
+            },
+            binding: {
+              control: "pad.9"
+            }
+          },
+          picker: {
+            component: "select",
+            options: [
+              {
+                label: "A",
+                value: "a"
+              }
+            ],
+            binding: {
+              control: "knob.1"
+            }
+          }
+        } as unknown as Record<string, FieldConfig>;
+
+        const declared = collectDeclaredBindings(
+          config,
+          noValues
+        );
+
+        expect( declared.map( ( entry ) => entry.target ) ).toEqual( [
+          "picker"
+        ] );
+      }
+    );
   }
 );

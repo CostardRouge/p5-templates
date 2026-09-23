@@ -272,6 +272,13 @@ export const MIDI_CC_PREFIX = "midi.cc";
 // that exists before any CC has arrived, so it is the only one in the manifest.
 export const MIDI_CC_LAST_ID = "midi.ccLast";
 
+// The channel id prefix for a single MIDI note: `midi.note96` is note 96 — on a
+// Launchkey's DAW port, the first pad. Minted at runtime like the CC channels,
+// one per note actually received, by channelsAdapter.midiNoteChannels. A pad
+// publishes its velocity while held and 0 after release, so it is a scalar
+// that a boolean binding gates or toggles on, and that a button fires on.
+export const MIDI_NOTE_PREFIX = "midi.note";
+
 // The getAudio().bands keys exposed as `audio.<band>` scalar channels.
 export const AUDIO_BANDS = [
   "sub",

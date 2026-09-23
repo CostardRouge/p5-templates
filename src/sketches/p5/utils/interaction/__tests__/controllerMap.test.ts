@@ -10,6 +10,8 @@ import {
   CONTROLLER_MAPS,
   controlForChannel,
   controllerMapFor,
+  padNoteFor,
+  padSequence,
   portRequiresArming,
   resolveControl
 } from "../controllerMap.js";
@@ -111,6 +113,35 @@ describe(
     );
 
     it(
+      "numbers the pads by PANEL position, so pad.1 is the same pad on both ports",
+      () => {
+        // Top-left pad: note 40 in the drum layout, note 96 in the session one.
+        expect( resolveControl(
+          MIDI_PORT,
+          "pad.1"
+        ) ).toBe( "midi.note40" );
+        expect( resolveControl(
+          DAW_PORT,
+          "pad.1"
+        ) ).toBe( "midi.note96" );
+        // Bottom row starts at pad.9 — 112, not 104, which is a round pad the
+        // Mini does not have.
+        expect( resolveControl(
+          DAW_PORT,
+          "pad.9"
+        ) ).toBe( "midi.note112" );
+        expect( resolveControl(
+          DAW_PORT,
+          "pad.16"
+        ) ).toBe( "midi.note119" );
+        expect( resolveControl(
+          DAW_PORT,
+          "pad.17"
+        ) ).toBeNull();
+      }
+    );
+
+    it(
       "returns null for an unknown port, an unknown control, or a bad argument",
       () => {
         expect( resolveControl(
@@ -185,6 +216,128 @@ describe(
         expect( controlForChannel(
           MIDI_PORT,
           "audio.bass"
+        ) ).toBeNull();
+      }
+    );
+  }
+);
+
+describe(
+  "padSequence",
+  () => {
+    it(
+      "hands back consecutive pads from the named one, in reading order",
+      () => {
+        expect( padSequence(
+          DAW_PORT,
+          "pad.1",
+          3
+        ) ).toEqual( [
+          "midi.note96",
+          "midi.note97",
+          "midi.note98"
+        ] );
+        // The bottom row follows the top one without a gap in pad numbering.
+        expect( padSequence(
+          DAW_PORT,
+          "pad.7",
+          4
+        ) ).toEqual( [
+          "midi.note102",
+          "midi.note103",
+          "midi.note112",
+          "midi.note113"
+        ] );
+      }
+    );
+
+    it(
+      "reads a bare \"pad\" as the first pad",
+      () => {
+        expect( padSequence(
+          MIDI_PORT,
+          "pad",
+          2
+        ) ).toEqual( padSequence(
+          MIDI_PORT,
+          "pad.1",
+          2
+        ) );
+      }
+    );
+
+    it(
+      "truncates at the last pad instead of wrapping",
+      () => {
+        expect( padSequence(
+          DAW_PORT,
+          "pad.15",
+          4
+        ) ).toEqual( [
+          "midi.note118",
+          "midi.note119"
+        ] );
+      }
+    );
+
+    it(
+      "returns null for an unknown port, a non-pad control or a bad count",
+      () => {
+        expect( padSequence(
+          "Some Other Controller",
+          "pad.1",
+          8
+        ) ).toBeNull();
+        expect( padSequence(
+          DAW_PORT,
+          "knob.1",
+          8
+        ) ).toBeNull();
+        expect( padSequence(
+          DAW_PORT,
+          "pad.1",
+          0
+        ) ).toBeNull();
+      }
+    );
+  }
+);
+
+describe(
+  "padNoteFor",
+  () => {
+    it(
+      "gives the note a pad answers to, which is also the note that lights it",
+      () => {
+        expect( padNoteFor(
+          DAW_PORT,
+          "pad.1"
+        ) ).toBe( 96 );
+        expect( padNoteFor(
+          DAW_PORT,
+          "pad.16"
+        ) ).toBe( 119 );
+        expect( padNoteFor(
+          MIDI_PORT,
+          "pad"
+        ) ).toBe( 40 );
+      }
+    );
+
+    it(
+      "returns null off the grid, for a knob, or on an unknown port",
+      () => {
+        expect( padNoteFor(
+          DAW_PORT,
+          "pad.17"
+        ) ).toBeNull();
+        expect( padNoteFor(
+          DAW_PORT,
+          "knob.1"
+        ) ).toBeNull();
+        expect( padNoteFor(
+          "Some Other Controller",
+          "pad.1"
         ) ).toBeNull();
       }
     );

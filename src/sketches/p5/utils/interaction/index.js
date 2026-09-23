@@ -33,6 +33,15 @@ import {
   resolveAssetURL
 } from "@/lib/assets/resolveAssetURL";
 import {
+  getPadLeds
+} from "@/lib/padLedBridge";
+import {
+  padNoteFor, portRequiresArming
+} from "@/p5/utils/interaction/controllerMap.js";
+import {
+  desiredPadLeds, padLedDiff, padLedsOff
+} from "@/p5/utils/interaction/padLeds.js";
+import {
   ensurePointerTracking,
   removePointerTracking,
   getRawMouse,
@@ -229,6 +238,12 @@ let _gyroPermissionListener = null;
 let _midiInitialized = false;
 let _midiAccess = null;
 const _midiNotes = new Map(); // noteNumber → velocity
+// The LEVEL of every note the controller has sent since the last reset:
+// noteNumber → velocity while held, 0 once released. Distinct from _midiNotes
+// (which forgets a released note, because the spatial fold only wants what is
+// down) — a pad channel must publish its falling edge, or a trigger listening
+// for the next press never re-arms. Read by channels.js as `midi.note<n>`.
+const _midiNoteLevels = new Map(); // noteNumber → level (0–127)
 // Held control-change state: ccNumber → raw value (0–127). Kept exactly like
 // _midiNotes (filled by _onMidiMessage, cleared on reset / device switch /
 // dispose) and read by channels.js, which normalizes it to 0..1 scalars.
@@ -245,6 +260,20 @@ let _midiDeviceId = "";
 // input: with two ports open there is no single name to answer, and a map
 // applied to the wrong one would silently address the wrong knob.
 let _midiDeviceName = "";
+// The OUTPUT port paired with that input — same name on a Launchkey — through
+// which the pads are lit and the DAW port is armed. Null while listening to
+// every input: no single port to arm, and the pads of the wrong one would
+// light. Everything below it is what this layer owes the hardware on the way
+// out: a DAW port left armed after the tab closes keeps the keyboard in DAW
+// mode until it is power-cycled, and a pad left lit stays lit.
+let _midiOutput = null;
+let _midiArmed = false;
+// note → { color, channel } as last sent, so a frame that changes nothing
+// sends nothing (see padLeds.js), and a teardown knows what to switch off.
+let _ledSent = {};
+// The wish list identity and port the last flush resolved against.
+let _ledSeen = null;
+let _ledPort = "";
 
 // Audio state
 let _audioInitialized = false;
@@ -684,6 +713,116 @@ function _wireMidiInputs() {
       _midiDeviceName = input.name || "";
     }
   } );
+
+  _wireMidiOutputs();
+}
+
+function _sendMidi( bytes ) {
+  if ( !_midiOutput ) {
+    return;
+  }
+
+  try {
+    _midiOutput.send( bytes );
+  } catch {
+    // An output that vanished between the state change and this send.
+  }
+}
+
+// Pair the output with the input by NAME, which is how a Launchkey exposes
+// its ports: "… DAW Port" in, "… DAW Port" out. Re-run on every state change
+// like the inputs. Arms the port when the map says it needs it — `9F 0C 7F`,
+// a plain note-on on channel 16, no SysEx, so no extra permission prompt.
+function _wireMidiOutputs() {
+  const name = _midiDeviceName;
+  let output = null;
+
+  if ( _midiAccess && name ) {
+    _midiAccess.outputs.forEach( ( candidate ) => {
+      if ( !output && candidate.name === name ) {
+        output = candidate;
+      }
+    } );
+  }
+
+  if ( output === _midiOutput ) {
+    return;
+  }
+
+  // Release the previous port cleanly before adopting the new one: its pads
+  // off, its DAW mode off.
+  _disarmMidiOutput();
+  _midiOutput = output;
+
+  if ( output && portRequiresArming( name ) ) {
+    _sendMidi( [
+      0x9f,
+      0x0c,
+      0x7f
+    ] );
+    _midiArmed = true;
+  }
+}
+
+// Undo everything sent to the output: every lit pad off, then `9F 0C 00` if
+// the port was armed. Runs from _clearMidiState (reset, dispose, a device
+// switch) and from `pagehide`, because leaving a keyboard in DAW mode after
+// the tab is gone is the trap TODO.md names — the pads stay dark and the
+// knobs stay silent until the user power-cycles it.
+function _disarmMidiOutput() {
+  if ( _midiOutput ) {
+    padLedsOff( _ledSent ).forEach( _sendMidi );
+
+    if ( _midiArmed ) {
+      _sendMidi( [
+        0x9f,
+        0x0c,
+        0x00
+      ] );
+    }
+  }
+
+  _midiOutput = null;
+  _midiArmed = false;
+  _ledSent = {};
+  _ledSeen = null;
+  _ledPort = "";
+}
+
+// Send the pads what the editor wants them to show, and only what changed.
+// Called every frame from _collectMidi, so the wish list is compared by
+// identity first (the bridge hands back the same array until a publish) and
+// the diff only runs when a field changed its mind or the port moved.
+function _flushPadLeds() {
+  if ( !_midiOutput ) {
+    return;
+  }
+
+  const entries = getPadLeds();
+
+  if ( entries === _ledSeen && _ledPort === _midiDeviceName ) {
+    return;
+  }
+
+  _ledSeen = entries;
+  _ledPort = _midiDeviceName;
+
+  const port = _midiDeviceName;
+  const {
+    messages, next
+  } = padLedDiff(
+    _ledSent,
+    desiredPadLeds(
+      entries,
+      ( control ) => padNoteFor(
+        port,
+        control
+      )
+    )
+  );
+
+  messages.forEach( _sendMidi );
+  _ledSent = next;
 }
 
 function _onMidiMessage( msg ) {
@@ -700,8 +839,16 @@ function _onMidiMessage( msg ) {
       note,
       velocity
     );
+    _midiNoteLevels.set(
+      note,
+      velocity
+    );
   } else if ( command === 0x80 || ( command === 0x90 && velocity === 0 ) ) {
     _midiNotes.delete( note );
+    _midiNoteLevels.set(
+      note,
+      0
+    );
   } else if ( command === 0xb0 ) {
     // Control change: a knob/fader position, which unlike a note is HELD —
     // there is no "off" message, so the entry stays until a reset.
@@ -716,7 +863,9 @@ function _onMidiMessage( msg ) {
 // Drop held MIDI state. Notes and controls are cleared together everywhere: a
 // value from a device we stopped listening to is stale either way.
 function _clearMidiState() {
+  _disarmMidiOutput();
   _midiNotes.clear();
+  _midiNoteLevels.clear();
   _midiControls.clear();
   _midiLastControl = -1;
   _midiDeviceName = "";
@@ -740,6 +889,13 @@ async function _initMidi( opts ) {
     _midiAccess = await navigator.requestMIDIAccess();
     _wireMidiInputs();
     _midiAccess.onstatechange = () => _wireMidiInputs();
+    // The one teardown React cannot run: the tab going away. `pagehide`
+    // fires on close, reload and bfcache entry alike; a synchronous send
+    // still goes out from it. Registered once — access is requested once.
+    window.addEventListener(
+      "pagehide",
+      _disarmMidiOutput
+    );
   } catch {
     // Permission denied or MIDI not available
   }
@@ -2596,6 +2752,10 @@ function _collectMidi(
     ) );
     count++;
   }
+
+  // The pads' LEDs ride the same per-frame call, so they only ever run while
+  // MIDI is enabled and initialised — the one lifecycle this layer has.
+  _flushPadLeds();
 }
 
 function _collectAudio(
@@ -2854,6 +3014,21 @@ export function recalibrateGyroscope() {
  */
 export function getMidiControls() {
   return _midiControls;
+}
+
+/**
+ * The level of every note received since the last reset: velocity while the
+ * key or pad is held, 0 after release. The same live Map every call. A note
+ * never sent has no entry, which is what keeps a pad binding a no-op until the
+ * pad is actually hit (the CC policy, see `getMidiControls`).
+ *
+ * Backs the `midi.note<n>` channels — a pad is a scalar that goes 0 → v → 0,
+ * and the rising edge is what a trigger listens for.
+ *
+ * @returns {Map<number, number>} noteNumber → level (0–127)
+ */
+export function getMidiNoteLevels() {
+  return _midiNoteLevels;
 }
 
 /**

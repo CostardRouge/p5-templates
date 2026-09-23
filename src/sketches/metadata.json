@@ -4197,5 +4197,18 @@
     "asyncDraw": false,
     "mtime": "2026-09-21T20:47:22.877Z",
     "ctime": "2026-09-21T20:42:17.073Z"
+  },
+  {
+    "name": "pad-rack-v1-launchkey",
+    "engine": "p5",
+    "category": "midi",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": true,
+    "hiddenFromGallery": false,
+    "asyncDraw": false,
+    "mtime": "2026-09-23T23:06:57.888Z",
+    "ctime": "2026-09-23T23:06:11.616Z"
   }
 ]
