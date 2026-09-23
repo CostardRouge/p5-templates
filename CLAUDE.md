@@ -113,15 +113,25 @@ changed and never what state the project is in.
 A session that changes code here changes this project's state, and the state
 has to reach that folder.
 
-1. If a checkout of `second-brain` is reachable — a sibling directory, or a
-   repository attached to this session — edit `projets/p5-templates/README.md` and
-   commit it there, in its own commit: set `point:` to today, rewrite the
-   `## Dernier point` paragraph, tick what is done and add what is now open
-   under `## À faire`. **Never change `state:`** — the state is the
-   maintainer's call, never the agent's. Then run `node bin/projets.mjs index`
-   from that repo's root and include the regenerated `PROJETS.md` in the same
-   commit.
-2. Otherwise, end the final message with the block, ready to paste:
+1. **Reach `second-brain`.** Locally it is a sibling directory
+   (`../second-brain`). In a cloud session where it is not already attached,
+   attach it yourself: call the `add_repo` tool with owner `costardrouge`,
+   repo `second-brain` and access `push`, then clone it beside this
+   repository with the command the tool returns. The session's GitHub access
+   already covers it — **never put a token for it in this repository or in
+   its environment**.
+2. Once it is reachable, edit `projets/p5-templates/README.md` and commit it there,
+   in its own commit: set `point:` to today, rewrite the `## Dernier point`
+   paragraph, tick what is done and add what is now open under `## À faire`.
+   **Never change `state:`** — the state is the maintainer's call, never the
+   agent's. Then run `node bin/projets.mjs index` from that repo's root and
+   include the regenerated `PROJETS.md` in the same commit. A cloud session
+   pushes that commit on its own working branch and opens a draft pull
+   request in `second-brain`, exactly as it does here.
+3. Only if it stays unreachable — the tool refused, or does not exist — write
+   the block below under a `### Registre` heading in the description of this
+   repository's pull request, where it can be found and collected later, and
+   end the final message with it too:
 
        projets/p5-templates/README.md — point: YYYY-MM-DD
        Dernier point : <dernier point connu>

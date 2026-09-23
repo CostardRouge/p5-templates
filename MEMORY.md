@@ -97,7 +97,7 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 - A new sculpt that wants the scatter takes `_lattice.js` and `_wave.js` and extends them (`skin`, `max`, `budget`) rather than shipping its own sampler and wave; a parallel build that did was rebuilt on them at rebase time → `sketches.md`.
 - The gyroscope pointer is a calibrated pose (auto / flat / custom) driving one of four signals (tilt, gravity, acceleration, rotation), publishes nothing until the sensor speaks, and says why in the overlay legend (permission tap, HTTPS, no sensor) → `interaction-sources.md`.
 
-- A session that changes code reports this project's state to its fiche, `projets/p5-templates/README.md`, in the private `second-brain` repo: the register is that folder and `PROJETS.md` there is generated from it, never Claude's memory and never `git log` → CLAUDE.md rule 4
+- A session that changes code reports this project's state to its fiche, `projets/p5-templates/README.md`, in the private `second-brain` repo: the register is that folder and `PROJETS.md` there is generated from it, never Claude's memory and never `git log`. A cloud session that has no checkout of it attaches it itself (`add_repo`, 2026-09-23), because a week of sessions left the state only in chat; the fallback block goes into the PR description under `### Registre`, and no `second-brain` token is ever put in this repo. → CLAUDE.md rule 4
 
 ## Open items (dated; remove when done)
 
