@@ -63,7 +63,9 @@ const TIMELINE_HEIGHT = 96;
 const TIMELINE_MARGIN = 28;
 const HUD_MARGIN = 24;
 
-const state = {
+// Per page/layer instance (sketch.state), so a second embedding of the studio
+// never shares takes or targets with the page.
+const state = sketch.state( () => ( {
   mode: "idle",
   countdownLeft: 0,
   scenario: 0,
@@ -86,7 +88,7 @@ const state = {
   messageAt: 0,
   showHelp: true,
   unregisterKey: null
-};
+} ) );
 
 function clamp(
   value, min, max
