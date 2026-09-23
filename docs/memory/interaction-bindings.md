@@ -124,6 +124,19 @@ arriving", never "a learnable channel exists"; and the affordance must be hidden
 for `vector2d`, because `observeForLearn` returns only scalars, so a 2D pad arms
 and waits forever. The popover hides its own crosshair for that kind.
 
+**A pad is a scalar channel, `midi.note<n>`, minted like the CCs** (2026-09-23).
+`_midiNoteLevels` in the handler holds velocity while held and **0 after
+release — set, never deleted**: the falling edge is the signal a boolean gate
+needs and what lets a trigger re-arm. `_midiNotes` (release = delete) stays
+untouched because the spatial fold only wants what is down. `controllerMap.js`
+numbers pads by PANEL position (`pad.1` top-left … `pad.16`), so `pad.1` is the
+same physical pad on both ports though it sends note 40 on one and 96 on the
+other; `padSequence( port, "pad.1", n )` hands a row of buttons its n
+consecutive channels and a bare `"pad"` means `pad.1`. **How to apply**: a
+boolean field declaring `binding: { control: "pad.9" }` already toggles on that
+pad with no other code — the existing `toggle` mode of `mapBoolean` sees the
+rising edge.
+
 **Declared ones resolve at read time and are NEVER written to the document.**
 `effectiveInteractive` (`options.js`) appends them inside the ephemeral array it
 hands `resolveBindings`; nothing writes back. Persisting them would put one

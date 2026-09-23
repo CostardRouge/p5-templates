@@ -4,7 +4,7 @@
 // (index.js → MediaPipe). channels.js imports these.
 
 import {
-  MIDI_CC_PREFIX, MIDI_CC_LAST_ID
+  MIDI_CC_PREFIX, MIDI_CC_LAST_ID, MIDI_NOTE_PREFIX
 } from "./sources.js";
 
 export function clamp01( v ) {
@@ -121,6 +121,40 @@ export function midiControlChannels(
       value: clamp01( lastValue / 127 )
     };
   }
+
+  return channels;
+}
+
+/**
+ * Map note levels — `getMidiNoteLevels()`, a Map of note number → velocity
+ * while held, 0 once released — onto one `midi.note<n>` scalar channel per note
+ * the controller has actually sent. Same policy as the CC channels: a note
+ * never received publishes NO channel, so an untouched pad leaves a boolean
+ * binding on its base value and a headless render sees no pad at all.
+ *
+ * The 0 after release is kept on purpose. A pad is a pulse, and a trigger
+ * listening for its rising edge can only re-arm once it has seen the fall.
+ *
+ * @param {Map<number, number> | null | undefined} levels
+ * @returns {Record<string, { type: "scalar", value: number }>}
+ */
+export function midiNoteChannels( levels ) {
+  const channels = {};
+
+  if ( !levels || typeof levels.forEach !== "function" ) {
+    return channels;
+  }
+
+  levels.forEach( (
+    level, note
+  ) => {
+    if ( typeof level === "number" ) {
+      channels[ `${ MIDI_NOTE_PREFIX }${ note }` ] = {
+        type: "scalar",
+        value: clamp01( level / 127 )
+      };
+    }
+  } );
 
   return channels;
 }

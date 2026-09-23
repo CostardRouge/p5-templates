@@ -229,6 +229,12 @@ let _gyroPermissionListener = null;
 let _midiInitialized = false;
 let _midiAccess = null;
 const _midiNotes = new Map(); // noteNumber → velocity
+// The LEVEL of every note the controller has sent since the last reset:
+// noteNumber → velocity while held, 0 once released. Distinct from _midiNotes
+// (which forgets a released note, because the spatial fold only wants what is
+// down) — a pad channel must publish its falling edge, or a trigger listening
+// for the next press never re-arms. Read by channels.js as `midi.note<n>`.
+const _midiNoteLevels = new Map(); // noteNumber → level (0–127)
 // Held control-change state: ccNumber → raw value (0–127). Kept exactly like
 // _midiNotes (filled by _onMidiMessage, cleared on reset / device switch /
 // dispose) and read by channels.js, which normalizes it to 0..1 scalars.
@@ -700,8 +706,16 @@ function _onMidiMessage( msg ) {
       note,
       velocity
     );
+    _midiNoteLevels.set(
+      note,
+      velocity
+    );
   } else if ( command === 0x80 || ( command === 0x90 && velocity === 0 ) ) {
     _midiNotes.delete( note );
+    _midiNoteLevels.set(
+      note,
+      0
+    );
   } else if ( command === 0xb0 ) {
     // Control change: a knob/fader position, which unlike a note is HELD —
     // there is no "off" message, so the entry stays until a reset.
@@ -717,6 +731,7 @@ function _onMidiMessage( msg ) {
 // value from a device we stopped listening to is stale either way.
 function _clearMidiState() {
   _midiNotes.clear();
+  _midiNoteLevels.clear();
   _midiControls.clear();
   _midiLastControl = -1;
   _midiDeviceName = "";
@@ -2854,6 +2869,21 @@ export function recalibrateGyroscope() {
  */
 export function getMidiControls() {
   return _midiControls;
+}
+
+/**
+ * The level of every note received since the last reset: velocity while the
+ * key or pad is held, 0 after release. The same live Map every call. A note
+ * never sent has no entry, which is what keeps a pad binding a no-op until the
+ * pad is actually hit (the CC policy, see `getMidiControls`).
+ *
+ * Backs the `midi.note<n>` channels — a pad is a scalar that goes 0 → v → 0,
+ * and the rising edge is what a trigger listens for.
+ *
+ * @returns {Map<number, number>} noteNumber → level (0–127)
+ */
+export function getMidiNoteLevels() {
+  return _midiNoteLevels;
 }
 
 /**

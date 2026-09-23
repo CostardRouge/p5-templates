@@ -5,7 +5,8 @@
  */
 import {
   buildChannelsFromDebug,
-  midiControlChannels
+  midiControlChannels,
+  midiNoteChannels
 } from "../channelsAdapter.js";
 import {
   INTERACTION_SOURCES,
@@ -277,6 +278,60 @@ describe(
           undefined,
           undefined
         ) ).toEqual( {} );
+      }
+    );
+  }
+);
+
+describe(
+  "midiNoteChannels",
+  () => {
+    it(
+      "mints one scalar per note received, normalised from its velocity",
+      () => {
+        const channels: any = midiNoteChannels( new Map( [
+          [
+            96,
+            127
+          ],
+          [
+            112,
+            64
+          ]
+        ] ) );
+
+        expect( channels[ "midi.note96" ] ).toEqual( {
+          type: "scalar",
+          value: 1
+        } );
+        expect( channels[ "midi.note112" ].value ).toBeCloseTo( 64 / 127 );
+      }
+    );
+
+    it(
+      "keeps a released note at 0 rather than dropping it — the falling edge is the signal",
+      () => {
+        // A trigger re-arms on the fall; a boolean gate must see it go low.
+        const channels: any = midiNoteChannels( new Map( [
+          [
+            96,
+            0
+          ]
+        ] ) );
+
+        expect( channels[ "midi.note96" ] ).toEqual( {
+          type: "scalar",
+          value: 0
+        } );
+      }
+    );
+
+    it(
+      "publishes nothing for a note never sent, and nothing with no levels at all",
+      () => {
+        expect( midiNoteChannels( new Map() ) ).toEqual( {} );
+        expect( midiNoteChannels( null ) ).toEqual( {} );
+        expect( midiNoteChannels( undefined ) ).toEqual( {} );
       }
     );
   }
