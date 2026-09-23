@@ -4197,5 +4197,70 @@
     "asyncDraw": false,
     "mtime": "2026-09-21T20:47:22.877Z",
     "ctime": "2026-09-21T20:42:17.073Z"
+  },
+  {
+    "name": "sculpt-v5-letter-pinch",
+    "engine": "p5",
+    "category": "sculpt",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "asyncDraw": false,
+    "mtime": "2026-09-23T22:40:06.034Z",
+    "ctime": "2026-09-23T22:39:37.414Z"
+  },
+  {
+    "name": "sculpt-v6-letter-halftone",
+    "engine": "p5",
+    "category": "sculpt",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "asyncDraw": false,
+    "mtime": "2026-09-23T22:44:19.286Z",
+    "ctime": "2026-09-23T22:43:53.142Z"
+  },
+  {
+    "name": "sculpt-v7-letter-slices",
+    "engine": "p5",
+    "category": "sculpt",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "asyncDraw": false,
+    "mtime": "2026-09-23T22:47:39.774Z",
+    "ctime": "2026-09-23T22:47:08.578Z"
+  },
+  {
+    "name": "sculpt-v8-letter-dashes",
+    "engine": "p5",
+    "category": "sculpt",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "asyncDraw": false,
+    "mtime": "2026-09-23T22:49:34.434Z",
+    "ctime": "2026-09-23T22:49:07.058Z"
+  },
+  {
+    "name": "sculpt-v9-letter-ripple",
+    "engine": "p5",
+    "category": "sculpt",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "asyncDraw": false,
+    "mtime": "2026-09-23T22:51:18.994Z",
+    "ctime": "2026-09-23T22:50:51.186Z"
   }
 ]
