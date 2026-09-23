@@ -1,13 +1,6 @@
-import type {
-  SketchEngine,
-  EngineEventName,
-  EngineEventMap,
-  EnginePerformanceSample
-} from "@/engines/types";
-import type {
-  CaptureSource,
-  RecorderCapabilities
-} from "@/engines/recording/types";
+import {
+  BaseSketchEngine
+} from "@/engines/BaseSketchEngine";
 import type {
   SketchOption
 } from "@/types/sketch.types";
@@ -15,24 +8,21 @@ import {
   getEffectiveSlideSettings
 } from "@/lib/effectiveSlideSettings";
 import {
-  resolveAnimation, totalFramesFor
-} from "@/lib/animationConfig";
-import {
   resolveSketchPath
 } from "@/engines/metadata";
-import {
-  createCanvasCaptureSource
-} from "@/engines/recording/captureSource";
 import {
   registerServerCaptureController,
   unregisterServerCaptureController
 } from "@/engines/recording/serverCapture";
 import {
+  FrameRateMeter
+} from "@/engines/frameRateMeter";
+import {
   loadCavalryPlayer, type CavalryPlayerHandle
 } from "./player/loadPlayer";
 
 /**
- * Shape of a Cavalry sketch module (`src/templates/cavalry/sketches/…/index.js`).
+ * Shape of a Cavalry sketch module (`src/sketches/cavalry/sketches/…/index.js`).
  *
  * A Cavalry animation is a `.cv` scene, not code. Two sources are supported:
  *  - `scene` set to an asset path → a committed scene shipped with the repo.
@@ -46,52 +36,37 @@ type CavalrySketchModule = {
 /**
  * Cavalry implementation of `SketchEngine`.
  *
- * Drives the Cavalry Web Player (a self-hosted WASM runtime) which renders a
- * `.cv` scene to a real WebGL canvas. Playback and capture are deterministic:
- * the app's frame clock is the source of truth (identical to `GsapEngine`), and
- * each frame is mapped onto the scene via `player.setFrame()` → `render()`.
+ * Drives the Cavalry Web Player (a self-hosted WASM runtime, see
+ * `player/loadPlayer.ts`) which renders a `.cv` scene to a WebGL surface.
+ * Because it paints into a live `<canvas>`, it keeps the base class's canvas
+ * `CaptureSource` and capture waits unchanged (same path as p5 and Three.js).
  *
- * When the Web Player bundle is not vendored (see `player/loadPlayer.ts`), the
- * engine degrades to a placeholder canvas + `error` event without breaking the
- * page — the editor and `.cv` upload flow stay fully interactive.
+ * When the runtime is not vendored the engine degrades to a placeholder canvas
+ * plus an `error` event without breaking the page — the editor and the `.cv`
+ * upload flow stay fully interactive.
  */
-export class CavalryEngine implements SketchEngine {
+export class CavalryEngine extends BaseSketchEngine {
   readonly engineId = "cavalry";
 
-  private _isReady = false;
-  // Set by destroy(). init() re-checks it after every await: React strict
-  // mode (dev) mounts, destroys and re-mounts the renderer synchronously, so
-  // a destroyed engine's still-pending init would otherwise resume alongside
-  // the replacement's and append a SECOND canvas to the shared container —
-  // two stacked players, with capture reading the dead one. Clearing stale
-  // canvases at the top of init() cannot catch it: both inits get past that
-  // clear before either has appended anything.
-  private destroyed = false;
-  private container: HTMLElement | null = null;
   private player: CavalryPlayerHandle | null = null;
   private placeholderCanvas: HTMLCanvasElement | null = null;
   private options: SketchOption | null = null;
   private deterministic = false;
-  private listeners = new Map<string, Set<( payload: any ) => void>>();
 
   // Live-preview clock, in app frames (fractional between rAF ticks).
   private playhead = 0;
   private playLoopId: number | null = null;
-  private perfLoopId: number | null = null;
-  private perfSample = {
-    paused: true,
-    lastEmitTime: 0
-  };
 
-  get isReady(): boolean {
-    return this._isReady;
-  }
+  // Frames this engine actually rendered; the rate is derived from deltas of
+  // that counter rather than a runtime-reported instantaneous fps.
+  private framesRendered = 0;
+  private perfMeter = new FrameRateMeter();
 
   /* ---- lifecycle ------------------------------------------------- */
 
   async init(
     container: HTMLElement,
-    templatePath: string,
+    sketchName: string,
     options: SketchOption
   ): Promise<void> {
     this.container = container;
@@ -122,7 +97,7 @@ export class CavalryEngine implements SketchEngine {
     } = getEffectiveSlideSettings( options );
 
     const sketchPath = resolveSketchPath(
-      templatePath,
+      sketchName,
       "cavalry"
     );
 
@@ -137,7 +112,7 @@ export class CavalryEngine implements SketchEngine {
         return;
       }
 
-      const templateModule = await loadSketchModule(
+      const sketchModule = await loadSketchModule(
         "cavalry",
         sketchPath
       ).catch( () => null );
@@ -146,12 +121,12 @@ export class CavalryEngine implements SketchEngine {
         return;
       }
 
-      const mod = ( templateModule?.default ?? templateModule ) as CavalrySketchModule | null;
+      const mod = ( sketchModule?.default ?? sketchModule ) as CavalrySketchModule | null;
 
       scenePath = mod?.scene;
     }
 
-    // Uploaded scene takes over when the template doesn't ship one.
+    // Uploaded scene takes over when the sketch doesn't ship one.
     scenePath = scenePath ?? ( options.sketch as Record<string, any> | undefined )?.cavalryFile;
 
     await this.loadPlayerAndScene(
@@ -165,7 +140,7 @@ export class CavalryEngine implements SketchEngine {
       return;
     }
 
-    this._isReady = true;
+    this.perfMeter.reset();
 
     // Uniform headless-capture controller (canvas-based, like p5).
     registerServerCaptureController( {
@@ -175,10 +150,7 @@ export class CavalryEngine implements SketchEngine {
       renderFrame: ( index ) => this.renderFrame( index )
     } );
 
-    this.emit(
-      "ready",
-      undefined as any
-    );
+    this.becomeReady();
   }
 
   private async loadPlayerAndScene(
@@ -241,9 +213,10 @@ export class CavalryEngine implements SketchEngine {
       player.getCanvas().classList.add( "cavalry-canvas" );
 
       this.player = player;
+      this.renderFrame( 0 );
     } catch( error ) {
-      // Stub / load failure: keep the page usable and report through the
-      // engine event bus rather than rejecting init().
+      // Missing runtime / load failure: keep the page usable and report through
+      // the engine event bus rather than rejecting init().
       this.drawPlaceholder(
         container,
         width,
@@ -310,10 +283,8 @@ export class CavalryEngine implements SketchEngine {
     this.placeholderCanvas = canvas;
   }
 
-  destroy(): void {
-    this.destroyed = true;
+  protected teardown(): void {
     this.stopPlaybackLoop();
-    this.stopPerformanceLoop();
     unregisterServerCaptureController();
 
     this.player?.dispose();
@@ -322,11 +293,8 @@ export class CavalryEngine implements SketchEngine {
     this.placeholderCanvas?.remove();
     this.placeholderCanvas = null;
 
-    this._isReady = false;
-    this.container = null;
     this.options = null;
     this.deterministic = false;
-    this.listeners.clear();
   }
 
   /* ---- options --------------------------------------------------- */
@@ -337,13 +305,7 @@ export class CavalryEngine implements SketchEngine {
       ...partial
     } as SketchOption;
 
-    import( "@/lib/syncSketchOptions" ).then( ( {
-      setSketchOptions
-    } ) => setSketchOptions(
-      partial,
-      "react"
-    ) );
-
+    super.updateOptions( partial );
     this.redraw();
   }
 
@@ -351,22 +313,19 @@ export class CavalryEngine implements SketchEngine {
 
   play(): void {
     this.startPlaybackLoop();
-    this.perfSample.paused = false;
-    this.emitPerformanceSample();
+    this.reportPlaying();
   }
 
   pause(): void {
     this.stopPlaybackLoop();
-    this.perfSample.paused = true;
-    this.emitPerformanceSample();
+    this.reportPaused();
   }
 
   stop(): void {
     this.stopPlaybackLoop();
     this.playhead = 0;
     this.renderFrame( 0 );
-    this.perfSample.paused = true;
-    this.emitPerformanceSample();
+    this.reportStopped();
   }
 
   /**
@@ -419,6 +378,9 @@ export class CavalryEngine implements SketchEngine {
   }
 
   seek( frame: number ): void {
+    // Keep the preview clock with the scrub, so resuming continues from where
+    // the playhead was dropped rather than snapping back.
+    this.playhead = frame;
     this.renderFrame( frame );
   }
 
@@ -463,32 +425,10 @@ export class CavalryEngine implements SketchEngine {
 
     this.player.setFrame( sceneFrame );
     this.player.render();
+    this.framesRendered++;
   }
 
   /* ---- capture --------------------------------------------------- */
-
-  async captureFrame( frame: number ): Promise<string> {
-    await this.seekAndDraw( frame );
-
-    const canvas = this.getCanvas();
-
-    if ( !canvas ) {
-      throw new Error( "CavalryEngine: no canvas available for capture." );
-    }
-
-    return canvas.toDataURL( "image/png" );
-  }
-
-  async seekAndDraw( frame: number ): Promise<void> {
-    this.renderFrame( frame );
-
-    // Allow one frame for the WebGL surface to flush before it is read back.
-    await new Promise( ( r ) => requestAnimationFrame( r ) );
-  }
-
-  async resetToStart(): Promise<void> {
-    this.renderFrame( 0 );
-  }
 
   beginDeterministicCapture(): void {
     this.deterministic = true;
@@ -500,149 +440,16 @@ export class CavalryEngine implements SketchEngine {
     this.deterministic = false;
   }
 
-  getRecordingCapabilities(
-    _options: SketchOption,
-    _slideIndex?: number
-  ): RecorderCapabilities {
-    return {
-      supportsDeterministicCapture: true,
-      // WebGL read-back per frame is async, so the deterministic loop is the
-      // natural default (realtime is still offered).
-      defaultMode: "async-loop",
-      supportedFormats: [
-        "webm",
-        "gif",
-        "mp4"
-      ]
-    };
-  }
-
-  getTotalFrames(
-    options: SketchOption,
-    slideIndex?: number
-  ): number {
-    const {
-      animation
-    } = getEffectiveSlideSettings(
-      options,
-      slideIndex
-    );
-
-    return totalFramesFor( animation );
-  }
-
-  getFrameRate(
-    options: SketchOption,
-    slideIndex?: number
-  ): number {
-    const {
-      animation
-    } = getEffectiveSlideSettings(
-      options,
-      slideIndex
-    );
-
-    return resolveAnimation( animation ).framerate;
-  }
-
   getCanvas(): HTMLCanvasElement | null {
     return this.player?.getCanvas() ?? this.placeholderCanvas ?? null;
   }
 
-  getCaptureSource(): CaptureSource {
-    return createCanvasCaptureSource( () => this.getCanvas() );
-  }
+  /* ---- performance ----------------------------------------------- */
 
-  /* ---- events ---------------------------------------------------- */
-
-  on<E extends EngineEventName>(
-    event: E,
-    handler: ( payload: EngineEventMap[ E ] ) => void
-  ): void {
-    if ( !this.listeners.has( event ) ) {
-      this.listeners.set(
-        event,
-        new Set()
-      );
-    }
-
-    this.listeners.get( event )!.add( handler );
-
-    if ( event === "performance" ) {
-      this.startPerformanceLoop();
-      this.emitPerformanceSample();
-    }
-  }
-
-  off<E extends EngineEventName>(
-    event: E,
-    handler: ( payload: EngineEventMap[ E ] ) => void
-  ): void {
-    this.listeners.get( event )?.delete( handler );
-
-    if ( event === "performance" && !this.hasPerformanceListeners() ) {
-      this.stopPerformanceLoop();
-    }
-  }
-
-  private emit<E extends EngineEventName>(
-    event: E,
-    payload: EngineEventMap[ E ]
-  ): void {
-    this.listeners.get( event )?.forEach( ( h ) => h( payload ) );
-  }
-
-  private hasPerformanceListeners(): boolean {
-    return ( this.listeners.get( "performance" )?.size ?? 0 ) > 0;
-  }
-
-  private startPerformanceLoop(): void {
-    if ( this.perfLoopId !== null ) {
-      return;
-    }
-
-    const tick = ( now: number ) => {
-      if ( !this.hasPerformanceListeners() ) {
-        this.perfLoopId = null;
-        return;
-      }
-
-      if ( now - this.perfSample.lastEmitTime >= 250 ) {
-        this.perfSample.lastEmitTime = now;
-        this.emitPerformanceSample();
-      }
-
-      this.perfLoopId = requestAnimationFrame( tick );
-    };
-
-    this.perfLoopId = requestAnimationFrame( tick );
-  }
-
-  private stopPerformanceLoop(): void {
-    if ( this.perfLoopId === null ) {
-      return;
-    }
-
-    cancelAnimationFrame( this.perfLoopId );
-    this.perfLoopId = null;
-  }
-
-  private emitPerformanceSample(): void {
-    const fps = this.perfSample.paused || this.deterministic
-      ? 0
-      : this.options
-        ? this.getFrameRate( this.options )
-        : 0;
-
-    const payload: EnginePerformanceSample = {
-      fps,
-      paused: this.perfSample.paused,
-      timestamp: performance.now()
-    };
-
-    this.emit(
-      "performance",
-      payload
+  protected measureFps( now: number ): number {
+    return this.perfMeter.sample(
+      now,
+      this.framesRendered
     );
   }
 }
