@@ -256,6 +256,22 @@ function padIndexOf( control ) {
   return match ? Number( match[ 1 ] ) : null;
 }
 
+// `( "pad.1", 3 )` → `"pad.4"`: the control `offset` pads after this one, in
+// reading order — how a row of buttons names the pad of its i-th option, and
+// the LED it lights. Null when the control is not a pad. Deliberately blind to
+// any port: the grid's edge is the port map's business (see padSequence).
+export function padControlAt(
+  control, offset
+) {
+  const first = padIndexOf( control );
+
+  if ( first === null || !Number.isInteger( offset ) || offset < 0 ) {
+    return null;
+  }
+
+  return `pad.${ first + offset }`;
+}
+
 // `( port, "pad.1", 8 )` → the channel ids of eight CONSECUTIVE pads starting
 // at that one, in reading order — what a select rendered as a row of buttons
 // needs: option i is driven by pad first+i, and no field ever spells a note.

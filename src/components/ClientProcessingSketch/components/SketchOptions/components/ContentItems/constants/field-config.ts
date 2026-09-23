@@ -49,6 +49,17 @@ interface BaseConfig {
    */
   binding?: {
     control: string;
+    /**
+     * What the pad(s) driving this field should show, as palette indices
+     * (0–127, the note-on velocity a Launchkey reads as a colour). `active`
+     * lights the pressed option of a button row, `idle` the others and a
+     * lone button. Defaults are the three measured values in
+     * `controllerMap.js` (`PAD_COLORS`).
+     */
+    led?: {
+      active?: number;
+      idle?: number;
+    };
   };
 }
 

@@ -172,15 +172,21 @@ lighting message on the static channel is also what stops a flash or a pulse.
 | Port name exposed to the engine | `getMidiDeviceName()`, empty while listening to every input | No map can apply without it, and an ambiguous name would address the wrong knob | low | ✅ #360 |
 | Learn from the context menu | Right-click a field → "Learn a control…" → move it. A shortcut for assigning the source, not a second editor: easing, smoothing and generators stay in the popover | Four clicks down to two, on the one step that was tedious | low | ✅ #360 |
 | Abstract control on a learned binding | The document keeps `knob.3`, not `midi.cc23` | The binding survives a MIDI ↔ DAW port switch, and would travel to another controller | low | ✅ #360 |
+| Pad channels | One `midi.note<n>` scalar per pad hit, velocity while held and 0 after release; pads are `pad.1` … `pad.16` by panel position on both ports | Nothing could listen to a pad before; a checkbox with `binding: { control: "pad.9" }` now toggles on it with no other code | low | ✅ |
+| Button field | `component: "button"` with an `effect` (set / toggle / cycle / randomize / reset) on a sketch-relative target; `select` can render as a row of buttons (`display: "buttons"`) | A field that triggers rather than edits — one ordinary write, no callback into the sketch, no capture policy | medium | ✅ |
+| Pads press buttons | `usePadTrigger`: a Schmitt on the pad's level, fires the button's own click handler on the rising edge; a button row takes consecutive pads from `binding.control` | The performance gesture the whole thing is for, entirely editor-side | medium | ✅ |
+| MIDI output: arm / disarm DAW mode | Output paired with the input by name; `9F 0C 7F` when the map requires it, pads off + `9F 0C 00` on reset, dispose, device switch and `pagehide` | Gates the LEDs; never leaves the keyboard in DAW mode after the tab closes | medium | ✅ |
+| Pad LEDs | `usePadLeds` publishes a wish per pad through `padLedBridge`; the engine diffs and sends only what changed (`padLeds.js`), static channel; `binding.led` picks the palette indices | The active option and the wired pads show on the hardware itself | medium | ✅ |
 
 ### Next
 
 | Feature | What it does | Why it matters | Complexity | Worth |
 | --- | --- | --- | --- | --- |
+| Learn a pad from the context menu | Right-click a button → move a pad → it is assigned | A button has no `bindings` entry to store a learned channel in, so it needs its own home first | medium | ✅ |
+| A colour per option | `led` on each `SelectOption`, not only active/idle on the row | Eight effects, eight hues on the top row | low | ⚠️ comfort |
+| Flash / pulse on the pads | `mode` is plumbed through `padLedBridge` and `padLeds.js` (channels 2/3) but no field asks for it yet | A held effect could pulse | low | ⚠️ |
+| LEDs on the MIDI port | Whether a note-on lights a pad on the drum-layout port (channels 10/11/12?) is unmeasured; the DAW port is | The MIDI port needs no arming, so it would be the simpler default | low, hardware time | ⚠️ measure |
 | Context menu on a checkbox | The checkbox branch of `FieldRenderer` returns before the wrapper carrying `onContextMenu`, so no boolean field has a context menu at all — and "Learn a control" is unreachable there although the `boolean` kind is bindable | A pad is the natural control for a toggle, and that is exactly the field it cannot be learned on | low, but it touches a branch every form shares | ⚠️ |
-| MIDI output: arm / disarm DAW mode | Send `9F 0C 7F` on connect, `9F 0C 00` on teardown | Nothing in `src/` writes MIDI yet, and this gates the LEDs. Leaving the keyboard armed after the tab closes is the trap | medium | ✅ |
-| Pad LEDs | Light a pad from the palette; flash and pulse | Visual feedback on the hardware itself | medium | ⚠️ comfort |
-| `component: "action"` field type | A field that triggers rather than edits a value | **Pads cannot drive anything without it** — selecting an effect is an action, not a value. Already filed under Options / Form System | **high** | ✅ but its own job |
 
 ### Later
 
@@ -190,7 +196,6 @@ lighting message on the static channel is also what stops a flash or a pulse.
 | Other control families | `axis.left-x`, `band.bass`, `pinch`, `tilt.x` | The vocabulary is already device-agnostic; each is a map entry, not a redesign | low each | ⚠️ on demand |
 | Soft takeover for absolute pots | A knob stays inert until it crosses the stored value | Kills the jump when a bank switch re-points a knob. Only matters once banks exist | medium | ⚠️ if banks |
 | Machine-level controller preference | Remember the port outside the document | "Open a sketch and it plays", without enabling MIDI inside every document | medium | ⚠️ |
-| Pads driving actions | A pad selects or bypasses an effect | The performance gesture the whole thing is for; blocked on `component: "action"` | medium | ⚠️ after the action type |
 
 ### Rejected, and why
 

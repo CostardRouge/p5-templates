@@ -184,16 +184,31 @@ factory one wrong.
   name and the wrong map addresses the wrong knob in silence. Match exact then
   case-insensitive, **never by prefix** — "Launchkey" must not claim an
   unmeasured model.
-- Pad notes are recorded there though nothing reads them yet (driving an action
-  from a pad needs the `component: "action"` kind that `TODO.md` still lists).
-  `104` is a *round pad* the Mini MK3 lacks: the DAW rows are 96-103 and
-  **112**-119, not contiguous.
-- LEDs later: velocity indexes a **128-colour palette**, not free RGB, and the
-  channel follows the pad LAYOUT — session (notes 96+) uses 1/2/3 for
-  static/flash/pulse, drum (36-51) uses 10/11/12. **Flashing alternates between
-  the colour already on the pad and the one in the message** and follows a MIDI
-  clock, so a lone channel-2 message alternates with whatever was there and looks
-  erratic; a static-channel lighting message is also what STOPS a flash or pulse.
+- Pads are `pad.1` … `pad.16` in the same `controls` map (see "A pad is a
+  scalar channel" above). `104` is a *round pad* the Mini MK3 lacks: the DAW
+  rows are 96-103 and **112**-119, not contiguous.
+- **The engine owns the output and always disarms** (2026-09-23). The output is
+  paired with the input BY NAME (a Launchkey exposes both as "… DAW Port"),
+  armed with `9F 0C 7F` when the map says `requiresArming`, and released —
+  every lit pad off, then `9F 0C 00` — from `_clearMidiState` (reset, dispose,
+  device switch) and from `pagehide`, because a keyboard left in DAW mode after
+  the tab closes stays dark and silent until power-cycled. LED wishes cross
+  from the editor through `@/lib/padLedBridge` keyed by abstract control
+  (`usePadLeds` publishes, one owner per field); `_flushPadLeds` runs inside
+  `_collectMidi`, compares the wish list by identity, and sends only the diff
+  (`padLeds.js`, pure). Velocity indexes a **128-colour palette**, not free
+  RGB; only 0 / 1 / 9 are measured (`PAD_COLORS`). The channel follows the pad
+  LAYOUT — session (notes 96+) uses 1/2/3 for static/flash/pulse, drum (36-51)
+  uses 10/11/12 — and **flashing alternates between the colour already on the
+  pad and the one in the message** on a MIDI clock, so "off" always goes out
+  on the static channel, which is also what stops a flash or a pulse.
+- **A pad press is an editor event, not a signal** (2026-09-23). `usePadTrigger`
+  diffs the pad's `midi.note<n>` level frame to frame from `subscribeChannels`
+  (a Schmitt: fires above 0.5, re-arms below 0.25, never on release, a pad
+  already down at mount is waited out) and calls the button's own click
+  handler; a select in `display: "buttons"` gets `padSequence` consecutive
+  pads, option i on pad first+i. Nothing goes through `resolveBindings`, so
+  there is no capture policy to write: no hands in a headless run, no pads.
 
 ## Adding a kind
 

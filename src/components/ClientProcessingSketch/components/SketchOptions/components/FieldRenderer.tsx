@@ -75,6 +75,12 @@ import {
   useSketchFormConfig
 } from "../hooks/useSketchFormConfig";
 import {
+  usePadTrigger
+} from "../hooks/usePadTrigger";
+import {
+  usePadLeds
+} from "../hooks/usePadLeds";
+import {
   useChannelLearn
 } from "./ContentItems/components/BindingAffordance/useLiveChannels";
 import {
@@ -230,6 +236,71 @@ export default function FieldRenderer( {
 
   const isModified =
     JSON.stringify( currentValue ) !== JSON.stringify( initialValueRef.current );
+
+  // The pads. A button names the one that presses it; a select laid out as
+  // buttons names the FIRST of a run, option i on pad first+i. The press
+  // reaches the same handler as a click, and the pads show which option is
+  // held (`usePadLeds`). Both hooks stand down when no pad is declared, and
+  // the whole thing is behind the interaction-bindings flag like the pastille.
+  const padOptions = config.component === "select" && config.display === "buttons"
+    ? config.options
+    : null;
+  const padControl =
+    interactionBindingsEnabled() &&
+    typeof config.binding?.control === "string" &&
+    ( config.component === "button" || padOptions !== null )
+      ? config.binding.control
+      : undefined;
+  const padCount = padOptions ? padOptions.length : 1;
+  const selectOption = useCallback(
+    ( option: { value: string | number } ) => {
+      setValue(
+        registeredName,
+        config.component === "select" && config.asNumber
+          ? Number( option.value )
+          : option.value,
+        {
+          shouldDirty: true,
+          shouldTouch: true,
+          shouldValidate: true
+        }
+      );
+    },
+    [
+      registeredName,
+      setValue,
+      config
+    ]
+  );
+
+  usePadTrigger(
+    padControl,
+    padCount,
+    useCallback(
+      ( index: number ) => {
+        if ( config.component === "button" ) {
+          runEffect( config.effect );
+        } else if ( padOptions && padOptions[ index ] ) {
+          selectOption( padOptions[ index ] );
+        }
+      },
+      [
+        config,
+        padOptions,
+        runEffect,
+        selectOption
+      ]
+    )
+  );
+  usePadLeds(
+    registeredName,
+    padControl,
+    padCount,
+    padOptions
+      ? padOptions.findIndex( ( option ) => String( option.value ) === String( currentValue ?? "" ) )
+      : -1,
+    config.binding?.led
+  );
 
   // Reset restores the value the field was loaded with — exactly what
   // `isModified` compares against — so the reset indicator reliably clears.
@@ -492,15 +563,7 @@ export default function FieldRenderer( {
                       aria-pressed={ pressed }
                       onClick={ ( event ) => {
                         event.stopPropagation();
-                        setValue(
-                          registeredName,
-                          config.asNumber ? Number( option.value ) : option.value,
-                          {
-                            shouldDirty: true,
-                            shouldTouch: true,
-                            shouldValidate: true
-                          }
-                        );
+                        selectOption( option );
                       } }
                       className={ clsx(
                         "h-10 md:h-7 min-w-0 flex-1 truncate px-2 text-base md:text-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-focus",
