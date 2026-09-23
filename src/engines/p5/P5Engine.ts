@@ -1,16 +1,6 @@
-import type {
-  SketchEngine,
-  EngineEventName,
-  EngineEventMap,
-  EnginePerformanceSample
-} from "@/engines/types";
-import type {
-  CaptureSource,
-  RecorderCapabilities
-} from "@/engines/recording/types";
 import {
-  createCanvasCaptureSource
-} from "@/engines/recording/captureSource";
+  BaseSketchEngine
+} from "@/engines/BaseSketchEngine";
 import {
   registerServerCaptureController,
   unregisterServerCaptureController
@@ -18,12 +8,6 @@ import {
 import type {
   SketchOption
 } from "@/types/sketch.types";
-import {
-  getEffectiveSlideSettings
-} from "@/lib/effectiveSlideSettings";
-import {
-  resolveAnimation, totalFramesFor
-} from "@/lib/animationConfig";
 import {
   resolveSketchPath
 } from "@/engines/metadata";
@@ -60,37 +44,16 @@ type P5SketchRuntime = {
  * element directly, so the canvas is created inside it — no need
  * for MutationObserver or body-level DOM queries.
  */
-export class P5Engine implements SketchEngine {
+export class P5Engine extends BaseSketchEngine {
   readonly engineId = "p5";
 
-  private _isReady = false;
-  // Set by destroy(). init() re-checks it after every await: React strict
-  // mode (dev) mounts, destroys and re-mounts the renderer synchronously, so
-  // a destroyed engine's still-pending init would otherwise resume alongside
-  // the replacement's and start a SECOND p5 instance on the shared runtime —
-  // two stacked canvases, doubled event handlers, capture reading the dead
-  // one. The old `sketchRuntime` null-check could not catch this: init
-  // re-assigns sketchRuntime itself right after the destroy ran.
-  private destroyed = false;
-  private container: HTMLElement | null = null;
   private sketchRuntime: P5SketchRuntime | null = null;
-  private listeners = new Map<string, Set<( payload: any ) => void>>();
   private unsubscribeLoading: ( () => void ) | null = null;
-  private perfLoopId: number | null = null;
   // Measures the real draw rate from p5's frameCount: counter deltas over a
   // sliding window converge within ~1s of a framerate change, where sampling
   // p5's instantaneous frameRate() (display-rate aliased, then smoothed)
   // lagged the true rate by several seconds.
   private perfMeter = new FrameRateMeter();
-  private perfSample = {
-    paused: false,
-    fps: 0,
-    lastEmitTime: 0
-  };
-
-  get isReady(): boolean {
-    return this._isReady;
-  }
 
   /* ---- lifecycle ------------------------------------------------- */
 
@@ -240,19 +203,20 @@ export class P5Engine implements SketchEngine {
     }
 
     this.perfMeter.reset();
-    this.perfSample = {
-      paused: false,
-      fps: 0,
-      lastEmitTime: performance.now()
-    };
 
     // Wait for the first draw cycle to complete before marking as ready.
     // This ensures the canvas is fully rendered and ready to be measured/centered.
-    await new Promise<void>( async( resolve ) => {
-      const {
-        default: events
-      } = await import( "@/sketches/p5/utils/events.js" );
+    // p5 gates its first draw on an animation frame, so registering here —
+    // after the synchronous part of `start()` — always catches it.
+    const {
+      default: events
+    } = await import( "@/sketches/p5/utils/events.js" );
 
+    if ( this.destroyed ) {
+      return;
+    }
+
+    await new Promise<void>( ( resolve ) => {
       const unregister = events.register(
         "post-draw",
         () => {
@@ -265,8 +229,6 @@ export class P5Engine implements SketchEngine {
     if ( this.destroyed ) {
       return;
     }
-
-    this._isReady = true;
 
     // Expose a uniform headless-capture controller. Mirrors the long-standing
     // server behaviour (frame-based time + redraw stepping) but drives the
@@ -292,18 +254,10 @@ export class P5Engine implements SketchEngine {
     // vanish while it reads part-way.
     finishLoadingProgress();
 
-    this.emit(
-      "ready",
-      undefined as any
-    );
+    this.becomeReady();
   }
 
-  destroy(): void {
-    // Cancel any still-pending init (see the field's note) before tearing
-    // the runtime down.
-    this.destroyed = true;
-
-    this.stopPerformanceLoop();
+  protected teardown(): void {
     this.unsubscribeLoading?.();
     this.unsubscribeLoading = null;
     unregisterServerCaptureController();
@@ -315,21 +269,6 @@ export class P5Engine implements SketchEngine {
 
     // Clean up scripts loaded by other libraries (decomp, CCapture, etc.)
     ( window as any ).removeLoadedScripts?.();
-
-    this._isReady = false;
-    this.container = null;
-    this.listeners.clear();
-  }
-
-  /* ---- options --------------------------------------------------- */
-
-  updateOptions( partial: Partial<SketchOption> ): void {
-    import( "@/lib/syncSketchOptions" ).then( ( {
-      setSketchOptions
-    } ) => setSketchOptions(
-      partial,
-      "react"
-    ) );
   }
 
   /* ---- playback -------------------------------------------------- */
@@ -350,19 +289,16 @@ export class P5Engine implements SketchEngine {
     // Restart the measurement window: frameCount stood still while paused
     // and averaging across the gap would report a stale, too-low rate.
     this.perfMeter.reset();
-    this.perfSample.paused = false;
-    this.emitPerformanceSample();
+    this.reportPlaying();
   }
 
   pause(): void {
     pauseLoop( this.sketchRuntime?.getP5() );
-    this.perfSample.paused = true;
-    this.emitPerformanceSample();
+    this.reportPaused();
   }
 
   stop(): void {
     pauseLoop( this.sketchRuntime?.getP5() );
-    this.perfSample.paused = true;
 
     const p = this.sketchRuntime?.getP5();
 
@@ -371,8 +307,7 @@ export class P5Engine implements SketchEngine {
     }
 
     this.perfMeter.reset();
-    this.perfSample.fps = 0;
-    this.emitPerformanceSample();
+    this.reportStopped();
   }
 
   seek( frame: number ): void {
@@ -387,7 +322,10 @@ export class P5Engine implements SketchEngine {
     // the sketch only consults the pinned index while in recording mode.
     window.setRecordingFrame?.( frame );
 
-    this.sketchRuntime?.getP5()?.redraw();
+    // p5's redraw() runs the user draw synchronously: the frame is on the
+    // canvas when this returns, which is what lets seekAndDraw() skip the
+    // display-frame wait.
+    p?.redraw();
   }
 
   redraw(): void {
@@ -410,33 +348,6 @@ export class P5Engine implements SketchEngine {
 
   /* ---- capture --------------------------------------------------- */
 
-  async captureFrame( frame: number ): Promise<string> {
-    await this.seekAndDraw( frame );
-
-    const canvas = this.getCanvas();
-
-    if ( !canvas ) {
-      throw new Error( "P5Engine: no canvas available for capture." );
-    }
-
-    return canvas.toDataURL( "image/png" );
-  }
-
-  async seekAndDraw( frame: number ): Promise<void> {
-    this.seek( frame );
-
-    // Allow one rAF for the draw cycle to complete.
-    await new Promise( ( r ) => requestAnimationFrame( r ) );
-  }
-
-  async resetToStart(): Promise<void> {
-    const bridge = getAnimationBridge();
-
-    bridge?.setProgression( 0 );
-
-    await this.seekAndDraw( 0 );
-  }
-
   beginDeterministicCapture(): void {
     // Stop the live draw loop and switch the time utility to frame-based time.
     // From here `incrementElapsedTime` derives `elapsed` from the pinned
@@ -451,157 +362,34 @@ export class P5Engine implements SketchEngine {
     window.disableRecordingMode?.();
   }
 
-  getRecordingCapabilities(
-    _options: SketchOption,
-    _slideIndex?: number
-  ): RecorderCapabilities {
-    return {
-      supportsDeterministicCapture: true,
-      defaultMode: "async-loop",
-      supportedFormats: [
-        "webm",
-        "gif",
-        "mp4"
-      ]
-    };
-  }
-
-  getTotalFrames(
-    options: SketchOption,
-    slideIndex?: number
-  ): number {
-    const {
-      animation
-    } = getEffectiveSlideSettings(
-      options,
-      slideIndex
-    );
-
-    return totalFramesFor( animation );
-  }
-
-  getFrameRate(
-    options: SketchOption,
-    slideIndex?: number
-  ): number {
-    const {
-      animation
-    } = getEffectiveSlideSettings(
-      options,
-      slideIndex
-    );
-
-    return resolveAnimation( animation ).framerate;
-  }
-
   getCanvas(): HTMLCanvasElement | null {
-    return this.container?.querySelector( "canvas" ) ?? null;
+    // The main canvas carries p5's own class; the buffers `createGraphics`
+    // makes are canvases in the same container, so a bare `canvas` query
+    // could answer with one of those. Same selector the headless recorder
+    // targets.
+    return this.container?.querySelector( "canvas.p5Canvas" ) ??
+      this.container?.querySelector( "canvas" ) ??
+      null;
   }
 
-  getCaptureSource(): CaptureSource {
-    return createCanvasCaptureSource( () => this.getCanvas() );
-  }
+  /* ---- performance ----------------------------------------------- */
 
-  /* ---- events ---------------------------------------------------- */
+  protected onPerformanceTick( now: number ): void {
+    const p = this.sketchRuntime?.getP5();
 
-  on<E extends EngineEventName>(
-    event: E,
-    handler: ( payload: EngineEventMap[ E ] ) => void
-  ): void {
-    if ( !this.listeners.has( event ) ) {
-      this.listeners.set(
-        event,
-        new Set()
-      );
-    }
-
-    this.listeners.get( event )!.add( handler );
-
-    if ( event === "performance" ) {
-      this.startPerformanceLoop();
-      this.emitPerformanceSample();
-    }
-  }
-
-  off<E extends EngineEventName>(
-    event: E,
-    handler: ( payload: EngineEventMap[ E ] ) => void
-  ): void {
-    this.listeners.get( event )?.delete( handler );
-
-    if ( event === "performance" && !this.hasPerformanceListeners() ) {
-      this.stopPerformanceLoop();
-    }
-  }
-
-  private emit<E extends EngineEventName>(
-    event: E,
-    payload: EngineEventMap[ E ]
-  ): void {
-    this.listeners.get( event )?.forEach( ( h ) => h( payload ) );
-  }
-
-  private hasPerformanceListeners(): boolean {
-    return ( this.listeners.get( "performance" )?.size ?? 0 ) > 0;
-  }
-
-  private startPerformanceLoop(): void {
-    if ( this.perfLoopId !== null ) {
+    if ( !p ) {
       return;
     }
 
-    const tick = ( now: number ) => {
-      if ( !this.hasPerformanceListeners() ) {
-        this.perfLoopId = null;
-        return;
-      }
-
-      const p = this.sketchRuntime?.getP5();
-
-      if ( p && this._isReady ) {
-        const frameCount = typeof p.frameCount === "number"
-          ? p.frameCount
-          : 0;
-
-        const fps = this.perfMeter.sample(
-          now,
-          frameCount
-        );
-
-        if ( now - this.perfSample.lastEmitTime >= 500 ) {
-          this.perfSample.fps = fps;
-          this.perfSample.lastEmitTime = now;
-          this.emitPerformanceSample();
-        }
-      }
-
-      this.perfLoopId = requestAnimationFrame( tick );
-    };
-
-    this.perfLoopId = requestAnimationFrame( tick );
-  }
-
-  private stopPerformanceLoop(): void {
-    if ( this.perfLoopId === null ) {
-      return;
-    }
-
-    cancelAnimationFrame( this.perfLoopId );
-    this.perfLoopId = null;
-  }
-
-  private emitPerformanceSample(): void {
-    const payload: EnginePerformanceSample = {
-      fps: Number.isFinite( this.perfSample.fps )
-        ? this.perfSample.fps
-        : 0,
-      paused: this.perfSample.paused,
-      timestamp: performance.now()
-    };
-
-    this.emit(
-      "performance",
-      payload
+    this.perfMeter.sample(
+      now,
+      typeof p.frameCount === "number"
+        ? p.frameCount
+        : 0
     );
+  }
+
+  protected measureFps(): number {
+    return this.perfMeter.fps;
   }
 }

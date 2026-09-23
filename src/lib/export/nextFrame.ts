@@ -52,3 +52,37 @@ export default function nextFrame(): Promise<FrameWait> {
     );
   } );
 }
+
+type YieldingScheduler = {
+  yield?: () => Promise<void>;
+};
+
+/**
+ * Hand the event loop back for one task, without waiting for a display frame.
+ *
+ * A canvas engine has finished drawing a frame by the time its seek returns —
+ * there is nothing to wait *for*, only something to give: between two captured
+ * frames the page has to paint the progress it was just told and take the
+ * click on Stop. Waiting a whole animation frame for that caps an export at
+ * the display's refresh rate (a 60 fps clip could never capture faster than it
+ * plays) and, in a hidden tab, stops it dead — see `nextFrame` above.
+ *
+ * `scheduler.yield()` is exactly this primitive where it exists: its
+ * continuation runs ahead of other queued tasks, but after pending input and
+ * rendering. A zero-delay timer is the portable fallback. Neither depends on a
+ * frame being composited, so a backgrounded export keeps going.
+ */
+export function yieldToEventLoop(): Promise<void> {
+  const scheduler = ( globalThis as {
+    scheduler?: YieldingScheduler;
+  } ).scheduler;
+
+  if ( typeof scheduler?.yield === "function" ) {
+    return scheduler.yield();
+  }
+
+  return new Promise( ( resolve ) => setTimeout(
+    resolve,
+    0
+  ) );
+}

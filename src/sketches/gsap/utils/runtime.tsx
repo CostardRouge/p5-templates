@@ -42,6 +42,7 @@ import {
 import {
   resolveAnimation, totalFramesFor
 } from "@/lib/animationConfig";
+import nextFrame from "@/lib/export/nextFrame";
 import {
   toCssColor
 } from "./dom";
@@ -245,9 +246,11 @@ class GsapRuntime {
 
     this.registerBridge();
 
-    // Let React commit + the timeline build before resolving.
-    await new Promise<void>( ( resolve ) =>
-      requestAnimationFrame( () => requestAnimationFrame( () => resolve() ) ) );
+    // Let React commit + the timeline build before resolving. Two frame
+    // waits, each falling back to a timer: a sketch booting in a background
+    // tab (a hidden embed) would otherwise never resolve here.
+    await nextFrame();
+    await nextFrame();
 
     // Wait for the template's images to finish loading before we report ready /
     // prime the mirror. Otherwise the first capture (and the headless recorder,
@@ -599,7 +602,9 @@ class GsapRuntime {
     this.elapsed = 0;
     this.scrub();
     this.notify();
-    await new Promise( ( r ) => requestAnimationFrame( r ) );
+    // The recorder calls this first, so it is on the export path: a frame
+    // wait that falls back to a timer, never a bare rAF (nextFrame.ts).
+    await nextFrame();
   }
 
   /** Switch into deterministic, frame-stepped capture mode. */

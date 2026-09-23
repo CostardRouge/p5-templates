@@ -16,10 +16,6 @@ import type {
 export type EngineEventMap = {
   /** Fired once when the engine has finished initialising and is ready. */
   ready: void;
-  /** Fired on every rendered frame with the current frame index. */
-  frame: number;
-  /** Fired when the animation reaches its last frame (duration elapsed). */
-  complete: void;
   /** Fired on any unrecoverable engine error. */
   error: Error;
   /**
@@ -133,6 +129,12 @@ export interface SketchEngine {
    * Seek to `frame` and render it without producing a data-URL.
    * Cheaper than `captureFrame` for client-side async-loop
    * recording where the encoder reads pixels straight from the canvas.
+   *
+   * Resolves once the frame can be read from the capture source. It must
+   * never block on a display frame the browser may not deliver (a hidden
+   * tab stops `requestAnimationFrame` outright): a canvas engine draws
+   * synchronously and only yields a task, a DOM engine waits for layout
+   * through a frame wait that falls back to a timer.
    */
   seekAndDraw( frame: number ): Promise<void>;
 
