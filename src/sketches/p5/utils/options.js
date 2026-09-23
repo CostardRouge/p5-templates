@@ -54,6 +54,10 @@ import {
 } from "./interaction/controllerMap.js";
 
 import {
+  registerProbeEvents
+} from "./probe.js";
+
+import {
   getDeclaredBindings
 } from "@/lib/declaredBindings";
 
@@ -535,6 +539,9 @@ export function registerEvents() {
     "pre-setup",
     initInteractionForOptions
   );
+  // The probe registry's frame lifecycle (reset on a new sketch, advance the
+  // frame before the draw, publish the page's probes after it).
+  registerProbeEvents();
 }
 
 // Tracks whether the interaction handler was booted for the current sketch, so

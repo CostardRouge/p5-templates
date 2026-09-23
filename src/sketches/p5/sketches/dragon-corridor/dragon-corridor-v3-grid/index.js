@@ -4,6 +4,7 @@ import sketch, {
 } from "@/p5/utils/sketch.js";
 import animation from "@/p5/utils/animation.js";
 import audio from "@/p5/utils/audio.js";
+import probe from "@/p5/utils/probe.js";
 import createNoiseFieldRenderer from "@/p5/utils/noiseFieldGpu.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -780,7 +781,44 @@ sketch.draw( () => {
     2
   );
 
-  const f = animation.progression * crossings;
+  // The head parameter, in crossings: the one number the whole loop hangs on.
+  // Exposed as probes — the HUD can read them, the inspector lists them.
+  const f = probe(
+    "head",
+    animation.progression * crossings,
+    {
+      label: "Head",
+      min: 0,
+      max: crossings,
+      decimals: 2
+    }
+  );
+
+  probe(
+    "crossings",
+    crossings,
+    {
+      label: "Crossings / loop"
+    }
+  );
+  probe(
+    "arc.t",
+    f - Math.floor( f ),
+    {
+      label: "Arc phase",
+      min: 0,
+      max: 1,
+      decimals: 3
+    }
+  );
+  // Even crossings arc through the air, odd ones swim under the plate.
+  probe(
+    "submerged",
+    Math.floor( f ) % 2 === 1,
+    {
+      label: "Submerged"
+    }
+  );
 
   // ── Behaviour ──────────────────────────────────────────────────────────────
   const flow = Math.min(
@@ -1008,6 +1046,40 @@ sketch.draw( () => {
   const bank = camera.bank ?? 0.6;
   const headSmooth = smoothAt( f );
 
+  // Where the head actually is — the Hermite arc plus swim sway, after the
+  // hesitation warp — and how high above (or deep below) the plate.
+  const headNow = pathAt( f );
+
+  probe(
+    "head.xz",
+    {
+      x: headNow[ 0 ],
+      y: headNow[ 2 ]
+    },
+    {
+      label: "Head (plate)",
+      min: -holeReachX - reachPad,
+      max: holeReachX + reachPad
+    }
+  );
+  probe(
+    "head.height",
+    headNow[ 1 ],
+    {
+      label: "Head height",
+      min: -maxAmp,
+      max: maxAmp,
+      decimals: 3
+    }
+  );
+  probe(
+    "camera.view",
+    view,
+    {
+      label: "Camera"
+    }
+  );
+
   let camPos;
   let camTarget;
   let roll = 0;
@@ -1178,7 +1250,24 @@ sketch.draw( () => {
   const nextIdx = ( ( Math.ceil( f ) % crossings ) + crossings ) % crossings;
   const targetArc = arcs[ nextIdx ];
   const ft = f - Math.floor( f );
-  const anticipation = ft * ft * ( 3 - 2 * ft );
+  const anticipation = probe(
+    "hole.anticipation",
+    ft * ft * ( 3 - 2 * ft ),
+    {
+      label: "Next hole",
+      min: 0,
+      max: 1,
+      decimals: 3
+    }
+  );
+
+  probe(
+    "hole.next",
+    nextIdx,
+    {
+      label: "Next hole #"
+    }
+  );
 
   // ── Splash on every crossing ───────────────────────────────────────────────
   // The head crosses the plate each time f passes an integer. Wrap-aware (the

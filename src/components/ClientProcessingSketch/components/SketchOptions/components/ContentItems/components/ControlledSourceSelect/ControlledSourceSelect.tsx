@@ -14,8 +14,18 @@ import {
   BarLabelSegment
 } from "../ControlChrome";
 import {
-  BUILTIN_SOURCES, POINT_BUILTIN_SOURCES, flattenKeys, flattenPointKeys, groupKeyPaths
+  BUILTIN_SOURCES,
+  POINT_BUILTIN_SOURCES,
+  flattenKeys,
+  flattenPointKeys,
+  groupKeyPaths,
+  isProbeSource,
+  probeSourceId,
+  probeSourceName
 } from "@/p5/utils/hud/keyPaths";
+import {
+  useLiveProbes, type LiveProbe
+} from "@/hooks/useLiveProbes";
 
 type Props = {
   name: string;
@@ -30,11 +40,20 @@ type Props = {
   onReset?: ( event: React.MouseEvent ) => void;
 };
 
+/** How a live probe reads in the picker: its label or name, plus its unit. */
+function probeOptionLabel( probe: LiveProbe ): string {
+  const base = probe.label ?? probe.name;
+
+  return probe.unit ? `${ base } (${ probe.unit })` : base;
+}
+
 /**
  * Source picker for HUD widgets. Populated — like the `specs` overlay — by
  * enumerating the keys that already exist in the sketch settings, plus the
- * built-in live sources. No probe registry / runtime bridge required: the form
- * already holds the sketch settings, so the key list is derived client-side.
+ * built-in live sources: the form already holds the sketch settings, so that
+ * key list is derived client-side. The third family, the probes the running
+ * sketch exposes from inside its draw, cannot be — it is read off the probe
+ * bridge, and re-rendered only when a probe appears or disappears.
  *
  * Shares the segmented control-bar chrome: a label segment, the selected value,
  * and an invisible native <select> overlaying the whole bar.
@@ -69,9 +88,25 @@ export default function ControlledSourceSelect( {
   const {
     rootOptions, groups
   } = groupKeyPaths( keys );
+
+  // A picker offers what its consumer can read: the point pickers list the
+  // point-shaped probes, the scalar pickers everything else.
+  const liveProbes = useLiveProbes().filter( ( probe ) =>
+    ( probe.shape === "point" ) === isPointPicker );
   const currentValue = typeof field.value === "string" ? field.value : "";
   const builtin = builtins.find( ( source ) => source.value === currentValue );
-  const displayLabel = builtin?.label ?? ( currentValue || "—" );
+  const currentProbe = isProbeSource( currentValue )
+    ? liveProbes.find( ( probe ) => probeSourceId( probe.name ) === currentValue )
+    : undefined;
+  // A saved probe source is only listed while the sketch writes it — after a
+  // reload, or while its branch is not running, it is gone. Keep it selectable
+  // rather than letting the native select show the first entry over the saved
+  // value, and say that nothing is arriving.
+  const missingProbe = isProbeSource( currentValue ) && !currentProbe;
+  const displayLabel = builtin?.label
+    ?? ( currentProbe ? probeOptionLabel( currentProbe ) : null )
+    ?? ( missingProbe ? `${ probeSourceName( currentValue ) } (not arriving)` : null )
+    ?? ( currentValue || "—" );
 
   return (
     <div className={ CONTROL_BAR_CLASS }>
@@ -102,8 +137,23 @@ export default function ControlledSourceSelect( {
           ) )}
         </optgroup>
 
+        {( liveProbes.length > 0 || missingProbe ) && (
+          <optgroup label="Probes (live)">
+            {liveProbes.map( ( probe ) => (
+              <option key={ probe.name } value={ probeSourceId( probe.name ) }>
+                {probeOptionLabel( probe )}
+              </option>
+            ) )}
+            {missingProbe && (
+              <option value={ currentValue }>
+                {probeSourceName( currentValue )} (not arriving)
+              </option>
+            )}
+          </optgroup>
+        )}
+
         {/* Keep a saved key selectable even if it isn't in the current list. */}
-        {currentValue && !builtin && !keys.includes( currentValue ) && (
+        {currentValue && !builtin && !isProbeSource( currentValue ) && !keys.includes( currentValue ) && (
           <option value={ currentValue } hidden>
             {currentValue}
           </option>

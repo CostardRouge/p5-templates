@@ -38,6 +38,7 @@ import CaptureDialog from "./components/CaptureDialog";
 import TransportBar from "./components/TransportBar";
 import UndoRedo from "./components/UndoRedo";
 import InteractivePanel from "./components/InteractivePanel/InteractivePanel";
+import ProbesPanel from "./components/ProbesPanel/ProbesPanel";
 import SketchAssetsProvider from "./components/SketchAssetsProvider/SketchAssetsProvider";
 import useMediaQuery from "@/hooks/useMediaQuery";
 import useGlobalHotkey from "@/hooks/useGlobalHotkey";
@@ -784,6 +785,8 @@ export default function SketchOptions( {
                           bottom: `calc(${ transportHeight } + 1rem)`
                         } }
                       >
+                        <ProbesPanel stacked />
+
                         <InteractivePanel basePath={ sketchBasePath } stacked />
 
                         <SketchAssetsProvider scope="global" assetsName="assets" jobId={ jobId }>
@@ -895,18 +898,27 @@ export default function SketchOptions( {
                   />
                 </div>
 
-                {/* The central Interactive mixer — one overview of every binding, with
-              per-layer solo / mute / weight. Docked only here: Controls is a
-              full-height rail with no room to stack above, so the mixer stays
-              a standalone float, centered bottom and lifted above the slide
-              filmstrip. Floating stacks it above Controls instead (see the
-              Inspector block above) — hidden unless the plugin is on and the
-              scope has bindings, either way. */}
+                {/* The Probes inspector and the central Interactive mixer — one
+              overview of every binding, with per-layer solo / mute / weight.
+              Docked only here: Controls is a full-height rail with no room to
+              stack above, so the two stay a standalone float, centered bottom
+              and lifted above the slide filmstrip, in one bottom-anchored
+              column so they never overlap. Floating stacks them above Controls
+              instead (see the Inspector block above) — each hidden on its own
+              terms either way (the mixer unless the plugin is on and the scope
+              has bindings, the probes unless dev actions are on and the sketch
+              publishes some). */}
                 {dockedDesktop && (
-                  <InteractivePanel
-                    basePath={ sketchBasePath }
-                    bottomOffset={ mixerBottom }
-                  />
+                  <div
+                    className="absolute left-1/2 z-50 flex w-80 max-w-[calc(100vw-1rem)] -translate-x-1/2 flex-col gap-2"
+                    style={ {
+                      bottom: mixerBottom
+                    } }
+                  >
+                    <ProbesPanel stacked />
+
+                    <InteractivePanel basePath={ sketchBasePath } stacked />
+                  </div>
                 )}
               </>
             )}

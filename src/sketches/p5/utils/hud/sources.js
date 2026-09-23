@@ -10,8 +10,11 @@ import {
   getRawMouse
 } from "../interaction/pointerTracking.js";
 import {
-  getByPath
+  getByPath, isProbeSource, probeSourceName
 } from "./keyPaths.js";
+import {
+  probeSourceMeta, readProbeSource
+} from "../probe.js";
 
 /**
  * Read the running sketch's identity (name / engine label / category), exposed
@@ -58,14 +61,16 @@ const FALLBACK_COLORS = {
 };
 
 /**
- * Resolve a HUD widget's data source. A `source` is either a built-in live key
- * (fps / frame / progression / resolution …) or a dotted key-path into the live
- * sketch settings ("magnitude.start"), read exactly like the specs overlay
- * enumerates them — no probe registry required.
+ * Resolve a HUD widget's data source. A `source` is a built-in live key (fps /
+ * frame / progression / resolution …), a dotted key-path into the live sketch
+ * settings ("magnitude.start") read exactly like the specs overlay enumerates
+ * them, or "probe:<name>" — a value the sketch exposed from inside its draw
+ * (see ../probe.js), the only family that is not an input.
  *
  * Recording determinism: built-ins read only deterministic state (frameCount,
  * animation.progression, target framerate during capture). Key-path values come
- * straight from the (deterministic) sketch settings.
+ * straight from the (deterministic) sketch settings, and a probe is computed by
+ * the sketch from that same state.
  */
 
 const BUILTINS = {
@@ -228,6 +233,10 @@ export function resolveValue( source ) {
     return BUILTINS[ source ]();
   }
 
+  if ( isProbeSource( source ) ) {
+    return readProbeSource( source );
+  }
+
   return getByPath(
     options.sketch,
     source
@@ -236,11 +245,24 @@ export function resolveValue( source ) {
 
 /**
  * Resolve display metadata ({ label, unit }) for a binding: built-in defaults,
- * else the last key-path segment as a label.
+ * a probe's own meta when it gave one, else the last key-path segment as a
+ * label.
  */
 export function resolveMeta( source ) {
   if ( isBuiltin( source ) ) {
     return BUILTIN_META[ source ] ?? {};
+  }
+
+  if ( isProbeSource( source ) ) {
+    const meta = probeSourceMeta( source ) ?? {};
+
+    return {
+      label: meta.label ?? probeSourceName( source ).split( "." )
+        .pop(),
+      ...( meta.unit ? {
+        unit: meta.unit
+      } : {} )
+    };
   }
 
   return {
