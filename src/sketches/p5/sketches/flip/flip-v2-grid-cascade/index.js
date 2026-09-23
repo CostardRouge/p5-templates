@@ -466,7 +466,7 @@ function getCard(
   p, spec
 ) {
   const font = string.fonts[ spec.font ] ?? string.fonts.sans;
-  const family = font?.font?.names?.fontFamily?.en || "unknown";
+  const family = font?.name || font?.face?.family || "unknown";
   const key = [
     spec.renderer,
     spec.text,

@@ -218,7 +218,8 @@ function buildLetter( {
   const p = getP5();
   const font = string.fonts[ fontName ] ?? string.fonts.sans;
 
-  if ( !font?.font || !letter ) {
+  // p5 v2: glyph data readiness lives on `font.data` (was `font.font`).
+  if ( !font?.data || !letter ) {
     return null;
   }
 
@@ -226,14 +227,16 @@ function buildLetter( {
   p.textFont( font );
   p.textSize( BUILD_SIZE );
 
+  // p5 v2: textToPoints reads the size from the renderer state set
+  // above; a 4th positional number would be treated as a wrap width.
   const raw = font.textToPoints(
     letter,
     0,
     0,
-    BUILD_SIZE,
     {
       sampleFactor,
-      simplifyThreshold
+      simplifyThreshold,
+      graphics: p
     }
   );
 
@@ -380,7 +383,7 @@ function buildLetter( {
 
 function getLetter( cfg ) {
   const font = string.fonts[ cfg.fontName ] ?? string.fonts.sans;
-  const fontFamily = font?.font?.names?.fontFamily?.en || "unknown";
+  const fontFamily = font?.name || font?.face?.family || "unknown";
   const key = [
     cfg.letter,
     fontFamily,
