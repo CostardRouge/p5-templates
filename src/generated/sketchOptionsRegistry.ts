@@ -149,6 +149,7 @@ export const sketchFormLoaders: Record<string, SketchModuleLoader> = {
   "p5:metaballs/metaballs-v2-marching-squares": () => import( "@/p5/sketches/metaballs/metaballs-v2-marching-squares/options" ),
   "p5:metaballs/metaballs-v3-blobs": () => import( "@/p5/sketches/metaballs/metaballs-v3-blobs/options" ),
   "p5:metaballs/metaballs-v4-contours": () => import( "@/p5/sketches/metaballs/metaballs-v4-contours/options" ),
+  "p5:midi/pad-rack-v1-launchkey": () => import( "@/p5/sketches/midi/pad-rack-v1-launchkey/options" ),
   "p5:neon-graffiti": () => import( "@/p5/sketches/neon-graffiti/options" ),
   "p5:neon/neon-v0-legacy": () => import( "@/p5/sketches/neon/neon-v0-legacy/options" ),
   "p5:neon/neon-v1-graffiti": () => import( "@/p5/sketches/neon/neon-v1-graffiti/options" ),

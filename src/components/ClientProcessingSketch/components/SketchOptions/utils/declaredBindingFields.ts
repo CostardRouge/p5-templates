@@ -55,11 +55,21 @@ function collectField(
         field
       );
 
+      // A declaration may narrow the derived mapping — a checkbox on a pad wants
+      // `mode: "toggle"`, since the template's `gate` would hold the value only
+      // while the pad is down. Partial, so a sketch states one key, not the lot.
+      const mapping = field.binding.mapping
+        ? {
+          ...( template.mapping as Record<string, unknown> ),
+          ...field.binding.mapping
+        }
+        : template.mapping;
+
       out.push( {
         target: path,
         control: field.binding.control,
         kind,
-        mapping: template.mapping,
+        mapping,
         smoothing: template.smoothing
       } );
     }

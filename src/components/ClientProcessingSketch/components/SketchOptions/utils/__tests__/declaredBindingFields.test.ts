@@ -180,6 +180,36 @@ describe(
     );
 
     it(
+      "lays a declared mapping over the derived one, key by key",
+      () => {
+        const config = {
+          hiss: {
+            component: "checkbox",
+            binding: {
+              control: "pad.9",
+              mapping: {
+                mode: "toggle"
+              }
+            }
+          }
+        } as unknown as Record<string, FieldConfig>;
+
+        const [
+          declared
+        ] = collectDeclaredBindings(
+          config,
+          noValues
+        );
+        const mapping = declared.mapping as Record<string, unknown>;
+
+        // The pad flips the layer instead of holding it down…
+        expect( mapping.mode ).toBe( "toggle" );
+        // …and the threshold the template derived is still there.
+        expect( mapping.threshold ).toBe( 0.5 );
+      }
+    );
+
+    it(
       "declares nothing for a select laid out as buttons, or for a button — the pads own those",
       () => {
         // An enum binding folds ONE continuous channel onto the option list;

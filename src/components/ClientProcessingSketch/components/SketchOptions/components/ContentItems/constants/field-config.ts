@@ -50,6 +50,13 @@ interface BaseConfig {
   binding?: {
     control: string;
     /**
+     * Overrides laid over the mapping `makeDefaultBinding` derives from the
+     * field — `{ mode: "toggle" }` on a checkbox so a pad flips it instead of
+     * holding it, a narrower `{ min, max }` on a slider. Partial: only the keys
+     * given change.
+     */
+    mapping?: Record<string, unknown>;
+    /**
      * What the pad(s) driving this field should show, as palette indices
      * (0–127, the note-on velocity a Launchkey reads as a colour). `active`
      * lights the pressed option of a button row, `idle` the others and a
