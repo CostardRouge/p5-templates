@@ -126,8 +126,10 @@ What's left requires actions only the repo owner can take, in this order:
   - [ ] **Text** — a list of strings to step through; decide first whether that is modulation or a content feature
   - [ ] **Widen the targets, not just the kinds** — bindings only address paths under `sketch` (`getSketchScope`), so a content item's position and the canvas/animation settings carry no pastille. Deliberate for now: capture determinism for size/framerate, and per-item scoping for content
 - [ ] **Probe system** — expose the values a sketch computes inside `draw()` (a lerped radius, an eased position, a per-element progression) so the HUD / specs can display them and a binding can follow them. Design proposal, phases and the rejected options in `docs/probe-system.md`
-  - [ ] Phase 1 — `probe( name, value )` + per-instance registry + runtime→UI bridge, readable as a `probe:` source by the `hud-*` items and the specs overlay
-  - [ ] Phase 1.5 — a "Probes" inspector card listing what the running sketch publishes (live value, write count, sparkline); it is also the discovery UI for the pickers
+  - [x] Phase 1 — `probe( name, value )` + per-instance registry + runtime→UI bridge, readable as a `probe:` source by the `hud-*` items (`p5/utils/probe.js`, `lib/probeBridge.ts`, `hud/sources.js`; the specs overlay does not list probes yet)
+  - [x] Phase 1.5 — a "Probes" inspector card listing what the running sketch publishes (live value, write count; no sparkline yet), dev-actions gated; it is also the discovery UI for the pickers (`ProbesPanel`, `useLiveProbes`)
+  - [ ] Layer probes — recorded per instance but not addressable from the host's HUD (`probe:<layerId>.<name>` needs a stable layer identity)
+  - [ ] Instrument the rest of the catalogue as sketches are touched (`docs/memory/sketches.md` — every sketch written or edited gets its probes)
   - [ ] Phase 2 — probes as binding channels (capture-safe, unlike every other non-generator source), with a per-binding input range and a "learn" button
   - [ ] Phase 3 (hold) — `probe.each` array probes and indexed addressing, for staggering off a per-element progression; wait for a real sketch to need it
 - [ ] **Fake mouse pointer** — custom cursor overlay on the canvas (circle or crosshair) that follows pointer; useful when the system cursor isn't visible in recordings

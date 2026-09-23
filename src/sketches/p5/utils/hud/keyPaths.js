@@ -100,6 +100,25 @@ export const POINT_BUILTIN_SOURCES = BUILTIN_SOURCES.filter( ( source ) =>
 
 export const POINT_BUILTIN_SOURCE_KEYS = POINT_BUILTIN_SOURCES.map( ( source ) => source.value );
 
+// A probe — a value the sketch exposes from inside draw() (see ../probe.js) —
+// is addressed as "probe:<name>". The prefix keeps the three source families
+// apart in one string: a built-in key, a settings key-path, a probe.
+export const PROBE_SOURCE_PREFIX = "probe:";
+
+export function isProbeSource( source ) {
+  return typeof source === "string" && source.startsWith( PROBE_SOURCE_PREFIX );
+}
+
+/** "probe:arc.t" → "arc.t". */
+export function probeSourceName( source ) {
+  return String( source ?? "" ).slice( PROBE_SOURCE_PREFIX.length );
+}
+
+/** "arc.t" → "probe:arc.t". */
+export function probeSourceId( name ) {
+  return `${ PROBE_SOURCE_PREFIX }${ name }`;
+}
+
 // Overlay-config keys that live alongside sketch params but are not data.
 const SKIP_TOP_LEVEL = new Set( [
   "hud",

@@ -1,8 +1,17 @@
 # Probe system — reading a sketch's internal values
 
-> Design proposal, 2026-09-02. Nothing is implemented. This is the evaluation
-> asked for before any code: what exists, what is missing, what it would cost,
-> what is worth building and in which order.
+> Design proposal, 2026-09-02, written before any code: what exists, what is
+> missing, what it would cost, what is worth building and in which order.
+>
+> **Status, 2026-09-23 — phases 1 and 1.5 shipped**, on one sketch
+> (`dragon-corridor-v3-grid`): `probe()` / `probe.fold` + the per-instance
+> registry (`p5/utils/probe.js`, `probeRegistry.js`), the runtime→UI bridge
+> (`lib/probeBridge.ts`), the `probe:` source in the HUD runtime and the
+> "Probes (live)" picker group, and the Probes inspector card. What differs
+> from the text below: `probe.each` and the `sketch.state()` record walk were
+> cut (§4, §7); layer probes are recorded but not addressable; there is no
+> "off" state — the registry is cheap enough to always record. The rules that
+> hold are in `docs/memory/probes.md`; this file stays as the reasoning.
 
 ## 1. The gap, stated precisely
 
