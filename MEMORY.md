@@ -96,6 +96,7 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 - Raymarched sketches take the tangible camera rig — tilt, spin, distance, eye offset and target as bindable sliders, `fit` per export aspect, whole-cycle motion — instead of a bespoke orbit → `sketches.md`.
 - A new sculpt that wants the scatter takes `_lattice.js` and `_wave.js` and extends them (`skin`, `max`, `budget`) rather than shipping its own sampler and wave; a parallel build that did was rebuilt on them at rebase time → `sketches.md`.
 - The gyroscope pointer is a calibrated pose (auto / flat / custom) driving one of four signals (tilt, gravity, acceleration, rotation), publishes nothing until the sensor speaks, and says why in the overlay legend (permission tap, HTTPS, no sensor) → `interaction-sources.md`.
+- Recorded hand takes are baked offline into the uniform-fps `p5t-handclip` format and replayed as hand-shaped groups through the existing pinch/drag layer — never a second pointer path → `hand-clips.md`.
 
 - A session that changes code reports this project's state to its fiche, `projets/p5-templates/README.md`, in the private `second-brain` repo: the register is that folder and `PROJETS.md` there is generated from it, never Claude's memory and never `git log`. A cloud session that has no checkout of it attaches it itself (`add_repo`, 2026-09-23), because a week of sessions left the state only in chat; the fallback block goes into the PR description under `### Registre`, and no `second-brain` token is ever put in this repo. → CLAUDE.md rule 4
 
@@ -110,7 +111,6 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 - 2026-09-01 — **Loading-screen UX shipped** (poster-as-progress + reserved caption, precomputed total, monotonic progress, 150ms anti-flash). Details and the traps it cost in `docs/memory/architecture.md`. Still open: the engine's `ready` event is not gated on assets settling — `TODO.md` asks for it, but it needs a timeout/failure policy first.
 - 2026-08-20 — `.vscode/settings.json` was untracked as accidental IDE state (it arrived inside a sketch commit, 1ccd877). Its content was genuinely useful: eslint format-on-save matching the repo's `@stylistic` rules. If that is wanted as shared project config, re-add it deliberately with a `!.vscode/settings.json` negation — the file is still on disk.
 - 2026-08-20 — `.husky/pre-push` is entirely commented out, so nothing runs `npm run build` before a push; `.github/workflows/lint-fix.yml` records the reason as "a known issue with NEXT_BUILD_DIR resolution". Either fix the resolution and re-enable it, or delete the file. Left alone: hooks are the maintainer's call.
-- 2026-08-20 — `fast-check` is a devDependency that nothing imports. Either start using it for the maths helpers or drop it.
 - 2026-08-20 — No secret has ever been tracked in this repo (`git log --diff-filter=A -- '.env*'` is empty), so nothing needs rotating.
 
 ## Topic files — read before touching the area
@@ -130,4 +130,5 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 | `docs/memory/interaction-bindings.md` | Modulating a parameter: the binding resolver, its kinds, the pastille/popover, the channel manifest |
 | `docs/memory/interaction-sources.md` | How a sensor, camera or controller becomes a pointer: the collectors in `interaction/index.js`, the gyroscope's modes/calibration/permission, verifying a source without hardware |
 | `docs/memory/home-and-seo.md` | The home page and its studio tour, the capture assets, site metadata, JSON-LD, the sitemap |
+| `docs/memory/hand-clips.md` | The `p5t-handclip` format, the bake pipeline, the hand-clip studio, replaying recorded hands as virtual pointers |
 | `docs/analytics.md` | Umami config, why auto-track is off, the pageview queue, how to verify tracking (maintained, unlike the rest of `docs/`) |
