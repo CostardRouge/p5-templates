@@ -31,12 +31,18 @@ function collectField(
   readValue: ReadValue,
   out: DeclaredBinding[]
 ): void {
-  if ( field.binding?.control ) {
+  // A select laid out as a row of buttons is driven by the PADS, one per
+  // option, through the button-trigger path — not by a continuous enum
+  // binding on a single channel, which would fold a pad's 0/1 onto the first
+  // and last options and ignore the rest.
+  const ownedByPads = field.component === "select" && field.display === "buttons";
+
+  if ( field.binding?.control && !ownedByPads ) {
     const kind = bindingKindFor( field.component );
 
     // A kind of null means nothing knows how to modulate this component (text,
-    // an asset picker, …). Silently skipping is right: the declaration is a
-    // hint, and a field that cannot be driven simply is not.
+    // an asset picker, a button, …). Silently skipping is right: the
+    // declaration is a hint, and a field that cannot be driven simply is not.
     if ( kind ) {
       // makeDefaultBinding is the one place that knows how to derive a mapping
       // from a field's own config — the slider's min/max, the select's option

@@ -78,7 +78,7 @@ What's left requires actions only the repo owner can take, in this order:
 - [ ] **Common images handling** — define a standard `ImageInput` type and loader utility used by all sketches for loading, caching, and fallback
 - [ ] **Migrate images-stack to multiple inputs** — replace the single multi-image array field with individual typed image inputs per slot, with per-slot drag-and-drop
 - [x] **Item-list component** — `item-list` is a field type in `FieldRenderer`; it delegates each entry to the renderer for the configured item type (the breakdown item's `snapKeys` / `excludeKeys` are `item-list`s of `key-select`)
-- [ ] **Options: button field type** — support a `button` type in the settings schema; clicking triggers a named callback in the sketch (e.g. Randomize, Reset, Capture frame)
+- [x] **Options: button field type** — `component: "button"` with an `effect` (`set` / `toggle` / `cycle` / `randomize` / `reset`) on a sketch-relative target: one ordinary write, no callback into the sketch (nothing in the engine can be called from the form, and a write is what every existing one-shot already does). A `select` can also render as a row of buttons (`display: "buttons"`). "Capture frame" is not a field effect and stays with the export dialog
 - [ ] **Specialized input components**
   - [ ] Color / Palette — the named palette picker (iridescent, rainbow, purple, blue/yellow, B&W, gold) is still missing; `ControlledColorInput` already covers the colour + alpha half (draggable alpha bar over a checkerboard preview, numeric entry)
   - [ ] Noise — LOD detail, seed, noise type selector

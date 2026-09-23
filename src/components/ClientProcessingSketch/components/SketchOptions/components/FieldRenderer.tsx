@@ -1,5 +1,5 @@
 import {
-  ChevronDown, CopyPlus, Crosshair, RotateCcw
+  ChevronDown, CopyPlus, Crosshair, RotateCcw, Zap
 } from "lucide-react";
 import clsx from "clsx";
 import {
@@ -63,8 +63,17 @@ import {
 import BindingAffordance
   from "./ContentItems/components/BindingAffordance/BindingAffordance";
 import {
-  bindingKindFor
+  bindingKindFor, getSketchScope
 } from "./ContentItems/components/BindingAffordance/bindingUtils";
+import {
+  applyFieldEffect
+} from "../utils/fieldEffects";
+import {
+  findFieldConfig
+} from "../utils/findFieldConfig";
+import {
+  useSketchFormConfig
+} from "../hooks/useSketchFormConfig";
 import {
   useChannelLearn
 } from "./ContentItems/components/BindingAffordance/useLiveChannels";
@@ -76,7 +85,7 @@ import {
 } from "@/lib/interactionBindings";
 import deepClone from "@/utils/deepClone";
 import type {
-  FieldConfig
+  FieldConfig, FieldEffect
 } from "./ContentItems/constants/field-config";
 import {
   CONTROL_BAR_CLASS,
@@ -96,6 +105,26 @@ import {
 import {
   getSharedCollapsibleKey
 } from "../utils/getSharedCollapsibleKey";
+
+// What the press does, in the button's own words when the label segment is
+// hidden (an item-list row) — otherwise the verb, since the label already
+// names the field.
+function effectLabel( effect: FieldEffect ): string {
+  switch ( effect?.kind ) {
+    case "set":
+      return "Set";
+    case "toggle":
+      return "Toggle";
+    case "cycle":
+      return "Next";
+    case "randomize":
+      return "Randomize";
+    case "reset":
+      return "Reset";
+    default:
+      return "Run";
+  }
+}
 
 type FieldRendererProps = {
   fieldBasePath: string;
@@ -125,7 +154,8 @@ export default function FieldRenderer( {
     setValue,
     getValues,
     formState: {
-      errors
+      errors,
+      defaultValues
     },
     control
   } = useFormContext();
@@ -133,6 +163,46 @@ export default function FieldRenderer( {
   const registeredName = fieldName
     ? `${ fieldBasePath }.${ fieldName }`
     : fieldBasePath;
+
+  // A button's press is one write to the field its effect targets. The target
+  // is sketch-relative, so the sketch scope of THIS field anchors it, and the
+  // target's own config (for randomize / reset) comes from the form's root
+  // configuration. Shared by the click and, later, by the pad that presses it.
+  const sketchFormConfig = useSketchFormConfig();
+  const runEffect = useCallback(
+    ( effect: FieldEffect ) => {
+      const scope = getSketchScope( registeredName );
+
+      if ( !scope ) {
+        return;
+      }
+
+      applyFieldEffect(
+        effect,
+        {
+          getValues,
+          setValue,
+          getDefault: ( path ) => get(
+            defaultValues,
+            path
+          )
+        },
+        scope,
+        ( target ) => findFieldConfig(
+          sketchFormConfig,
+          target,
+          ( path ) => getValues( `${ scope }.${ path }` )
+        )
+      );
+    },
+    [
+      registeredName,
+      getValues,
+      setValue,
+      defaultValues,
+      sketchFormConfig
+    ]
+  );
 
   const error = get(
     errors,
@@ -297,6 +367,35 @@ export default function FieldRenderer( {
           />
         );
 
+      case "button":
+        // A push button in the bar chrome: no value, no register, no reset —
+        // the whole field is the press. The label segment names it like any
+        // other bar; the button fills the rest so the target is finger-sized.
+        return (
+          <div className={ CONTROL_BAR_CLASS }>
+            <BarLabelSegment label={ inlineLabel } />
+            <button
+              type="button"
+              id={ registeredName }
+              onClick={ ( event ) => {
+                event.stopPropagation();
+                runEffect( config.effect );
+              } }
+              className={ clsx(
+                "flex h-full min-w-0 flex-1 items-center justify-center gap-1.5 px-2.5 text-base md:text-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-focus",
+                config.variant === "danger"
+                  ? "text-red-500 hover:bg-red-500/10"
+                  : "text-foreground/80 hover:bg-hover hover:text-foreground"
+              ) }
+            >
+              <Zap className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">
+                { hideLabel && config.label ? config.label : effectLabel( config.effect ) }
+              </span>
+            </button>
+          </div>
+        );
+
       case "number":
         return (
           <div className={ `${ CONTROL_BAR_CLASS } focus-within:ring-1 focus-within:ring-focus` }>
@@ -366,6 +465,58 @@ export default function FieldRenderer( {
         const selectedOption = config.options.find( ( option ) => String( option.value ) === String( currentValue ?? "" ) );
         const selectedLabel =
           selectedOption?.label ?? ( config.noneLabel || "--" );
+
+        // A row of buttons instead of a picker: every option visible, the
+        // current one pressed. The bar loses its fixed height so the row can
+        // wrap on a phone — eight options do not fit one line at 400px.
+        if ( config.display === "buttons" ) {
+          return (
+            <div
+              className={ `${ CONTROL_BAR_CLASS } h-auto md:h-auto min-h-10 md:min-h-7` }
+              role="group"
+              aria-label={ config.label ?? registeredName }
+            >
+              <BarLabelSegment
+                label={ inlineLabel }
+                isModified={ isModified }
+                onReset={ handleReset }
+              />
+              <div className="flex min-w-0 flex-1 flex-wrap">
+                {config.options.map( ( option ) => {
+                  const pressed = String( option.value ) === String( currentValue ?? "" );
+
+                  return (
+                    <button
+                      key={ option.value }
+                      type="button"
+                      aria-pressed={ pressed }
+                      onClick={ ( event ) => {
+                        event.stopPropagation();
+                        setValue(
+                          registeredName,
+                          config.asNumber ? Number( option.value ) : option.value,
+                          {
+                            shouldDirty: true,
+                            shouldTouch: true,
+                            shouldValidate: true
+                          }
+                        );
+                      } }
+                      className={ clsx(
+                        "h-10 md:h-7 min-w-0 flex-1 truncate px-2 text-base md:text-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-focus",
+                        pressed
+                          ? "bg-foreground/10 font-medium text-foreground"
+                          : "text-label hover:bg-hover hover:text-foreground"
+                      ) }
+                    >
+                      {option.label}
+                    </button>
+                  );
+                } )}
+              </div>
+            </div>
+          );
+        }
 
         return (
           <div className={ CONTROL_BAR_CLASS }>

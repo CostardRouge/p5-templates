@@ -102,6 +102,16 @@ interface SelectConfig extends BaseConfig {
   noneLabel?: string;
   asNumber?: boolean;
   options: SelectOption[];
+  /**
+   * How the options are shown. `"dropdown"` (the default) is the native picker
+   * behind a one-line bar. `"buttons"` lays every option out as a segmented
+   * row, one button each, the current one pressed — for a short list a
+   * performer switches between, where seeing all of them beats a menu. A row
+   * declaring `binding: { control: "pad.1" }` is driven by consecutive pads,
+   * option i on pad 1+i, and the ordinary (continuous) enum binding is not
+   * created for it.
+   */
+  display?: "dropdown" | "buttons";
 }
 
 // For 'multi-select' inputs: a checkbox list bound to a string[] value, letting
@@ -109,6 +119,47 @@ interface SelectConfig extends BaseConfig {
 interface MultiSelectConfig extends BaseConfig {
   component: "multi-select";
   options: SelectOption[];
+}
+
+/**
+ * What a button DOES when it is pressed — the whole of its behaviour, since a
+ * button holds no value of its own. Every effect is one ordinary write to
+ * another field, addressed by a sketch-relative path: pressing is an edit,
+ * which is why it never needs the engine, the binding resolver or any capture
+ * policy (see `utils/fieldEffects.ts`).
+ */
+export type FieldEffect =
+  | {
+    kind: "set";
+    target: string;
+    value: unknown;
+  }
+  | {
+    kind: "toggle";
+    target: string;
+  }
+  | {
+    kind: "cycle";
+    target: string;
+    values: unknown[];
+  }
+  | {
+    kind: "randomize";
+    target: string;
+  }
+  | {
+    kind: "reset";
+    target: string;
+  };
+
+// A field that triggers rather than edits: no value, no `register`, no reset
+// arrow — a one-line bar holding a single push button. `binding.control`
+// on it names the pad that presses it (`"pad.9"`).
+interface ButtonConfig extends BaseConfig {
+  component: "button";
+  effect: FieldEffect;
+  /** `danger` for the destructive kind (a reset), rendered in the warn hue. */
+  variant?: "default" | "danger";
 }
 
 // For static, non-conditional nested objects
@@ -350,6 +401,7 @@ export type FieldConfig =
   | ColorInputConfig
   | SelectConfig
   | MultiSelectConfig
+  | ButtonConfig
   | NestedObjectConfig
   | ConditionalGroupConfig
   | ImagesStackConfig
