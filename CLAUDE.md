@@ -102,31 +102,39 @@ you are in for before starting.
 
 ## Rule 4 — Report the project's state (MANDATORY)
 
-The register of what is open is `PROJETS.md`, at the root of the private
-`second-brain` repository: one line per project, four states
-(`idée` → `actif` → `veille` → `clos`). That file is the source of truth — not
+The register of what is open is the `projets/` folder at the root of the
+private `second-brain` repository: one folder per project, whose `README.md`
+carries a typed front matter (`state`, `point`, `repos`) and a `## À faire`
+list of checkboxes. `PROJETS.md` beside it is GENERATED from those folders —
+never edit it, never tick a box in it. That folder is the source of truth — not
 this conversation, not Claude's memory, not `git log`, which records what
 changed and never what state the project is in.
 
 A session that changes code here changes this project's state, and the state
-has to reach that file.
+has to reach that folder.
 
 1. If a checkout of `second-brain` is reachable — a sibling directory, or a
-   repository attached to this session — edit its line in `PROJETS.md` and
-   commit it there, in its own commit: the date, the last known point, the
-   next action. **Never move a line between sections.** The state is the
-   maintainer's call, never the agent's.
-2. Otherwise, end the final message with the line, ready to paste:
+   repository attached to this session — edit `projets/p5-templates/README.md` and
+   commit it there, in its own commit: set `point:` to today, rewrite the
+   `## Dernier point` paragraph, tick what is done and add what is now open
+   under `## À faire`. **Never change `state:`** — the state is the
+   maintainer's call, never the agent's. Then run `node bin/projets.mjs index`
+   from that repo's root and include the regenerated `PROJETS.md` in the same
+   commit.
+2. Otherwise, end the final message with the block, ready to paste:
 
-       - <projet> — <domaine> — YYYY-MM-DD · <dernier point connu> — <prochaine action>
+       projets/p5-templates/README.md — point: YYYY-MM-DD
+       Dernier point : <dernier point connu>
+       - [ ] <prochaine action>
 
 The date is the day of the session. The last known point is what someone who
 has been away for three months needs in order to pick the project back up, not
 a changelog — the commit body already carries the detail. The next action is
-one gesture, not a plan.
+one gesture, not a plan: it is the first unticked box, and the generated
+register reads it from there.
 
 A question, an exploration or an explanation changes no state and prints no
-line.
+block.
 
 ## Verification — trust the disk, not the context
 
