@@ -136,6 +136,7 @@ export const sketchFormLoaders: Record<string, SketchModuleLoader> = {
   "p5:kinetic/kinetic-grid-spheres": () => import( "@/p5/sketches/kinetic/kinetic-grid-spheres/options" ),
   "p5:kinetic/kinetic-letters": () => import( "@/p5/sketches/kinetic/kinetic-letters/options" ),
   "p5:kinetic/kinetic-plane": () => import( "@/p5/sketches/kinetic/kinetic-plane/options" ),
+  "p5:lcd/lcd-v1-flipper-zero": () => import( "@/p5/sketches/lcd/lcd-v1-flipper-zero/options" ),
   "p5:letter-grid/letter-grid-v1-spell": () => import( "@/p5/sketches/letter-grid/letter-grid-v1-spell/options" ),
   "p5:letter-grid/letter-grid-v2-extrude": () => import( "@/p5/sketches/letter-grid/letter-grid-v2-extrude/options" ),
   "p5:letter-grid/letter-grid-v3-leap": () => import( "@/p5/sketches/letter-grid/letter-grid-v3-leap/options" ),

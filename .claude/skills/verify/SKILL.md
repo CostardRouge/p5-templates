@@ -48,6 +48,10 @@ the full usage.
 
 ## Gotchas
 
+- **Driving `window.__sketchCapture` yourself: call `prepare()` first.** Until
+  it runs, `renderFrame( k )` draws on the live clock, so the same *k* renders
+  different pixels twice and a determinism check fails for no reason in the
+  sketch. `bench-sketch.mjs` already does it.
 - **`page.screenshot()` times out** — and it is the SwiftShader launch flags,
   not the page: a browser started with `--use-angle=swiftshader` never
   completes a screenshot, even of `setContent( "<h1>hi</h1>" )`, and CDP
