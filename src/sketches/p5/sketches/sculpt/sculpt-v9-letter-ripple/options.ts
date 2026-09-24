@@ -42,26 +42,26 @@ export const formValues = {
 
   field: {
     ...fieldFormValues,
-    density: 44,
-    jitter: 0.1,
-    drift: 0.04,
+    density: 33,
+    jitter: 0.18,
+    drift: 0.06,
     // Radius of a junction bead at rest (fraction of a cell; 0 = tubes only).
     bead: 0.14
   },
 
   ripple: {
     // Rings per loop (whole, so the loop closes).
-    rings: 2,
+    rings: 3,
     // Distance between two crests (cells).
-    spacing: 6,
+    spacing: 12,
     // How far from the ink the rings are felt (cells).
-    reach: 16,
+    reach: 31.5,
     // The crest's share of its period (0.05 a thin ring, 1 a full sine).
-    width: 0.55,
+    width: 0.41,
     // Height of a crest at the ink (world units), fading over the reach.
-    height: 0.3,
+    height: 0.18,
     // Fade with distance: (1 − d / reach) ^ decay.
-    decay: 1,
+    decay: 1.65,
     direction: "out" as "out" | "in",
     // How far a crest pushes the points along its way (cells, up to 0.45).
     push: 0.3,
@@ -96,12 +96,12 @@ export const formValues = {
     // endpoints by default: a ring crosses a counter, the ink rule would cut it.
     rule: "endpoints" as "ink" | "endpoints",
     // A faint rest mesh: the rings are tubes, the sheet between them is dots.
-    restWeight: 0.06,
+    restWeight: 0.46,
     gain: 0.6,
     maxLength: 1.9,
     // A link climbing more than this (world units) is dropped: without it
     // every crest hangs a skirt of hairlines down to the sheet.
-    maxRise: 0.1
+    maxRise: 1.23
   },
 
   material: {

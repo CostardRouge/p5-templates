@@ -37,7 +37,7 @@ export const formValues = {
 
   field: {
     ...fieldFormValues,
-    density: 40,
+    density: 21,
     jitter: 0.1,
     drift: 0.05,
     // Radius of a junction bead at rest (fraction of a cell; 0 = tubes only).
@@ -46,9 +46,9 @@ export const formValues = {
 
   slices: {
     // Strips of rows slide sideways; strips of columns slide up and down.
-    axis: "rows" as "rows" | "columns",
+    axis: "columns" as "rows" | "columns",
     // Rows (or columns) per strip.
-    band: 2,
+    band: 6,
     // Amplitude of each strip's wave (fraction of the sheet).
     wave: 0.045,
     // Whole cycles of the wave per loop.
@@ -58,20 +58,20 @@ export const formValues = {
     // Odd strips run the other way.
     alternate: true,
     // How far a strip slides out on a handover (fraction of the sheet).
-    scatter: 0.3,
+    scatter: 0.43,
     // Which strip goes first on a handover.
     order: "first-last" as "first-last" | "last-first" | "centre-out" | "edges-in" | "alternate" | "random",
     // 0 = every strip together, 0.95 = one after the other.
-    spread: 0.6,
+    spread: 0.32,
     outEasing: "easeInCubic",
     inEasing: "easeOutBack",
     // How much a point on the ink is carried with its strip (its cell caps it).
-    carry: 1
+    carry: 0.37
   },
 
   relief: {
     // Full elevation, world units (the sheet is 2 units tall).
-    height: 0.3,
+    height: 0.17,
     // flat: every strip level · ramp: each strip higher than the last.
     profile: "flat" as "flat" | "ramp"
   },
@@ -86,7 +86,7 @@ export const formValues = {
   links: {
     reach: "4" as "4" | "8",
     rule: "ink" as "ink" | "endpoints",
-    restWeight: 0.1,
+    restWeight: 0.05,
     gain: 0.7,
     // Stretched links between two strips survive up to this length (cells).
     maxLength: 1.9

@@ -41,19 +41,19 @@ export const formValues = {
 
   field: {
     ...fieldFormValues,
-    density: 40,
-    jitter: 0.1,
+    density: 16,
+    jitter: 0.75,
     drift: 0.05,
     // Radius of a junction bead at rest (fraction of a cell; 0 = tubes only).
-    bead: 0.12
+    bead: 0.23
   },
 
   pinch: {
     // How far a point may slide toward the ink (cells, up to 0.45 — a point
     // never leaves its own cell, which is what keeps the trace exact).
-    pull: 0.45,
+    pull: 0.26,
     // How far from the ink the pull is felt (cells).
-    reach: 2.5,
+    reach: 3.9,
     // Share of the pull applied INSIDE the ink, toward the stroke's axis.
     inside: 1,
     // Easing of the pull from the outline (1) to the reach (0).
@@ -63,7 +63,7 @@ export const formValues = {
   relief: {
     // The letter is the contraction, not a lift: 0 keeps the sheet flat.
     // Any height lifts the ink as v2 does, on top of the pinch.
-    height: 0
+    height: 0.48
   },
 
   rhythm: {
@@ -85,9 +85,9 @@ export const formValues = {
 
   squeeze: {
     // How much every radius shrinks at the middle of a handover (0 = none).
-    amount: 0.6,
+    amount: 0.21,
     // How far past its size the material pops in the second half (0 = none).
-    overshoot: 0.25
+    overshoot: 0
   },
 
   links: {

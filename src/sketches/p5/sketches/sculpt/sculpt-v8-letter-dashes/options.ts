@@ -40,9 +40,9 @@ export const formValues = {
 
   field: {
     ...fieldFormValues,
-    density: 34,
-    jitter: 0,
-    drift: 0
+    density: 19,
+    jitter: 0.16,
+    drift: 0.14
   },
 
   dashes: {
@@ -71,7 +71,7 @@ export const formValues = {
 
   relief: {
     // Lift of the dashes on the ink (world units, 0 = flat).
-    height: 0
+    height: 0.11
   },
 
   rhythm: {

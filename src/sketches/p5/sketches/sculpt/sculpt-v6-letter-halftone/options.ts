@@ -41,18 +41,18 @@ export const formValues = {
 
   field: {
     ...fieldFormValues,
-    density: 36,
-    jitter: 0,
+    density: 16,
+    jitter: 0.03,
     drift: 0
   },
 
   dots: {
     shape: "sphere" as "sphere" | "box",
     // Radius off the ink (fraction of a cell; 0 = no rest grid).
-    rest: 0.1,
+    rest: 0.09,
     // Radius gained at full coverage (fraction of a cell): past 0.4 the dots
     // on the ink touch and fuse.
-    gain: 0.38,
+    gain: 0.4,
     // Halftone curve: coverage ^ gamma (< 1 fattens the edge dots).
     gamma: 1,
     // Supersamples per side when reading the ink's area under a cell.
