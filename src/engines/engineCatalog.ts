@@ -31,6 +31,10 @@ export const ENGINE_CATALOG: readonly EngineCatalogEntry[] = [
   {
     id: "threejs",
     label: "Three.js"
+  },
+  {
+    id: "cavalry",
+    label: "Cavalry"
   }
 ];
 
