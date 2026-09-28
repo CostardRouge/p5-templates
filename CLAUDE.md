@@ -124,10 +124,11 @@ has to reach that folder.
    in its own commit: set `point:` to today, rewrite the `## Dernier point`
    paragraph, tick what is done and add what is now open under `## À faire`.
    **Never change `state:`** — the state is the maintainer's call, never the
-   agent's. Then run `node bin/projets.mjs index` from that repo's root and
-   include the regenerated `PROJETS.md` in the same commit. A cloud session
-   pushes that commit on its own working branch and opens a draft pull
-   request in `second-brain`, exactly as it does here.
+   agent's. **Do not run `node bin/projets.mjs index` and do not commit
+   `PROJETS.md`**: a workflow regenerates it on `main` after the merge, and a
+   branch that carries it conflicts with every other open register PR. A
+   cloud session pushes that commit on its own working branch and opens a
+   draft pull request in `second-brain`, exactly as it does here.
 3. Only if it stays unreachable — the tool refused, or does not exist — write
    the block below under a `### Registre` heading in the description of this
    repository's pull request, where it can be found and collected later, and
