@@ -19,8 +19,12 @@ import {
 import {
   threejsRegistration
 } from "./threejs/index";
+import {
+  cavalryRegistration
+} from "./cavalry/index";
 
 /* ---- register built-in engines ----------------------------------- */
 registerEngine( p5Registration );
 registerEngine( gsapRegistration );
 registerEngine( threejsRegistration );
+registerEngine( cavalryRegistration );

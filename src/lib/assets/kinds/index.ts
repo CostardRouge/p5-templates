@@ -15,7 +15,11 @@ import {
 import {
   audiosKind
 } from "./audios";
+import {
+  cavalryKind
+} from "./cavalry";
 
 registerAssetKind( imagesKind );
 registerAssetKind( videosKind );
 registerAssetKind( audiosKind );
+registerAssetKind( cavalryKind );
