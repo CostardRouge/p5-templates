@@ -18,6 +18,10 @@ Read before touching TypeScript, ESLint, the git hooks, the merge drivers or any
 
 2026-08-20 — `.husky/pre-commit` regenerates and stages the sketch catalogue when a sketch or template asset is in the commit, then runs `lint-staged`. `.husky/pre-push` is entirely commented out — it would run `npm run build` with `NEXT_BUILD_DIR=/tmp/p5-templates-build`, and `.github/workflows/lint-fix.yml` records the reason as "a known issue with NEXT_BUILD_DIR resolution". CI workflows set `HUSKY: 0` during `npm ci` so hooks do not run in Actions. **How to apply**: nothing validates a push locally today — run `npm run check` yourself, plus `npm run build` for sketch or route changes. Never `--no-verify`: the pre-commit hook is what keeps the generated catalogue from drifting, and skipping it produces a commit that fails `sketches.test.ts` in CI.
 
+## Security bumps go through `npm update <pkg>`, not `npm audit fix`
+
+2026-10-02 — `npm audit fix` resolves every advisory it can in one pass, and on this tree that drags the `prisma` CLI a minor ahead of `@prisma/client` (7.10 vs 7.9) as a side effect of fixing `@prisma/config`; the CLI generates the client into `src/generated/prisma`, so the two must move together. What is left after a targeted update — `deepmerge-ts` and `mysql2` under the Prisma CLI — is only fixable by downgrading Prisma to 6 (`--force`), and neither is reached at runtime (Postgres, not MySQL). **How to apply**: name the vulnerable packages, `npm update --ignore-scripts <pkg…>` (lockfile only — the ranges in `package.json` already admit the fix), then `npm audit --omit=dev` to confirm, and run check + build. Bump `prisma` and `@prisma/client` together, deliberately, never as a side effect.
+
 ## `.gitignore` traps worth knowing
 
 2026-08-20 — `src/generated/prisma` is gitignored, so a fresh clone has no Prisma client until `npm install` runs `prisma generate` via `postinstall`. "Missing module `@/generated/prisma`" on a fresh checkout means that, not a lost file.
