@@ -119,7 +119,7 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 - 2026-08-20 — `.vscode/settings.json` was untracked as accidental IDE state (it arrived inside a sketch commit, 1ccd877). Its content was genuinely useful: eslint format-on-save matching the repo's `@stylistic` rules. If that is wanted as shared project config, re-add it deliberately with a `!.vscode/settings.json` negation — the file is still on disk.
 - 2026-08-20 — `.husky/pre-push` is entirely commented out, so nothing runs `npm run build` before a push; `.github/workflows/lint-fix.yml` records the reason as "a known issue with NEXT_BUILD_DIR resolution". Either fix the resolution and re-enable it, or delete the file. Left alone: hooks are the maintainer's call.
 - 2026-08-20 — `fast-check` is a devDependency that nothing imports. Either start using it for the maths helpers or drop it.
-- 2026-08-20 — No secret has ever been tracked in this repo (`git log --diff-filter=A -- '.env*'` is empty), so nothing needs rotating.
+- 2026-10-02 — A web-push private key WAS tracked: `.env.example` carried a full VAPID pair until 2026-10-02, and `setup.sh` copied it into every `.env` while the generator skipped any `.env` that already had the lines. The template is blank now and setup generates a pair per install, but any deployment whose `.env` came from that template still signs with the published key — rotating it (which drops every existing push subscription) is the maintainer's call → `security.md`.
 
 ## Topic files — read before touching the area
 

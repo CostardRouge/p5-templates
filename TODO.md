@@ -240,7 +240,7 @@ Keeping these so they are not re-proposed:
 ## ⚙️ Infrastructure & DevOps
 
 - [ ] **Sentry error tracking** — frontend (error boundaries + unhandled rejections) and backend (API routes + BullMQ worker); source maps uploaded in CI
-- [ ] **Secure `.env`** — `.env.example` is tracked (ec49040) and no secret was ever committed (`git log --diff-filter=A -- '.env*'` is empty); what remains is documenting required vs optional per var and deciding on a secrets manager for production
+- [ ] **Secure `.env`** — `.env.example` is tracked (ec49040); it carried a real VAPID key pair until 2026-10-02 (now blank, `setup.sh` generates one per install). What remains: rotate the production VAPID pair if its `.env` came from the template, document required vs optional per var, and decide on a secrets manager for production
 - [x] **Notification settings corner (PWA)** — widget to manage push notification preferences (enable/disable, test notification, permission status); part of PWA install flow
 - [ ] **Multi-user support** — user accounts with auth (email/password or OAuth); recordings and jobs scoped to `userId` in DB; API auth middleware; break into sub-tasks before starting
 

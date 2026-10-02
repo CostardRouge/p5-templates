@@ -52,11 +52,14 @@ function updateEnvFile(
       "utf-8"
     );
 
-    // Check if keys already exist
+    // A key "exists" only when it has a value: .env.example ships both lines
+    // empty, and an empty line must be filled in place, not skipped.
     const hasPublicKey = /^NEXT_PUBLIC_VAPID_PUBLIC_KEY=/m.test( envContent );
     const hasPrivateKey = /^VAPID_PRIVATE_KEY=/m.test( envContent );
+    const hasPublicValue = /^NEXT_PUBLIC_VAPID_PUBLIC_KEY=\S/m.test( envContent );
+    const hasPrivateValue = /^VAPID_PRIVATE_KEY=\S/m.test( envContent );
 
-    if ( hasPublicKey && hasPrivateKey ) {
+    if ( hasPublicValue && hasPrivateValue ) {
       console.log( "ℹ️  VAPID keys already exist in .env file. Skipping..." );
       return false;
     }
