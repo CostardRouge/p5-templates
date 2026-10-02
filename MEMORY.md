@@ -139,5 +139,6 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 | `docs/memory/interaction-bindings.md` | Modulating a parameter: the binding resolver, its kinds, the pastille/popover, the driven-field treatment, slides and bindings |
 | `docs/memory/interaction-midi.md` | A MIDI channel, the learn gesture, a sketch-declared `binding: { control }`, the port-name controller map |
 | `docs/memory/interaction-sources.md` | How a sensor, camera or controller becomes a pointer: the collectors in `interaction/index.js`, the gyroscope's modes/calibration/permission, verifying a source without hardware |
+| `docs/memory/security.md` | An API route, a server action, request data becoming a path / S3 key / outbound URL, `.env.example` — there is no auth, so every route is public |
 | `docs/memory/home-and-seo.md` | The home page and its studio tour, the capture assets, site metadata, JSON-LD, the sitemap |
 | `docs/analytics.md` | Umami config, why auto-track is off, the pageview queue, how to verify tracking (maintained, unlike the rest of `docs/`) |
