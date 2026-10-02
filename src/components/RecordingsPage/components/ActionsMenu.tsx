@@ -169,7 +169,10 @@ export default function ActionsMenu( {
   return (
     <>
       <Menu as="div" className="relative inline-block text-left">
-        <MenuButton className="p-2 bg-background/90 backdrop-blur-sm hover:bg-hover rounded-lg border border-border shadow-lg transition-colors inline-flex items-center justify-center">
+        <MenuButton
+          aria-label="Recording actions"
+          className="p-2 bg-background/90 backdrop-blur-sm hover:bg-hover rounded-lg border border-border shadow-lg transition-colors inline-flex items-center justify-center"
+        >
           <MenuIcon className="h-4 w-4 text-foreground" />
         </MenuButton>
 

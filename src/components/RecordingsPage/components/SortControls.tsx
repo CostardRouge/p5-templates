@@ -56,6 +56,7 @@ export default function SortControls( {
   return (
     <div className="flex items-center gap-1.5 sm:gap-2">
       <select
+        aria-label="Sort by"
         value={ sortConfig.field }
         onChange={ ( e ) =>
           onSortChange( {

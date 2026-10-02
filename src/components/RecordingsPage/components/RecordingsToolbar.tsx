@@ -54,6 +54,7 @@ export default function RecordingsToolbar( {
         <div className="relative flex-1 min-w-0">
           <input
             type="text"
+            aria-label="Search recordings"
             placeholder="Search..."
             value={ search }
             onChange={ ( e ) => onSearchChange( e.target.value ) }
@@ -63,6 +64,7 @@ export default function RecordingsToolbar( {
 
         {/* Status Filter */}
         <select
+          aria-label="Filter by status"
           value={ statusFilter }
           onChange={ ( e ) => onStatusFilterChange( e.target.value ) }
           className="px-4 py-2.5 rounded-xl bg-background border border-border hover:border-foreground/30 focus:border-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/10 transition-all text-sm font-medium cursor-pointer flex-shrink-0"
@@ -115,6 +117,7 @@ export default function RecordingsToolbar( {
         <div className="relative w-full">
           <input
             type="text"
+            aria-label="Search recordings"
             placeholder="Search..."
             value={ search }
             onChange={ ( e ) => onSearchChange( e.target.value ) }
@@ -128,6 +131,7 @@ export default function RecordingsToolbar( {
           <div className="flex items-center gap-1.5 flex-1 min-w-0">
             {/* Status Filter */}
             <select
+              aria-label="Filter by status"
               value={ statusFilter }
               onChange={ ( e ) => onStatusFilterChange( e.target.value ) }
               className="px-2.5 py-2 rounded-lg bg-background border border-border hover:border-foreground/30 focus:border-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/10 transition-all text-xs font-medium cursor-pointer flex-shrink-0 min-w-0"

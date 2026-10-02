@@ -143,6 +143,7 @@ export default function ControlledAssetInput( {
 
           <button
             type="button"
+            aria-label="Remove file"
             onClick={ clear }
             className="absolute left-1 top-1 h-5 w-5 text-center text-red-600 bg-background/90 hover:bg-background rounded-md border border-theme p-0.5"
           >
