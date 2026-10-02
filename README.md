@@ -85,6 +85,17 @@ flag in `next.config.ts`). All default **off** — set the var to `true` to enab
 INTERACTION_BINDINGS=true   # in .env / .env.local, then restart the dev server
 ```
 
+## Checks
+
+What CI runs (Node 24, four parallel jobs), and what to run before opening a pull request:
+
+```bash
+npm run check               # lint + typecheck + test
+npm run build               # compiles every sketch route — catches broken imports the tests cannot
+```
+
+`npm run lint:fix` is the formatter (ESLint `@stylistic`; there is no Prettier). A new or renamed sketch needs `npm run sketch:meta:write` to regenerate the catalogue; the pre-commit hook does it for you when a sketch is staged.
+
 ## Useful Commands
 
 ```bash
@@ -99,15 +110,21 @@ make clean                  # stop services and remove volumes
 
 ```
 src/
-├── app/              # Next.js pages & API routes
-├── components/       # React components
-├── lib/              # Core business logic
-├── templates/        # The sketches themselves (p5/gsap/threejs) + shared utils
-└── utils/            # Utility helpers
+├── app/              # Next.js pages, API routes, server actions
+├── components/       # React components (the studio lives in ClientProcessingSketch/)
+├── engines/          # The SketchEngine contract and the p5 / GSAP / Three.js engines
+├── sketches/         # The sketches themselves, per engine (p5/, gsap/, threejs/) + metadata.json
+├── generated/        # Generated sketch registries and Prisma client — never hand-edit
+├── lib/              # Core logic: recording, export, assets, progression, connections
+├── services/         # BullMQ queue/worker and web-push
+├── hooks/ utils/ types/
 prisma/               # DB schema & migrations
 public/assets/        # Fonts, images, libraries
-scripts/              # Build & dev scripts
+scripts/              # Build & dev scripts (sketch catalogue, bench, VAPID keys)
+docs/memory/          # Maintained project memory: decisions, traps, conventions
 ```
+
+Security note: no route is authenticated. Anything with `BACKEND_RECORDING=true` exposes the recording API to whoever can reach the host — see `docs/memory/security.md` before deploying it publicly.
 
 ## License
 
