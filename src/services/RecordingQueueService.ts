@@ -200,23 +200,21 @@ export class RecordingQueueService {
 
   public async getQueueHealth(): Promise<QueueHealthResponse> {
     try {
-      const [
-        waiting,
-        active,
-        completed,
-        failed
-      ] = await Promise.all( [
-        this.queue.getWaiting(),
-        this.queue.getActive(),
-        this.queue.getCompleted(),
-        this.queue.getFailed()
-      ] );
+      // Counts, not job lists. Every job is added with a priority, so the
+      // queued ones are "prioritized", which getWaiting() never returned.
+      const counts = await this.queue.getJobCounts(
+        "waiting",
+        "prioritized",
+        "active",
+        "completed",
+        "failed"
+      );
 
       return {
-        waiting: waiting.length,
-        active: active.length,
-        completed: completed.length,
-        failed: failed.length
+        waiting: ( counts.waiting ?? 0 ) + ( counts.prioritized ?? 0 ),
+        active: counts.active ?? 0,
+        completed: counts.completed ?? 0,
+        failed: counts.failed ?? 0
       };
     } catch( error ) {
       console.error(
