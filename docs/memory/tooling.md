@@ -22,6 +22,10 @@ Read before touching TypeScript, ESLint, the git hooks, the merge drivers or any
 
 2026-10-02 — `npm audit fix` resolves every advisory it can in one pass, and on this tree that drags the `prisma` CLI a minor ahead of `@prisma/client` (7.10 vs 7.9) as a side effect of fixing `@prisma/config`; the CLI generates the client into `src/generated/prisma`, so the two must move together. What is left after a targeted update — `deepmerge-ts` and `mysql2` under the Prisma CLI — is only fixable by downgrading Prisma to 6 (`--force`), and neither is reached at runtime (Postgres, not MySQL). **How to apply**: name the vulnerable packages, `npm update --ignore-scripts <pkg…>` (lockfile only — the ranges in `package.json` already admit the fix), then `npm audit --omit=dev` to confirm, and run check + build. Bump `prisma` and `@prisma/client` together, deliberately, never as a side effect.
 
+## Tailwind is 3.4: variants on data attributes need brackets
+
+2026-10-02 — Headless UI v2 marks state with bare data attributes (`data-focus`, `data-active`, `data-open`), and the short `data-focus:bg-hover` variant is Tailwind **4** syntax: 3.4 compiles it to nothing, silently, so a keyboard-focused menu item had no highlight (`ExportPanel`'s variant menu). **How to apply**: write `data-[focus]:…`; to check a class exists, grep the built CSS under `.next/static/chunks/*.css` after `npm run build` — a missing rule produces no error anywhere else.
+
 ## `.gitignore` traps worth knowing
 
 2026-08-20 — `src/generated/prisma` is gitignored, so a fresh clone has no Prisma client until `npm install` runs `prisma generate` via `postinstall`. "Missing module `@/generated/prisma`" on a fresh checkout means that, not a lost file.
