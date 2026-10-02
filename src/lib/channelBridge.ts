@@ -199,23 +199,44 @@ export function bindingSignalVarName( target: string ): string {
   ) }`;
 }
 
-/** Write each binding's resolved 0..1 signal to its CSS var on `:root`. */
+// The vars written last frame, so the ones no longer published can be removed.
+let publishedSignalVars = new Set<string>();
+
+/**
+ * Write each binding's resolved 0..1 signal to its CSS var on `:root`, and
+ * remove the vars of bindings that stopped playing — the same absence rule as
+ * the channels above. Switching to a slide whose bindings differ used to leave
+ * the previous slide's vars frozen at their last value, so a pastille or mixer
+ * meter read as live when nothing drove it. Publish `{}` to clear them all.
+ */
 export function publishBindingSignals( signals: Record<string, number> ): void {
   if ( typeof document === "undefined" || !signals ) {
     return;
   }
 
   const root = document.documentElement.style;
+  const written = new Set<string>();
 
   for ( const [
     target,
     value
   ] of Object.entries( signals ) ) {
+    const name = bindingSignalVarName( target );
+
     root.setProperty(
-      bindingSignalVarName( target ),
+      name,
       String( clamp01( value ) )
     );
+    written.add( name );
   }
+
+  for ( const name of publishedSignalVars ) {
+    if ( !written.has( name ) ) {
+      root.removeProperty( name );
+    }
+  }
+
+  publishedSignalVars = written;
 }
 
 /** Subscribe to per-frame channel snapshots. Returns an unsubscribe function. */

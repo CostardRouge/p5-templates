@@ -767,7 +767,7 @@ function bindingContext() {
 // Sample the interaction channels once per frame and publish them, plus each
 // active binding's resolved 0..1 signal (keyed by target) for the UI's VU
 // meters. Runs for every sketch; `sampleChannels` is memoized per frame and the
-// binding-signal pass is skipped entirely when a sketch has no bindings.
+// binding-signal computation is skipped when a sketch has no bindings.
 function publishChannelsFrame() {
   if ( !BINDINGS_ENABLED ) {
     return;
@@ -792,16 +792,18 @@ function publishChannelsFrame() {
 
     publishChannels( channels );
 
-    if ( Array.isArray( bindings ) && bindings.length > 0 ) {
-      publishBindingSignals( computeBindingSignals(
+    // An empty set still publishes: it is what clears the meters of a slide
+    // (or a removed binding) that no longer plays.
+    publishBindingSignals( Array.isArray( bindings ) && bindings.length > 0
+      ? computeBindingSignals(
         {
           ...base,
           bindings
         },
         channels,
         bindingContext()
-      ) );
-    }
+      )
+      : {} );
   } catch {
     // Never let telemetry break the draw loop.
   }
