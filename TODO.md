@@ -117,7 +117,7 @@ What's left requires actions only the repo owner can take, in this order:
   - [ ] `useAudio` — Web Audio API analyser data
   - [ ] `useOrbit` — 3D orbit camera controls
   - [ ] `usePerlinNoise` — seeded Perlin/Simplex noise with optional animated offset
-- [x] **MIDI learn as a gesture** — the crosshair button beside the source picker: arm, move a control, it is assigned. A frame-to-frame diff of the channel snapshot (`observeForLearn` + `useChannelLearn`), so it learns a fader, an audio band or a hand gesture just as well as a knob; derived channels are excluded or a mirror like `midi.ccLast` wins every time. See `docs/memory/interaction-bindings.md`
+- [x] **MIDI learn as a gesture** — the crosshair button beside the source picker: arm, move a control, it is assigned. A frame-to-frame diff of the channel snapshot (`observeForLearn` + `useChannelLearn`), so it learns a fader, an audio band or a hand gesture just as well as a knob; derived channels are excluded or a mirror like `midi.ccLast` wins every time. See `docs/memory/interaction-midi.md`
 - [ ] **MIDI monitor panel** — a debug surface listing the decoded messages, every CC number seen with its raw and normalised value, the notes held, and the channel snapshot the resolver actually gets. Mocked up in full (a published artifact, Sept 2026) and worth porting behind `INTERACTION_BINDINGS`: without it, "which CC is this knob" is unanswerable from inside the app. The mock-up is what produced the measured Launchkey map in the MIDI controllers section below — guided capture of the eight encoders and sixteen pads per port, a DAW-mode arm button and a JSON dump
 - [ ] **Bind the exotic value types** — modulation covers number, 2D pad, boolean, select and colour (see `docs/memory/interaction-bindings.md`); the rest still has no `kind`
   - [ ] **Generators for the 2D pad** — it can only follow a live vector2d channel today (Orbit and Perlin noise animate without a device; everything else needs one). One generator per axis on a shared clock, with a phase offset, would give circles / figure-eights / drifts
@@ -138,7 +138,7 @@ What's left requires actions only the repo owner can take, in this order:
 ## 🎚️ MIDI controllers
 
 Playing a sketch from hardware. The measured truth about the Launchkey, the
-decisions and the traps live in `docs/memory/interaction-bindings.md`; this is
+decisions and the traps live in `docs/memory/interaction-midi.md`; this is
 the task register. **Complexity** is the cost of the change, **Worth** whether
 it earns that cost.
 

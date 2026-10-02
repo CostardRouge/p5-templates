@@ -199,26 +199,119 @@ export function bindingSignalVarName( target: string ): string {
   ) }`;
 }
 
-/** Write each binding's resolved 0..1 signal to its CSS var on `:root`. */
+// The vars written last frame, so the ones no longer published can be removed.
+let publishedSignalVars = new Set<string>();
+
+/**
+ * Write each binding's resolved 0..1 signal to its CSS var on `:root`, and
+ * remove the vars of bindings that stopped playing — the same absence rule as
+ * the channels above. Switching to a slide whose bindings differ used to leave
+ * the previous slide's vars frozen at their last value, so a pastille or mixer
+ * meter read as live when nothing drove it. Publish `{}` to clear them all.
+ */
 export function publishBindingSignals( signals: Record<string, number> ): void {
   if ( typeof document === "undefined" || !signals ) {
     return;
   }
 
   const root = document.documentElement.style;
+  const written = new Set<string>();
 
   for ( const [
     target,
     value
   ] of Object.entries( signals ) ) {
+    const name = bindingSignalVarName( target );
+
     root.setProperty(
-      bindingSignalVarName( target ),
+      name,
       String( clamp01( value ) )
     );
+    written.add( name );
+  }
+
+  for ( const name of publishedSignalVars ) {
+    if ( !written.has( name ) ) {
+      root.removeProperty( name );
+    }
+  }
+
+  publishedSignalVars = written;
+}
+
+// ── Per-binding resolved values ─────────────────────────────────────────────
+// What a driven field's own control shows: the value the sketch reads this
+// frame (a number, or an option index for an enum), keyed by target. The bar's
+// fill reads `--binding-value-<target>` in pure CSS against the field's own
+// min/max — which the engine does not know — and the few text readouts
+// subscribe and write their node directly, so a moving value costs no React
+// render. Same absence rule as everything above: a target that stops being
+// driven loses its var, and the control falls back to its base value.
+
+/** CSS variable name for a driven target's resolved value. */
+export function bindingValueVarName( target: string ): string {
+  return `--binding-value-${ cssId( target ) }`;
+}
+
+type ValueSubscriber = ( values: Record<string, number> ) => void;
+
+let latestValues: Record<string, number> = {};
+let publishedValueVars = new Set<string>();
+const valueSubscribers = new Set<ValueSubscriber>();
+
+/** Write each driven target's resolved value to its var and notify readers. */
+export function publishBindingValues( values: Record<string, number> ): void {
+  latestValues = values ?? {};
+
+  if ( typeof document !== "undefined" ) {
+    const root = document.documentElement.style;
+    const written = new Set<string>();
+
+    for ( const [
+      target,
+      value
+    ] of Object.entries( latestValues ) ) {
+      const name = bindingValueVarName( target );
+
+      root.setProperty(
+        name,
+        String( value )
+      );
+      written.add( name );
+    }
+
+    for ( const name of publishedValueVars ) {
+      if ( !written.has( name ) ) {
+        root.removeProperty( name );
+      }
+    }
+
+    publishedValueVars = written;
+  }
+
+  for ( const subscriber of valueSubscribers ) {
+    try {
+      subscriber( latestValues );
+    } catch {
+      // A subscriber must never break the publish loop.
+    }
   }
 }
 
-/** Subscribe to per-frame channel snapshots. Returns an unsubscribe function. */
+/** Latest resolved values, for a reader's first paint. */
+export function getBindingValues(): Record<string, number> {
+  return latestValues;
+}
+
+/** Subscribe to per-frame resolved values. Returns an unsubscribe function. */
+export function subscribeBindingValues( cb: ValueSubscriber ): () => void {
+  valueSubscribers.add( cb );
+
+  return () => {
+    valueSubscribers.delete( cb );
+  };
+}
+
 /**
  * The name of the MIDI input the engine is listening to, or "" when none is
  * picked (or every input is, which is the same as none for a controller map).
@@ -238,6 +331,7 @@ export function getMidiPortName(): string {
   return midiPort;
 }
 
+/** Subscribe to per-frame channel snapshots. Returns an unsubscribe function. */
 export function subscribeChannels( cb: Subscriber ): () => void {
   subscribers.add( cb );
 

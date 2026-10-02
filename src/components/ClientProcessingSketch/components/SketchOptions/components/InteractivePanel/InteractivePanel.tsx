@@ -7,7 +7,7 @@ import {
   useFormContext, useWatch
 } from "react-hook-form";
 import {
-  Activity, ChevronDown, Trash2
+  ChevronDown, Trash2
 } from "lucide-react";
 import clsx from "clsx";
 
@@ -28,6 +28,7 @@ import {
   humanizeTarget,
   interactiveScopeFor
 } from "../ContentItems/components/BindingAffordance/bindingUtils";
+import BindingGlyph from "../ContentItems/components/BindingAffordance/BindingGlyph";
 
 type Props = {
   /** The sketch-settings scope whose bindings this manages ("sketch" or
@@ -207,7 +208,7 @@ export default function InteractivePanel( {
         className="flex items-center gap-2 px-3 py-2 text-foreground"
         aria-label={ expanded ? "Collapse interactive mixer" : "Expand interactive mixer" }
       >
-        <Activity className="h-3.5 w-3.5" />
+        <BindingGlyph state={ activeCount > 0 ? "live" : "muted" } />
         <span>
           Interactive · {list.length} layer{list.length === 1 ? "" : "s"}
           {anySolo && ` · ${ activeCount } soloed`}
@@ -267,7 +268,10 @@ export default function InteractivePanel( {
                             opacity: `var(${ meterVar }, 0)`
                           } }
                         />
-                        <Activity className="relative h-3.5 w-3.5 text-focus" />
+                        <BindingGlyph
+                          state={ dimmed ? "muted" : "live" }
+                          className="text-focus"
+                        />
                       </span>
 
                       <span className="min-w-0 flex-1 truncate text-foreground">

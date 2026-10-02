@@ -66,8 +66,10 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 - Every positioned content item is grabbable on canvas, and that takes three aligned edits (type set, anchor resolution, renderer-reported bounds) — not just a schema → `canvas-interaction.md`.
 - The viewport's wheel pans and only a pinch (touch, or ctrl+wheel as browsers report a trackpad pinch) zooms; the wheel recogniser must skip ctrl+wheel itself → `canvas-interaction.md`.
 - A binding is data resolved at read time, in its own `interactive` namespace; its five kinds share one signal pipeline and differ only in the mapping and the fold rule → `interaction-bindings.md`.
+- A slide carries its own `interactive` namespace: the editor never shows the root's, so a slide created or loaded without it is filled from what the engine plays there; binding meters (`--bind-*`) are cleared when their binding stops playing → `interaction-bindings.md`.
+- A driven field shows the value the sketch reads on its own control (iridescent live fill + base thumb + range band, an option lane on a select) and the pastille is a diamond, not a pulse; the value travels as a CSS var and a direct text write, never React state per frame → `interaction-bindings.md`.
 - A device-backed channel publishes nothing when it has no value, never a zero — which is what keeps a headless export from depending on hardware being plugged in → `interaction-bindings.md`.
-- A sketch declares which physical control drives a field (`binding: { control }`); the map is keyed on the MIDI PORT name, it resolves rather than mints channels, and a declared binding is rebuilt every frame instead of ever being written to the document → `interaction-bindings.md`.
+- A sketch declares which physical control drives a field (`binding: { control }`); the map is keyed on the MIDI PORT name, it resolves rather than mints channels, and a declared binding is rebuilt every frame instead of ever being written to the document → `interaction-midi.md`.
 - The home page documents the editor surface by surface with real screenshots of it, as a server component slotted into the client page → `home-and-seo.md`.
 - There are two site maps: `/sitemap.xml` for crawlers (`app/sitemap.ts`) and `/sitemap` for people (`app/sitemap/page.tsx`); Next resolves them independently → `home-and-seo.md`.
 - The canonical origin has a hardcoded production default (`SITE_URL`) because statically prerendered routes bake their URLs at build time, where a runtime env var is too late → `home-and-seo.md`.
@@ -104,6 +106,8 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 
 ## Open items (dated; remove when done)
 
+- 2026-10-02 — Driven-field treatment shipped for sliders, selects and number bars (`interaction-bindings.md`). Still open: the colour swatch, the checkbox and the 2D pad only get the diamond glyph — a live swatch would need `computeBindingValues` to publish colours (an `rgb()` var would do); and a sketch-declared binding gets no live treatment because it is not in the form.
+
 - 2026-09-21 — `vector3d` ships ONE view, the orbitable box, chosen at the bench; the other three are proposals again, not code (`docs/vector3d-control.md` §4 — the trackball is first in line if editing a light in a box grates). Still open: a `vector3d` binding kind (`bindingKindFor` returns `null`), a HUD widget over a triple, HUD quick-add, unit-sphere randomization for `kind: "direction"`, colour-coded axis letters, and converting `dragon-corridor`'s `camera.x/y/z` (a stored-shape change).
 - 2026-09-21 — The gyroscope's product choices are still the maintainer's to confirm on a phone: which of the four signals is the default (shipped: tilt, marble mapping, auto calibration, smoothing 0.5), whether the "aim" inversion should be the default instead, and the landscape mapping sign (`rotateForScreen`, derived on paper). The decision page built for it lives in the session's artifact; adjust `interactionFormValues.gyroscope` in `interaction/defaults.js` once decided.
 - 2026-09-23 — Open in `sculpt`, the typographic five (v5–v9): no thumbnail or preview captured (the maintainer captures from the studio; the gallery shows blank cards until then), none measured on a phone GPU, and v7 / v9 run ~2 × v2 per pixel under SwiftShader because their fat defaults tighten the derived cell bound (`sculpt.md`). Whether v2 should also drop its hanging-hairline skirt (`linkWeights`' `maxRise`) is the maintainer's call: it would change a published look.
@@ -132,7 +136,8 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 | `docs/memory/local-development.md` | Running the app locally, infra services, `setup.sh`, dev-server config |
 | `docs/memory/studio-ui.md` | The sketch page's panels and layouts (inspector, content rail, filmstrip, export, mobile drawer) |
 | `docs/memory/canvas-interaction.md` | The on-canvas drag/selection layer, item-bounds reporting, a renderer's grab surface, the viewport's pan/zoom gestures (wheel vs pinch) |
-| `docs/memory/interaction-bindings.md` | Modulating a parameter: the binding resolver, its kinds, the pastille/popover, the channel manifest |
+| `docs/memory/interaction-bindings.md` | Modulating a parameter: the binding resolver, its kinds, the pastille/popover, the driven-field treatment, slides and bindings |
+| `docs/memory/interaction-midi.md` | A MIDI channel, the learn gesture, a sketch-declared `binding: { control }`, the port-name controller map |
 | `docs/memory/interaction-sources.md` | How a sensor, camera or controller becomes a pointer: the collectors in `interaction/index.js`, the gyroscope's modes/calibration/permission, verifying a source without hardware |
 | `docs/memory/home-and-seo.md` | The home page and its studio tour, the capture assets, site metadata, JSON-LD, the sitemap |
 | `docs/analytics.md` | Umami config, why auto-track is off, the pageview queue, how to verify tracking (maintained, unlike the rest of `docs/`) |

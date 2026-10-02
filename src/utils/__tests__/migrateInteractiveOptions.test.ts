@@ -1,5 +1,116 @@
-import migrateInteractiveOptions from "@/utils/migrateInteractiveOptions";
+import migrateInteractiveOptions, {
+  effectiveSlideInteractive
+} from "@/utils/migrateInteractiveOptions";
 import initOptions from "@/utils/initOptions";
+
+const rootBinding = {
+  id: "root-1",
+  source: "oscillator",
+  target: "grid.rows",
+  kind: "continuous"
+};
+
+describe(
+  "effectiveSlideInteractive",
+  () => {
+    it(
+      "reads each key from the slide, falling back to the root — as the engine does",
+      () => {
+        const slideBindings = [
+          {
+            id: "slide-1",
+            source: "ramp",
+            target: "grid.columns",
+            kind: "continuous"
+          }
+        ];
+        const merged = effectiveSlideInteractive(
+          {
+            bindings: [
+              rootBinding
+            ],
+            interaction: {
+              midi: {
+                enabled: true
+              }
+            }
+          },
+          {
+            bindings: slideBindings
+          }
+        ) as Record<string, any>;
+
+        expect( merged.bindings ).toEqual( slideBindings );
+        expect( merged.interaction.midi.enabled ).toBe( true );
+      }
+    );
+
+    it(
+      "lets the root show through a slide key that is explicitly undefined",
+      () => {
+        // A spread would let `interaction: undefined` (what the pruning writes)
+        // hide the root's block — which the engine reads anyway.
+        const merged = effectiveSlideInteractive(
+          {
+            interaction: {
+              enabled: true
+            }
+          },
+          {
+            bindings: [],
+            interaction: undefined
+          }
+        ) as Record<string, any>;
+
+        expect( merged.interaction ).toEqual( {
+          enabled: true
+        } );
+        expect( merged.bindings ).toEqual( [] );
+      }
+    );
+
+    it(
+      "deep-clones, so editing the slide's copy cannot reach the root",
+      () => {
+        const root = {
+          bindings: [
+            {
+              ...rootBinding,
+              mapping: {
+                min: 1,
+                max: 9
+              }
+            }
+          ]
+        };
+        const merged = effectiveSlideInteractive(
+          root,
+          undefined
+        ) as Record<string, any>;
+
+        merged.bindings[ 0 ].mapping.min = 5;
+
+        expect( root.bindings[ 0 ].mapping.min ).toBe( 1 );
+      }
+    );
+
+    it(
+      "is undefined when neither side carries anything",
+      () => {
+        expect( effectiveSlideInteractive(
+          undefined,
+          undefined
+        ) ).toBeUndefined();
+        expect( effectiveSlideInteractive(
+          {},
+          {
+            bindings: undefined
+          }
+        ) ).toBeUndefined();
+      }
+    );
+  }
+);
 
 describe(
   "migrateInteractiveOptions",
@@ -157,6 +268,59 @@ describe(
     );
 
     it(
+      "gives a slide the root bindings the engine was already playing on it",
+      () => {
+        const ownBindings = [
+          {
+            id: "own",
+            source: "ramp",
+            target: "spin",
+            kind: "continuous"
+          }
+        ];
+        const input = {
+          sketch: {},
+          interactive: {
+            bindings: [
+              rootBinding
+            ]
+          },
+          slides: [
+            {
+              sketch: {}
+            },
+            {
+              sketch: {},
+              interactive: {
+                bindings: ownBindings
+              }
+            },
+            {
+              sketch: {},
+              interactive: {
+                bindings: []
+              }
+            }
+          ]
+        };
+        const options: Record<string, any> = migrateInteractiveOptions( input );
+
+        // Inherited: now visible to the editor, and a copy rather than the
+        // root's own objects.
+        expect( options.slides[ 0 ].interactive.bindings ).toEqual( [
+          rootBinding
+        ] );
+        expect( options.slides[ 0 ].interactive.bindings[ 0 ] ).not.toBe( rootBinding );
+        // A slide with its own list — even an empty one — overrides the root
+        // at runtime, and keeps doing so.
+        expect( options.slides[ 1 ] ).toBe( input.slides[ 1 ] );
+        expect( options.slides[ 2 ].interactive.bindings ).toEqual( [] );
+        // The input itself is left alone.
+        expect( ( input.slides[ 0 ] as Record<string, any> ).interactive ).toBeUndefined();
+      }
+    );
+
+    it(
       "returns the input object unchanged when nothing needs migrating",
       () => {
         const input = {
@@ -219,6 +383,38 @@ describe(
         expect( raw.sketch.bindings ).toHaveLength( 1 );
         expect( first.interactive.bindings ).toHaveLength( 1 );
         expect( second.interactive.bindings ).toHaveLength( 1 );
+      }
+    );
+
+    it(
+      "loads a saved deck whose slides ran the root bindings with those bindings on each slide",
+      () => {
+        const parsed = initOptions( {
+          interactive: {
+            bindings: [
+              rootBinding
+            ]
+          },
+          slides: [
+            {
+              name: "A",
+              sketch: {}
+            },
+            {
+              name: "A-1",
+              sketch: {}
+            }
+          ]
+        } ) as Record<string, any>;
+
+        expect( parsed.slides[ 0 ].interactive.bindings ).toEqual( [
+          rootBinding
+        ] );
+        expect( parsed.slides[ 1 ].interactive.bindings ).toEqual( [
+          rootBinding
+        ] );
+        // Two copies, not one shared array: editing A must not edit A-1.
+        expect( parsed.slides[ 0 ].interactive.bindings ).not.toBe( parsed.slides[ 1 ].interactive.bindings );
       }
     );
 

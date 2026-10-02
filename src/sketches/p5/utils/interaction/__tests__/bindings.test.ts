@@ -25,6 +25,7 @@ import {
   randomValue,
   shapedScalar,
   computeBindingSignals,
+  computeBindingValues,
   isGenerator,
   selectActiveBindings,
   getPath,
@@ -1878,6 +1879,137 @@ describe(
           0,
           255
         ] );
+      }
+    );
+  }
+);
+
+describe(
+  "computeBindingValues",
+  () => {
+    it(
+      "reads each driven target off the resolved clone: a number, an option index, 0/1",
+      () => {
+        const resolved = {
+          grid: {
+            rows: 287.5
+          },
+          palette: "purple",
+          stroke: true,
+          tint: [
+            1,
+            2,
+            3,
+            255
+          ]
+        };
+        const values = computeBindingValues(
+          resolved,
+          [
+            {
+              source: "oscillator",
+              target: "grid.rows",
+              kind: "continuous"
+            },
+            {
+              source: "ramp",
+              target: "palette",
+              kind: "enum",
+              mapping: {
+                values: [
+                  "rainbow",
+                  "purple",
+                  "green"
+                ]
+              }
+            },
+            {
+              source: "oscillator",
+              target: "stroke",
+              kind: "boolean"
+            },
+            {
+              source: "oscillator",
+              target: "tint",
+              kind: "color"
+            }
+          ]
+        );
+
+        expect( values ).toEqual( {
+          "grid.rows": 287.5,
+          palette: 1,
+          stroke: 1
+        } );
+      }
+    );
+
+    it(
+      "leaves out what does not play, and an enum value off its own list",
+      () => {
+        const values = computeBindingValues(
+          {
+            a: 1,
+            b: 2,
+            palette: "gone"
+          },
+          [
+            {
+              source: "oscillator",
+              target: "a",
+              kind: "continuous",
+              enabled: false
+            },
+            {
+              source: "oscillator",
+              target: "b",
+              kind: "continuous"
+            },
+            {
+              source: "ramp",
+              target: "palette",
+              kind: "enum",
+              mapping: {
+                values: [
+                  "rainbow"
+                ]
+              }
+            }
+          ]
+        );
+
+        expect( values ).toEqual( {
+          b: 2
+        } );
+      }
+    );
+
+    it(
+      "honours solo across the whole scope",
+      () => {
+        const values = computeBindingValues(
+          {
+            a: 1,
+            b: 2
+          },
+          [
+            {
+              source: "oscillator",
+              target: "a",
+              kind: "continuous"
+            },
+            {
+              source: "oscillator",
+              target: "b",
+              kind: "continuous",
+              solo: true
+            }
+          ]
+        );
+
+        expect( values ).toEqual( {
+          b: 2
+        } );
       }
     );
   }

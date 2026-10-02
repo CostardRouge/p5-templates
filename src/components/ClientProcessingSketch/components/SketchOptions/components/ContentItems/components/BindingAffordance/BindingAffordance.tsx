@@ -5,7 +5,7 @@ import {
   Popover, PopoverButton, PopoverPanel
 } from "@headlessui/react";
 import {
-  Activity, ChevronDown, Crosshair, Plus, RotateCcw, Trash2, X
+  ChevronDown, Crosshair, Plus, RotateCcw, Trash2, X
 } from "lucide-react";
 import clsx from "clsx";
 import {
@@ -39,6 +39,10 @@ import {
 import {
   needsInteractionBlock
 } from "@/p5/utils/interaction/bindings.js";
+import BindingGlyph from "./BindingGlyph";
+import {
+  describeFieldBinding
+} from "./useFieldBinding";
 import ControlledColorInput from "../ControlledColorInput/ControlledColorInput";
 import {
   type Binding,
@@ -783,7 +787,12 @@ export default function BindingAffordance( {
   // by the resolver — so it works for input channels AND generators alike.
   const meterVar = bindingSignalVarName( target );
   const category = sourceCategory( binding?.source );
-  const enabled = binding?.enabled !== false;
+  // The glyph speaks for the field, not for the layer being edited: driven as
+  // soon as any layer on it plays, whichever one the popover has selected.
+  const playing = describeFieldBinding(
+    list,
+    target
+  ).live;
 
   return (
     <Popover className="relative shrink-0">
@@ -798,25 +807,16 @@ export default function BindingAffordance( {
         } }
         className={ clsx(
           "relative grid h-7 w-7 place-items-center rounded-md border transition-colors outline-none focus-visible:ring-1 focus-visible:ring-focus",
-          bound && enabled
-            ? "border-focus/60 text-focus"
+          playing
+            ? "border-focus/60 text-focus hover:bg-hover"
             : bound
-              ? "border-theme text-label"
+              ? "border-theme text-label hover:text-foreground hover:bg-hover"
               : "border-theme text-label/60 hover:text-foreground hover:bg-hover"
         ) }
       >
-        {/* Live VU glow behind the icon, driven purely by the binding's CSS var. */}
-        {bound && enabled && (
-          <span
-            aria-hidden
-            className="pointer-events-none absolute inset-0 rounded-md bg-focus/30"
-            style={ {
-              opacity: `var(${ meterVar }, 0)`,
-              transform: `scale(calc(0.4 + 0.6 * var(${ meterVar }, 0)))`
-            } }
-          />
-        )}
-        <Activity className="relative h-3.5 w-3.5" />
+        {/* No pulse: the moving value is on the field's own bar now. The
+            diamond only says which state the field is in. */}
+        <BindingGlyph state={ playing ? "live" : bound ? "muted" : "free" } />
       </PopoverButton>
 
       <PopoverPanel
