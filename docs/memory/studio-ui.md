@@ -274,6 +274,16 @@ and `initOptions`' top-level `.catch` resets **that deck's whole options** to
 defaults, not just the offending layer. If a report ever arrives that "a deck
 came back empty", this is the first thing to check.
 
+2026-10-02 — That reset no longer happens for an **imported** file: the
+studio's import (button and the gallery's sessionStorage handoff, both through
+`handleImportOptions`) uses `src/utils/parseImportedOptions.ts` — the same
+migrations and parse as `initOptions`, minus the `.catch` — and a file that
+fails is refused with an ink (never red) `role="alert"` banner naming the first
+failing path, the form untouched. `initOptions` keeps its `.catch` for loading
+what the app saved itself. **How to apply**: anything that takes options from
+outside the app (a file, a paste, a URL) parses with `parseImportedOptions`,
+not `initOptions`.
+
 ## A layer row shows its whole action set at rest
 
 2026-09-01 — The layers list used to fade its action cluster in on hover
