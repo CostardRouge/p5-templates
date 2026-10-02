@@ -3,8 +3,13 @@
 import {
   useRef
 } from "react";
+import clsx from "clsx";
 
 import clamp from "@/utils/clamp";
+import {
+  bindingValueVarName
+} from "@/lib/channelBridge";
+import LiveBindingValue from "../BindingAffordance/LiveBindingValue";
 import {
   fractionToValue,
   resolveAxes,
@@ -35,6 +40,18 @@ type Props = {
   ariaLabel?: string;
   /** Overrides the wrapper sizing. Defaults to a compact 140px-wide column. */
   className?: string;
+  /**
+   * Set while an interaction binding drives the pair: an iridescent point
+   * follows the value the sketch reads this frame, the base point turns
+   * hollow, and `area` (the binding's per-axis range) is outlined.
+   */
+  live?: {
+    target: string;
+    area: { x: { min: number;
+      max: number };
+    y: { min: number;
+      max: number }; } | null;
+  } | null;
 };
 
 /**
@@ -44,7 +61,7 @@ type Props = {
  * callers (e.g. the video params editor) drive it from local state.
  */
 export default function Vector2DPad( {
-  value, onChange, config = {}, ariaLabel = "vector", className
+  value, onChange, config = {}, ariaLabel = "vector", className, live = null
 }: Props ) {
   const padRef = useRef<HTMLDivElement>( null );
 
@@ -215,6 +232,72 @@ export default function Vector2DPad( {
   ) * 100;
   const pointTop = valueYToFraction( current.y ) * 100;
 
+  // Driven: the live point is placed in pure CSS from the vars the engine
+  // writes every frame, through the same axis mapping as the base point (the
+  // engine does not know the pad's ranges). No var yet → the base position.
+  const cssFraction = (
+    axisVar: string, base: number, range: { min: number;
+      max: number }
+  ) => {
+    const span = range.max - range.min;
+
+    return span === 0
+      ? "0"
+      : `clamp(0, (var(${ axisVar }, ${ base }) - ${ range.min }) / ${ span }, 1)`;
+  };
+  const liveX = live
+    ? cssFraction(
+      bindingValueVarName(
+        live.target,
+        "x"
+      ),
+      current.x,
+      xAxis
+    )
+    : null;
+  const liveYFraction = live
+    ? cssFraction(
+      bindingValueVarName(
+        live.target,
+        "y"
+      ),
+      current.y,
+      yAxis
+    )
+    : null;
+  const liveY = liveYFraction && ( yDown ? liveYFraction : `(1 - ${ liveYFraction })` );
+
+  // The swept range as a rectangle in pad coordinates (top-left origin).
+  const areaBox = live?.area
+    ? ( () => {
+      const xs = [
+        valueToFraction(
+          live.area.x.min,
+          xAxis
+        ),
+        valueToFraction(
+          live.area.x.max,
+          xAxis
+        )
+      ];
+      const ys = [
+        valueYToFraction( live.area.y.min ),
+        valueYToFraction( live.area.y.max )
+      ];
+
+      return {
+        left: Math.min( ...xs ) * 100,
+        width: Math.abs( xs[ 1 ] - xs[ 0 ] ) * 100,
+        top: Math.min( ...ys ) * 100,
+        height: Math.abs( ys[ 1 ] - ys[ 0 ] ) * 100
+      };
+    } )()
+    : null;
+  const liveDecimals = Math.max(
+    stepDecimals( xAxis.step ),
+    stepDecimals( yAxis.step )
+  );
+
   // The native spin buttons are dropped on purpose: Chrome reserves ~13px for
   // them inside a 48px-wide field, which was enough to clip the last digit of a
   // value like -0.75 — and at a 0.01 step they were unusable anyway. Stepping
@@ -264,8 +347,24 @@ export default function Vector2DPad( {
         onPointerDown={ handlePointerDown }
         onPointerMove={ handlePointerMove }
         onKeyDown={ handleKeyDown }
-        className="relative aspect-square w-full cursor-crosshair touch-none select-none overflow-hidden rounded-lg border border-theme bg-background/50 focus:outline-none focus:ring-1 focus:ring-theme"
+        className={ clsx(
+          "relative aspect-square w-full cursor-crosshair touch-none select-none overflow-hidden rounded-lg border border-theme bg-background/50 focus:outline-none focus:ring-1 focus:ring-theme",
+          live && "binding-live-ring"
+        ) }
       >
+        {areaBox && (
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute rounded-sm border border-dashed border-foreground/30 bg-foreground/5"
+            style={ {
+              left: `${ areaBox.left }%`,
+              top: `${ areaBox.top }%`,
+              width: `${ areaBox.width }%`,
+              height: `${ areaBox.height }%`
+            } }
+          />
+        )}
+
         <svg
           className="absolute inset-0 h-full w-full"
           viewBox="0 0 100 100"
@@ -316,12 +415,45 @@ export default function Vector2DPad( {
         </span>
 
         <span
-          className="pointer-events-none absolute h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border border-background bg-foreground shadow"
+          className={ clsx(
+            "pointer-events-none absolute h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full shadow",
+            live
+              ? "border border-foreground bg-background"
+              : "border border-background bg-foreground"
+          ) }
           style={ {
             left: `${ pointLeft }%`,
             top: `${ pointTop }%`
           } }
         />
+
+        {live && liveX && liveY && (
+          <>
+            <span
+              aria-hidden="true"
+              className="binding-iridescent pointer-events-none absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border border-background shadow"
+              style={ {
+                left: `calc(${ liveX } * 100%)`,
+                top: `calc(${ liveY } * 100%)`
+              } }
+            />
+            <span className="pointer-events-none absolute bottom-0.5 left-0.5 rounded-sm bg-background/70 px-0.5 font-mono text-[9px] leading-tight tabular-nums text-foreground">
+              <LiveBindingValue
+                target={ live.target }
+                axis="x"
+                decimals={ liveDecimals }
+                fallback={ current.x.toFixed( liveDecimals ) }
+              />
+              {", "}
+              <LiveBindingValue
+                target={ live.target }
+                axis="y"
+                decimals={ liveDecimals }
+                fallback={ current.y.toFixed( liveDecimals ) }
+              />
+            </span>
+          </>
+        )}
       </div>
     </div>
   );

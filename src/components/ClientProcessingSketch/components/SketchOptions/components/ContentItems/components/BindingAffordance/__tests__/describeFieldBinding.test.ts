@@ -38,7 +38,9 @@ describe(
           bound: false,
           live: false,
           range: null,
-          values: null
+          values: null,
+          area: null,
+          ramp: null
         } );
       }
     );
@@ -120,6 +122,133 @@ describe(
           bound: true,
           live: false
         } );
+      }
+    );
+
+    it(
+      "spans a pad's playing layers per axis, a missing bound reading as the resolver's default",
+      () => {
+        const state = describeFieldBinding(
+          [
+            {
+              source: "orbit",
+              target: "orientation",
+              kind: "vector2d",
+              mapping: {
+                x: {
+                  min: -1,
+                  max: 0.5
+                },
+                y: {
+                  min: 0.2
+                }
+              }
+            },
+            {
+              source: "mouse",
+              target: "orientation",
+              kind: "vector2d",
+              mapping: {
+                x: {
+                  min: 0.8,
+                  max: -0.25
+                },
+                y: {
+                  min: -0.5,
+                  max: 0.6
+                }
+              }
+            }
+          ],
+          "orientation"
+        );
+
+        expect( state.area ).toEqual( {
+          x: {
+            min: -1,
+            max: 0.8
+          },
+          y: {
+            min: -0.5,
+            max: 1
+          }
+        } );
+      }
+    );
+
+    it(
+      "takes a colour's ramp from the last playing layer, and none from a malformed one",
+      () => {
+        const ramp = (
+          from: unknown, to: unknown
+        ): Binding => ( {
+          source: "oscillator",
+          target: "tint",
+          kind: "color",
+          mapping: {
+            from,
+            to
+          }
+        } );
+
+        expect( describeFieldBinding(
+          [
+            ramp(
+              [
+                0,
+                0,
+                0,
+                255
+              ],
+              [
+                255,
+                255,
+                255,
+                255
+              ]
+            ),
+            ramp(
+              [
+                10,
+                20,
+                30
+              ],
+              [
+                200,
+                100,
+                0,
+                128
+              ]
+            )
+          ],
+          "tint"
+        ).ramp ).toEqual( {
+          from: [
+            10,
+            20,
+            30
+          ],
+          to: [
+            200,
+            100,
+            0,
+            128
+          ]
+        } );
+
+        expect( describeFieldBinding(
+          [
+            ramp(
+              "red",
+              [
+                1,
+                2,
+                3
+              ]
+            )
+          ],
+          "tint"
+        ).ramp ).toBeNull();
       }
     );
 

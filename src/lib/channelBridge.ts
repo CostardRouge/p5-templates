@@ -241,26 +241,83 @@ export function publishBindingSignals( signals: Record<string, number> ): void {
 
 // ── Per-binding resolved values ─────────────────────────────────────────────
 // What a driven field's own control shows: the value the sketch reads this
-// frame (a number, or an option index for an enum), keyed by target. The bar's
-// fill reads `--binding-value-<target>` in pure CSS against the field's own
-// min/max — which the engine does not know — and the few text readouts
+// frame, keyed by target. The controls map it in pure CSS against their own
+// domain — which the engine does not know — and the few text readouts
 // subscribe and write their node directly, so a moving value costs no React
 // render. Same absence rule as everything above: a target that stops being
-// driven loses its var, and the control falls back to its base value.
+// driven loses its vars, and the control falls back to its base value.
+//
+//   number (slider, enum index, boolean) → --binding-value-<t>
+//   [r, g, b, a] bytes (colour)          → --binding-value-<t>    rgb(r g b / α)
+//                                          --binding-value-<t>-a  α, 0..1
+//   { x, y } (pad)                       → --binding-value-<t>-x, -y
 
-/** CSS variable name for a driven target's resolved value. */
-export function bindingValueVarName( target: string ): string {
-  return `--binding-value-${ cssId( target ) }`;
+export type BindingValue = number | number[] | { x: number;
+  y: number };
+
+/** CSS variable name for a driven target's resolved value, or one part of it. */
+export function bindingValueVarName(
+  target: string, part?: "x" | "y" | "a"
+): string {
+  return `--binding-value-${ cssId( target ) }${ part ? `-${ part }` : "" }`;
 }
 
-type ValueSubscriber = ( values: Record<string, number> ) => void;
+function bindingValueVars(
+  target: string, value: BindingValue
+): Array<[string, string]> {
+  if ( typeof value === "number" ) {
+    return [
+      [
+        bindingValueVarName( target ),
+        String( value )
+      ]
+    ];
+  }
 
-let latestValues: Record<string, number> = {};
+  if ( Array.isArray( value ) ) {
+    const alpha = Math.round( ( value[ 3 ] ?? 255 ) / 255 * 1000 ) / 1000;
+
+    return [
+      [
+        bindingValueVarName( target ),
+        `rgb(${ value[ 0 ] } ${ value[ 1 ] } ${ value[ 2 ] } / ${ alpha })`
+      ],
+      [
+        bindingValueVarName(
+          target,
+          "a"
+        ),
+        String( alpha )
+      ]
+    ];
+  }
+
+  return [
+    [
+      bindingValueVarName(
+        target,
+        "x"
+      ),
+      String( value.x )
+    ],
+    [
+      bindingValueVarName(
+        target,
+        "y"
+      ),
+      String( value.y )
+    ]
+  ];
+}
+
+type ValueSubscriber = ( values: Record<string, BindingValue> ) => void;
+
+let latestValues: Record<string, BindingValue> = {};
 let publishedValueVars = new Set<string>();
 const valueSubscribers = new Set<ValueSubscriber>();
 
-/** Write each driven target's resolved value to its var and notify readers. */
-export function publishBindingValues( values: Record<string, number> ): void {
+/** Write each driven target's resolved value to its vars and notify readers. */
+export function publishBindingValues( values: Record<string, BindingValue> ): void {
   latestValues = values ?? {};
 
   if ( typeof document !== "undefined" ) {
@@ -271,13 +328,19 @@ export function publishBindingValues( values: Record<string, number> ): void {
       target,
       value
     ] of Object.entries( latestValues ) ) {
-      const name = bindingValueVarName( target );
-
-      root.setProperty(
+      for ( const [
         name,
-        String( value )
-      );
-      written.add( name );
+        text
+      ] of bindingValueVars(
+          target,
+          value
+        ) ) {
+        root.setProperty(
+          name,
+          text
+        );
+        written.add( name );
+      }
     }
 
     for ( const name of publishedValueVars ) {
@@ -299,7 +362,7 @@ export function publishBindingValues( values: Record<string, number> ): void {
 }
 
 /** Latest resolved values, for a reader's first paint. */
-export function getBindingValues(): Record<string, number> {
+export function getBindingValues(): Record<string, BindingValue> {
   return latestValues;
 }
 
