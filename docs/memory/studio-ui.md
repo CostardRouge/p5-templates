@@ -128,6 +128,8 @@ Three things to keep right when touching this:
 
 ## Panel sections: bands, not boxes
 
+2026-10-02 — Every band header is keyboard-operable through `CollapsibleItem` itself (`role="button"`, `tabIndex=0`, `aria-expanded`, `aria-controls`, Enter/Space only when the header has focus, inset `ring-focus` on `focus-visible`). It cannot be a real `<button>` because the header render prop holds its own buttons (reset, randomize, add); a consumer never adds keyboard handling of its own. Checked headless on a braid sketch: Enter opens "Braid", Tab reaches its "Randomize parameters" then the "Strands" slider. Before this, keyboard and screen-reader users could not open any section.
+
 2026-08-28 — Every settings group is a `PanelSection`: a full-bleed header (uppercase, letter-spaced eyebrow + optional meta/actions + chevron) closed by a hairline running edge to edge. Sections read as a stack of bands, which keeps a long inspector scannable without boxing each group in its own card. The rule does the structural work — do not re-add per-section borders, rounded cards or background tints.
 
 Depth is expressed by *treatment*, not by nesting boxes (`FieldRenderer`'s `nested-object` takes a `depth` prop, threaded from `GenericObjectForm`): depth 0 — a group directly under a section — renders as a sub-band with its own top hairline and a full-bleed, hover-highlighted header; deeper groups get a left indent guide and no rule. The previous style put every group in a `border rounded-xl` box with `ml-2`, which stacked borders inside borders as soon as a sketch nested two levels.
