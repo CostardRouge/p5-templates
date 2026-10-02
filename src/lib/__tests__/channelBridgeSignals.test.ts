@@ -7,7 +7,10 @@
  * vars frozen at their last value.
  */
 import {
-  publishBindingSignals
+  publishBindingSignals,
+  publishBindingValues,
+  subscribeBindingValues,
+  getBindingValues
 } from "../channelBridge";
 
 function bindVar( name: string ): string {
@@ -76,6 +79,74 @@ describe(
         publishBindingSignals( {} );
 
         expect( bindVar( "--ch-mouse" ) ).toBe( "0.3" );
+      }
+    );
+  }
+);
+
+describe(
+  "publishBindingValues",
+  () => {
+    afterEach( () => {
+      publishBindingValues( {} );
+    } );
+
+    it(
+      "writes the resolved value unclamped, under its own var, beside the signal",
+      () => {
+        publishBindingSignals( {
+          "grid.rows": 0.5
+        } );
+        publishBindingValues( {
+          "grid.rows": 287.5
+        } );
+
+        expect( bindVar( "--binding-value-grid-rows" ) ).toBe( "287.5" );
+        expect( bindVar( "--bind-grid-rows" ) ).toBe( "0.5" );
+        publishBindingSignals( {} );
+      }
+    );
+
+    it(
+      "removes the var of a target that is no longer driven",
+      () => {
+        publishBindingValues( {
+          "grid.rows": 120,
+          palette: 2
+        } );
+        publishBindingValues( {
+          palette: 3
+        } );
+
+        expect( bindVar( "--binding-value-grid-rows" ) ).toBe( "" );
+        expect( bindVar( "--binding-value-palette" ) ).toBe( "3" );
+      }
+    );
+
+    it(
+      "hands every publish to subscribers until they unsubscribe",
+      () => {
+        const seen: Array<Record<string, number>> = [];
+        const unsubscribe = subscribeBindingValues( ( values ) => {
+          seen.push( values );
+        } );
+
+        publishBindingValues( {
+          seed: 512
+        } );
+        unsubscribe();
+        publishBindingValues( {
+          seed: 600
+        } );
+
+        expect( seen ).toEqual( [
+          {
+            seed: 512
+          }
+        ] );
+        expect( getBindingValues() ).toEqual( {
+          seed: 600
+        } );
       }
     );
   }

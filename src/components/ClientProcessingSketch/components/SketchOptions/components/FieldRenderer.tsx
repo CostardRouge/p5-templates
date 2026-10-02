@@ -68,6 +68,13 @@ import {
 import {
   useChannelLearn
 } from "./ContentItems/components/BindingAffordance/useLiveChannels";
+import useFieldBinding
+  from "./ContentItems/components/BindingAffordance/useFieldBinding";
+import LiveBindingValue
+  from "./ContentItems/components/BindingAffordance/LiveBindingValue";
+import {
+  bindingValueVarName
+} from "@/lib/channelBridge";
 import {
   applyLearnedChannel, armLearnForField, canLearnBindingFor
 } from "../utils/learnBindingForField";
@@ -213,6 +220,12 @@ export default function FieldRenderer( {
     ]
   ) );
 
+  // Whether an interaction binding drives this field right now, and over what
+  // — the outline its own control draws (live fill, range, option lane). The
+  // pastille beside it edits the same array.
+  const fieldBinding = useFieldBinding( bindingKindFor( config.component ) !== null ? registeredName : null );
+  const driven = fieldBinding?.live ? fieldBinding : null;
+
   const canApply = canApplyToAllSlides(
     getValues,
     registeredName
@@ -299,7 +312,11 @@ export default function FieldRenderer( {
 
       case "number":
         return (
-          <div className={ `${ CONTROL_BAR_CLASS } focus-within:ring-1 focus-within:ring-focus` }>
+          <div className={ clsx(
+            CONTROL_BAR_CLASS,
+            "focus-within:ring-1 focus-within:ring-focus",
+            driven && "binding-live-ring"
+          ) }>
             <BarLabelSegment
               label={ inlineLabel }
               isModified={ isModified }
@@ -336,6 +353,10 @@ export default function FieldRenderer( {
             step={ config.step }
             isModified={ isModified }
             onReset={ handleReset }
+            live={ driven ? {
+              target: driven.target,
+              range: driven.range
+            } : null }
           />
         );
 
@@ -366,18 +387,72 @@ export default function FieldRenderer( {
         const selectedOption = config.options.find( ( option ) => String( option.value ) === String( currentValue ?? "" ) );
         const selectedLabel =
           selectedOption?.label ?? ( config.noneLabel || "--" );
+        // Driven: the bar names the option the sketch is on right now, and a
+        // lane along its bottom edge has one segment per option the binding
+        // cycles through — how many it will switch between, and which is lit.
+        const cycle = driven?.values?.length ? driven.values : null;
+        const cycleLabels = cycle?.map( ( value ) => config.options.find( ( option ) => String( option.value ) === String( value ) )?.label ?? String( value ) );
+        const baseIndex = cycle
+          ? cycle.findIndex( ( value ) => String( value ) === String( currentValue ?? "" ) )
+          : -1;
+        const indexVar = driven
+          ? `var(${ bindingValueVarName( driven.target ) }, ${ baseIndex >= 0 ? baseIndex : -9 })`
+          : "";
 
         return (
-          <div className={ CONTROL_BAR_CLASS }>
+          <div className={ clsx(
+            CONTROL_BAR_CLASS,
+            cycle && "binding-live-ring"
+          ) }>
             <BarLabelSegment
               label={ inlineLabel }
               isModified={ isModified }
               onReset={ handleReset }
             />
 
-            <span className="pointer-events-none flex min-w-0 flex-1 items-center justify-between gap-1 px-2.5">
-              <span className="truncate">{selectedLabel}</span>
+            <span className="pointer-events-none relative flex min-w-0 flex-1 items-center justify-between gap-1 self-stretch px-2.5">
+              {cycle && driven && cycleLabels ? (
+                <span className="flex min-w-0 items-center gap-1">
+                  <LiveBindingValue
+                    target={ driven.target }
+                    fallback={ selectedLabel }
+                    labels={ cycleLabels }
+                    className="truncate text-foreground"
+                  />
+                  <span className="shrink-0 truncate text-label">· {selectedLabel}</span>
+                </span>
+              ) : (
+                <span className="truncate">{selectedLabel}</span>
+              )}
               <ChevronDown className={ CONTROL_CHEVRON_CLASS } />
+
+              {cycle && cycle.length > 0 && (
+                <span
+                  aria-hidden
+                  className="absolute inset-x-2.5 bottom-0.5 grid h-[3px] gap-0.5"
+                  style={ {
+                    gridTemplateColumns: `repeat(${ cycle.length }, minmax(0, 1fr))`
+                  } }
+                >
+                  {cycle.map( (
+                    value, index
+                  ) => (
+                    <span
+                      key={ `${ String( value ) }-${ index }` }
+                      className="relative overflow-hidden rounded-full bg-foreground/15"
+                    >
+                      {/* Lit only at the published index: 1 - |index - i|,
+                          floored at 0 — CSS has max() everywhere, abs() not. */}
+                      <span
+                        className="binding-iridescent absolute inset-0"
+                        style={ {
+                          opacity: `max(0, 1 - max(${ indexVar } - ${ index }, ${ index } - ${ indexVar }))`
+                        } }
+                      />
+                    </span>
+                  ) )}
+                </span>
+              )}
             </span>
 
             <select

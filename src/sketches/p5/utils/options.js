@@ -43,7 +43,7 @@ import {
 import animation from "./animation.js";
 
 import {
-  resolveBindings, computeBindingSignals
+  resolveBindings, computeBindingSignals, computeBindingValues
 } from "./interaction/bindings.js";
 import {
   sampleChannels, midiPortName
@@ -61,7 +61,7 @@ import {
   publishMidiPortName
 } from "@/lib/channelBridge";
 import {
-  publishChannels, publishBindingSignals
+  publishChannels, publishBindingSignals, publishBindingValues
 } from "@/lib/channelBridge";
 
 import {
@@ -794,16 +794,28 @@ function publishChannelsFrame() {
 
     // An empty set still publishes: it is what clears the meters of a slide
     // (or a removed binding) that no longer plays.
-    publishBindingSignals( Array.isArray( bindings ) && bindings.length > 0
-      ? computeBindingSignals(
-        {
-          ...base,
-          bindings
-        },
-        channels,
-        bindingContext()
-      )
-      : {} );
+    if ( !Array.isArray( bindings ) || bindings.length === 0 ) {
+      publishBindingSignals( {} );
+      publishBindingValues( {} );
+
+      return;
+    }
+
+    publishBindingSignals( computeBindingSignals(
+      {
+        ...base,
+        bindings
+      },
+      channels,
+      bindingContext()
+    ) );
+    // The values a driven field's own control shows are read from the SAME
+    // resolved clone the sketch draws from (resolveBindings memoizes it per
+    // frame), so the bar can never disagree with the picture.
+    publishBindingValues( computeBindingValues(
+      resolveSketch( live ),
+      bindings
+    ) );
   } catch {
     // Never let telemetry break the draw loop.
   }

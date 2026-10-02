@@ -1309,3 +1309,48 @@ export function computeBindingSignals(
     targetMax
   );
 }
+
+// ── Per-target resolved values ──────────────────────────────────────────────
+// What a bound field's own control shows while it is driven: the value the
+// sketch actually reads this frame, taken from the resolved clone so layering,
+// blend, weight and smoothing are all already applied. A number for a
+// continuous target, the index in the winning layer's option list for an enum,
+// 0/1 for a boolean; colours and pads publish nothing yet. Keyed by target.
+// Pure so it can be unit-tested.
+
+export function computeBindingValues(
+  resolved, bindings
+) {
+  const out = {};
+
+  for ( const binding of selectActiveBindings( bindings ) ) {
+    if ( !binding?.target ) {
+      continue;
+    }
+
+    const kind = binding.kind ?? "continuous";
+    const value = getPath(
+      resolved,
+      binding.target
+    );
+
+    if ( kind === "continuous" ) {
+      if ( typeof value === "number" && Number.isFinite( value ) ) {
+        out[ binding.target ] = value;
+      }
+    } else if ( kind === "enum" ) {
+      // Later layers win the fold, so the last active one names the list the
+      // index refers to — the same layer the editor reads its segments from.
+      const values = Array.isArray( binding.mapping?.values ) ? binding.mapping.values : [];
+      const index = values.findIndex( ( candidate ) => String( candidate ) === String( value ) );
+
+      if ( index >= 0 ) {
+        out[ binding.target ] = index;
+      }
+    } else if ( kind === "boolean" ) {
+      out[ binding.target ] = value ? 1 : 0;
+    }
+  }
+
+  return out;
+}
