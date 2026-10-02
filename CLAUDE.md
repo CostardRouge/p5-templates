@@ -105,47 +105,43 @@ you are in for before starting.
 The register of what is open is the `projets/` folder at the root of the
 private `second-brain` repository: one folder per project, whose `README.md`
 carries a typed front matter (`state`, `point`, `repos`) and a `## À faire`
-list of checkboxes. `PROJETS.md` beside it is GENERATED from those folders —
-never edit it, never tick a box in it. That folder is the source of truth — not
-this conversation, not Claude's memory, not `git log`, which records what
-changed and never what state the project is in.
+list of checkboxes. `PROJETS.md` beside it is GENERATED from those folders.
+That folder is the source of truth — not this conversation, not Claude's
+memory, not `git log`, which records what changed and never what state the
+project is in.
 
 A session that changes code here changes this project's state, and the state
-has to reach that folder.
+reaches that folder **through this repository: never touch `second-brain`**.
+Do not attach it (`add_repo`), do not clone it, do not commit to it — locally
+either, even though it sits beside this checkout. On every push to `main`,
+`.github/workflows/registre.yml` reads the block below from the merged pull
+request's description (or, when there is none, from the pushed commits'
+messages) and sends it to `second-brain`, whose own workflow updates the fiche
+and regenerates `PROJETS.md`. Only what reaches `main` is reported.
 
-1. **Reach `second-brain`.** Locally it is a sibling directory
-   (`../second-brain`). In a cloud session where it is not already attached,
-   attach it yourself: call the `add_repo` tool with owner `costardrouge`,
-   repo `second-brain` and access `push`, then clone it beside this
-   repository with the command the tool returns. The session's GitHub access
-   already covers it — **never put a token for it in this repository or in
-   its environment**.
-2. Once it is reachable, edit `projets/p5-templates/README.md` and commit it there,
-   in its own commit: set `point:` to today, rewrite the `## Dernier point`
-   paragraph, tick what is done and add what is now open under `## À faire`.
-   **Never change `state:`** — the state is the maintainer's call, never the
-   agent's. **Do not run `node bin/projets.mjs index` and do not commit
-   `PROJETS.md`**: a workflow regenerates it on `main` after the merge, and a
-   branch that carries it conflicts with every other open register PR. A
-   cloud session pushes that commit on its own working branch and opens a
-   draft pull request in `second-brain`, exactly as it does here.
-3. Only if it stays unreachable — the tool refused, or does not exist — write
-   the block below under a `### Registre` heading in the description of this
-   repository's pull request, where it can be found and collected later, and
-   end the final message with it too:
+Write the block under a `### Registre` heading — in a cloud session, in this
+repository's pull request description; in a local session, at the end of the
+task's commit body:
 
-       projets/p5-templates/README.md — point: YYYY-MM-DD
-       Dernier point : <dernier point connu>
-       - [ ] <prochaine action>
+    projets/p5-templates/README.md
+    Dernier point : <the project as it now stands, in French>
+    - [x] <an existing box this work closes, copied from the fiche>
+    - [ ] <a new open action, in French>
+    Journal : <one line for the fiche's journal, in French>
 
-The date is the day of the session. The last known point is what someone who
-has been away for three months needs in order to pick the project back up, not
-a changelog — the commit body already carries the detail. The next action is
-one gesture, not a plan: it is the first unticked box, and the generated
-register reads it from there.
+Every line but the first is optional. `Dernier point` REPLACES the fiche's
+paragraph: write what someone back after three months needs about the whole
+project, not a changelog — the commit body already carries the detail. A
+`- [x]` ticks a box only when its text matches one; copy it from the fiche
+when you can read it (locally `../second-brain`, or through GitHub when the
+session already has it — never attach it just to read it), otherwise leave the
+ticking to the maintainer. A new box is one gesture, not a plan. The date is
+the merge's, and `state:` is never written by a block: it is the
+maintainer's call.
 
-A question, an exploration or an explanation changes no state and prints no
-block.
+A change a returning reader does not need — tooling, a typo, a refactor —
+carries no block. A question, an exploration or an explanation changes no
+state and writes no block.
 
 ## Verification — trust the disk, not the context
 
