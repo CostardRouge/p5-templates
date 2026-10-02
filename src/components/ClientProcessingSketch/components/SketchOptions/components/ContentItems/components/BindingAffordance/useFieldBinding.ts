@@ -33,7 +33,58 @@ export type FieldBindingState = {
     max: number } | null;
   /** Enum: the cycle of the last playing layer — the one that wins the fold. */
   values: unknown[] | null;
+  /** 2D pad: the union of the playing layers' per-axis mapping ranges. */
+  area: { x: { min: number;
+    max: number };
+  y: { min: number;
+    max: number }; } | null;
+  /** Colour: the last playing layer's two-stop ramp, `[r, g, b, a]` bytes. */
+  ramp: { from: number[];
+    to: number[] } | null;
 };
+
+type Span = { min: number;
+  max: number };
+
+// Widen `span` to cover [a, b] in either order; a missing bound reads as the
+// resolver's own default, so the drawn span is the one it actually sweeps.
+function widen(
+  span: Span | null, a: unknown, b: unknown, fallbackA: number, fallbackB: number
+): Span {
+  const first = finite( a ) ? a : fallbackA;
+  const second = finite( b ) ? b : fallbackB;
+  const low = Math.min(
+    first,
+    second
+  );
+  const high = Math.max(
+    first,
+    second
+  );
+
+  return span
+    ? {
+      min: Math.min(
+        span.min,
+        low
+      ),
+      max: Math.max(
+        span.max,
+        high
+      )
+    }
+    : {
+      min: low,
+      max: high
+    };
+}
+
+function isRgba( value: unknown ): value is number[] {
+  return Array.isArray( value ) && value.length >= 3 && value.slice(
+    0,
+    3
+  ).every( finite );
+}
 
 function finite( value: unknown ): value is number {
   return typeof value === "number" && Number.isFinite( value );
@@ -52,37 +103,44 @@ export function describeFieldBinding(
 
   let range: FieldBindingState[ "range" ] = null;
   let values: unknown[] | null = null;
+  let areaX: Span | null = null;
+  let areaY: Span | null = null;
+  let ramp: FieldBindingState[ "ramp" ] = null;
 
   for ( const binding of playing ) {
     const kind = binding.kind ?? "continuous";
+    const mapping = binding.mapping ?? {};
 
-    if ( kind === "continuous" && finite( binding.mapping?.min ) && finite( binding.mapping?.max ) ) {
-      const low = Math.min(
-        binding.mapping.min,
-        binding.mapping.max
+    if ( kind === "continuous" && finite( mapping.min ) && finite( mapping.max ) ) {
+      range = widen(
+        range,
+        mapping.min,
+        mapping.max,
+        0,
+        1
       );
-      const high = Math.max(
-        binding.mapping.min,
-        binding.mapping.max
+    } else if ( kind === "enum" && Array.isArray( mapping.values ) ) {
+      values = mapping.values;
+    } else if ( kind === "vector2d" ) {
+      areaX = widen(
+        areaX,
+        mapping.x?.min,
+        mapping.x?.max,
+        0,
+        1
       );
-
-      range = range
-        ? {
-          min: Math.min(
-            range.min,
-            low
-          ),
-          max: Math.max(
-            range.max,
-            high
-          )
-        }
-        : {
-          min: low,
-          max: high
-        };
-    } else if ( kind === "enum" && Array.isArray( binding.mapping?.values ) ) {
-      values = binding.mapping.values;
+      areaY = widen(
+        areaY,
+        mapping.y?.min,
+        mapping.y?.max,
+        0,
+        1
+      );
+    } else if ( kind === "color" && isRgba( mapping.from ) && isRgba( mapping.to ) ) {
+      ramp = {
+        from: mapping.from,
+        to: mapping.to
+      };
     }
   }
 
@@ -91,7 +149,14 @@ export function describeFieldBinding(
     bound: own.length > 0,
     live: playing.length > 0,
     range,
-    values
+    values,
+    area: areaX && areaY
+      ? {
+        x: areaX,
+        y: areaY
+      }
+      : null,
+    ramp
   };
 }
 

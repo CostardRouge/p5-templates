@@ -7,6 +7,7 @@
  * vars frozen at their last value.
  */
 import {
+  type BindingValue,
   publishBindingSignals,
   publishBindingValues,
   subscribeBindingValues,
@@ -124,9 +125,39 @@ describe(
     );
 
     it(
+      "writes a colour as an rgb() plus its alpha, and a pad as two axis vars",
+      () => {
+        publishBindingValues( {
+          backgroundColor: [
+            255,
+            128,
+            0,
+            51
+          ],
+          orientation: {
+            x: 0.25,
+            y: -0.5
+          }
+        } );
+
+        expect( bindVar( "--binding-value-backgroundColor" ) ).toBe( "rgb(255 128 0 / 0.2)" );
+        expect( bindVar( "--binding-value-backgroundColor-a" ) ).toBe( "0.2" );
+        expect( bindVar( "--binding-value-orientation-x" ) ).toBe( "0.25" );
+        expect( bindVar( "--binding-value-orientation-y" ) ).toBe( "-0.5" );
+
+        // Every part goes with its target.
+        publishBindingValues( {} );
+
+        expect( bindVar( "--binding-value-backgroundColor" ) ).toBe( "" );
+        expect( bindVar( "--binding-value-backgroundColor-a" ) ).toBe( "" );
+        expect( bindVar( "--binding-value-orientation-x" ) ).toBe( "" );
+      }
+    );
+
+    it(
       "hands every publish to subscribers until they unsubscribe",
       () => {
-        const seen: Array<Record<string, number>> = [];
+        const seen: Array<Record<string, BindingValue>> = [];
         const unsubscribe = subscribeBindingValues( ( values ) => {
           seen.push( values );
         } );

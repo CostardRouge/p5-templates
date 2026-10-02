@@ -1315,8 +1315,8 @@ export function computeBindingSignals(
 // sketch actually reads this frame, taken from the resolved clone so layering,
 // blend, weight and smoothing are all already applied. A number for a
 // continuous target, the index in the winning layer's option list for an enum,
-// 0/1 for a boolean; colours and pads publish nothing yet. Keyed by target.
-// Pure so it can be unit-tested.
+// 0/1 for a boolean, `[r, g, b, a]` bytes for a colour, `{ x, y }` for a pad.
+// Keyed by target. Pure so it can be unit-tested.
 
 export function computeBindingValues(
   resolved, bindings
@@ -1349,6 +1349,26 @@ export function computeBindingValues(
       }
     } else if ( kind === "boolean" ) {
       out[ binding.target ] = value ? 1 : 0;
+    } else if ( kind === "color" ) {
+      // Whole bytes: the editor turns them into a hex readout and an `rgb()`.
+      if ( Array.isArray( value ) && value.length >= 3 ) {
+        out[ binding.target ] = [
+          0,
+          1,
+          2,
+          3
+        ].map( ( i ) => clampByte( num(
+          value[ i ],
+          i === 3 ? 255 : 0
+        ) ) );
+      }
+    } else if ( kind === "vector2d" ) {
+      if ( value && Number.isFinite( value.x ) && Number.isFinite( value.y ) ) {
+        out[ binding.target ] = {
+          x: value.x,
+          y: value.y
+        };
+      }
     }
   }
 

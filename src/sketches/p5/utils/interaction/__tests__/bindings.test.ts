@@ -1888,7 +1888,7 @@ describe(
   "computeBindingValues",
   () => {
     it(
-      "reads each driven target off the resolved clone: a number, an option index, 0/1",
+      "reads each driven target off the resolved clone: a number, an option index, 0/1, bytes, a pair",
       () => {
         const resolved = {
           grid: {
@@ -1897,11 +1897,15 @@ describe(
           palette: "purple",
           stroke: true,
           tint: [
-            1,
-            2,
-            3,
-            255
-          ]
+            1.4,
+            300,
+            -2
+          ],
+          orientation: {
+            x: 0.25,
+            y: -0.5,
+            z: 9
+          }
         };
         const values = computeBindingValues(
           resolved,
@@ -1932,6 +1936,11 @@ describe(
               source: "oscillator",
               target: "tint",
               kind: "color"
+            },
+            {
+              source: "orbit",
+              target: "orientation",
+              kind: "vector2d"
             }
           ]
         );
@@ -1939,7 +1948,19 @@ describe(
         expect( values ).toEqual( {
           "grid.rows": 287.5,
           palette: 1,
-          stroke: 1
+          stroke: 1,
+          // Whole bytes, clamped, alpha defaulting to opaque.
+          tint: [
+            1,
+            255,
+            0,
+            255
+          ],
+          // Only the pair the pad edits, whatever rides along.
+          orientation: {
+            x: 0.25,
+            y: -0.5
+          }
         } );
       }
     );

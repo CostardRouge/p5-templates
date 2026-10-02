@@ -671,6 +671,10 @@ export default function FieldRenderer( {
             label={ config.label ?? fieldName }
             isModified={ isModified }
             onReset={ handleReset }
+            live={ driven ? {
+              target: driven.target,
+              ramp: driven.ramp
+            } : null }
           />
         );
 
@@ -778,6 +782,10 @@ export default function FieldRenderer( {
           <ControlledVector2DInput
             name={ registeredName }
             config={ config }
+            live={ driven ? {
+              target: driven.target,
+              area: driven.area
+            } : null }
           />
         );
 
