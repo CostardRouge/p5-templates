@@ -4,9 +4,7 @@ import {
 import {
   getJobById
 } from "@/lib/jobStore";
-import {
-  getDownloadUrlFromS3Url
-} from "@/lib/connections/s3";
+import downloadObjectResponse from "@/utils/downloadObjectResponse";
 
 /**
  * GET /api/options/download/[id]
@@ -35,20 +33,6 @@ export async function GET(
       );
     }
 
-    const s3DownloadUrl = await getDownloadUrlFromS3Url( `${ jobId }/options.json` );
-
-    // Fetch the file from S3
-    const response = await fetch( s3DownloadUrl );
-
-    if ( !response.ok || !response.body ) {
-      return new NextResponse(
-        "Failed to fetch file from S3",
-        {
-          status: 502
-        }
-      );
-    }
-
     // Extract sketch name from template (e.g., "p5/photo-in-circle" -> "photo-in-circle")
     const sketchName = job.sketch.split( "/" ).pop() || "sketch";
     const jobIdShort = jobId.slice(
@@ -59,15 +43,9 @@ export async function GET(
     // Format: {sketch-name}-options-{jobId}.json
     const filename = `${ sketchName }-options-${ jobIdShort }.json`;
 
-    return new Response(
-      response.body,
-      {
-        status: 200,
-        headers: {
-          "Content-Type": "application/json",
-          "Content-Disposition": `attachment; filename="${ filename }"`
-        }
-      }
+    return downloadObjectResponse(
+      `${ jobId }/options.json`,
+      filename
     );
   } catch( error ) {
     console.error(
