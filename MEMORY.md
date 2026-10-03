@@ -34,6 +34,7 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 
 ## Decisions at a glance (details in the topic files)
 
+- There is no authentication: every API route and server action is public, so every handler validates its input as if the caller were hostile and never turns a parameter into a path, key prefix, fetched URL or shell argument unchecked → `security.md`.
 - Every rendering back-end implements `SketchEngine`; nothing special-cases an engine → `architecture.md`.
 - Every engine extends `BaseSketchEngine` and is only the part that differs; the listener map, the performance loop, the frame maths and the capture waits live once, in the base → `architecture.md`.
 - A canvas engine's `seekAndDraw` yields one task and never waits a display frame: the frame is drawn when `seek()` returns, a rAF capped exports at the refresh rate and never came in a hidden tab → `recording.md`.
@@ -105,6 +106,8 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 - A session that changes code reports this project's state to its fiche, `projets/p5-templates/README.md`, in the private `second-brain` repo: the register is that folder and `PROJETS.md` there is generated from it, never Claude's memory and never `git log`. A cloud session that has no checkout of it attaches it itself (`add_repo`, 2026-09-23), because a week of sessions left the state only in chat; the fallback block goes into the PR description under `### Registre`, and no `second-brain` token is ever put in this repo. Since 2026-09-28 a register PR carries the fiche alone: `PROJETS.md` is regenerated on `main` by its workflow, because every branch that committed it put all the other register PRs in conflict (nine at once). → CLAUDE.md rule 4
 
 ## Open items (dated; remove when done)
+
+- 2026-10-02 — A whole-repo audit is in `docs/audit-2026-10-02.md` (inventory, ~70 findings with IDs, plan, ten maintainer decisions). PR #380 fixed the exploitable security holes and the worst correctness/UX/a11y bugs; the decisions and the open batches are in `TODO.md` under "Audit follow-ups". The two that matter most: there is no authentication anywhere (`security.md`), and the Dockerfile's Playwright image (1.59) does not match the locked client (1.62).
 
 - 2026-10-02 — Driven-field treatment shipped for sliders, selects, number bars, colours and the 2D pad (`interaction-bindings.md`). Still open: the checkbox only gets the diamond glyph (`computeBindingValues` already publishes its 0/1), and a sketch-declared binding gets no live treatment because it is not in the form.
 

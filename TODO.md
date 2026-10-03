@@ -26,6 +26,37 @@ What's left requires actions only the repo owner can take, in this order:
 
 ---
 
+## 🔒 Audit follow-ups (2026-10-02 — details and IDs in `docs/audit-2026-10-02.md`)
+
+Owner decisions first; each unblocks a small batch. The fixed findings are on PR #380.
+
+- [ ] **Authentication** (SEC-03, DECISION-01) — no route or server action checks who
+  calls; recommended: shared secret / basic auth in `src/proxy.ts` (also covers the N8n key).
+- [ ] **Playwright base image** (COR-01) — `Dockerfile` is on `playwright:v1.59.1-jammy`, the
+  lockfile on 1.62.0: backend recording very likely fails at browser launch. Bump all three
+  `FROM`s to `v1.62.0-jammy`.
+- [ ] **Compose exposure** (SEC-08) — Redis (no password), Postgres and MinIO (default
+  credentials) are published on every host interface.
+- [ ] **Rotate the production VAPID pair** if production's `.env` came from `.env.example`.
+- [ ] **Job caps + per-job deadline** (SEC-10) — tell me the real maxima (duration, size,
+  slides, files); one request can hold a worker slot forever today.
+- [ ] **Worker as its own process** (COR-08) — deploys kill in-flight recordings and queued
+  jobs wait for the next HTTP request to start the worker.
+- [ ] Notifications sent once, from the worker only, and never able to fail a completed job (COR-06)
+- [ ] `RecordingService`'s `uncaughtException` handler: exit instead of shutting the queue
+  down and staying up with a green health check (COR-02)
+- [ ] Cancel that stops the running worker; conditional status writes (COR-03)
+- [ ] `/api/recordings` pagination + `Job(status, createdAt)` indexes (PERF-01, migration)
+- [ ] Recordings page error state with Retry; `app/error.tsx` + `global-error.tsx`; engine-init
+  failure screen (UX-03, UX-04)
+- [ ] Studio re-renders on every slider frame through `watch()` — profile, then path-scoped
+  `useWatch` (FE-01)
+- [ ] Dialogs and menus to Headless UI focus management (A11Y-02); landmarks and headings
+  (A11Y-05); contrast tokens (A11Y-06)
+- [ ] `frame-ancestors 'self'` on every non-embed route (SEC-11)
+
+---
+
 ## 🎬 Recording System
 
 - [ ] **Batch recordings** — queue multiple template+options combinations in a single action; needs UI (select multiple drafts → start all) and backend atomic/sequential enqueue
