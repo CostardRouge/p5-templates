@@ -2,14 +2,11 @@ import {
   NextRequest, NextResponse
 } from "next/server";
 import {
-  getJobById, deleteJob
+  getJobById
 } from "@/lib/jobStore";
 import {
-  RecordingQueueService
-} from "@/services/RecordingQueueService";
-import {
-  deleteArtifact
-} from "@/lib/connections/s3";
+  deleteRecordingJob
+} from "@/lib/deleteRecordingJob";
 
 /**
  * GET /api/recordings/[id]
@@ -73,9 +70,9 @@ export async function DELETE(
   const jobId = ( await params ).id;
 
   try {
-    const dbJob = await getJobById( jobId );
+    const outcome = await deleteRecordingJob( jobId );
 
-    if ( !dbJob ) {
+    if ( outcome === "not-found" ) {
       return new NextResponse(
         "Job not found",
         {
@@ -84,12 +81,7 @@ export async function DELETE(
       );
     }
 
-    if ( ![
-      "failed",
-      "draft",
-      "completed",
-      "cancelled"
-    ].includes( dbJob.status ) ) {
+    if ( outcome === "not-finalized" ) {
       return new NextResponse(
         "Job is not finalized and cannot be deleted",
         {
@@ -98,47 +90,7 @@ export async function DELETE(
       );
     }
 
-    // Try to remove from queue (best effort)
-    try {
-      const bullJob = await RecordingQueueService.getInstance()
-        .getQueue()
-        .getJob( jobId );
-
-      if ( bullJob ) {
-        try {
-          await bullJob.remove();
-        } catch( err ) {
-          console.warn(
-            `Could not remove job ${ jobId } from queue:`,
-            err
-          );
-        }
-      }
-    } catch( err ) {
-      console.warn(
-        `Error accessing queue for job ${ jobId }:`,
-        err
-      );
-    }
-
-    // Try to delete artifacts from S3 (best effort)
-    try {
-      await deleteArtifact( jobId );
-    } catch( err ) {
-      console.warn(
-        `Could not delete artifacts for job ${ jobId } from S3:`,
-        err
-      );
-    }
-
-    // Always delete from database (critical operation)
-    try {
-      await deleteJob( jobId );
-    } catch( err ) {
-      console.error(
-        `Failed to delete job ${ jobId } from database:`,
-        err
-      );
+    if ( outcome === "failed" ) {
       return new NextResponse(
         "Failed to delete job from database",
         {

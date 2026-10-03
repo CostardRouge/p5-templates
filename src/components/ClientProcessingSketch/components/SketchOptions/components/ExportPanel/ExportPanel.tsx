@@ -600,7 +600,7 @@ export default function ExportPanel( {
                     sketchKey,
                     preset
                   ) }
-                  className="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-left text-xs text-foreground data-focus:bg-hover"
+                  className="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-left text-xs text-foreground data-[focus]:bg-hover"
                 >
                   <span className="truncate">{preset.label}</span>
                   {preset.size && (

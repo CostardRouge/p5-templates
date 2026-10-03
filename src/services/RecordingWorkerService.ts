@@ -184,6 +184,16 @@ export class RecordingWorkerService {
     try {
       console.error( `[Worker] Job failed: ${ jobId } - ${ error?.message }` );
 
+      // The processor's own catch writes this too, but a job that stalled
+      // past maxStalledCount is failed by BullMQ without the processor ever
+      // running again — this event is the only place that sees it.
+      await updateJob(
+        jobId,
+        {
+          status: "failed"
+        }
+      );
+
       // Send push notification for job failure
       try {
         const notificationService = NotificationService.getInstance();
@@ -211,11 +221,19 @@ export class RecordingWorkerService {
     );
   }
 
+  /**
+   * By the time BullMQ emits `stalled` it has ALREADY moved the job back to
+   * the queue (bullmq 5: moveStalledJobsToWait). One past `maxStalledCount`
+   * gets a deferred failure instead and is failed when next picked up, which
+   * fires `failed` (handled above). So the only thing left to do is make the
+   * row say "queued" again while the job waits. Calling `retry()` here — the
+   * old recovery — throws for any job that is not failed, and the catch then
+   * marked a job that was already running again as failed.
+   */
   private async handleStalledJob( jobId: string ): Promise<void> {
-    console.warn( `[Worker] Job stalled: ${ jobId }, attempting to recover...` );
+    console.warn( `[Worker] Job stalled: ${ jobId }, BullMQ moved it back to the queue` );
 
     try {
-      // Get the stalled job from the queue
       const queue = RecordingQueueService.getInstance().getQueue();
       const stalledJob = await queue.getJob( jobId );
 
@@ -224,17 +242,17 @@ export class RecordingWorkerService {
         return;
       }
 
-      // Check the job state
       const state = await stalledJob.getState();
 
       console.log( `[Worker] Stalled job ${ jobId } state: ${ state }` );
 
-      // Retry the stalled job by moving it back to waiting
-      if ( state === "active" ) {
-        await stalledJob.retry();
-        console.log( `[Worker] Retrying stalled job: ${ jobId }` );
-
-        // Update the database status back to queued
+      // "active" means a worker already picked it up again and set the row
+      // itself; anything terminal is the `failed`/`completed` handlers' job.
+      if ( [
+        "waiting",
+        "prioritized",
+        "delayed"
+      ].includes( state ) ) {
         await updateJob(
           jobId,
           {
@@ -242,38 +260,12 @@ export class RecordingWorkerService {
             progress: 0
           }
         );
-
-        await updateRecordingStatus(
-          jobId,
-          "queued"
-        );
       }
     } catch( error ) {
       console.error(
-        `[Worker] Error recovering stalled job: ${ jobId }`,
+        `[Worker] Error recording stalled job: ${ jobId }`,
         error
       );
-
-      // If recovery fails, mark the job as failed
-      try {
-        await updateJob(
-          jobId,
-          {
-            status: "failed",
-            progress: 0
-          }
-        );
-
-        await updateRecordingStatus(
-          jobId,
-          "failed"
-        );
-      } catch( updateError ) {
-        console.error(
-          `[Worker] Error marking stalled job as failed: ${ jobId }`,
-          updateError
-        );
-      }
     }
   }
 

@@ -2,20 +2,8 @@ import {
   NextRequest, NextResponse
 } from "next/server";
 import {
-  prisma
-} from "@/lib/connections/prisma";
-import {
-  RecordingQueueService
-} from "@/services/RecordingQueueService";
-import {
-  Job
-} from "bullmq";
-import {
-  deleteJob, getJobById
-} from "@/lib/jobStore";
-import {
-  deleteArtifact
-} from "@/lib/connections/s3";
+  deleteRecordingJob
+} from "@/lib/deleteRecordingJob";
 
 export async function DELETE( req: NextRequest ) {
   try {
@@ -39,68 +27,16 @@ export async function DELETE( req: NextRequest ) {
 
     for ( const jobId of ids ) {
       try {
-        const dbJob = await getJobById( jobId );
+        const outcome = await deleteRecordingJob( jobId );
 
-        if ( !dbJob ) {
-          console.warn( `Job ${ jobId } not found, skipping.` );
-          continue;
-        }
-
-        if (
-          ![
-            "failed",
-            "draft",
-            "completed",
-            "cancelled"
-          ].includes( dbJob.status )
-        ) {
-          console.warn( `Job ${ jobId } is not finalized and cannot be deleted.` );
-          continue;
-        }
-
-        // Try to remove from queue (best effort)
-        try {
-          const bullJob: Job | undefined =
-            await RecordingQueueService.getInstance().getQueue()
-              .getJob( jobId );
-
-          if ( bullJob ) {
-            try {
-              await bullJob.remove();
-            } catch( err ) {
-              console.warn(
-                `Could not remove job ${ jobId } from queue:`,
-                err
-              );
-            }
-          }
-        } catch( err ) {
-          console.warn(
-            `Error accessing queue for job ${ jobId }:`,
-            err
-          );
-        }
-
-        // Try to delete artifacts from S3 (best effort)
-        try {
-          await deleteArtifact( jobId );
-        } catch( err ) {
-          console.warn(
-            `Could not delete artifacts for job ${ jobId } from S3:`,
-            err
-          );
-        }
-
-        // Always delete from database (critical operation)
-        try {
-          await deleteJob( jobId );
+        if ( outcome === "deleted" ) {
           deleted.push( jobId );
-        } catch( err ) {
-          console.error(
-            `Failed to delete job ${ jobId } from database:`,
-            err
-          );
+        } else if ( outcome === "failed" ) {
           failed.push( jobId );
+        } else if ( outcome === "not-found" ) {
+          console.warn( `Job ${ jobId } not found, skipping.` );
+        } else {
+          console.warn( `Job ${ jobId } is not finalized and cannot be deleted.` );
         }
       } catch( err ) {
         console.error(

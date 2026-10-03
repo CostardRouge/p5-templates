@@ -10,7 +10,7 @@ import {
 import {
   FormProvider, useFieldArray, useWatch
 } from "react-hook-form";
-import initOptions from "@/utils/initOptions";
+import parseImportedOptions from "@/utils/parseImportedOptions";
 import {
   withUiSoundSuppressed
 } from "@/lib/uiSound";
@@ -32,7 +32,9 @@ import {
   FormUndoRedo
 } from "./components/FormUndoRedo";
 import RecordingLockBanner from "./components/RecordingLockBanner";
-import ImportSuccessBanner from "./components/ImportSuccessBanner";
+import ImportSuccessBanner, {
+  type ImportBannerState
+} from "./components/ImportSuccessBanner";
 import SketchSettings from "./components/SketchSettings/SketchSettings";
 import CaptureDialog from "./components/CaptureDialog";
 import TransportBar from "./components/TransportBar";
@@ -145,13 +147,13 @@ export default function SketchOptions( {
     setBannerCloning
   ] = useState( false );
 
-  // Success banner shown above the options panel after an import applies —
-  // covers both the manual Import button and the sketches-listing handoff,
-  // since both funnel through handleImportOptions below.
+  // Banner shown above the options panel after an import — applied, or
+  // refused — covering both the manual Import button and the
+  // sketches-listing handoff, since both funnel through handleImportOptions.
   const [
     importBanner,
     setImportBanner
-  ] = useState<string | null>( null );
+  ] = useState<ImportBannerState | null>( null );
 
   // The capture dialog: opened by the transport bar's record dot and, in the
   // docked layout, by the top bar's Export button. One dialog, one mounted
@@ -506,10 +508,23 @@ export default function SketchOptions( {
   );
 
   const handleImportOptions = ( importedOptions: SketchOption ) => {
-    const processedOptions = initOptions( importedOptions );
+    // Strict, not initOptions: a file that does not parse used to reset the
+    // whole document to blank defaults and still report success.
+    const parsed = parseImportedOptions( importedOptions );
 
-    reset( processedOptions );
-    setImportBanner( "Options imported successfully" );
+    if ( !parsed.ok ) {
+      setImportBanner( {
+        tone: "error",
+        message: `Import refused, nothing was changed — ${ parsed.reason }`
+      } );
+      return;
+    }
+
+    reset( parsed.options );
+    setImportBanner( {
+      tone: "success",
+      message: "Options imported successfully"
+    } );
   };
 
   // One-shot handoff from the sketches listing page's "Import .json"
@@ -721,7 +736,9 @@ export default function SketchOptions( {
 
                           {importBanner && (
                             <ImportSuccessBanner
-                              message={ importBanner }
+                              key={ importBanner.message }
+                              message={ importBanner.message }
+                              tone={ importBanner.tone }
                               onDismiss={ () => setImportBanner( null ) }
                             />
                           )}

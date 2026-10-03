@@ -76,6 +76,7 @@ export async function captureFramesWithStreaming( {
   );
 
   let ffmpegError = "";
+  let ffmpegExited = false;
 
   ffmpegProcess.stderr.on(
     "data",
@@ -83,6 +84,50 @@ export async function captureFramesWithStreaming( {
       ffmpegError += chunk.toString();
     }
   );
+
+  // Listen for the end of FFmpeg from the moment it is spawned, not after the
+  // frame loop: an `error` (ENOENT) or a stdin `error` (EPIPE when it dies
+  // mid-stream) with no listener is an uncaught exception that takes the
+  // whole server's recording system down, and a death during a `drain` wait
+  // used to leave the loop waiting forever.
+  const ffmpegDone = new Promise<void>( (
+    resolve, reject
+  ) => {
+    ffmpegProcess.once(
+      "error",
+      ( error: Error ) => {
+        ffmpegExited = true;
+        reject( error );
+      }
+    );
+
+    ffmpegProcess.once(
+      "close",
+      ( exitCode: number | null ) => {
+        ffmpegExited = true;
+
+        if ( exitCode === 0 ) {
+          resolve();
+        } else {
+          reject( new Error( `FFmpeg exited with code ${ exitCode }\n${ ffmpegError }` ) );
+        }
+      }
+    );
+  } );
+
+  // Observed now so an early failure is never an unhandled rejection; the
+  // loop and the final await below still see it.
+  ffmpegDone.catch( () => {} );
+
+  // EPIPE and friends: the process's own `close`/`error` carries the reason.
+  ffmpegProcess.stdin.on(
+    "error",
+    () => {}
+  );
+
+  const exitedEarly = () => ffmpegDone.then( () => {
+    throw new Error( "FFmpeg exited before every frame was written" );
+  } );
 
   try {
     // Capture and stream frames one by one
@@ -102,17 +147,24 @@ export async function captureFramesWithStreaming( {
         surface
       );
 
+      if ( ffmpegExited ) {
+        await exitedEarly();
+      }
+
       // Write frame directly to FFmpeg stdin
       const canWrite = ffmpegProcess.stdin.write( frameBuffer );
 
-      // If the buffer is full, wait for drain
+      // If the buffer is full, wait for drain — or for FFmpeg to die
       if ( !canWrite ) {
-        await new Promise<void>( ( resolve ) => {
-          ffmpegProcess.stdin.once(
-            "drain",
-            resolve
-          );
-        } );
+        await Promise.race( [
+          new Promise<void>( ( resolve ) => {
+            ffmpegProcess.stdin.once(
+              "drain",
+              resolve
+            );
+          } ),
+          exitedEarly()
+        ] );
       }
 
       // Report progress
@@ -128,27 +180,7 @@ export async function captureFramesWithStreaming( {
     ffmpegProcess.stdin.end();
 
     // Wait for FFmpeg to finish encoding
-    await new Promise<void>( (
-      resolve, reject
-    ) => {
-      ffmpegProcess.on(
-        "close",
-        ( exitCode: number ) => {
-          if ( exitCode === 0 ) {
-            resolve();
-          } else {
-            reject( new Error( `FFmpeg exited with code ${ exitCode }\n${ ffmpegError }` ) );
-          }
-        }
-      );
-
-      ffmpegProcess.on(
-        "error",
-        ( error: Error ) => {
-          reject( error );
-        }
-      );
-    } );
+    await ffmpegDone;
 
     // Video is done — if the sketch logged audio events during the frame
     // loop (capture mode is armed by prepareCapture), render them offline
@@ -161,7 +193,7 @@ export async function captureFramesWithStreaming( {
     } );
   } catch( error ) {
     // Kill FFmpeg if still running
-    if ( !ffmpegProcess.killed ) {
+    if ( !ffmpegExited && !ffmpegProcess.killed ) {
       ffmpegProcess.kill( "SIGKILL" );
     }
     throw error;

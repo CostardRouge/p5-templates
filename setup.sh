@@ -67,6 +67,12 @@ fi
 
 echo ""
 
+# Web-push keys: .env.example ships them empty, so every install gets its own
+# pair instead of sharing one committed private key. A no-op once .env has both.
+node scripts/generate-vapid-keys.mjs
+
+echo ""
+
 # Generate Prisma client
 echo "🔧 Generating Prisma client..."
 npx prisma generate

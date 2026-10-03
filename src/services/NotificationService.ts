@@ -2,6 +2,27 @@ import webpush from "web-push";
 import {
   prisma
 } from "@/lib/connections/prisma";
+import {
+  isAllowedPushEndpoint,
+  parsePushSubscription,
+  type PushSubscriptionData
+} from "@/lib/pushSubscription";
+
+export type {
+  PushSubscriptionData
+};
+
+// A push service that does not answer must not hold a worker's completion
+// handler open indefinitely (web-push has no default timeout).
+const PUSH_TIMEOUT_MS = 10_000;
+
+type NotificationPayload = {
+  title: string;
+  body: string;
+  icon?: string;
+  url?: string;
+  jobId?: string;
+};
 
 // Initialize VAPID details. The subject is configurable so deployments are
 // not tied to the historical social-templates.com address.
@@ -11,14 +32,6 @@ if ( process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY )
     process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
     process.env.VAPID_PRIVATE_KEY
   );
-}
-
-export interface PushSubscriptionData {
-  endpoint: string;
-  keys: {
-    p256dh: string;
-    auth: string;
-  };
 }
 
 export class NotificationService {
@@ -36,7 +49,15 @@ export class NotificationService {
   /**
    * Store a push subscription in the database
    */
-  async storeSubscription( subscription: PushSubscriptionData ): Promise<void> {
+  async storeSubscription( input: PushSubscriptionData ): Promise<void> {
+    // Comes straight from an unauthenticated server action, and the endpoint
+    // is a URL this server will POST to on every job: push services only.
+    const subscription = parsePushSubscription( input );
+
+    if ( !subscription ) {
+      throw new Error( "Invalid push subscription" );
+    }
+
     try {
       await prisma.pushSubscription.upsert( {
         where: {
@@ -52,9 +73,10 @@ export class NotificationService {
           auth: subscription.keys.auth
         }
       } );
+      // The endpoint URL is a bearer capability: log where, not what.
       console.log(
         "[Notification] Subscription stored:",
-        subscription.endpoint
+        new URL( subscription.endpoint ).hostname
       );
     } catch( error ) {
       console.error(
@@ -93,22 +115,12 @@ export class NotificationService {
    */
   async sendNotification(
     subscription: PushSubscriptionData,
-    payload: {
-      title: string;
-      body: string;
-      icon?: string;
-      url?: string;
-      jobId?: string;
-    }
+    payload: NotificationPayload
   ): Promise<boolean> {
     try {
-      await webpush.sendNotification(
+      await this.deliver(
         subscription,
-        JSON.stringify( payload )
-      );
-      console.log(
-        "[Notification] Sent successfully to:",
-        subscription.endpoint
+        payload
       );
       return true;
     } catch( error ) {
@@ -123,13 +135,32 @@ export class NotificationService {
   /**
    * Send a notification to all stored subscriptions
    */
-  async sendNotificationToAll( payload: {
-    title: string;
-    body: string;
-    icon?: string;
-    url?: string;
-    jobId?: string;
-  } ): Promise<void> {
+  /**
+   * Send one push and let the error through — `sendNotification` swallows
+   * it into a boolean, which is why the 410 clean-up below never ran.
+   */
+  private async deliver(
+    subscription: PushSubscriptionData,
+    payload: NotificationPayload
+  ): Promise<void> {
+    if ( !isAllowedPushEndpoint( subscription.endpoint ) ) {
+      throw new Error( "Refusing to send to an endpoint that is not a push service" );
+    }
+
+    await webpush.sendNotification(
+      subscription,
+      JSON.stringify( payload ),
+      {
+        timeout: PUSH_TIMEOUT_MS
+      }
+    );
+    console.log(
+      "[Notification] Sent successfully to:",
+      new URL( subscription.endpoint ).hostname
+    );
+  }
+
+  async sendNotificationToAll( payload: NotificationPayload ): Promise<void> {
     // Only send notifications if backend recording is enabled
     if ( process.env.BACKEND_RECORDING !== "true" ) {
       console.log( "[Notification] Notifications disabled (BACKEND_RECORDING=false)" );
@@ -149,9 +180,20 @@ export class NotificationService {
         payload
       );
 
-      const results = await Promise.allSettled( subscriptions.map( async( sub ) => {
+      // A row stored before endpoints were checked can point anywhere; it is
+      // skipped, not deleted, in case it is a push service the list misses.
+      const deliverable = subscriptions.filter( ( sub ) => {
+        if ( isAllowedPushEndpoint( sub.endpoint ) ) {
+          return true;
+        }
+
+        console.warn( `[Notification] Skipping subscription ${ sub.id }: endpoint is not a known push service` );
+        return false;
+      } );
+
+      const results = await Promise.allSettled( deliverable.map( async( sub ) => {
         try {
-          await this.sendNotification(
+          await this.deliver(
             {
               endpoint: sub.endpoint,
               keys: {
@@ -162,8 +204,9 @@ export class NotificationService {
             payload
           );
         } catch( error: any ) {
-          // If subscription is invalid (410 Gone), remove it
-          if ( error.statusCode === 410 ) {
+          // The push service says this subscription no longer exists
+          // (404 Not Found / 410 Gone): remove it so it is not retried forever.
+          if ( error?.statusCode === 404 || error?.statusCode === 410 ) {
             console.log( `[Notification] Removing invalid subscription ${ sub.id }` );
             await prisma.pushSubscription.delete( {
               where: {
@@ -178,7 +221,7 @@ export class NotificationService {
 
       const successful = results.filter( ( r ) => r.status === "fulfilled" ).length;
 
-      console.log( `[Notification] Sent ${ successful }/${ subscriptions.length } notifications` );
+      console.log( `[Notification] Sent ${ successful }/${ deliverable.length } notifications` );
     } catch( error ) {
       console.error(
         "[Notification] Error sending notifications to all:",

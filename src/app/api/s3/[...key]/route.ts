@@ -42,7 +42,15 @@ export async function GET(
         status: object.status,
         headers: {
           ...object.headers,
-          "cache-control": "private, max-age=3600"
+          "cache-control": "private, max-age=3600",
+          // The bucket holds client uploads and this route serves them from
+          // the app's own origin, with whatever type storage recorded. An
+          // uploaded .html or .svg opened directly would otherwise run as
+          // this site. `sandbox` gives such a document an opaque origin with
+          // scripts off; it has no effect on an <img>, <video>, font or
+          // fetch() use of the same bytes.
+          "x-content-type-options": "nosniff",
+          "content-security-policy": "sandbox"
         }
       }
     );

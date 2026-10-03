@@ -34,6 +34,7 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 
 ## Decisions at a glance (details in the topic files)
 
+- There is no authentication: every API route and server action is public, so every handler validates its input as if the caller were hostile and never turns a parameter into a path, key prefix, fetched URL or shell argument unchecked → `security.md`.
 - Every rendering back-end implements `SketchEngine`; nothing special-cases an engine → `architecture.md`.
 - Every engine extends `BaseSketchEngine` and is only the part that differs; the listener map, the performance loop, the frame maths and the capture waits live once, in the base → `architecture.md`.
 - A canvas engine's `seekAndDraw` yields one task and never waits a display frame: the frame is drawn when `seek()` returns, a rAF capped exports at the refresh rate and never came in a hidden tab → `recording.md`.
@@ -106,6 +107,8 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 
 ## Open items (dated; remove when done)
 
+- 2026-10-02 — A whole-repo audit is in `docs/audit-2026-10-02.md` (inventory, ~70 findings with IDs, plan, ten maintainer decisions). PR #380 fixed the exploitable security holes and the worst correctness/UX/a11y bugs; the decisions and the open batches are in `TODO.md` under "Audit follow-ups". The two that matter most: there is no authentication anywhere (`security.md`), and the Dockerfile's Playwright image (1.59) does not match the locked client (1.62).
+
 - 2026-10-02 — Driven-field treatment shipped for sliders, selects, number bars, colours and the 2D pad (`interaction-bindings.md`). Still open: the checkbox only gets the diamond glyph (`computeBindingValues` already publishes its 0/1), and a sketch-declared binding gets no live treatment because it is not in the form.
 
 - 2026-09-21 — `vector3d` ships ONE view, the orbitable box, chosen at the bench; the other three are proposals again, not code (`docs/vector3d-control.md` §4 — the trackball is first in line if editing a light in a box grates). Still open: a `vector3d` binding kind (`bindingKindFor` returns `null`), a HUD widget over a triple, HUD quick-add, unit-sphere randomization for `kind: "direction"`, colour-coded axis letters, and converting `dragon-corridor`'s `camera.x/y/z` (a stored-shape change).
@@ -119,7 +122,7 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 - 2026-08-20 — `.vscode/settings.json` was untracked as accidental IDE state (it arrived inside a sketch commit, 1ccd877). Its content was genuinely useful: eslint format-on-save matching the repo's `@stylistic` rules. If that is wanted as shared project config, re-add it deliberately with a `!.vscode/settings.json` negation — the file is still on disk.
 - 2026-08-20 — `.husky/pre-push` is entirely commented out, so nothing runs `npm run build` before a push; `.github/workflows/lint-fix.yml` records the reason as "a known issue with NEXT_BUILD_DIR resolution". Either fix the resolution and re-enable it, or delete the file. Left alone: hooks are the maintainer's call.
 - 2026-08-20 — `fast-check` is a devDependency that nothing imports. Either start using it for the maths helpers or drop it.
-- 2026-08-20 — No secret has ever been tracked in this repo (`git log --diff-filter=A -- '.env*'` is empty), so nothing needs rotating.
+- 2026-10-02 — A web-push private key WAS tracked: `.env.example` carried a full VAPID pair until 2026-10-02, and `setup.sh` copied it into every `.env` while the generator skipped any `.env` that already had the lines. The template is blank now and setup generates a pair per install, but any deployment whose `.env` came from that template still signs with the published key — rotating it (which drops every existing push subscription) is the maintainer's call → `security.md`.
 
 ## Topic files — read before touching the area
 
@@ -139,5 +142,6 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 | `docs/memory/interaction-bindings.md` | Modulating a parameter: the binding resolver, its kinds, the pastille/popover, the driven-field treatment, slides and bindings |
 | `docs/memory/interaction-midi.md` | A MIDI channel, the learn gesture, a sketch-declared `binding: { control }`, the port-name controller map |
 | `docs/memory/interaction-sources.md` | How a sensor, camera or controller becomes a pointer: the collectors in `interaction/index.js`, the gyroscope's modes/calibration/permission, verifying a source without hardware |
+| `docs/memory/security.md` | An API route, a server action, request data becoming a path / S3 key / outbound URL, `.env.example` — there is no auth, so every route is public |
 | `docs/memory/home-and-seo.md` | The home page and its studio tour, the capture assets, site metadata, JSON-LD, the sitemap |
 | `docs/analytics.md` | Umami config, why auto-track is off, the pageview queue, how to verify tracking (maintained, unlike the rest of `docs/`) |

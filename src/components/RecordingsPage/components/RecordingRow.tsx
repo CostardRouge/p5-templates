@@ -62,6 +62,7 @@ export default function RecordingRow( {
       <td className="px-2 py-2 sm:px-4 sm:py-3">
         <input
           type="checkbox"
+          aria-label={ `Select ${ job.sketch }` }
           checked={ isSelected }
           onChange={ onToggleSelection }
           className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded border-border text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"

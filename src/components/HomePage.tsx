@@ -410,6 +410,7 @@ export default function HomePage( {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40" />
               <input
                 type="text"
+                aria-label="Search sketches"
                 value={ query }
                 onChange={ ( e ) => setQuery( e.target.value ) }
                 placeholder={ `Search ${ sketches.length } sketches...` }

@@ -95,6 +95,7 @@ Rules that are load-bearing rather than cosmetic:
 - **The stretch measures the registered surface element, not `window.screen`.** That is what makes "fill the display" and "fill the page" one code path — the difference is only whether fullscreen happens to be on. It writes the root `size` *and* every `slides[].size` (a slide's own size wins in `getEffectiveSlideSettings`, so rewriting only the root is masked), snapshots both on entry, restores them on exit, on unmount, and when the surface unregisters. It skips a write that measures no change: each write moves `resolutionKey`, which re-lays out the viewport and restarts the sketch's `setup()`.
 - **The stretch is view state, not a document edit.** `nativeSizeFor` (`src/lib/export/variants.ts`) resolves "the sketch's own size" through the snapshot while the stretch is on, so opening Export from a stretched preview does not silently repoint every `size: null` variant at the screen resolution. The size cell goes read-only, reading `Adaptive — W × H`, rather than offering a preset that would fight a live driver.
 - **Esc is ours in two of the five presets.** The browser only hands Esc back while the API is engaged; "Fill the page" and "Clean preview" hide everything without it. `SketchPage` registers its own Escape listener (not through `useGlobalHotkey`: Esc must still fire with a button focused, and dismissing a dialog has to win), and `PresentationExitButton` is the visible way out in every layout — it fades after 2 s of stillness and returns on pointer move, so an unattended display reads as the sketch alone without being a trap.
+- **Autosave is a 10 s tick that saves only what changed** (2026-10-02) — `useFormState` marks the form dirty on every watch event and the tick calls `saveAsDraft` only when dirty, re-marking it if the save fails (`saveAsDraft` resolves `false`, and passes `silent` so a background failure never `alert()`s). `useInterval` reads its callback from a ref: when the callback was a dependency, every render restarted the timer, and the studio renders on every edit — the autosave never fired while someone was editing, and fired every 10 s (re-uploading every asset) while they were not. **How to apply**: a timer hook whose callback changes per render keeps it in a ref, never in the effect's deps.
 - **`SketchOptions` and `CaptureDialog` stay mounted while the interface is hidden** — only the chrome inside them is skipped. The dialog holds `captureActionsRef` (the autosave handle) and a running recording has to survive, exactly as the export entry above requires.
 - **Two presets duplicate a toggle on purpose, and must not duplicate its shortcut.** "Focus" sets only `fullscreen`, "Clean preview" only `hideInterface` — each identical, from idle, to ticking the matching axis a few rows below. Cutting them was proposed and **declined** (2026-08-31): a named row reaches someone who would not think to reason in axes, and that is worth a redundant row. The shortcut hint is the opposite call: a preset sets all three axes at once while a key flips one, so they part ways from any non-idle state (from "Present", `F` un-fullscreens and leaves hide+stretch on — it does not apply "Focus"). `F` on the Focus row was therefore not merely duplicated but wrong, and was removed; only "Present" carries a key (`P`), which nothing else claims. **How to apply**: do not "clean up" either half — the duplicate rows stay, the hints stay on the toggles.
 
@@ -127,6 +128,8 @@ Three things to keep right when touching this:
 `useSketchDevWatch` stays out of it — no UI, and it is the sketch hot-reload. No server change either: every `/api/dev/*` route already 404s in production independently of the client gate.
 
 ## Panel sections: bands, not boxes
+
+2026-10-02 — Every band header is keyboard-operable through `CollapsibleItem` itself (`role="button"`, `tabIndex=0`, `aria-expanded`, `aria-controls`, Enter/Space only when the header has focus, inset `ring-focus` on `focus-visible`). It cannot be a real `<button>` because the header render prop holds its own buttons (reset, randomize, add); a consumer never adds keyboard handling of its own. Checked headless on a braid sketch: Enter opens "Braid", Tab reaches its "Randomize parameters" then the "Strands" slider. Before this, keyboard and screen-reader users could not open any section.
 
 2026-08-28 — Every settings group is a `PanelSection`: a full-bleed header (uppercase, letter-spaced eyebrow + optional meta/actions + chevron) closed by a hairline running edge to edge. Sections read as a stack of bands, which keeps a long inspector scannable without boxing each group in its own card. The rule does the structural work — do not re-add per-section borders, rounded cards or background tints.
 
@@ -273,6 +276,16 @@ parsed discriminated union, so a saved deck still carrying one fails the array
 and `initOptions`' top-level `.catch` resets **that deck's whole options** to
 defaults, not just the offending layer. If a report ever arrives that "a deck
 came back empty", this is the first thing to check.
+
+2026-10-02 — That reset no longer happens for an **imported** file: the
+studio's import (button and the gallery's sessionStorage handoff, both through
+`handleImportOptions`) uses `src/utils/parseImportedOptions.ts` — the same
+migrations and parse as `initOptions`, minus the `.catch` — and a file that
+fails is refused with an ink (never red) `role="alert"` banner naming the first
+failing path, the form untouched. `initOptions` keeps its `.catch` for loading
+what the app saved itself. **How to apply**: anything that takes options from
+outside the app (a file, a paste, a URL) parses with `parseImportedOptions`,
+not `initOptions`.
 
 ## A layer row shows its whole action set at rest
 
