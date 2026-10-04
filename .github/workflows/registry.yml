@@ -1,36 +1,42 @@
-name: Registre
+name: Registry
 
-# Rapporte l'état du projet au registre (`projets/` de costardrouge/second-brain)
+# Rapporte l'état du projet au registre (les fiches de costardrouge/second-brain)
 # sans qu'aucune session n'ait à toucher second-brain — CLAUDE.md, règle
 # « Report the project's state ».
 #
 # À chaque push sur main : retrouver la PR fusionnée de ce commit, lire le bloc
-# Registre de sa description — ou, sans PR ou sans bloc, ceux des messages des
+# Registry de sa description — ou, sans PR ou sans bloc, ceux des messages des
 # commits poussés (une session locale l'écrit là) — et l'envoyer à second-brain
 # par un `repository_dispatch`. C'est second-brain qui écrit la fiche
-# (`.github/workflows/registre-reception.yml` là-bas). Ce fichier est identique
+# (`.github/workflows/registry-intake.yml` là-bas). Ce fichier est identique
 # dans chaque dépôt du portfolio : le modifier ici, c'est le modifier partout.
 #
-# Le bloc, dans une PR, est un commentaire HTML — `<!-- Registre` … `-->` — :
+# Le bloc, dans une PR, est un commentaire HTML — `<!-- Registry` … `-->` — :
 # invisible dans la PR affichée, il ne la pollue pas, et son français ne se
 # mêle pas à une description en anglais. Un message de commit (session locale)
-# le porte après une ligne « Registre: ». Invisible n'est pas privé : l'API le
+# le porte après une ligne « Registry: ». Invisible n'est pas privé : l'API le
 # rend à quiconque lit le dépôt. Donc, dans un dépôt PUBLIC, le bloc ne porte
-# que ce qui est déjà public — le chemin de la fiche, des cases cochées
-# (`- [x]`) et une ligne `Journal :` ; jamais de `Dernier point`, jamais de case
+# que ce qui est déjà public — la ligne `Project:`, des cases cochées
+# (`- [x]`) et une ligne `Log:` ; jamais de `Last point:`, jamais de case
 # ouverte, rien d'autre.
 #
-# Le job `bloc` vérifie tout cela SUR LA PR, avant la fusion — après, il est
+# Le job `check` vérifie tout cela SUR LA PR, avant la fusion — après, il est
 # trop tard : la description est déjà publique. Il échoue sur un bloc mal formé,
-# sur un bloc en clair (titre `### Registre`) dans une PR, et, dans un dépôt
+# sur un bloc en clair (titre `### Registry`) dans une PR, et, dans un dépôt
 # public, sur une ligne interdite. Au push sur main, il refait la lecture et,
 # si une ligne interdite est passée quand même, la retire avant l'envoi.
 #
 # Le secret REGISTRE_TOKEN (un token fin, « Contents: write » sur second-brain
 # SEUL) vit dans l'environnement `registre`, réservé à la branche main : un
-# workflow poussé sur une autre branche ne peut pas le lire, et le job `envoi`
+# workflow poussé sur une autre branche ne peut pas le lire, et le job `send`
 # ne tourne que sur un push. Sans secret, il le dit et sort en vert ; un token
 # refusé (expiré) le fait rougir.
+#
+# `registre` et `REGISTRE_TOKEN` gardent leur nom français, seuls de tout le
+# circuit : ils vivent dans les réglages GitHub de chaque dépôt, pas dans un
+# fichier, et seul `bin/registry-setup.sh` lancé sur la machine du mainteneur
+# peut les recréer. Les renommer ici sans relancer ce script couperait tous les
+# rapports en silence.
 #
 # Rejouer un rapport : relancer ce workflow sur le commit concerné.
 # Second-brain ignore une source qu'il a déjà, donc c'est sans risque.
@@ -46,7 +52,7 @@ permissions:
   pull-requests: read
 
 jobs:
-  bloc:
+  check:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
@@ -58,17 +64,17 @@ jobs:
           script: |
             const isPublic = context.payload.repository && context.payload.repository.private === false;
 
-            // Le bloc en commentaire : `<!-- Registre` sur sa ligne, puis le
+            // Le bloc en commentaire : `<!-- Registry` sur sa ligne, puis le
             // bloc, puis `-->`.
             const hidden = (text) => {
-              const m = /<!--[ \t]*Registre[ \t]*:?[ \t]*\n([\s\S]*?)-->/i.exec(text);
+              const m = /<!--[ \t]*Registry[ \t]*:?[ \t]*\n([\s\S]*?)-->/i.exec(text);
               return m ? m[1].trim() : null;
             };
-            // Le bloc en clair : de « ### Registre » (ou une ligne « Registre »
+            // Le bloc en clair : de « ### Registry » (ou une ligne « Registry »
             // seule) jusqu'au titre suivant de niveau 1 à 3 hors bloc de code.
             const visible = (text) => {
               const lines = text.split("\n");
-              const start = lines.findIndex((l) => /^\s*(#{1,4}\s*)?Registre\s*:?\s*$/i.test(l));
+              const start = lines.findIndex((l) => /^\s*(#{1,4}\s*)?Registry\s*:?\s*$/i.test(l));
               if (start < 0) return null;
               const out = [];
               let fence = false;
@@ -87,18 +93,18 @@ jobs:
               return v ? { block: v, form: "visible" } : null;
             };
 
-            // Ce qu'un dépôt public a le droit d'écrire : le chemin, des cases
+            // Ce qu'un dépôt public a le droit d'écrire : le projet, des cases
             // cochées, une ligne de journal. Le reste est une fuite.
             const publicLine = (l) =>
               /^\s*$/.test(l) ||
-              /^\s*projets\/[^\s]+\/README\.md\s*$/.test(l) ||
+              /^\s*Project\s*:\s*[a-z0-9][a-z0-9-]*\s*$/i.test(l) ||
               /^\s*[-*]\s*\[[xX]\]\s+\S/.test(l) ||
-              /^\s*Journal\s*:/i.test(l);
+              /^\s*Log\s*:/i.test(l);
             const check = (block) => {
               const problems = [];
               const first = block.split("\n").map((l) => l.trim()).find(Boolean) || "";
-              if (!/^projets\/[a-z0-9][a-z0-9-]*\/README\.md$/.test(first)) {
-                problems.push(`la première ligne doit être le chemin de la fiche (projets/<slug>/README.md), pas « ${first.slice(0, 80)} »`);
+              if (!/^Project\s*:\s*[a-z0-9][a-z0-9-]*$/i.test(first)) {
+                problems.push(`la première ligne doit nommer la fiche (Project: <slug>), pas « ${first.slice(0, 80)} »`);
               }
               const leaks = isPublic ? block.split("\n").filter((l) => !publicLine(l)) : [];
               for (const l of leaks) problems.push(`dépôt public, ligne interdite : « ${l.trim().slice(0, 80)} »`);
@@ -112,18 +118,18 @@ jobs:
             if (context.eventName === "pull_request") {
               const found = read(context.payload.pull_request.body);
               if (!found) {
-                core.info("Pas de bloc Registre dans cette PR : rien à vérifier.");
+                core.info("Pas de bloc Registry dans cette PR : rien à vérifier.");
                 return;
               }
               const { problems } = check(found.block);
               if (found.form === "visible") {
-                problems.unshift("le bloc est en clair dans la description : mettez-le dans un commentaire HTML, `<!-- Registre` … `-->`");
+                problems.unshift("le bloc est en clair dans la description : mettez-le dans un commentaire HTML, `<!-- Registry` … `-->`");
               }
               if (problems.length) {
-                core.setFailed(`Bloc Registre refusé${isPublic ? " (dépôt public)" : ""} :\n- ${problems.join("\n- ")}`);
+                core.setFailed(`Bloc Registry refusé${isPublic ? " (dépôt public)" : ""} :\n- ${problems.join("\n- ")}`);
                 return;
               }
-              core.info(`Bloc Registre conforme${isPublic ? " pour un dépôt public" : ""}.`);
+              core.info(`Bloc Registry conforme${isPublic ? " pour un dépôt public" : ""}.`);
               return;
             }
 
@@ -158,14 +164,14 @@ jobs:
             }
 
             if (sources.length === 0) {
-              core.info("Aucun bloc Registre dans ce push : rien à rapporter.");
+              core.info("Aucun bloc Registry dans ce push : rien à rapporter.");
               return;
             }
             core.setOutput("payload", JSON.stringify({ repo: full, sources: sources.slice(0, 10) }));
 
-  envoi:
-    needs: bloc
-    if: github.event_name == 'push' && needs.bloc.outputs.payload != ''
+  send:
+    needs: check
+    if: github.event_name == 'push' && needs.check.outputs.payload != ''
     runs-on: ubuntu-latest
     environment: registre
     timeout-minutes: 5
@@ -173,7 +179,7 @@ jobs:
       - uses: actions/github-script@v7
         env:
           REGISTRE_TOKEN: ${{ secrets.REGISTRE_TOKEN }}
-          PAYLOAD: ${{ needs.bloc.outputs.payload }}
+          PAYLOAD: ${{ needs.check.outputs.payload }}
         with:
           script: |
             const token = process.env.REGISTRE_TOKEN;
@@ -189,7 +195,7 @@ jobs:
                 Accept: "application/vnd.github+json",
                 "X-GitHub-Api-Version": "2022-11-28",
               },
-              body: JSON.stringify({ event_type: "registre", client_payload: payload }),
+              body: JSON.stringify({ event_type: "registry", client_payload: payload }),
             });
             if (res.status !== 204) {
               core.setFailed(`second-brain a refusé le rapport (${res.status}) : ${await res.text()}`);

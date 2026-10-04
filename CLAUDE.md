@@ -102,39 +102,40 @@ you are in for before starting.
 
 ## Rule 4 — Report the project's state (MANDATORY)
 
-The register of what is open is the `projets/` folder at the root of the
-private `second-brain` repository: one folder per project, whose `README.md`
-carries a typed front matter (`state`, `point`, `repos`) and a `## À faire`
-list of checkboxes. `PROJETS.md` beside it is GENERATED from those folders.
-That folder is the source of truth — not this conversation, not Claude's
-memory, not `git log`, which records what changed and never what state the
-project is in.
+The register of what is open is the private `second-brain` repository: one
+folder per project, filed by group and domain and found by its slug (`p5-templates`
+here), whose `README.md` carries a typed front matter (`state`, `point`,
+`repos`) and a `## To do` list of checkboxes. `PROJECTS.md` at its root is
+GENERATED from those folders. That register is the source of truth — not this
+conversation, not Claude's memory, not `git log`, which records what changed
+and never what state the project is in.
 
 A session that changes code here changes this project's state, and the state
-reaches that folder **through this repository: never touch `second-brain`**.
+reaches the register **through this repository: never touch `second-brain`**.
 Do not attach it (`add_repo`), do not clone it, do not commit to it — locally
 either, even though it sits beside this checkout. On every push to `main`,
-`.github/workflows/registre.yml` reads the block below from the merged pull
+`.github/workflows/registry.yml` reads the block below from the merged pull
 request's description (or, when there is none, from the pushed commits'
 messages) and sends it to `second-brain`, whose own workflow updates the fiche
-and regenerates `PROJETS.md`. Only what reaches `main` is reported.
+and regenerates `PROJECTS.md`. Only what reaches `main` is reported.
 
 Write the block in a cloud session in this repository's pull request
 description, **inside an HTML comment** so the rendered pull request stays
-clean and its French does not mix with an English description:
+clean and its French does not mix with an English description. The labels are
+English, what follows them is French:
 
-    <!-- Registre
-    projets/p5-templates/README.md
-    Dernier point : <the project as it now stands, in French>
+    <!-- Registry
+    Project: p5-templates
+    Last point: <the project as it now stands, in French>
     - [x] <an existing box this work closes, copied from the fiche>
     - [ ] <a new open action, in French>
-    Journal : <one line for the fiche's journal, in French>
+    Log: <one line for the fiche's log, in French>
     -->
 
 In a local session, write the same lines at the end of the task's commit body,
-after a line `Registre:`.
+after a line `Registry:`.
 
-Every line but the first is optional. `Dernier point` REPLACES the fiche's
+Every line but the first is optional. `Last point:` REPLACES the fiche's
 paragraph: write what someone back after three months needs about the whole
 project, not a changelog — the commit body already carries the detail. A
 `- [x]` ticks a box only when its text matches one; copy it from the fiche
@@ -146,9 +147,9 @@ maintainer's call.
 
 **Hidden is not private.** The API hands a pull request's description and a
 commit's message to anyone who can read the repository. In a **public**
-repository the block carries only what is already public: the path, ticked
-boxes (`- [x]`) and one `Journal :` line — never a `Dernier point`, never an
-open box, nothing else. The `bloc` job of `registre.yml` checks every pull
+repository the block carries only what is already public: the `Project:` line,
+ticked boxes (`- [x]`) and one `Log:` line — never a `Last point:`, never an
+open box, nothing else. The `check` job of `registry.yml` checks every pull
 request before it is merged: it fails on a malformed block, on a block left
 visible under a heading, and, in a public repository, on any other line; and
 the report strips such a line if it is merged anyway.
