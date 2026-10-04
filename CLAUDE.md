@@ -119,15 +119,20 @@ request's description (or, when there is none, from the pushed commits'
 messages) and sends it to `second-brain`, whose own workflow updates the fiche
 and regenerates `PROJETS.md`. Only what reaches `main` is reported.
 
-Write the block under a `### Registre` heading — in a cloud session, in this
-repository's pull request description; in a local session, at the end of the
-task's commit body:
+Write the block in a cloud session in this repository's pull request
+description, **inside an HTML comment** so the rendered pull request stays
+clean and its French does not mix with an English description:
 
+    <!-- Registre
     projets/p5-templates/README.md
     Dernier point : <the project as it now stands, in French>
     - [x] <an existing box this work closes, copied from the fiche>
     - [ ] <a new open action, in French>
     Journal : <one line for the fiche's journal, in French>
+    -->
+
+In a local session, write the same lines at the end of the task's commit body,
+after a line `Registre:`.
 
 Every line but the first is optional. `Dernier point` REPLACES the fiche's
 paragraph: write what someone back after three months needs about the whole
@@ -138,6 +143,15 @@ session already has it — never attach it just to read it), otherwise leave the
 ticking to the maintainer. A new box is one gesture, not a plan. The date is
 the merge's, and `state:` is never written by a block: it is the
 maintainer's call.
+
+**Hidden is not private.** The API hands a pull request's description and a
+commit's message to anyone who can read the repository. In a **public**
+repository the block carries only what is already public: the path, ticked
+boxes (`- [x]`) and one `Journal :` line — never a `Dernier point`, never an
+open box, nothing else. The `bloc` job of `registre.yml` checks every pull
+request before it is merged: it fails on a malformed block, on a block left
+visible under a heading, and, in a public repository, on any other line; and
+the report strips such a line if it is merged anyway.
 
 A change a returning reader does not need — tooling, a typo, a refactor —
 carries no block. A question, an exploration or an explanation changes no
