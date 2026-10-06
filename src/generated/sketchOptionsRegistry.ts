@@ -28,6 +28,7 @@ export const sketchOptionsJsonLoaders: Record<string, SketchModuleLoader> = {
 
 /** `<engine>:<sketchPath>` → loads the sketch's `options.ts` (form module). */
 export const sketchFormLoaders: Record<string, SketchModuleLoader> = {
+  "cavalry:cavalry-player": () => import( "@/cavalry/sketches/cavalry-player/options" ),
   "gsap:hello-gsap": () => import( "@/gsap/sketches/hello-gsap/options" ),
   "gsap:photo/coverflow-3d": () => import( "@/gsap/sketches/photo/coverflow-3d/options" ),
   "gsap:photo/duo-swap": () => import( "@/gsap/sketches/photo/duo-swap/options" ),
