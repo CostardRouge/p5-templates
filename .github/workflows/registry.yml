@@ -51,15 +51,20 @@ permissions:
   contents: read
   pull-requests: read
 
+# Les deux jobs n'appellent que l'API GitHub. Leur machine est nommée
+# (`ubuntu-24.04`) plutôt que `ubuntu-latest`, qui passe à Ubuntu 26 à partir
+# du 19 octobre 2026 : le changement d'OS devient un choix, pas une surprise.
+# `github-script@v8` tourne sur Node 24 ; la v7 visait Node 20, déprécié.
+
 jobs:
   check:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     outputs:
       payload: ${{ steps.lire.outputs.payload }}
     steps:
       - id: lire
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const isPublic = context.payload.repository && context.payload.repository.private === false;
@@ -172,11 +177,11 @@ jobs:
   send:
     needs: check
     if: github.event_name == 'push' && needs.check.outputs.payload != ''
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment: registre
     timeout-minutes: 5
     steps:
-      - uses: actions/github-script@v7
+      - uses: actions/github-script@v8
         env:
           REGISTRE_TOKEN: ${{ secrets.REGISTRE_TOKEN }}
           PAYLOAD: ${{ needs.check.outputs.payload }}
