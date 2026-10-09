@@ -15,6 +15,10 @@ export {
   easingId
 };
 
+// The GLSL stdlib, the WebGL plumbing and the p5-camera matrices below are also
+// exported (at the bottom of this file) for spikeMeshGpu.js, which rasterises
+// the same peaks geometry as solid surfaces instead of disc billboards.
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared GPU engine for the "peaks" family (a 3D point cloud on a surface).
 //
@@ -712,16 +716,49 @@ function rotationZMat4( a ) {
   ];
 }
 
+function translationMat4( t ) {
+  return [
+    1,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    t[ 0 ],
+    t[ 1 ],
+    t[ 2 ],
+    1
+  ];
+}
+
 // Model-view for the default camera with the sketch's rotateX/Y/Z applied in
-// p5's order (uModelMatrix = Rx·Ry·Rz, then the camera view in front).
-function modelViewMat4( rotation ) {
-  const model = multiplyMat4(
+// p5's order (uModelMatrix = Rx·Ry·Rz, then the camera view in front). An
+// optional `translate` is applied to the vertices first — p5's
+// `rotate…(); translate( … )` order, which peaks-tunnel uses to centre its
+// tunnel on the origin before the wobble.
+function modelViewMat4(
+  rotation, translate = null
+) {
+  let model = multiplyMat4(
     multiplyMat4(
       rotationXMat4( rotation.x ),
       rotationYMat4( rotation.y )
     ),
     rotationZMat4( rotation.z )
   );
+
+  if ( translate ) {
+    model = multiplyMat4(
+      model,
+      translationMat4( translate )
+    );
+  }
 
   return multiplyMat4(
     viewMat4(),
@@ -1218,3 +1255,22 @@ export default function createPeaksFieldRenderer( {
     render
   };
 }
+
+// ─── Shared with spikeMeshGpu.js ──────────────────────────────────────────────
+// The solid-surface renderer draws the same peaks placements (the same Perlin
+// table, the same mapEase / easing dispatch, the same p5 default camera) as
+// lit meshes rather than disc billboards. It reuses these rather than restating
+// them, so the two renderers can never disagree on a noise value or a matrix.
+export const PEAKS_STDLIB_GLSL = CONSTANTS_GLSL + PERLIN_GLSL + MAPPERS_GLSL + EASINGS_GLSL + MAPEASE_GLSL + PALETTE_GLSL;
+
+export {
+  buildProgram,
+  writePerlinTexture,
+  isWebGL2,
+  getInstancingExt,
+  setDivisor,
+  setUniformValue,
+  multiplyMat4,
+  modelViewMat4,
+  perspectiveMat4
+};
