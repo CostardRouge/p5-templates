@@ -45,6 +45,9 @@ import {
 } from "./useFieldBinding";
 import ControlledColorInput from "../ControlledColorInput/ControlledColorInput";
 import {
+  resolveAxes3D
+} from "../ControlledVector3DInput/utils/vector3dMath";
+import {
   type Binding,
   type BindingKind,
   type SourceCategory,
@@ -503,11 +506,32 @@ export default function BindingAffordance( {
   // Boolean and enum default to no smoothing: a lagged signal there delays the
   // flip rather than calming it.
   const defaultSmoothing =
-    kind === "vector2d"
+    kind === "vector2d" || kind === "vector3d"
       ? 0.15
       : ( kind === "boolean" || kind === "enum" ? 0 : 0.2 );
 
+  // A 3D vector carries one range per axis (shared min/max, then per-axis
+  // overrides), which `fieldDomain`'s single min/max cannot express.
+  const axes3 = kind === "vector3d" ? resolveAxes3D( config as any ) : null;
+  const axis3Of = ( axis: "x" | "y" | "z" ) => ( axis === "x"
+    ? axes3!.xAxis
+    : axis === "y" ? axes3!.yAxis : axes3!.zAxis );
+
   const defaultMapping = () => {
+    if ( kind === "vector3d" ) {
+      const span = ( axis: "x" | "y" | "z" ) => ( {
+        min: axis3Of( axis ).min,
+        max: axis3Of( axis ).max
+      } );
+
+      return {
+        x: span( "x" ),
+        y: span( "y" ),
+        z: span( "z" ),
+        curve: "linear"
+      };
+    }
+
     if ( kind === "vector2d" ) {
       return {
         x: {
@@ -1368,6 +1392,35 @@ export default function BindingAffordance( {
             )}
 
             {/* Colour: the two stops the signal crossfades between. */}
+            {/* 3D: one range per axis; the signal sweeps all three at once,
+                so min → max is the path between two corners of the box. */}
+            {kind === "vector3d" && axes3 && (
+              <div className="flex flex-col gap-1">
+                {( [
+                  "x",
+                  "y",
+                  "z"
+                ] as const ).flatMap( ( axis ) => ( [
+                  "min",
+                  "max"
+                ] as const ).map( ( end ) => (
+                  <ControlledSliderInput
+                    key={ `${ axis }.${ end }` }
+                    name={ `${ bindingPath }.mapping.${ axis }.${ end }` }
+                    label={ `${ axis.toUpperCase() } ${ end }` }
+                    min={ axis3Of( axis ).min }
+                    max={ axis3Of( axis ).max }
+                    step={ axis3Of( axis ).step }
+                    { ...resetFor(
+                      `mapping.${ axis }.${ end }`,
+                      binding.mapping?.[ axis ]?.[ end ],
+                      axis3Of( axis )[ end ]
+                    ) }
+                  />
+                ) ) )}
+              </div>
+            )}
+
             {kind === "color" && (
               <div className="flex flex-col gap-1">
                 <ControlledColorInput

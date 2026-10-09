@@ -1,6 +1,9 @@
 import {
   describeFieldBinding
 } from "../useFieldBinding";
+import {
+  bindingKindFor, makeDefaultBinding
+} from "../bindingUtils";
 import type {
   Binding
 } from "../bindingUtils";
@@ -177,6 +180,51 @@ describe(
     );
 
     it(
+      "gives a 3D vector a z span beside x and y, a 2D pad none",
+      () => {
+        const state = describeFieldBinding(
+          [
+            {
+              source: "oscillator",
+              target: "light",
+              kind: "vector3d",
+              mapping: {
+                x: {
+                  min: -1,
+                  max: 1
+                },
+                y: {
+                  min: 0,
+                  max: 2
+                },
+                z: {
+                  min: 4,
+                  max: -4
+                }
+              }
+            }
+          ],
+          "light"
+        );
+
+        expect( state.area ).toEqual( {
+          x: {
+            min: -1,
+            max: 1
+          },
+          y: {
+            min: 0,
+            max: 2
+          },
+          z: {
+            min: -4,
+            max: 4
+          }
+        } );
+      }
+    );
+
+    it(
       "takes a colour's ramp from the last playing layer, and none from a malformed one",
       () => {
         const ramp = (
@@ -292,6 +340,52 @@ describe(
           "d"
         ] );
         expect( state.range ).toBeNull();
+      }
+    );
+  }
+);
+
+describe(
+  "vector3d as a bindable kind",
+  () => {
+    it(
+      "maps the 3D control to its own kind",
+      () => {
+        expect( bindingKindFor( "vector3d" ) ).toBe( "vector3d" );
+      }
+    );
+
+    it(
+      "starts on a generator sweeping each axis' whole range, per-axis overrides first",
+      () => {
+        const binding = makeDefaultBinding(
+          "light",
+          "vector3d",
+          {
+            component: "vector3d",
+            zAxis: {
+              min: 0,
+              max: 10
+            }
+          } as any
+        );
+
+        expect( binding.source ).toBe( "oscillator" );
+        expect( binding.mapping ).toEqual( {
+          x: {
+            min: -1,
+            max: 1
+          },
+          y: {
+            min: -1,
+            max: 1
+          },
+          z: {
+            min: 0,
+            max: 10
+          },
+          curve: "linear"
+        } );
       }
     );
   }

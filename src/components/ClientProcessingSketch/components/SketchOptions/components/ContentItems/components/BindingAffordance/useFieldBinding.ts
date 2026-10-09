@@ -33,10 +33,13 @@ export type FieldBindingState = {
     max: number } | null;
   /** Enum: the cycle of the last playing layer — the one that wins the fold. */
   values: unknown[] | null;
-  /** 2D pad: the union of the playing layers' per-axis mapping ranges. */
+  /** 2D pad / 3D vector: the union of the playing layers' per-axis mapping
+   *  ranges (`z` only for a 3D vector). */
   area: { x: { min: number;
     max: number };
   y: { min: number;
+    max: number };
+  z?: { min: number;
     max: number }; } | null;
   /** Colour: the last playing layer's two-stop ramp, `[r, g, b, a]` bytes. */
   ramp: { from: number[];
@@ -105,6 +108,7 @@ export function describeFieldBinding(
   let values: unknown[] | null = null;
   let areaX: Span | null = null;
   let areaY: Span | null = null;
+  let areaZ: Span | null = null;
   let ramp: FieldBindingState[ "ramp" ] = null;
 
   for ( const binding of playing ) {
@@ -121,7 +125,17 @@ export function describeFieldBinding(
       );
     } else if ( kind === "enum" && Array.isArray( mapping.values ) ) {
       values = mapping.values;
-    } else if ( kind === "vector2d" ) {
+    } else if ( kind === "vector2d" || kind === "vector3d" ) {
+      if ( kind === "vector3d" ) {
+        areaZ = widen(
+          areaZ,
+          mapping.z?.min,
+          mapping.z?.max,
+          0,
+          1
+        );
+      }
+
       areaX = widen(
         areaX,
         mapping.x?.min,
@@ -153,7 +167,10 @@ export function describeFieldBinding(
     area: areaX && areaY
       ? {
         x: areaX,
-        y: areaY
+        y: areaY,
+        ...( areaZ && {
+          z: areaZ
+        } )
       }
       : null,
     ramp

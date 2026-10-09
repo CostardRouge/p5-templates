@@ -250,14 +250,15 @@ export function publishBindingSignals( signals: Record<string, number> ): void {
 //   number (slider, enum index, boolean) → --binding-value-<t>
 //   [r, g, b, a] bytes (colour)          → --binding-value-<t>    rgb(r g b / α)
 //                                          --binding-value-<t>-a  α, 0..1
-//   { x, y } (pad)                       → --binding-value-<t>-x, -y
+//   { x, y } / { x, y, z } (pads)        → --binding-value-<t>-x, -y (, -z)
 
 export type BindingValue = number | number[] | { x: number;
-  y: number };
+  y: number;
+  z?: number };
 
 /** CSS variable name for a driven target's resolved value, or one part of it. */
 export function bindingValueVarName(
-  target: string, part?: "x" | "y" | "a"
+  target: string, part?: "x" | "y" | "z" | "a"
 ): string {
   return `--binding-value-${ cssId( target ) }${ part ? `-${ part }` : "" }`;
 }
@@ -292,7 +293,7 @@ function bindingValueVars(
     ];
   }
 
-  return [
+  const axes: Array<[string, string]> = [
     [
       bindingValueVarName(
         target,
@@ -308,6 +309,18 @@ function bindingValueVars(
       String( value.y )
     ]
   ];
+
+  if ( typeof value.z === "number" ) {
+    axes.push( [
+      bindingValueVarName(
+        target,
+        "z"
+      ),
+      String( value.z )
+    ] );
+  }
+
+  return axes;
 }
 
 type ValueSubscriber = ( values: Record<string, BindingValue> ) => void;

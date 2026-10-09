@@ -144,6 +144,17 @@ describe(
         expect( bindVar( "--binding-value-backgroundColor-a" ) ).toBe( "0.2" );
         expect( bindVar( "--binding-value-orientation-x" ) ).toBe( "0.25" );
         expect( bindVar( "--binding-value-orientation-y" ) ).toBe( "-0.5" );
+        expect( bindVar( "--binding-value-orientation-z" ) ).toBe( "" );
+
+        publishBindingValues( {
+          light: {
+            x: 1,
+            y: 2,
+            z: -3
+          }
+        } );
+
+        expect( bindVar( "--binding-value-light-z" ) ).toBe( "-3" );
 
         // Every part goes with its target.
         publishBindingValues( {} );

@@ -1,5 +1,6 @@
 "use client";
 
+import type React from "react";
 import {
   useController, useFormContext
 } from "react-hook-form";
@@ -12,7 +13,7 @@ export type {
   Vector3DInputConfig, Vector3DValue
 } from "./Vector3DPad";
 
-type Props = {
+type Props = Pick<React.ComponentProps<typeof Vector3DPad>, "live"> & {
   name: string;
   config?: Vector3DInputConfig;
 };
@@ -24,7 +25,7 @@ type Props = {
  * inside a larger value object.
  */
 export default function ControlledVector3DInput( {
-  name, config
+  name, config, live
 }: Props ) {
   const {
     control
@@ -52,6 +53,7 @@ export default function ControlledVector3DInput( {
       }
       config={ config }
       ariaLabel={ name }
+      live={ live }
     />
   );
 }
