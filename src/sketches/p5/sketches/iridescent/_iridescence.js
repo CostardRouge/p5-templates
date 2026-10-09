@@ -8,7 +8,8 @@ import {
 import {
   materialFormValues,
   backgroundFormValues,
-  renderingFormValues
+  renderingFormValues,
+  PALETTES
 } from "./_form.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -123,7 +124,8 @@ export function materialVariant( material ) {
     wave: ( wave.weight ?? d.wave.weight ) !== 0,
     waveAxis: wave.axis in AXIS_GLSL ? wave.axis : d.wave.axis,
     waveShape: wave.shape in WAVE_GLSL ? wave.shape : d.wave.shape,
-    waveCurve: wave.curve ?? d.wave.curve
+    waveCurve: wave.curve ?? d.wave.curve,
+    grain: ( m.finish?.grain ?? d.finish.grain ) > 0
   };
 
   return {
@@ -152,6 +154,17 @@ export function iridescentShadeGlsl( variant ) {
     ? `{
       float u = fract(${ AXIS_GLSL[ v.staggerAxis ] } * uStaggerCycles);
       offset += uStaggerWeight * ${ easingCall( v.staggerCurve ) };
+    }`
+    : "";
+  // Print grain: a static per-pixel jitter of the ramp coordinate, so band
+  // edges break into a stipple instead of a clean line. Screen-space and
+  // hashed (no time input), so a captured frame is the same every render.
+  const grainGlsl = v.grain
+    ? `{
+      vec2 q = floor(gl_FragCoord.xy / max(uGrainPx, 1.0));
+      vec3 h3 = fract(vec3(q.xyx) * 0.1031);
+      h3 += dot(h3, h3.yzx + 33.33);
+      offset += uGrain * (fract((h3.x + h3.y) * h3.z) - 0.5);
     }`
     : "";
   const waveGlsl = v.wave
@@ -185,6 +198,8 @@ export function iridescentShadeGlsl( variant ) {
   uniform float uWavePhase;    // wavelengths travelled so far this loop
 
   uniform float uShading;
+  uniform float uGrain;
+  uniform float uGrainPx;      // grain cell, in the buffer's pixels
   uniform vec3  uFogColor;
   uniform float uFogAmount;
   uniform float uFogStart;
@@ -236,6 +251,7 @@ export function iridescentShadeGlsl( variant ) {
     float offset = 0.0;
     ${ staggerGlsl }
     ${ waveGlsl }
+    ${ grainGlsl }
 
     vec3 c = rampColor(shape * uBands + offset + uShift);
 
@@ -385,13 +401,53 @@ function rgb01( color ) {
 }
 
 /**
+ * Apply the selected palette, if any: a named palette replaces the ramp's
+ * stops and hardness and the background with its paper; "custom" (or an
+ * unknown name) leaves both as the form has them. Every sketch reads its
+ * material and background through this, so a preset reaches the ramp, the
+ * fog colour and the gradient behind the subject at once.
+ *
+ * @returns {{ material: object, background: object }}
+ */
+export function resolveLook(
+  material, background
+) {
+  const m = material ?? materialFormValues;
+  const preset = PALETTES[ m.ramp?.palette ];
+
+  if ( !preset ) {
+    return {
+      material: m,
+      background: background ?? backgroundFormValues
+    };
+  }
+
+  return {
+    material: {
+      ...m,
+      ramp: {
+        ...( m.ramp ?? materialFormValues.ramp ),
+        stops: preset.stops,
+        hardness: preset.hardness
+      }
+    },
+    background: {
+      top: preset.paper.top,
+      bottom: preset.paper.bottom
+    }
+  };
+}
+
+/**
  * The material's render() inputs for this frame.
  *
  * @param {object} material the sketch's `material` options
  * @param {object} background the sketch's `background` options (fog colour)
- * @param {object} [scene] { scale, axis } — the structure's size in the
- *   sketch's units (normalises the position axes) and its main axis ("y" or
- *   "z") for the angle / radial coordinates
+ * @param {object} [scene] { scale, axis, pixelScale } — the structure's size
+ *   in the sketch's units (normalises the position axes), its main axis ("y"
+ *   or "z") for the angle / radial coordinates, and how many buffer pixels
+ *   make one screen pixel (the supersample or render scale), so the grain
+ *   keeps its size on screen
  * @returns {{ ramp: object, shade: { key: string, glsl: string }, uniforms: object }}
  *   `shade` is the material's fragment GLSL for the current variant (its
  *   selects and curves are baked in) with a key that changes with it, so a
@@ -400,7 +456,8 @@ function rgb01( color ) {
 export function materialRender(
   material, background, {
     scale = 500,
-    axis = "y"
+    axis = "y",
+    pixelScale = 1
   } = {}
 ) {
   const d = materialFormValues;
@@ -476,6 +533,8 @@ export function materialRender(
       uWavePhase: waveSpeed * phase,
 
       uShading: m.shading ?? d.shading,
+      uGrain: m.finish?.grain ?? d.finish.grain,
+      uGrainPx: ( m.finish?.grainSize ?? d.finish.grainSize ) * pixelScale,
       uFogColor: rgb01( background?.bottom ?? backgroundFormValues.bottom ),
       uFogAmount: fog.amount ?? d.fog.amount,
       uFogStart: fog.start ?? d.fog.start,

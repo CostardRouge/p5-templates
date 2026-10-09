@@ -9,6 +9,7 @@ import {
 } from "@/p5/utils/easingGlsl.js";
 
 import {
+  resolveLook,
   materialRender,
   renderingSettings,
   drawBackground,
@@ -112,9 +113,15 @@ sketch.draw( () => {
   const o = options.sketch ?? {};
 
   p.clear();
+  // A named palette replaces the stops, the hardness and the background.
+  const look = resolveLook(
+    o.material,
+    o.background
+  );
+
   drawBackground(
     p,
-    o.background
+    look.background
   );
 
   const tunnel = o.tunnel ?? defaults.tunnel;
@@ -128,19 +135,6 @@ sketch.draw( () => {
     ? animation.angle * ( peaks.animSpeed ?? defaults.peaks.animSpeed )
     : 0;
 
-  // Position axes are read after the centring translate, so the tunnel's
-  // length is the scene: z runs −0.5 → 0.5 across it.
-  const material = materialRender(
-    o.material,
-    o.background,
-    {
-      scale: Math.max(
-        Math.abs( depthEnd - depthStart ),
-        1
-      ),
-      axis: "z"
-    }
-  );
   const rendering = renderingSettings(
     o.rendering,
     {
@@ -148,6 +142,21 @@ sketch.draw( () => {
       spikeSegments: 16,
       bodyRings: 64,
       bodySegments: 64
+    }
+  );
+
+  // Position axes are read after the centring translate, so the tunnel's
+  // length is the scene: z runs −0.5 → 0.5 across it.
+  const material = materialRender(
+    look.material,
+    look.background,
+    {
+      scale: Math.max(
+        Math.abs( depthEnd - depthStart ),
+        1
+      ),
+      axis: "z",
+      pixelScale: rendering.supersample
     }
   );
 

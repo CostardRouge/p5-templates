@@ -27,10 +27,670 @@
 // wrap back to the first stop, or mirror back down the ramp.
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ── Palettes ─────────────────────────────────────────────────────────────────
+// Named looks for the ramp. Picking one in `ramp.palette` REPLACES the stops,
+// the band hardness and the background (its `paper`); "custom" keeps the
+// form's own stops and background. The riso four use Risograph ink colours
+// (fluorescent pink, blue, yellow, teal, orange, federal blue, mint, aqua,
+// sunflower, bright red, burgundy, purple, medium blue) plus the paper as an
+// unprinted stop and an overprint mix, with near-flat bands — pair them with
+// `finish.grain` for the stipple of a real print.
+export const PALETTES = {
+  "riso-pink-blue": {
+    label: "Riso — fluo pink × blue (yellow, paper, overprint violet)",
+    stops: [
+      [
+        255,
+        72,
+        176
+      ],
+      [
+        255,
+        232,
+        0
+      ],
+      [
+        245,
+        240,
+        230
+      ],
+      [
+        0,
+        120,
+        191
+      ],
+      [
+        74,
+        46,
+        126
+      ]
+    ],
+    hardness: 0.92,
+    paper: {
+      top: [
+        245,
+        240,
+        230
+      ],
+      bottom: [
+        234,
+        227,
+        212
+      ]
+    }
+  },
+  "riso-teal-orange": {
+    label: "Riso — teal × orange (mint, paper, federal blue)",
+    stops: [
+      [
+        0,
+        131,
+        138
+      ],
+      [
+        130,
+        216,
+        213
+      ],
+      [
+        245,
+        240,
+        230
+      ],
+      [
+        255,
+        108,
+        47
+      ],
+      [
+        61,
+        85,
+        136
+      ]
+    ],
+    hardness: 0.9,
+    paper: {
+      top: [
+        245,
+        240,
+        230
+      ],
+      bottom: [
+        234,
+        227,
+        212
+      ]
+    }
+  },
+  "riso-sunflower-burgundy": {
+    label: "Riso — sunflower × burgundy (bright red, aqua, paper)",
+    stops: [
+      [
+        255,
+        181,
+        17
+      ],
+      [
+        241,
+        80,
+        96
+      ],
+      [
+        145,
+        78,
+        114
+      ],
+      [
+        94,
+        200,
+        229
+      ],
+      [
+        245,
+        240,
+        230
+      ]
+    ],
+    hardness: 0.9,
+    paper: {
+      top: [
+        247,
+        241,
+        227
+      ],
+      bottom: [
+        236,
+        228,
+        210
+      ]
+    }
+  },
+  "riso-purple-mint": {
+    label: "Riso — purple × mint (paper, fluo pink, medium blue)",
+    stops: [
+      [
+        118,
+        91,
+        167
+      ],
+      [
+        130,
+        216,
+        213
+      ],
+      [
+        245,
+        240,
+        230
+      ],
+      [
+        255,
+        72,
+        176
+      ],
+      [
+        50,
+        85,
+        164
+      ]
+    ],
+    hardness: 0.9,
+    paper: {
+      top: [
+        245,
+        240,
+        230
+      ],
+      bottom: [
+        234,
+        227,
+        212
+      ]
+    }
+  },
+  "acid-y2k": {
+    label: "Acid Y2K — chartreuse, ink black, ultraviolet, hot pink, chrome",
+    stops: [
+      [
+        200,
+        255,
+        0
+      ],
+      [
+        13,
+        13,
+        18
+      ],
+      [
+        106,
+        0,
+        255
+      ],
+      [
+        255,
+        46,
+        147
+      ],
+      [
+        217,
+        222,
+        230
+      ]
+    ],
+    hardness: 0.55,
+    paper: {
+      top: [
+        21,
+        21,
+        27
+      ],
+      bottom: [
+        38,
+        38,
+        47
+      ]
+    }
+  },
+  "liquid-chrome": {
+    label: "Liquid chrome — mirror greys on graphite",
+    stops: [
+      [
+        244,
+        246,
+        248
+      ],
+      [
+        154,
+        163,
+        173
+      ],
+      [
+        43,
+        47,
+        54
+      ],
+      [
+        201,
+        209,
+        218
+      ],
+      [
+        92,
+        101,
+        112
+      ],
+      [
+        230,
+        235,
+        240
+      ]
+    ],
+    hardness: 0.1,
+    paper: {
+      top: [
+        26,
+        29,
+        34
+      ],
+      bottom: [
+        46,
+        51,
+        59
+      ]
+    }
+  },
+  "holo-foil": {
+    label: "Holographic foil — pastel rainbow and steel on graphite",
+    stops: [
+      [
+        255,
+        154,
+        213
+      ],
+      [
+        159,
+        231,
+        255
+      ],
+      [
+        201,
+        255,
+        158
+      ],
+      [
+        255,
+        229,
+        138
+      ],
+      [
+        185,
+        163,
+        255
+      ],
+      [
+        110,
+        122,
+        150
+      ]
+    ],
+    hardness: 0.05,
+    paper: {
+      top: [
+        42,
+        46,
+        56
+      ],
+      bottom: [
+        59,
+        64,
+        77
+      ]
+    }
+  },
+  "beetle-shell": {
+    label: "Beetle shell — deep oil slick on black",
+    stops: [
+      [
+        8,
+        26,
+        51
+      ],
+      [
+        14,
+        124,
+        107
+      ],
+      [
+        127,
+        227,
+        166
+      ],
+      [
+        242,
+        193,
+        78
+      ],
+      [
+        181,
+        23,
+        158
+      ],
+      [
+        58,
+        12,
+        163
+      ]
+    ],
+    hardness: 0.15,
+    paper: {
+      top: [
+        7,
+        9,
+        15
+      ],
+      bottom: [
+        21,
+        27,
+        41
+      ]
+    }
+  },
+  thermal: {
+    label: "Thermal camera — night to white heat",
+    stops: [
+      [
+        6,
+        6,
+        26
+      ],
+      [
+        58,
+        12,
+        163
+      ],
+      [
+        194,
+        24,
+        91
+      ],
+      [
+        255,
+        111,
+        0
+      ],
+      [
+        255,
+        214,
+        0
+      ],
+      [
+        255,
+        255,
+        240
+      ]
+    ],
+    hardness: 0.2,
+    paper: {
+      top: [
+        11,
+        11,
+        20
+      ],
+      bottom: [
+        30,
+        30,
+        46
+      ]
+    }
+  },
+  vaporwave: {
+    label: "Vaporwave — neon pink, violet, cyan, mint, lemon on dusk",
+    stops: [
+      [
+        255,
+        113,
+        206
+      ],
+      [
+        185,
+        103,
+        255
+      ],
+      [
+        1,
+        205,
+        254
+      ],
+      [
+        5,
+        255,
+        161
+      ],
+      [
+        255,
+        251,
+        150
+      ]
+    ],
+    hardness: 0.3,
+    paper: {
+      top: [
+        26,
+        16,
+        51
+      ],
+      bottom: [
+        51,
+        32,
+        79
+      ]
+    }
+  },
+  cyanotype: {
+    label: "Cyanotype — Prussian blue print on rag paper",
+    stops: [
+      [
+        11,
+        45,
+        91
+      ],
+      [
+        31,
+        95,
+        160
+      ],
+      [
+        141,
+        184,
+        222
+      ],
+      [
+        246,
+        241,
+        228
+      ],
+      [
+        169,
+        201,
+        230
+      ],
+      [
+        46,
+        111,
+        176
+      ]
+    ],
+    hardness: 0.5,
+    paper: {
+      top: [
+        243,
+        238,
+        223
+      ],
+      bottom: [
+        229,
+        221,
+        200
+      ]
+    }
+  },
+  seventies: {
+    label: "Seventies modernist — terracotta, mustard, sage, petrol",
+    stops: [
+      [
+        226,
+        112,
+        58
+      ],
+      [
+        242,
+        193,
+        78
+      ],
+      [
+        244,
+        233,
+        216
+      ],
+      [
+        107,
+        143,
+        113
+      ],
+      [
+        46,
+        74,
+        98
+      ],
+      [
+        158,
+        61,
+        47
+      ]
+    ],
+    hardness: 0.75,
+    paper: {
+      top: [
+        244,
+        233,
+        216
+      ],
+      bottom: [
+        232,
+        219,
+        195
+      ]
+    }
+  },
+  bauhaus: {
+    label: "Bauhaus — primaries, black and paper, flat",
+    stops: [
+      [
+        230,
+        57,
+        70
+      ],
+      [
+        242,
+        237,
+        228
+      ],
+      [
+        241,
+        196,
+        15
+      ],
+      [
+        29,
+        78,
+        137
+      ],
+      [
+        17,
+        17,
+        17
+      ]
+    ],
+    hardness: 1,
+    paper: {
+      top: [
+        242,
+        237,
+        228
+      ],
+      bottom: [
+        230,
+        223,
+        208
+      ]
+    }
+  }
+};
+
+export const PALETTE_OPTIONS = [
+  {
+    value: "custom",
+    label: "Custom — the stops and the background below"
+  },
+  {
+    value: "riso-pink-blue",
+    label: "Riso — fluo pink × blue (yellow, paper, overprint violet)"
+  },
+  {
+    value: "riso-teal-orange",
+    label: "Riso — teal × orange (mint, paper, federal blue)"
+  },
+  {
+    value: "riso-sunflower-burgundy",
+    label: "Riso — sunflower × burgundy (bright red, aqua, paper)"
+  },
+  {
+    value: "riso-purple-mint",
+    label: "Riso — purple × mint (paper, fluo pink, medium blue)"
+  },
+  {
+    value: "acid-y2k",
+    label: "Acid Y2K — chartreuse, ink black, ultraviolet, hot pink, chrome"
+  },
+  {
+    value: "liquid-chrome",
+    label: "Liquid chrome — mirror greys on graphite"
+  },
+  {
+    value: "holo-foil",
+    label: "Holographic foil — pastel rainbow and steel on graphite"
+  },
+  {
+    value: "beetle-shell",
+    label: "Beetle shell — deep oil slick on black"
+  },
+  {
+    value: "thermal",
+    label: "Thermal camera — night to white heat"
+  },
+  {
+    value: "vaporwave",
+    label: "Vaporwave — neon pink, violet, cyan, mint, lemon on dusk"
+  },
+  {
+    value: "cyanotype",
+    label: "Cyanotype — Prussian blue print on rag paper"
+  },
+  {
+    value: "seventies",
+    label: "Seventies modernist — terracotta, mustard, sage, petrol"
+  },
+  {
+    value: "bauhaus",
+    label: "Bauhaus — primaries, black and paper, flat"
+  }
+];
+
 // The reference's palette, in ramp order: blue → green → cream → pink → wine →
 // navy, then back to blue. Read off the video frame by frame (centre → rim).
 export const materialFormValues = {
   ramp: {
+    palette: "custom",
     stops: [
       [
         52,
@@ -106,6 +766,10 @@ export const materialFormValues = {
     curve: "linear"
   },
   shading: 0.12,
+  finish: {
+    grain: 0,
+    grainSize: 1.5
+  },
   fog: {
     amount: 0,
     start: 400,
@@ -193,6 +857,11 @@ export function materialFormConfiguration( {
         component: "nested-object",
         label: "Colour ramp",
         fields: {
+          palette: {
+            label: "Palette (a preset replaces the stops, the hardness and the background)",
+            component: "select",
+            options: PALETTE_OPTIONS
+          },
           stops: {
             label: "Stops, in order (the ramp loops back to the first)",
             component: "item-list",
@@ -450,6 +1119,26 @@ export function materialFormConfiguration( {
         min: 0,
         max: 1,
         step: 0.01
+      },
+      finish: {
+        component: "nested-object",
+        label: "Print finish",
+        fields: {
+          grain: {
+            label: "Grain (stipples the band edges, like a riso print)",
+            component: "slider",
+            min: 0,
+            max: 0.5,
+            step: 0.01
+          },
+          grainSize: {
+            label: "Grain size (screen px)",
+            component: "slider",
+            min: 1,
+            max: 8,
+            step: 0.5
+          }
+        }
       },
       fog: {
         component: "nested-object",

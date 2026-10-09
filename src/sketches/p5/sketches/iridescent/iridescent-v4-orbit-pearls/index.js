@@ -7,6 +7,7 @@ import createNoiseFieldRenderer from "@/p5/utils/noiseFieldGpu.js";
 
 import {
   RAMP_WIDTH,
+  resolveLook,
   materialRender,
   drawBackground
 } from "../_iridescence.js";
@@ -334,9 +335,15 @@ sketch.draw( () => {
   const light = o.light ?? defaults.light;
 
   p.clear();
+  // A named palette replaces the stops, the hardness and the background.
+  const look = resolveLook(
+    o.material,
+    o.background
+  );
+
   drawBackground(
     p,
-    o.background
+    look.background
   );
 
   const timeScale = o.timeScale ?? defaults.timeScale;
@@ -403,11 +410,12 @@ sketch.draw( () => {
   const camDist = camera.distance ?? defaults.camera.distance;
 
   const material = materialRender(
-    o.material,
-    o.background,
+    look.material,
+    look.background,
     {
       scale: span,
-      axis: "y"
+      axis: "y",
+      pixelScale: quality.renderScale ?? defaults.quality.renderScale
     }
   );
 

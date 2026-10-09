@@ -9,6 +9,7 @@ import {
 } from "@/p5/utils/easingGlsl.js";
 
 import {
+  resolveLook,
   materialRender,
   renderingSettings,
   drawBackground,
@@ -118,9 +119,15 @@ sketch.draw( () => {
   const o = options.sketch ?? {};
 
   p.clear();
+  // A named palette replaces the stops, the hardness and the background.
+  const look = resolveLook(
+    o.material,
+    o.background
+  );
+
   drawBackground(
     p,
-    o.background
+    look.background
   );
 
   const cylinder = o.cylinder ?? defaults.cylinder;
@@ -132,18 +139,20 @@ sketch.draw( () => {
     ? animation.angle * ( noise.speed ?? defaults.noise.speed )
     : 0;
 
+  const rendering = renderingSettings( o.rendering );
+
   const material = materialRender(
-    o.material,
-    o.background,
+    look.material,
+    look.background,
     {
       scale: Math.max(
         cylinder.height ?? defaults.cylinder.height,
         2 * ( ( cylinder.radius ?? defaults.cylinder.radius ) + ( cylinder.spikeLength ?? defaults.cylinder.spikeLength ) )
       ),
-      axis: "y"
+      axis: "y",
+      pixelScale: rendering.supersample
     }
   );
-  const rendering = renderingSettings( o.rendering );
 
   renderer.render( {
     rotation: wobbleRotation(
