@@ -108,6 +108,7 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 
 ## Open items (dated; remove when done)
 
+- 2026-10-09 — The MCP server (`agent-commands.md`) drives sketch parameters, size and clock only: no asset upload, no presets/slides/content items, and a failed recording's reason is only in the server log. Whether to expose MCP from the deployed app itself (it would need auth first) is the maintainer's call.
 - 2026-10-02 — A whole-repo audit is in `docs/audit-2026-10-02.md` (inventory, ~70 findings with IDs, plan, ten maintainer decisions). PR #380 fixed the exploitable security holes and the worst correctness/UX/a11y bugs; the decisions and the open batches are in `TODO.md` under "Audit follow-ups". The two that matter most: there is no authentication anywhere (`security.md`), and the Dockerfile's Playwright image (1.59) does not match the locked client (1.62).
 
 - 2026-10-02 — Driven-field treatment shipped for sliders, selects, number bars, colours and the 2D pad (`interaction-bindings.md`). Still open: the checkbox only gets the diamond glyph (`computeBindingValues` already publishes its 0/1), and a sketch-declared binding gets no live treatment because it is not in the form.
