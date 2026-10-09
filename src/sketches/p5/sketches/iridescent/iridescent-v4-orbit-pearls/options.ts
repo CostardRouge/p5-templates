@@ -3,7 +3,7 @@ import {
   materialFormConfiguration,
   backgroundFormValues,
   backgroundFormConfiguration
-} from "../_iridescence.js";
+} from "../_form.js";
 
 // flowers-shaders-v5-orbit-pearls' geometry, pearls and camera, verbatim; its
 // own spectrum / lighting blocks are replaced by the shared material, what
@@ -63,7 +63,10 @@ export const formValues = {
       ...materialFormValues.ramp,
       bands: 1
     },
-    extra: 0.5,
+    structure: {
+      ...materialFormValues.structure,
+      weight: 0.61
+    },
     fog: {
       amount: 0,
       start: 10,
@@ -310,7 +313,7 @@ export const formConfiguration: Record<string, any> = {
   },
   colors: {
     component: "nested-object",
-    label: "Structure → colour (scaled by the material's slider)",
+    label: "Structure channel (scaled by the material's structure weight)",
     fields: {
       pipeShift: {
         label: "Ramp offset between neighbouring pipes",
@@ -356,7 +359,7 @@ export const formConfiguration: Record<string, any> = {
     }
   },
   material: materialFormConfiguration( {
-    extraLabel: "Pipe & height → colour",
+    structureLabel: "Pipe & height → colour",
     fogRange: {
       max: 30,
       step: 0.1

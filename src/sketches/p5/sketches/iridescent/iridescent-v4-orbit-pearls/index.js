@@ -6,7 +6,6 @@ import animation from "@/p5/utils/animation.js";
 import createNoiseFieldRenderer from "@/p5/utils/noiseFieldGpu.js";
 
 import {
-  IRIDESCENT_SHADE_GLSL,
   RAMP_WIDTH,
   materialRender,
   drawBackground
@@ -40,7 +39,7 @@ const MAX_PEARLS = 6;
 const MAX_STEPS = 160;
 const SURF_EPS = 0.001;
 
-const FRAGMENT = `
+const fragmentFor = ( shadeGlsl ) => `
   const float SURF_EPS = ${ SURF_EPS.toFixed( 4 ) };
 
   uniform float uT;
@@ -76,6 +75,7 @@ const FRAGMENT = `
   uniform float uMaxDist;
 
   // ── What feeds the material's extra channel ──
+  uniform float uSpan;             // the pearls' travel span (the structure's height)
   uniform float uPipeShift;        // ramp offset between neighbouring pipes
   uniform float uLengthShift;      // ramp drift per world unit of height
 
@@ -84,7 +84,7 @@ const FRAGMENT = `
   uniform float uSpecPower;
   uniform float uAoAmount;
 
-  ${ IRIDESCENT_SHADE_GLSL }
+  ${ shadeGlsl }
 
   vec3 warpByPearls(vec3 p) {
     if (uPearlCount < 0.5 || abs(uDeform) < 1e-6) { return p; }
@@ -221,11 +221,17 @@ const FRAGMENT = `
     vec3 vV = vec3(-dot(rd, right), dot(rd, up), dot(rd, fwd));
 
     bool  isPearl = mapPearls(pos) < mapPipes(pos);
+    float k = isPearl ? nearestPearl(pos) : nearestPipe(pos);
+    float count = isPearl ? max(uPearlCount, 1.0) : max(uPipeCount, 1.0);
     float extra = isPearl
-      ? nearestPearl(pos) * uPearlShift
-      : nearestPipe(pos) / max(uPipeCount, 1.0) * uPipeShift + pos.y * uLengthShift;
+      ? k * uPearlShift
+      : k / count * uPipeShift + pos.y * uLengthShift;
 
-    vec3 col = iridescentShade(nV, vV, t, extra);
+    // The cell: the pipe (or pearl) index around, the height along, and the
+    // index again — so the stagger and the wave can run per pipe.
+    vec3 cell = vec3(k / count, clamp(pos.y / max(uSpan, 1e-3) + 0.5, 0.0, 1.0), k / count);
+
+    vec3 col = iridescentShade(nV, vV, t, cell, pos, extra);
 
     if (isPearl) {
       col = clamp(mix(vec3(1.0), col, uPearlTint) * uPearlBrightness, 0.0, 1.0);
@@ -293,7 +299,24 @@ const FRAGMENT = `
   }
 `;
 
-const orbitPearls = createNoiseFieldRenderer( FRAGMENT );
+// One renderer (one GL program) per material variant: the material's
+// selects and curves are baked into its GLSL, so a dropdown change compiles
+// a new permutation once and the fragment never branches on them.
+const renderers = new Map();
+
+function rendererFor( shade ) {
+  let renderer = renderers.get( shade.key );
+
+  if ( !renderer ) {
+    renderer = createNoiseFieldRenderer( fragmentFor( shade.glsl ) );
+    renderers.set(
+      shade.key,
+      renderer
+    );
+  }
+
+  return renderer;
+}
 
 sketch.setup(
   () => {},
@@ -381,10 +404,14 @@ sketch.draw( () => {
 
   const material = materialRender(
     o.material,
-    o.background
+    o.background,
+    {
+      scale: span,
+      axis: "y"
+    }
   );
 
-  orbitPearls.render( {
+  rendererFor( material.shade ).render( {
     columns: 1,
     rows: 1,
     resolutionScale: quality.renderScale ?? defaults.quality.renderScale,
@@ -422,6 +449,7 @@ sketch.draw( () => {
       uFocal: focal,
       uPitch: camera.pitch ?? defaults.camera.pitch,
       uYaw: ( camera.yaw ?? defaults.camera.yaw ) + t * orbitTurns,
+      uSpan: span,
       uPipeShift: colors.pipeShift ?? defaults.colors.pipeShift,
       uLengthShift: colors.lengthShift ?? defaults.colors.lengthShift,
       uSpecular: light.specular ?? defaults.light.specular,

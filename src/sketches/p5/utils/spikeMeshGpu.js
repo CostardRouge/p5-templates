@@ -7,6 +7,7 @@ import {
 } from "./instanceState.js";
 import {
   PEAKS_STDLIB_GLSL,
+  PEAKS_EASING_GLSL,
   buildProgram,
   writePerlinTexture,
   isWebGL2,
@@ -72,9 +73,12 @@ const VERT_HEADER = `
   uniform float uRadiusMax;   // stroke weight at the base
   uniform int   uRadiusEaseId;
   uniform int   uLengthEaseId;
+  uniform vec2  uCellCount;   // (cols, rows) of the spike grid
 
   varying vec3  vNormal;   // view space, unnormalised
   varying vec3  vViewPos;
+  varying vec3  vPos;      // model space, the sketch's own units
+  varying vec3  vCell;     // (column, row, index) as 0..1 fractions
   varying float vExtra;
 `;
 
@@ -125,12 +129,14 @@ const VERT_MAIN = `
     vec3 dPdt;
     vec3 dPda;
     float extra;
+    vec3 cell;
 
     if (uMode > 0.5) {
       vec4 here = bodyPoint(t, a);
 
       pos   = here.xyz;
       extra = here.w;
+      cell  = vec3(a, t, t);
       dPdt  = bodyPoint(tn + uDeltaT, a).xyz - bodyPoint(tn - uDeltaT, a).xyz;
       dPda  = bodyPoint(tn, a + uDeltaA).xyz - bodyPoint(tn, a - uDeltaA).xyz;
     } else {
@@ -146,11 +152,20 @@ const VERT_MAIN = `
         gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
         vNormal  = vec3(0.0, 0.0, 1.0);
         vViewPos = vec3(0.0);
+        vPos     = vec3(0.0);
+        vCell    = vec3(0.0);
         vExtra   = 0.0;
 
         return;
       }
 
+      float total = max(uCellCount.x * uCellCount.y - 1.0, 1.0);
+
+      cell = vec3(
+        aCell.x / max(uCellCount.x, 1.0),
+        aCell.y / max(uCellCount.y - 1.0, 1.0),
+        (aCell.x * uCellCount.y + aCell.y) / total
+      );
       dir = normalize(dir);
 
       vec3 helper = abs(dir.y) < 0.9 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
@@ -174,6 +189,8 @@ const VERT_MAIN = `
 
     vViewPos    = viewPos.xyz;
     vNormal     = mat3(uMV) * normalize(n);
+    vPos        = pos;
+    vCell       = cell;
     vExtra      = extra;
     gl_Position = uP * viewPos;
   }
@@ -187,13 +204,20 @@ const DEFAULT_BODY_GLSL = `
   }
 `;
 
+// The fragment gets the easing dispatch (applyEasing) so a material can take
+// a selectable curve, as the vertex side does for the profile.
 const FRAG_HEADER = `
   precision highp float;
 
+  const float PI  = 3.141592653589793;
+  const float TAU = 6.283185307179586;
+
   varying vec3  vNormal;
   varying vec3  vViewPos;
+  varying vec3  vPos;
+  varying vec3  vCell;
   varying float vExtra;
-`;
+` + PEAKS_EASING_GLSL;
 
 // The material is given a normal that always faces the camera: closed opaque
 // shapes only ever show their front, and the tunnel's wall is seen from inside,
@@ -208,7 +232,7 @@ const FRAG_MAIN = `
       n = -n;
     }
 
-    gl_FragColor = vec4(shade(n, v, vViewPos, vExtra), 1.0);
+    gl_FragColor = vec4(shade(n, v, vViewPos, vCell, vPos, vExtra), 1.0);
   }
 `;
 
@@ -303,15 +327,17 @@ function clampInt(
  *   `extra` channel (w) for the material, drawn once beneath the spikes. It
  *   may also live inside `spikeBody` (handy when both share helpers).
  * @param {string} sources.shadeBody GLSL defining
- *   `vec3 shade( vec3 n, vec3 v, vec3 viewPos, float extra )` — the material,
- *   given the camera-facing view-space normal, the direction to the eye, the
- *   view-space position and the placement's extra channel — plus its uniforms.
+ *   `vec3 shade( vec3 n, vec3 v, vec3 viewPos, vec3 cell, vec3 pos, float extra )`
+ *   — the material, given the camera-facing view-space normal, the direction
+ *   to the eye, the view-space position, the cell as (column, row, index)
+ *   fractions, the model-space position and the placement's extra channel —
+ *   plus its uniforms. `applyEasing( int, float )`, PI and TAU are available.
  * @returns {{ render: Function }}
  */
 export default function createSpikeMeshRenderer( {
   spikeBody,
   bodyBody = null,
-  shadeBody
+  shadeBody = ""
 } ) {
   // GL resources live with one context, and one renderer serves every surface
   // its sketch ever draws on (the page across re-navigations, every layer
@@ -333,7 +359,8 @@ export default function createSpikeMeshRenderer( {
       perlinTexture: null,
       perlinSeed: null,
       rampTexture: null,
-      rampKey: null
+      rampKey: null,
+      shadeKey: null
     } )
   );
 
@@ -381,8 +408,12 @@ export default function createSpikeMeshRenderer( {
     return state.locs[ name ];
   }
 
-  function ensureProgram( gl ) {
-    if ( state.gl === gl && state.program ) {
+  function ensureProgram(
+    gl, shade
+  ) {
+    const shadeKey = shade?.key ?? "static";
+
+    if ( state.gl === gl && state.program && state.shadeKey === shadeKey ) {
       return true;
     }
 
@@ -395,7 +426,7 @@ export default function createSpikeMeshRenderer( {
       + spikeBody
       + ( bodyBody ?? ( hasBody ? "" : DEFAULT_BODY_GLSL ) )
       + VERT_MAIN;
-    const fragSrc = FRAG_HEADER + shadeBody + FRAG_MAIN;
+    const fragSrc = FRAG_HEADER + ( shade?.glsl ?? shadeBody ) + FRAG_MAIN;
 
     state.program = buildProgram(
       gl,
@@ -403,6 +434,7 @@ export default function createSpikeMeshRenderer( {
       fragSrc
     );
     state.gl = gl;
+    state.shadeKey = shadeKey;
     state.locs = {};
     state.meshes = {};
     state.cellVBO = null;
@@ -654,6 +686,9 @@ export default function createSpikeMeshRenderer( {
    *   (easingId payloads for the easings; baseCapDepth is the base dome's depth × its radius, default 0.5 — a
    *   full hemisphere pokes out of the far side of a body thinner than the spike is wide)
    * @param {{key:string,width:number,bytes:Uint8Array}} [params.ramp] 1D lookup for the material (sampler `uRamp`)
+   * @param {{key:string,glsl:string}} [params.shade] a material variant replacing the constructor's
+   *   `shadeBody`: the program is rebuilt whenever `key` changes (a shader permutation per dropdown
+   *   choice beats a uniform branch chain per fragment)
    * @param {object} [params.uniforms] sketch and material uniforms (see setUniformValue)
    */
   function render( {
@@ -679,6 +714,7 @@ export default function createSpikeMeshRenderer( {
     falloff = 0.5,
     profile,
     ramp = null,
+    shade = null,
     uniforms = {}
   } ) {
     state = store.current();
@@ -699,7 +735,10 @@ export default function createSpikeMeshRenderer( {
     );
     const gl = g.drawingContext;
 
-    if ( !ensureProgram( gl ) ) {
+    if ( !ensureProgram(
+      gl,
+      shade
+    ) ) {
       return;
     }
 
@@ -806,6 +845,14 @@ export default function createSpikeMeshRenderer( {
       gl,
       getLocation( "uCapFrac" ),
       CAP_FRACTION
+    );
+    setUniformValue(
+      gl,
+      getLocation( "uCellCount" ),
+      [
+        cols,
+        rows
+      ]
     );
     setUniformValue(
       gl,

@@ -6,7 +6,7 @@ import {
   renderingFormValues,
   renderingFormConfiguration,
   rotationFormConfiguration
-} from "../_iridescence.js";
+} from "../_form.js";
 
 // peaks-sphere's geometry, verbatim (sphere / peaks / surface / noise /
 // rotation), minus the disc-stack knobs; plus the body, the material, the
@@ -16,43 +16,43 @@ export const formValues = {
     radiusX: 250,
     radiusY: 250,
     radiusZ: 250,
-    meridians: 10,
+    meridians: 38,
     parallels: 10
   },
   peaks: {
-    spikeLengthMax: 170,
-    spikeLengthMin: 36,
+    spikeLengthMax: 311,
+    spikeLengthMin: 50,
     depthEasing: "easeOutQuad",
     point: {
-      strokeWeightMin: 16.5,
-      strokeWeightMax: 63.5,
+      strokeWeightMin: 0.5,
+      strokeWeightMax: 62,
       strokeWeightEasing: "easeOutQuint"
     }
   },
   surface: {
-    noiseScale: 6.3,
-    noiseSpeed: 1,
+    noiseScale: 3.9,
+    noiseSpeed: 0.41,
     animated: false,
-    contrast: 1.79,
+    contrast: 2.57,
     contrastEasing: "easeInOutQuad",
-    noiseOffset: 38.8
+    noiseOffset: 150
   },
   body: {
     enabled: true,
-    scale: 1
+    scale: 0.6
   },
   rotation: {
     enabled: true,
     angleMax: 0.35,
-    xMultiplier: 1,
-    yMultiplier: 3,
+    xMultiplier: 3,
+    yMultiplier: 5,
     zMultiplier: 0,
-    spinTurns: 1
+    spinTurns: 2
   },
   noise: {
-    seed: 42,
-    detail: 4,
-    falloff: 0.5
+    seed: 4259,
+    detail: 5,
+    falloff: 0.43
   },
   material: materialFormValues,
   background: backgroundFormValues,
@@ -237,7 +237,7 @@ export const formConfiguration: Record<string, any> = {
     }
   },
   material: materialFormConfiguration( {
-    extraLabel: "Terrain height → colour"
+    structureLabel: "Terrain height → colour"
   } ),
   background: backgroundFormConfiguration,
   rendering: renderingFormConfiguration

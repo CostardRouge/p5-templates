@@ -6,7 +6,7 @@ import {
   renderingFormValues,
   renderingFormConfiguration,
   rotationFormConfiguration
-} from "../_iridescence.js";
+} from "../_form.js";
 
 // peaks-cylinder's geometry (cylinder / peaks / rotation), minus the disc
 // stack; plus a length-noise field, the pill body and the shared blocks.
@@ -16,24 +16,24 @@ export const formValues = {
   // and the intersections read as a jagged crown, where the original's flat
   // discs simply overlapped.
   cylinder: {
-    radius: 90,
-    height: 684,
-    spikeLength: 288,
-    columns: 9,
-    rows: 6
+    radius: 165,
+    height: 739,
+    spikeLength: 242,
+    columns: 12,
+    rows: 12
   },
   peaks: {
     depthEasing: "easeOutQuad",
     point: {
-      strokeWeightMax: 120,
-      strokeWeightMin: 41,
-      strokeWeightEasing: "easeInSine"
+      strokeWeightMax: 156,
+      strokeWeightMin: 1,
+      strokeWeightEasing: "easeOutQuad"
     }
   },
   body: {
     enabled: true,
-    scale: 1.5,
-    capRound: 1
+    scale: 0.5,
+    capRound: 0
   },
   rotation: {
     enabled: true,
@@ -45,16 +45,19 @@ export const formValues = {
   },
   noise: {
     lengthAmount: 0.35,
-    scale: 2.2,
+    scale: 4.7,
     animated: false,
     speed: 1,
     seed: 620,
-    detail: 4,
-    falloff: 0.5
+    detail: 7,
+    falloff: 0.66
   },
   material: {
     ...materialFormValues,
-    extra: 0.2
+    structure: {
+      ...materialFormValues.structure,
+      weight: 0.2
+    }
   },
   background: backgroundFormValues,
   rendering: renderingFormValues
@@ -214,7 +217,7 @@ export const formConfiguration: Record<string, any> = {
     }
   },
   material: materialFormConfiguration( {
-    extraLabel: "Height → colour"
+    structureLabel: "Height → colour"
   } ),
   background: backgroundFormConfiguration,
   rendering: renderingFormConfiguration

@@ -6,7 +6,7 @@ import {
   renderingFormValues,
   renderingFormConfiguration,
   rotationFormConfiguration
-} from "../_iridescence.js";
+} from "../_form.js";
 
 // peaks-tunnel's geometry (tunnel / peaks / noise / rotation), minus the disc
 // stack and the per-ring opacity fade, which fog replaces; plus the wall and
@@ -16,55 +16,58 @@ export const formValues = {
   // Longer, thinner spikes than peaks-tunnel's 109 × 154 px: solid spikes that
   // wide at 60 px spacing fuse into a quilt of bulbs; these stay spikes.
   tunnel: {
-    rings: 14,
-    segments: 20,
-    depthStart: -600,
-    depthEnd: -1760,
-    depthEasing: "easeInQuad",
-    radiusStart: 211,
-    radiusEnd: 10,
-    radiusEasing: "linear"
+    rings: 41,
+    segments: 19,
+    depthStart: -1050,
+    depthEnd: -2560,
+    depthEasing: "easeOutCubic",
+    radiusStart: 334,
+    radiusEnd: 4,
+    radiusEasing: "easeOutQuad"
   },
   peaks: {
-    spikeLengthMax: 190,
-    spikeLengthMin: 30,
-    depthEasing: "easeInQuad",
-    animated: false,
-    animSpeed: 1,
+    spikeLengthMax: 143,
+    spikeLengthMin: 0,
+    depthEasing: "easeOutSine",
+    animated: true,
+    animSpeed: 0.21,
     point: {
-      strokeWeightMin: 10,
-      strokeWeightMax: 60,
-      strokeWeightEasing: "easeInSine"
+      strokeWeightMin: 0.5,
+      strokeWeightMax: 82,
+      strokeWeightEasing: "easeOutQuint"
     }
   },
   body: {
-    enabled: true,
-    scale: 1
+    enabled: false,
+    scale: 1.18
   },
   rotation: {
     enabled: true,
-    angleMax: 0.08,
-    xMultiplier: 1,
-    yMultiplier: 1,
-    zMultiplier: 1,
+    angleMax: 0.06,
+    xMultiplier: -3,
+    yMultiplier: 2,
+    zMultiplier: -1,
     spinTurns: 0
   },
   noise: {
-    lengthAmount: 0.5,
-    scale: 1.5,
+    lengthAmount: 0.31,
+    scale: 2.6,
     seed: 42,
     detail: 4,
     falloff: 0.5,
-    xMultiplier: 1,
-    yMultiplier: 1
+    xMultiplier: 6.28,
+    yMultiplier: 4.27
   },
   material: {
     ...materialFormValues,
-    extra: 0.5,
+    structure: {
+      ...materialFormValues.structure,
+      weight: 1.28
+    },
     fog: {
-      amount: 0.85,
-      start: 500,
-      end: 1500
+      amount: 0.49,
+      start: 1310,
+      end: 2060
     }
   },
   background: backgroundFormValues,
@@ -261,7 +264,7 @@ export const formConfiguration: Record<string, any> = {
     }
   },
   material: materialFormConfiguration( {
-    extraLabel: "Depth → colour"
+    structureLabel: "Depth → colour"
   } ),
   background: backgroundFormConfiguration,
   rendering: renderingFormConfiguration

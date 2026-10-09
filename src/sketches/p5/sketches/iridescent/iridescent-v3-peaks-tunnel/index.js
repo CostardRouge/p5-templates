@@ -9,7 +9,6 @@ import {
 } from "@/p5/utils/easingGlsl.js";
 
 import {
-  IRIDESCENT_SHADE_GLSL,
   materialRender,
   renderingSettings,
   drawBackground,
@@ -97,9 +96,10 @@ const SPIKE_BODY = `
   }
 `;
 
+// The material's fragment GLSL arrives per frame (`shade`), specialised on
+// the form's selects and curves; the renderer recompiles when they change.
 const renderer = createSpikeMeshRenderer( {
-  spikeBody: SPIKE_BODY,
-  shadeBody: IRIDESCENT_SHADE_GLSL
+  spikeBody: SPIKE_BODY
 } );
 
 sketch.setup(
@@ -128,9 +128,18 @@ sketch.draw( () => {
     ? animation.angle * ( peaks.animSpeed ?? defaults.peaks.animSpeed )
     : 0;
 
+  // Position axes are read after the centring translate, so the tunnel's
+  // length is the scene: z runs −0.5 → 0.5 across it.
   const material = materialRender(
     o.material,
-    o.background
+    o.background,
+    {
+      scale: Math.max(
+        Math.abs( depthEnd - depthStart ),
+        1
+      ),
+      axis: "z"
+    }
   );
   const rendering = renderingSettings(
     o.rendering,
@@ -170,6 +179,7 @@ sketch.draw( () => {
       radiusEasing: easingId( peaks.point?.strokeWeightEasing ?? defaults.peaks.point.strokeWeightEasing )
     },
     ramp: material.ramp,
+    shade: material.shade,
     uniforms: {
       ...material.uniforms,
       uRings: tunnel.rings ?? defaults.tunnel.rings,

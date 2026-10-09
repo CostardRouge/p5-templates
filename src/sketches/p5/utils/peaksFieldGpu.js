@@ -1274,3 +1274,8 @@ export {
   modelViewMat4,
   perspectiveMat4
 };
+
+// The easing dispatch alone — remap, the easing curves and mapEase, without
+// the Perlin table or its uniforms — for a FRAGMENT shader that wants a
+// selectable curve (the iridescent material). Needs PI and TAU declared first.
+export const PEAKS_EASING_GLSL = MAPPERS_GLSL + EASINGS_GLSL + MAPEASE_GLSL;

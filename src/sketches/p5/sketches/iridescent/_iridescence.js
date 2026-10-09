@@ -1,8 +1,20 @@
 import animation from "@/p5/utils/animation.js";
 import mappers from "@/p5/utils/mappers.js";
+import easing from "@/p5/utils/easing.js";
+import {
+  EASING_IDS
+} from "@/p5/utils/easingGlsl.js";
+
+import {
+  materialFormValues,
+  backgroundFormValues,
+  renderingFormValues
+} from "./_form.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// The iridescent material, shared by every sketch in the category.
+// The iridescent material — the runtime half. The form half (values, control
+// descriptions) is `_form.js`, which imports nothing; THIS module reaches the
+// p5 runtime and is only ever imported by a sketch's `index.js`.
 //
 // The look: a LOOPING colour ramp (a handful of stops, wrapping back to the
 // first) read by the angle between the surface and the camera. A patch facing
@@ -10,42 +22,188 @@ import mappers from "@/p5/utils/mappers.js";
 // the whole ramp drifts a whole number of cycles per loop — so colours sweep
 // across a shape as it turns and as time passes, the way thin-film
 // iridescence (soap, oil, a beetle's shell) changes hue with the viewing
-// angle. A second, directional term offsets the ramp on the lit side so the
-// two sides of a shape never read the same colour, and each sketch feeds one
-// `extra` channel of its own (terrain height, ring depth) so the structure
-// shows through the bands.
+// angle. A directional term offsets the ramp on the lit side so the two sides
+// of a shape never read the same colour, each sketch feeds one `structure`
+// channel of its own (terrain height, ring depth) so the structure shows
+// through the bands, and two offset terms — a static stagger and a travelling
+// wave along any coordinate of the structure — let the bands be laid out and
+// propagated by hand. Every term has a selectable formula and easing curve;
+// `_form.js` documents how they combine.
 //
-// Rendering is spikeMeshGpu.js: this module only owns the fragment GLSL, the
-// ramp bake (a 1D texture, so the stops can be anything the form holds), the
-// form block and the per-frame uniforms.
+// Rendering is spikeMeshGpu.js (the mesh sketches) or noiseFieldGpu.js (the
+// raymarched v4): this module only owns the fragment GLSL, the ramp bake (a
+// 1D texture, so the stops can be anything the form holds), and the per-frame
+// uniforms.
 // ─────────────────────────────────────────────────────────────────────────────
+
+export {
+  materialFormValues,
+  backgroundFormValues,
+  renderingFormValues
+};
 
 export const RAMP_WIDTH = 256;
 
-export const IRIDESCENT_SHADE_GLSL = `
-  const float IRID_HALF_PI = 1.5707963267948966;
+const FOLDS = {
+  wrap: 0,
+  mirror: 1
+};
 
+const COMBINES = {
+  add: 0,
+  multiply: 1
+};
+
+// The easing keys of utils/easing.js are the GLSL function names of
+// easingGlsl.js; two have no function of their own.
+function easingCall( key ) {
+  if ( key === "smoothstep" ) {
+    return "(u * u * (3.0 - 2.0 * u))";
+  }
+
+  if ( !key || key === "linear" || !( key in EASING_IDS ) ) {
+    return "u";
+  }
+
+  return `${ key }(u)`;
+}
+
+const AXIS_GLSL = {
+  index: "cell.z",
+  column: "cell.x",
+  row: "cell.y",
+  x: "(p.x + 0.5)",
+  y: "(p.y + 0.5)",
+  z: "(p.z + 0.5)",
+  radial: "length(around)",
+  distance: "length(p)",
+  angle: "(atan(around.y, around.x) / TAU + 0.5)"
+};
+
+const FACING_GLSL = {
+  angle: "acos(cosine) / (PI * 0.5)",
+  cosine: "1.0 - cosine",
+  fresnel: "pow(1.0 - cosine, uFacingPower)",
+  inverse: "1.0 - acos(cosine) / (PI * 0.5)"
+};
+
+const WAVE_GLSL = {
+  sine: "0.5 + 0.5 * sin(TAU * phase)",
+  triangle: "1.0 - abs(2.0 * fract(phase) - 1.0)",
+  saw: "fract(phase)"
+};
+
+/**
+ * What the material's GLSL is specialised on: every select and every curve.
+ * The choices are baked into the shader rather than read from uniforms — a
+ * uniform `if` chain over 31 easings, five times per fragment, cost 5× the
+ * whole material under software GL, and a shader permutation costs one
+ * compile per change of a dropdown.
+ */
+export function materialVariant( material ) {
+  const d = materialFormValues;
+  const m = material ?? d;
+  const ramp = m.ramp ?? d.ramp;
+  const facing = m.facing ?? d.facing;
+  const light = m.light ?? d.light;
+  const structure = m.structure ?? d.structure;
+  const stagger = m.stagger ?? d.stagger;
+  const wave = m.wave ?? d.wave;
+
+  const variant = {
+    fold: ramp.fold in FOLDS ? ramp.fold : d.ramp.fold,
+    combine: m.combine in COMBINES ? m.combine : d.combine,
+    facingFormula: facing.formula in FACING_GLSL ? facing.formula : d.facing.formula,
+    facingCurve: facing.curve ?? d.facing.curve,
+    lightCurve: light.curve ?? d.light.curve,
+    structureCurve: structure.curve ?? d.structure.curve,
+    stagger: ( stagger.weight ?? d.stagger.weight ) !== 0,
+    staggerAxis: stagger.axis in AXIS_GLSL ? stagger.axis : d.stagger.axis,
+    staggerCurve: stagger.curve ?? d.stagger.curve,
+    wave: ( wave.weight ?? d.wave.weight ) !== 0,
+    waveAxis: wave.axis in AXIS_GLSL ? wave.axis : d.wave.axis,
+    waveShape: wave.shape in WAVE_GLSL ? wave.shape : d.wave.shape,
+    waveCurve: wave.curve ?? d.wave.curve
+  };
+
+  return {
+    ...variant,
+    key: Object.values( variant ).join( "|" )
+  };
+}
+
+/**
+ * The material's fragment GLSL for one variant. Needs, declared before it:
+ * PI and TAU, and the easing functions of easingGlsl.js (which both
+ * renderers inject). Defines `iridescentShade( n, v, dist, cell, pos,
+ * structure )` and spikeMeshGpu's `shade( … )` entry point.
+ */
+export function iridescentShadeGlsl( variant ) {
+  const v = variant ?? materialVariant( null );
+  const foldGlsl = v.fold === "mirror"
+    ? "u = 1.0 - abs(1.0 - 2.0 * u);"
+    : "";
+  const combineGlsl = v.combine === "multiply"
+    ? `float shape = mix(1.0, tFacing, uFacingWeight)
+      * mix(1.0, tLight, uLightWeight)
+      * mix(1.0, tStructure, uStructureWeight);`
+    : "float shape = tFacing * uFacingWeight + tLight * uLightWeight + tStructure * uStructureWeight;";
+  const staggerGlsl = v.stagger
+    ? `{
+      float u = fract(${ AXIS_GLSL[ v.staggerAxis ] } * uStaggerCycles);
+      offset += uStaggerWeight * ${ easingCall( v.staggerCurve ) };
+    }`
+    : "";
+  const waveGlsl = v.wave
+    ? `{
+      float phase = ${ AXIS_GLSL[ v.waveAxis ] } * uWaveCycles - uWavePhase;
+      float u = ${ WAVE_GLSL[ v.waveShape ] };
+      offset += uWaveWeight * ${ easingCall( v.waveCurve ) };
+    }`
+    : "";
+
+  return `
   uniform sampler2D uRamp;
   uniform float uRampWidth;
   uniform float uBands;
   uniform float uShift;
+
   uniform float uFacingWeight;
+  uniform float uFacingPower;
+
   uniform float uLightWeight;
-  uniform float uExtraWeight;
-  uniform float uShading;
   uniform vec3  uLightDir;     // view space, the way the light travels
+  uniform float uLightWrap;
+
+  uniform float uStructureWeight;
+
+  uniform float uStaggerWeight;
+  uniform float uStaggerCycles;
+
+  uniform float uWaveWeight;
+  uniform float uWaveCycles;
+  uniform float uWavePhase;    // wavelengths travelled so far this loop
+
+  uniform float uShading;
   uniform vec3  uFogColor;
   uniform float uFogAmount;
   uniform float uFogStart;
   uniform float uFogEnd;
 
+  uniform float uSceneScale;   // the structure's size, in the sketch's units
+  uniform int   uAxisMode;     // 0: the main axis is y, 1: it is z
+
   // The ramp, looping, interpolated by hand between texels so the lookup is
   // the same whether the texture was bound LINEAR + REPEAT (spikeMeshGpu) or
   // NEAREST + CLAMP (noiseFieldGpu's data textures).
   vec3 rampColor(float x) {
-    float u  = fract(x) * uRampWidth - 0.5;
-    float i0 = floor(u);
-    float f  = u - i0;
+    float u = fract(x);
+
+    ${ foldGlsl }
+
+    float s  = u * uRampWidth - 0.5;
+    float i0 = floor(s);
+    float f  = s - i0;
     float x0 = (mod(i0, uRampWidth) + 0.5) / uRampWidth;
     float x1 = (mod(i0 + 1.0, uRampWidth) + 0.5) / uRampWidth;
 
@@ -54,19 +212,34 @@ export const IRIDESCENT_SHADE_GLSL = `
 
   // n: the normal, facing the camera; v: the direction to the eye — both in
   // view space (x right, y down, z toward the eye, p5's WEBGL convention);
-  // dist: distance from the eye for the fog; extra: the sketch's own channel.
-  vec3 iridescentShade(vec3 n, vec3 v, float dist, float extra) {
-    // The angle itself rather than 1 - cos: on a sphere most of the projected
-    // area is within 30° of facing the lens, where 1 - cos has hardly moved,
-    // so the angle spreads the bands across the shape instead of its rim.
-    float facing = acos(clamp(abs(dot(n, v)), 0.0, 1.0)) / IRID_HALF_PI;
+  // dist: distance from the eye for the fog; cell: (column, row, index) as
+  // 0..1 fractions; pos: the point in the sketch's own units; structure: the
+  // sketch's own 0..1 channel.
+  vec3 iridescentShade(vec3 n, vec3 v, float dist, vec3 cell, vec3 pos, float structure) {
+    vec3 p = pos / max(uSceneScale, 1e-6);
+    vec2 around = uAxisMode == 1 ? p.xy : p.xz;
+
+    float cosine = clamp(abs(dot(n, v)), 0.0, 1.0);
+    float facing = ${ FACING_GLSL[ v.facingFormula ] };
+
     vec3  toLight = normalize(-uLightDir);
-    float lit = dot(n, toLight) * 0.5 + 0.5;
+    float lambert = dot(n, toLight);
+    float lit = clamp((lambert + uLightWrap) / (1.0 + uLightWrap), 0.0, 1.0);
 
-    float x = facing * uFacingWeight + lit * uLightWeight + extra * uExtraWeight;
-    vec3 c = rampColor(x * uBands + uShift);
+    float tFacing, tLight, tStructure;
+    { float u = clamp(facing, 0.0, 1.0);    tFacing    = ${ easingCall( v.facingCurve ) }; }
+    { float u = lit;                         tLight     = ${ easingCall( v.lightCurve ) }; }
+    { float u = clamp(structure, 0.0, 1.0); tStructure = ${ easingCall( v.structureCurve ) }; }
 
-    c *= mix(1.0, lit, uShading);
+    ${ combineGlsl }
+
+    float offset = 0.0;
+    ${ staggerGlsl }
+    ${ waveGlsl }
+
+    vec3 c = rampColor(shape * uBands + offset + uShift);
+
+    c *= mix(1.0, clamp(lambert * 0.5 + 0.5, 0.0, 1.0), uShading);
 
     float fog = clamp((dist - uFogStart) / max(uFogEnd - uFogStart, 1e-4), 0.0, 1.0) * uFogAmount;
 
@@ -74,268 +247,11 @@ export const IRIDESCENT_SHADE_GLSL = `
   }
 
   // spikeMeshGpu's material entry point.
-  vec3 shade(vec3 n, vec3 v, vec3 viewPos, float extra) {
-    return iridescentShade(n, v, length(viewPos), extra);
+  vec3 shade(vec3 n, vec3 v, vec3 viewPos, vec3 cell, vec3 pos, float structure) {
+    return iridescentShade(n, v, length(viewPos), cell, pos, structure);
   }
 `;
-
-// The reference's palette, in ramp order: blue → green → cream → pink → wine →
-// navy, then back to blue. Read off the video frame by frame (centre → rim).
-export const materialFormValues = {
-  ramp: {
-    stops: [
-      [
-        52,
-        72,
-        228
-      ],
-      [
-        72,
-        150,
-        30
-      ],
-      [
-        242,
-        232,
-        196
-      ],
-      [
-        242,
-        84,
-        136
-      ],
-      [
-        128,
-        6,
-        46
-      ],
-      [
-        16,
-        18,
-        56
-      ]
-    ],
-    hardness: 0.35,
-    bands: 0.75,
-    offset: 0,
-    cyclesPerLoop: 1
-  },
-  facing: 1,
-  light: {
-    weight: 0.6,
-    direction: {
-      x: 0.5,
-      y: 0.6,
-      z: -0.6
-    }
-  },
-  extra: 0.3,
-  shading: 0.12,
-  fog: {
-    amount: 0,
-    start: 400,
-    end: 1600
-  }
-};
-
-export const backgroundFormValues = {
-  top: [
-    178,
-    188,
-    206
-  ],
-  bottom: [
-    202,
-    210,
-    226
-  ]
-};
-
-export const renderingFormValues = {
-  supersample: "2",
-  detail: 1
-};
-
-/**
- * The `material` form block. `extraLabel` names what the sketch feeds the
- * extra channel with (terrain, height, depth…), since the slider means
- * nothing without it.
- */
-export function materialFormConfiguration( {
-  extraLabel = "Structure → colour",
-  fogRange = {
-    max: 4000,
-    step: 10
-  }
-} = {} ) {
-  return {
-    component: "nested-object",
-    label: "Iridescent material",
-    fields: {
-      ramp: {
-        component: "nested-object",
-        label: "Colour ramp (loops back to the first stop)",
-        fields: {
-          stops: {
-            label: "Stops, in order",
-            component: "item-list",
-            minItems: 2,
-            maxItems: 12,
-            itemConfig: {
-              label: "Stop",
-              component: "color"
-            }
-          },
-          hardness: {
-            label: "Band hardness (0 = soft blend, 1 = flat bands)",
-            component: "slider",
-            min: 0,
-            max: 1,
-            step: 0.01
-          },
-          bands: {
-            label: "Ramp cycles from facing the camera to the rim",
-            component: "slider",
-            min: 0.1,
-            max: 4,
-            step: 0.05
-          },
-          offset: {
-            label: "Ramp offset (which stop faces the camera)",
-            component: "slider",
-            min: 0,
-            max: 1,
-            step: 0.01
-          },
-          cyclesPerLoop: {
-            label: "Colour drift: whole cycles per loop",
-            component: "slider",
-            min: -4,
-            max: 4,
-            step: 1
-          }
-        }
-      },
-      facing: {
-        label: "Facing (rim) weight",
-        component: "slider",
-        min: 0,
-        max: 2,
-        step: 0.01
-      },
-      light: {
-        component: "nested-object",
-        label: "Directional term",
-        fields: {
-          weight: {
-            label: "Lit-side ramp offset",
-            component: "slider",
-            min: 0,
-            max: 2,
-            step: 0.01
-          },
-          direction: {
-            component: "vector3d",
-            label: "Light direction (camera space, the way it travels)",
-            kind: "direction",
-            min: -1,
-            max: 1,
-            step: 0.01,
-            yDown: true
-          }
-        }
-      },
-      extra: {
-        label: extraLabel,
-        component: "slider",
-        min: 0,
-        max: 2,
-        step: 0.01
-      },
-      shading: {
-        label: "Shading (darken the far side)",
-        component: "slider",
-        min: 0,
-        max: 1,
-        step: 0.01
-      },
-      fog: {
-        component: "nested-object",
-        label: "Fog (fades to the background colour)",
-        fields: {
-          amount: {
-            label: "Amount",
-            component: "slider",
-            min: 0,
-            max: 1,
-            step: 0.01
-          },
-          start: {
-            label: "Starts at (distance from the eye)",
-            component: "slider",
-            min: 0,
-            max: fogRange.max,
-            step: fogRange.step
-          },
-          end: {
-            label: "Full at (distance from the eye)",
-            component: "slider",
-            min: 0,
-            max: fogRange.max,
-            step: fogRange.step
-          }
-        }
-      }
-    }
-  };
 }
-
-export const backgroundFormConfiguration = {
-  component: "nested-object",
-  label: "Background",
-  fields: {
-    top: {
-      component: "color",
-      label: "Top"
-    },
-    bottom: {
-      component: "color",
-      label: "Bottom"
-    }
-  }
-};
-
-export const renderingFormConfiguration = {
-  component: "nested-object",
-  label: "Rendering",
-  fields: {
-    supersample: {
-      label: "Antialiasing (supersampling)",
-      component: "select",
-      options: [
-        {
-          value: "1",
-          label: "Off (1×)"
-        },
-        {
-          value: "2",
-          label: "2× (default)"
-        },
-        {
-          value: "3",
-          label: "3× (exports)"
-        }
-      ]
-    },
-    detail: {
-      label: "Mesh detail (quality ↔ speed)",
-      component: "slider",
-      min: 0.25,
-      max: 2,
-      step: 0.05
-    }
-  }
-};
 
 function channel(
   color, index, fallback
@@ -473,48 +389,102 @@ function rgb01( color ) {
  *
  * @param {object} material the sketch's `material` options
  * @param {object} background the sketch's `background` options (fog colour)
- * @returns {{ ramp: object, uniforms: object }}
+ * @param {object} [scene] { scale, axis } — the structure's size in the
+ *   sketch's units (normalises the position axes) and its main axis ("y" or
+ *   "z") for the angle / radial coordinates
+ * @returns {{ ramp: object, shade: { key: string, glsl: string }, uniforms: object }}
+ *   `shade` is the material's fragment GLSL for the current variant (its
+ *   selects and curves are baked in) with a key that changes with it, so a
+ *   renderer rebuilds its program only when one of those changes.
  */
 export function materialRender(
-  material, background
+  material, background, {
+    scale = 500,
+    axis = "y"
+  } = {}
 ) {
-  const m = material ?? materialFormValues;
-  const d = m.light?.direction ?? materialFormValues.light.direction;
+  const d = materialFormValues;
+  const m = material ?? d;
+  const ramp = m.ramp ?? d.ramp;
+  const facing = m.facing ?? d.facing;
+  const light = m.light ?? d.light;
+  const structure = m.structure ?? d.structure;
+  const stagger = m.stagger ?? d.stagger;
+  const wave = m.wave ?? d.wave;
+  const fog = m.fog ?? d.fog;
+
+  const dir = light.direction ?? d.light.direction;
   const len = Math.hypot(
-    d.x ?? 0,
-    d.y ?? 0,
-    d.z ?? 0
+    dir.x ?? 0,
+    dir.y ?? 0,
+    dir.z ?? 0
   );
   const lightDir = len > 1e-6
     ? [
-      d.x / len,
-      d.y / len,
-      d.z / len
+      dir.x / len,
+      dir.y / len,
+      dir.z / len
     ]
     : [
       0,
       0,
       -1
     ];
-  const cycles = Math.round( m.ramp?.cyclesPerLoop ?? materialFormValues.ramp.cyclesPerLoop );
-  const shift = ( m.ramp?.offset ?? 0 ) - cycles * animation.progression;
-  const fogColor = rgb01( background?.bottom ?? backgroundFormValues.bottom );
+
+  // Whole cycles per loop, so the drift closes; its curve reshapes the
+  // journey through the loop but still lands on the same phase.
+  const phase = animation.progression;
+  const cycles = Math.round( ramp.cyclesPerLoop ?? d.ramp.cyclesPerLoop );
+  const driftFn = easing?.[ ramp.driftCurve ?? d.ramp.driftCurve ] ?? easing.linear ?? ( ( t ) => t );
+  const shift = ( ramp.offset ?? d.ramp.offset ) - cycles * mappers.fn(
+    phase,
+    0,
+    1,
+    0,
+    1,
+    driftFn
+  );
+  const waveSpeed = Math.round( wave.speed ?? d.wave.speed );
+
+  const variant = materialVariant( m );
 
   return {
     ramp: rampFor( m ),
+    shade: {
+      key: variant.key,
+      glsl: iridescentShadeGlsl( variant )
+    },
     uniforms: {
       uRampWidth: RAMP_WIDTH,
-      uBands: m.ramp?.bands ?? materialFormValues.ramp.bands,
+      uBands: ramp.bands ?? d.ramp.bands,
       uShift: shift,
-      uFacingWeight: m.facing ?? materialFormValues.facing,
-      uLightWeight: m.light?.weight ?? materialFormValues.light.weight,
+
+      uFacingWeight: facing.weight ?? d.facing.weight,
+      uFacingPower: facing.power ?? d.facing.power,
+
+      uLightWeight: light.weight ?? d.light.weight,
       uLightDir: lightDir,
-      uExtraWeight: m.extra ?? materialFormValues.extra,
-      uShading: m.shading ?? materialFormValues.shading,
-      uFogColor: fogColor,
-      uFogAmount: m.fog?.amount ?? 0,
-      uFogStart: m.fog?.start ?? materialFormValues.fog.start,
-      uFogEnd: m.fog?.end ?? materialFormValues.fog.end
+      uLightWrap: light.wrap ?? d.light.wrap,
+
+      uStructureWeight: structure.weight ?? d.structure.weight,
+
+      uStaggerWeight: stagger.weight ?? d.stagger.weight,
+      uStaggerCycles: stagger.cycles ?? d.stagger.cycles,
+
+      uWaveWeight: wave.weight ?? d.wave.weight,
+      uWaveCycles: wave.cycles ?? d.wave.cycles,
+      uWavePhase: waveSpeed * phase,
+
+      uShading: m.shading ?? d.shading,
+      uFogColor: rgb01( background?.bottom ?? backgroundFormValues.bottom ),
+      uFogAmount: fog.amount ?? d.fog.amount,
+      uFogStart: fog.start ?? d.fog.start,
+      uFogEnd: fog.end ?? d.fog.end,
+
+      uSceneScale: scale,
+      uAxisMode: {
+        int: axis === "z" ? 1 : 0
+      }
     }
   };
 }
@@ -642,49 +612,3 @@ export function wobbleRotation(
     z: enabled ? wobble( p.sin( animation.angle * zMultiplier ) ) : 0
   };
 }
-
-export const rotationFormConfiguration = {
-  component: "nested-object",
-  label: "Rotation",
-  fields: {
-    enabled: {
-      label: "Animated wobble?",
-      component: "checkbox"
-    },
-    angleMax: {
-      label: "Wobble amplitude",
-      component: "slider",
-      min: 0,
-      max: Math.PI,
-      step: 0.01
-    },
-    xMultiplier: {
-      label: "X wobble speed",
-      component: "slider",
-      min: -9,
-      max: 9,
-      step: 1
-    },
-    yMultiplier: {
-      label: "Y wobble speed",
-      component: "slider",
-      min: -9,
-      max: 9,
-      step: 1
-    },
-    zMultiplier: {
-      label: "Z wobble speed",
-      component: "slider",
-      min: -9,
-      max: 9,
-      step: 1
-    },
-    spinTurns: {
-      label: "Whole turns per loop (around y)",
-      component: "slider",
-      min: -4,
-      max: 4,
-      step: 1
-    }
-  }
-};

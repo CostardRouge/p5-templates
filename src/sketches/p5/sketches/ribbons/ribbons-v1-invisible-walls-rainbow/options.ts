@@ -1,6 +1,6 @@
 import {
   PALETTE_OPTIONS
-} from "../_shared.js";
+} from "../_paletteOptions.js";
 
 export const formValues = {
   shape: {
