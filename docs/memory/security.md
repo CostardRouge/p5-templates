@@ -25,3 +25,7 @@ Read before adding or changing an API route, a server action, anything that turn
 ## Request data never becomes a filesystem path through `path.join`
 
 2026-10-02 — `/api/assets` built `path.join( os.tmpdir(), name )` from the query string, and `path.join` normalises `..` away: `?name=../../etc/passwd` returned `/etc/passwd` with a 200 (proved by `src/app/api/assets/__tests__/route.test.ts` against the old route), which in the container includes `/proc/self/environ` — the database URL and S3 keys. Nothing in the repo calls that route any more. **How to apply**: resolve untrusted segments with `src/utils/resolveInsideDirectory.ts`, which returns `null` when the result leaves the root (a `..`, an absolute segment, or the root itself), and answer 400 on `null`.
+
+## `/api/options/schema` and `/api/options/validate` are pure on purpose
+
+2026-10-09 — Two routes describe and check an options document for callers outside the browser (the agent commands, `agent-commands.md`): the schema is `OptionsSchema` exported by zod's `toJSONSchema`, and validation is `OptionsSchema.safeParse` plus every key the parse would drop. Neither stores, fetches, spawns or reads a file, and the validate body is capped (2 M characters, 413 beyond) so the one cost a caller can impose is one bounded parse. **How to apply**: keep them that way — a "validate and save" or "validate and render" variant belongs behind whatever auth the maintainer decides on, not here.
