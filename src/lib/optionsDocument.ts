@@ -96,11 +96,25 @@ function droppedKeys(
   }
 }
 
+export type OptionsVerdict = {
+  issues: OptionsIssue[];
+  /**
+   * The document as the schema parses it — every default filled in — when it
+   * parses clean; null otherwise. A stored job's options reach the page as
+   * they are (`Object.assign` over its own defaults, never through this
+   * parse), and the renderers read fields the form always writes: a content
+   * item stored without, say, its `alignment` throws on every frame. So a
+   * caller that builds a document by hand stores THIS, as the studio
+   * effectively does.
+   */
+  normalized: Record<string, unknown> | null;
+};
+
 /**
  * The document's problems as the page's own parse would see them, plus every
- * key the parse would silently drop; empty when it parses clean.
+ * key the parse would silently drop; no issues when it parses clean.
  */
-export function validateOptionsDocument( value: unknown ): OptionsIssue[] {
+export function validateOptionsDocument( value: unknown ): OptionsVerdict {
   const result = OptionsSchema.safeParse( value );
 
   if ( result.success ) {
@@ -113,11 +127,17 @@ export function validateOptionsDocument( value: unknown ): OptionsIssue[] {
       issues
     );
 
-    return issues;
+    return {
+      issues,
+      normalized: issues.length ? null : result.data as Record<string, unknown>
+    };
   }
 
-  return result.error.issues.map( ( issue ) => ( {
-    path: issue.path.map( String ).join( "." ),
-    message: issue.message
-  } ) );
+  return {
+    issues: result.error.issues.map( ( issue ) => ( {
+      path: issue.path.map( String ).join( "." ),
+      message: issue.message
+    } ) ),
+    normalized: null
+  };
 }

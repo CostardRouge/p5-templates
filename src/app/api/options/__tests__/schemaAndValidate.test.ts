@@ -43,9 +43,9 @@ describe(
   "/api/options/validate",
   () => {
     it(
-      "accepts a document the page would parse",
+      "accepts a document the page would parse, and answers it with its defaults filled in",
       async() => {
-        expect( await ( await post( JSON.stringify( {
+        const body = await ( await post( JSON.stringify( {
           size: {
             width: 1080,
             height: 1920
@@ -56,9 +56,22 @@ describe(
               content: "hello"
             }
           ]
-        } ) ) ).json() ).toEqual( {
-          valid: true,
-          issues: []
+        } ) ) ).json();
+
+        expect( body.valid ).toBe( true );
+        expect( body.issues ).toEqual( [] );
+        expect( body.normalized.size ).toEqual( {
+          width: 1080,
+          height: 1920
+        } );
+        // What the renderers read and a hand-built item leaves out.
+        expect( body.normalized.content[ 0 ] ).toMatchObject( {
+          type: "text",
+          content: "hello",
+          alignment: {
+            horizontal: "center",
+            vertical: "baseline"
+          }
         } );
       }
     );

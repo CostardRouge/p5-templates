@@ -30,3 +30,7 @@ Read when you touch `scripts/mcp/`, add a command an agent can call, or change a
 - Sketches whose parameters are images or assets cannot get NEW files from an agent: `render.video` posts no files, and the frame path has no upload. Their defaults render.
 - No command writes a preset, a slide deck, content items (text, HUD, sketch layers) or a multi-variant front-end export; only the sketch's own parameters, size and clock.
 - A failed job's reason lives only in the server log (above); persisting it is a schema change.
+
+## A stored job's options reach the page UNPARSED — store the normalised document (2026-10-09)
+
+The sketch page `Object.assign`s a job's `options.json` over `OptionsSchema.parse( {} )`; the job's own content items, slides and sizes are never run through the schema, so their zod defaults are never filled. The studio never notices because its form writes complete items. A hand-built `{ type: "text", content: "hi" }` therefore reaches the text renderer without `alignment` and throws on every frame (`Cannot read properties of undefined (reading 'horizontal')`) — the page never becomes ready, so a frame render times out and a recording fails at `waitForSelector`. **How to apply**: anything that writes a job's options by hand takes `normalized` from `POST /api/options/validate` (the parsed document, defaults filled) for the keys it supplies, never the raw input. Restrict to the supplied keys: the parse also fills root defaults (1080 × 1350, 60 fps / 12 s) that would override the sketch's own `options.json`.

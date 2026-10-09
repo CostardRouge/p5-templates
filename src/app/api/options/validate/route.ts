@@ -8,7 +8,7 @@ import {
 
 /**
  * Check an options document against `OptionsSchema` and answer the issues by
- * path. Pure: nothing is stored, fetched or run — the body is parsed and
+ * path, or the document with its defaults filled in. Pure: nothing is stored, fetched or run — the body is parsed and
  * dropped — and it is capped so a caller cannot hand the server an unbounded
  * parse (there is no auth, see docs/memory/security.md).
  */
@@ -50,10 +50,17 @@ export async function POST( request: Request ) {
     );
   }
 
-  const issues = validateOptionsDocument( options );
+  const {
+    issues, normalized
+  } = validateOptionsDocument( options );
 
+  // `normalized` is the document with every default filled in: what a caller
+  // building one by hand should store (see `OptionsVerdict`).
   return answer( {
     valid: issues.length === 0,
-    issues
+    issues,
+    ...( normalized ? {
+      normalized
+    } : {} )
   } );
 }
