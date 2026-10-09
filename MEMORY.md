@@ -55,6 +55,7 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 - Dev-only studio affordances are hidden behind a menu toggle, off by default, so the app reads and screenshots as the shipped product → `studio-ui.md`.
 - HUD telemetry widgets are nine standalone `hud-*` content-item types (own style, own layer row, eye toggle); the legacy single `hud` container is expanded lazily on read, before the zod parse → `studio-ui.md`.
 - A telemetry widget is chosen by the **value shape** it reads, not by the control's look: that decides the quick-add menu, what a source picker lists, and when a new kind is worth minting → `studio-ui.md`.
+- HUD widgets follow the adopted Micrographie charter: hairlines, one ink plus an accent that only marks a change and fades, 7–9px mono micro-type, edges as territory, motion only when the value moves, a trace of the previous state, no decorative sci-fi → `hud-style.md`.
 - The sketch page is one inspector (canvas+animation above the sketch form), a content rail, a bottom filmstrip and Export in the docked top bar; "document" is not a UI scope and the filmstrip is not a timeline → `studio-ui.md`.
 - Front-end export is a list of variants, each re-laying the sketch out at its own resolution and framerate; the variant list doubles as the run queue → `studio-ui.md`, `recording.md`.
 - Export-time size/framerate overrides go through one scope that strips per-slide overrides, re-applies after every slide switch, waits for the resize to land, and always restores → `recording.md`.
@@ -107,6 +108,8 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 
 ## Open items (dated; remove when done)
 
+- 2026-10-09 — The HUD charter is adopted but not implemented: the existing `hud-*` widgets do not yet draw ghosts, peaks or the fading accent, and those must run on the loop clock, not wall time. The style/selection UI (style written into every layer, composition presets, source → instrument → zone picker, gauge button per control) is a proposal awaiting the maintainer → `hud-style.md`.
+
 - 2026-10-02 — A whole-repo audit is in `docs/audit-2026-10-02.md` (inventory, ~70 findings with IDs, plan, ten maintainer decisions). PR #380 fixed the exploitable security holes and the worst correctness/UX/a11y bugs; the decisions and the open batches are in `TODO.md` under "Audit follow-ups". The two that matter most: there is no authentication anywhere (`security.md`), and the Dockerfile's Playwright image (1.59) does not match the locked client (1.62).
 
 - 2026-10-02 — Driven-field treatment shipped for sliders, selects, number bars, colours and the 2D pad (`interaction-bindings.md`). Still open: the checkbox only gets the diamond glyph (`computeBindingValues` already publishes its 0/1), and a sketch-declared binding gets no live treatment because it is not in the form.
@@ -138,6 +141,7 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 | `docs/memory/deployment.md` | Docker, GHCR, Watchtower, the NAS, `docker-compose.yml` |
 | `docs/memory/local-development.md` | Running the app locally, infra services, `setup.sh`, dev-server config |
 | `docs/memory/studio-ui.md` | The sketch page's panels and layouts (inspector, content rail, filmstrip, export, mobile drawer) |
+| `docs/memory/hud-style.md` | Drawing a HUD widget, adding a `hud-*` kind, the HUD charter, the HUD style/selection UI |
 | `docs/memory/canvas-interaction.md` | The on-canvas drag/selection layer, item-bounds reporting, a renderer's grab surface, the viewport's pan/zoom gestures (wheel vs pinch) |
 | `docs/memory/interaction-bindings.md` | Modulating a parameter: the binding resolver, its kinds, the pastille/popover, the driven-field treatment, slides and bindings |
 | `docs/memory/interaction-midi.md` | A MIDI channel, the learn gesture, a sketch-declared `binding: { control }`, the port-name controller map |
