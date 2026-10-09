@@ -28,7 +28,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 // ── Palettes ─────────────────────────────────────────────────────────────────
-// Named looks for the ramp. Picking one in `ramp.palette` REPLACES the stops,
+// Named looks for the ramp, picked in `ramp.palette` with the palette picker
+// (a grid of swatches, `palette-picker` in the form). Picking one REPLACES the stops,
 // the band hardness and the background (its `paper`); "custom" keeps the
 // form's own stops and background. The riso four use Risograph ink colours
 // (fluorescent pink, blue, yellow, teal, orange, federal blue, mint, aqua,
@@ -37,7 +38,9 @@
 // `finish.grain` for the stipple of a real print.
 export const PALETTES = {
   "riso-pink-blue": {
-    label: "Riso — fluo pink × blue (yellow, paper, overprint violet)",
+    label: "Riso pink × blue",
+    group: "Risograph",
+    description: "Fluorescent pink and blue inks, with yellow, the paper and their violet overprint",
     stops: [
       [
         255,
@@ -80,7 +83,9 @@ export const PALETTES = {
     }
   },
   "riso-teal-orange": {
-    label: "Riso — teal × orange (mint, paper, federal blue)",
+    label: "Riso teal × orange",
+    group: "Risograph",
+    description: "Teal and orange inks, with mint, the paper and federal blue",
     stops: [
       [
         0,
@@ -123,7 +128,9 @@ export const PALETTES = {
     }
   },
   "riso-sunflower-burgundy": {
-    label: "Riso — sunflower × burgundy (bright red, aqua, paper)",
+    label: "Riso sunflower × burgundy",
+    group: "Risograph",
+    description: "Sunflower and burgundy inks, with bright red, aqua and the paper",
     stops: [
       [
         255,
@@ -166,7 +173,9 @@ export const PALETTES = {
     }
   },
   "riso-purple-mint": {
-    label: "Riso — purple × mint (paper, fluo pink, medium blue)",
+    label: "Riso purple × mint",
+    group: "Risograph",
+    description: "Purple and mint inks, with the paper, fluorescent pink and medium blue",
     stops: [
       [
         118,
@@ -209,7 +218,9 @@ export const PALETTES = {
     }
   },
   "acid-y2k": {
-    label: "Acid Y2K — chartreuse, ink black, ultraviolet, hot pink, chrome",
+    label: "Acid Y2K",
+    group: "Looks",
+    description: "Chartreuse, ink black, ultraviolet, hot pink and chrome",
     stops: [
       [
         200,
@@ -252,7 +263,9 @@ export const PALETTES = {
     }
   },
   "liquid-chrome": {
-    label: "Liquid chrome — mirror greys on graphite",
+    label: "Liquid chrome",
+    group: "Looks",
+    description: "Mirror greys on graphite",
     stops: [
       [
         244,
@@ -300,7 +313,9 @@ export const PALETTES = {
     }
   },
   "holo-foil": {
-    label: "Holographic foil — pastel rainbow and steel on graphite",
+    label: "Holo foil",
+    group: "Looks",
+    description: "Pastel rainbow and steel on graphite",
     stops: [
       [
         255,
@@ -348,7 +363,9 @@ export const PALETTES = {
     }
   },
   "beetle-shell": {
-    label: "Beetle shell — deep oil slick on black",
+    label: "Beetle shell",
+    group: "Looks",
+    description: "A deep oil slick on black",
     stops: [
       [
         8,
@@ -396,7 +413,9 @@ export const PALETTES = {
     }
   },
   thermal: {
-    label: "Thermal camera — night to white heat",
+    label: "Thermal",
+    group: "Looks",
+    description: "A thermal camera, from night to white heat",
     stops: [
       [
         6,
@@ -444,7 +463,9 @@ export const PALETTES = {
     }
   },
   vaporwave: {
-    label: "Vaporwave — neon pink, violet, cyan, mint, lemon on dusk",
+    label: "Vaporwave",
+    group: "Looks",
+    description: "Neon pink, violet, cyan, mint and lemon on dusk",
     stops: [
       [
         255,
@@ -487,7 +508,9 @@ export const PALETTES = {
     }
   },
   cyanotype: {
-    label: "Cyanotype — Prussian blue print on rag paper",
+    label: "Cyanotype",
+    group: "Looks",
+    description: "Prussian blue print on rag paper",
     stops: [
       [
         11,
@@ -535,7 +558,9 @@ export const PALETTES = {
     }
   },
   seventies: {
-    label: "Seventies modernist — terracotta, mustard, sage, petrol",
+    label: "Seventies",
+    group: "Looks",
+    description: "Terracotta, mustard, sage and petrol",
     stops: [
       [
         226,
@@ -583,7 +608,9 @@ export const PALETTES = {
     }
   },
   bauhaus: {
-    label: "Bauhaus — primaries, black and paper, flat",
+    label: "Bauhaus",
+    group: "Looks",
+    description: "Primaries, black and paper, in flat bands",
     stops: [
       [
         230,
@@ -627,63 +654,23 @@ export const PALETTES = {
   }
 };
 
+// The picker's options: the custom look first (drawn live from the form's own
+// stops and background), then every preset with what its tile needs to draw
+// itself — stops, hardness, paper — so the swatches are real, not a guess.
 export const PALETTE_OPTIONS = [
   {
     value: "custom",
-    label: "Custom — the stops and the background below"
+    label: "Custom",
+    group: "Your own",
+    description: "The stops and the background set below"
   },
-  {
-    value: "riso-pink-blue",
-    label: "Riso — fluo pink × blue (yellow, paper, overprint violet)"
-  },
-  {
-    value: "riso-teal-orange",
-    label: "Riso — teal × orange (mint, paper, federal blue)"
-  },
-  {
-    value: "riso-sunflower-burgundy",
-    label: "Riso — sunflower × burgundy (bright red, aqua, paper)"
-  },
-  {
-    value: "riso-purple-mint",
-    label: "Riso — purple × mint (paper, fluo pink, medium blue)"
-  },
-  {
-    value: "acid-y2k",
-    label: "Acid Y2K — chartreuse, ink black, ultraviolet, hot pink, chrome"
-  },
-  {
-    value: "liquid-chrome",
-    label: "Liquid chrome — mirror greys on graphite"
-  },
-  {
-    value: "holo-foil",
-    label: "Holographic foil — pastel rainbow and steel on graphite"
-  },
-  {
-    value: "beetle-shell",
-    label: "Beetle shell — deep oil slick on black"
-  },
-  {
-    value: "thermal",
-    label: "Thermal camera — night to white heat"
-  },
-  {
-    value: "vaporwave",
-    label: "Vaporwave — neon pink, violet, cyan, mint, lemon on dusk"
-  },
-  {
-    value: "cyanotype",
-    label: "Cyanotype — Prussian blue print on rag paper"
-  },
-  {
-    value: "seventies",
-    label: "Seventies modernist — terracotta, mustard, sage, petrol"
-  },
-  {
-    value: "bauhaus",
-    label: "Bauhaus — primaries, black and paper, flat"
-  }
+  ...Object.entries( PALETTES ).map( ( [
+    value,
+    palette
+  ] ) => ( {
+    value,
+    ...palette
+  } ) )
 ];
 
 // The reference's palette, in ramp order: blue → green → cream → pink → wine →
@@ -858,9 +845,18 @@ export function materialFormConfiguration( {
         label: "Colour ramp",
         fields: {
           palette: {
-            label: "Palette (a preset replaces the stops, the hardness and the background)",
-            component: "select",
-            options: PALETTE_OPTIONS
+            label: "Palette",
+            component: "palette-picker",
+            options: PALETTE_OPTIONS,
+            // A preset replaces the stops, the hardness and the background;
+            // these say where the custom look lives, so the Custom tile can
+            // draw it and "edit a copy" can write a preset into it.
+            custom: {
+              value: "custom",
+              stops: "stops",
+              hardness: "hardness",
+              paper: "../../background"
+            }
           },
           stops: {
             label: "Stops, in order (the ramp loops back to the first)",

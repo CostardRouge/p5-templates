@@ -23,6 +23,8 @@ import ControlledSourceSelect
   from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/ControlledSourceSelect/ControlledSourceSelect";
 import ControlledKeySelect
   from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/ControlledKeySelect/ControlledKeySelect";
+import ControlledPalettePicker
+  from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/ControlledPalettePicker/ControlledPalettePicker";
 import ControlledEasingInput
   from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/ControlledEasingInput/ControlledEasingInput";
 import ControlledVector2DInput
@@ -764,6 +766,17 @@ export default function FieldRenderer( {
             config={ config }
             depth={ depth }
             leafPaddingClassName={ leafPaddingClassName }
+          />
+        );
+
+      case "palette-picker":
+        return (
+          <ControlledPalettePicker
+            name={ registeredName }
+            config={ config }
+            label={ inlineLabel }
+            isModified={ isModified }
+            onReset={ handleReset }
           />
         );
 

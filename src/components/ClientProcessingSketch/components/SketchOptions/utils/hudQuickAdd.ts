@@ -68,6 +68,9 @@ const QUICK_ADD_KINDS: Record<string, ItemKind[]> = {
   select: [
     "hud-readout"
   ],
+  "palette-picker": [
+    "hud-readout"
+  ],
   checkbox: [
     "hud-readout"
   ],

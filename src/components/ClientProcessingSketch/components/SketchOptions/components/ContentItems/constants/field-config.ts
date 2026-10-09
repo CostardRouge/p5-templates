@@ -277,6 +277,45 @@ export interface Vector3DConfig extends BaseConfig {
   kind?: "position" | "direction";
 }
 
+// A named colour look, as the palette picker draws it: the ramp's stops and
+// its band hardness as a swatch, on the `paper` behind it. An option without
+// stops stands for "the stops the form holds" (the picker draws those live).
+export type PaletteOption = {
+  value: string;
+  label: string;
+  /** A longer line, shown as the tile's tooltip. */
+  description?: string;
+  /** Tiles are grouped under this heading, in first-seen order. */
+  group?: string;
+  stops?: number[][];
+  hardness?: number;
+  paper?: {
+    top?: number[];
+    bottom?: number[];
+  };
+};
+
+// A palette chooser: a bar showing the current look's swatch, unfolding into a
+// grid of swatch tiles. The stored value is the option's `value`, like a
+// select; a select of thirteen palette NAMES was the first build, and nobody
+// picks a look from its name.
+export interface PalettePickerConfig extends BaseConfig {
+  component: "palette-picker";
+  options: PaletteOption[];
+  /**
+   * Where the hand-made look lives, as paths relative to the field's parent
+   * object (`"stops"` is a sibling, `"../../background"` climbs two levels).
+   * The option `customValue` is drawn from these live, and "edit a copy"
+   * writes a preset into them before switching to it.
+   */
+  custom?: {
+    value?: string;
+    stops?: string;
+    hardness?: string;
+    paper?: string;
+  };
+}
+
 // Source picker for HUD widgets: options are derived at render time from the
 // live sketch settings + built-in keys (see ControlledSourceSelect).
 interface SourceSelectConfig extends BaseConfig {
@@ -349,6 +388,7 @@ export type FieldConfig =
   | NumberInputConfig
   | ColorInputConfig
   | SelectConfig
+  | PalettePickerConfig
   | MultiSelectConfig
   | NestedObjectConfig
   | ConditionalGroupConfig
