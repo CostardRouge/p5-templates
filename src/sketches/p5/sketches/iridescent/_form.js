@@ -791,6 +791,15 @@ export const PALETTES = {
 // The picker's options: the custom look first (drawn live from the form's own
 // stops and background), then every preset with what its tile needs to draw
 // itself — stops, hardness, paper — so the swatches are real, not a guess.
+// The custom look's own stops and hardness only count while the palette is
+// "custom": a preset replaces both (`resolveLook`), so the form greys them out
+// rather than letting an edit — or a binding — play to nothing.
+const PALETTE_OVERRIDES_RAMP = {
+  field: "palette",
+  equals: "custom",
+  note: "Set by the palette. Pick Custom in the palette to edit, or use Edit a copy."
+};
+
 export const PALETTE_OPTIONS = [
   {
     value: "custom",
@@ -995,6 +1004,7 @@ export function materialFormConfiguration( {
           stops: {
             label: "Stops, in order (the ramp loops back to the first)",
             component: "item-list",
+            inactiveUnless: PALETTE_OVERRIDES_RAMP,
             minItems: 2,
             maxItems: 12,
             itemConfig: {
@@ -1005,6 +1015,11 @@ export function materialFormConfiguration( {
           hardness: {
             label: "Band hardness (0 = soft blend, 1 = flat bands)",
             component: "slider",
+            // Same rule, no second note: the stops just above say why.
+            inactiveUnless: {
+              ...PALETTE_OVERRIDES_RAMP,
+              note: undefined
+            },
             min: 0,
             max: 1,
             step: 0.01
@@ -1304,6 +1319,12 @@ export function materialFormConfiguration( {
 export const backgroundFormConfiguration = {
   component: "nested-object",
   label: "Background",
+  // A preset brings its own paper, so these two only count on the custom look.
+  inactiveUnless: {
+    field: "material/ramp/palette",
+    equals: "custom",
+    note: "The palette brings its own paper. Pick Custom in the palette to use these colours."
+  },
   fields: {
     top: {
       component: "color",

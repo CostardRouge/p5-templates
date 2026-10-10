@@ -27,8 +27,11 @@ import {
 } from "@/lib/channelBridge";
 import LiveBindingValue from "../BindingAffordance/LiveBindingValue";
 import {
-  paperGradient, rampGradient, resolveRelativePath, type Paper, type Rgb
+  paperGradient, rampGradient, type Paper, type Rgb
 } from "./paletteSwatch";
+import {
+  resolveRelativePath
+} from "../../../../utils/resolveRelativePath";
 
 type Props = {
   name: string;

@@ -117,36 +117,3 @@ export function paperGradient( paper: Paper | undefined ): string | null {
 
   return `linear-gradient(180deg, ${ rgbCss( paper.top ?? paper.bottom ) }, ${ rgbCss( paper.bottom ?? paper.top ) })`;
 }
-
-/**
- * Resolve a path written relative to a field's PARENT object: `"stops"` is a
- * sibling, `"../../background"` climbs two levels first. Returns null when the
- * path climbs past the root.
- */
-export function resolveRelativePath(
-  fieldName: string, relative: string
-): string | null {
-  const segments = fieldName.split( "." ).slice(
-    0,
-    -1
-  );
-
-  for ( const part of relative.split( "/" ) ) {
-    if ( part === "" || part === "." ) {
-      continue;
-    }
-
-    if ( part === ".." ) {
-      if ( segments.length === 0 ) {
-        return null;
-      }
-
-      segments.pop();
-      continue;
-    }
-
-    segments.push( part );
-  }
-
-  return segments.length > 0 ? segments.join( "." ) : null;
-}

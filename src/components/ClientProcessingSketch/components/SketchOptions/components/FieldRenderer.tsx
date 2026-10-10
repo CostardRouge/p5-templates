@@ -100,6 +100,9 @@ import {
 } from "./ContentItems/components/ControlChrome";
 import ItemListRenderer from "./ItemListRenderer";
 import {
+  isFieldInactive, resolveRelativePath
+} from "../utils/resolveRelativePath";
+import {
   useCollapsibleContext
 } from "../hooks/useCollapsibleStates";
 import {
@@ -161,6 +164,25 @@ export default function FieldRenderer( {
     control,
     name: registeredName
   } );
+
+  // `inactiveUnless`: another field overrides this one (a palette preset
+  // replaces the custom colour stops). The hook is called unconditionally —
+  // watching the field itself when there is no rule — to keep the hook count
+  // stable.
+  const inactivePath = config.inactiveUnless
+    ? resolveRelativePath(
+      registeredName,
+      config.inactiveUnless.field
+    )
+    : null;
+  const decidingValue = useWatch( {
+    control,
+    name: inactivePath ?? registeredName
+  } );
+  const inactive = inactivePath !== null && isFieldInactive(
+    config.inactiveUnless,
+    decidingValue
+  );
 
   if ( !isInitializedRef.current ) {
     isInitializedRef.current = true;
@@ -893,65 +915,81 @@ export default function FieldRenderer( {
   // Checkbox: label and switch share a single row — denser, and the whole
   // row is a finger-sized tap target. The reset button lives outside the
   // <label> elements so its clicks never race the label→checkbox activation.
+  // Greyed and inert while overridden, binding button and context menu
+  // included — a binding on an overridden value would play to nothing — with
+  // the reason above it, outside the inert part so it stays readable.
+  const withInactive = ( node: React.ReactNode ) => ( inactive ? (
+    <div className="flex flex-col gap-1">
+      {config.inactiveUnless?.note && (
+        <p className="text-[11px] leading-4 text-label">{config.inactiveUnless.note}</p>
+      )}
+      <div
+        inert
+        aria-disabled
+        className="opacity-40 grayscale"
+      >
+        {node}
+      </div>
+    </div>
+  ) : node );
+
   if ( config.component === "checkbox" ) {
-    return (
-      <div className="text-sm md:text-xs">
-        <div className="flex min-h-[2.5rem] md:min-h-0 items-center justify-between gap-2 py-1 md:py-0.5">
-          {config.label && !hideLabel && (
-            <label
-              htmlFor={ registeredName }
-              className={ clsx(
-                "min-w-0 flex-1 cursor-pointer select-none truncate",
-                isModified ? "font-medium" : "text-gray-400"
-              ) }
+    return withInactive( <div className="text-sm md:text-xs">
+      <div className="flex min-h-[2.5rem] md:min-h-0 items-center justify-between gap-2 py-1 md:py-0.5">
+        {config.label && !hideLabel && (
+          <label
+            htmlFor={ registeredName }
+            className={ clsx(
+              "min-w-0 flex-1 cursor-pointer select-none truncate",
+              isModified ? "font-medium" : "text-gray-400"
+            ) }
+          >
+            {config.label}
+          </label>
+        )}
+
+        <span className="flex shrink-0 items-center gap-1">
+          {isModified && (
+            <button
+              type="button"
+              onClick={ handleReset }
+              tabIndex={ -1 }
+              title="Reset to saved value"
+              className={ CONTROL_RESET_BUTTON_CLASS }
             >
-              {config.label}
-            </label>
+              <RotateCcw className="h-3.5 w-3.5 md:h-3 md:w-3" />
+            </button>
           )}
 
-          <span className="flex shrink-0 items-center gap-1">
-            {isModified && (
-              <button
-                type="button"
-                onClick={ handleReset }
-                tabIndex={ -1 }
-                title="Reset to saved value"
-                className={ CONTROL_RESET_BUTTON_CLASS }
-              >
-                <RotateCcw className="h-3.5 w-3.5 md:h-3 md:w-3" />
-              </button>
-            )}
-
-            {/* Driven: the switch shows the live state, so the row also
+          {/* Driven: the switch shows the live state, so the row also
                 names both — live first, then the base a click edits. */}
-            {driven && (
-              <span className="flex items-center gap-1 font-mono tabular-nums">
-                <LiveBindingValue
-                  target={ driven.target }
-                  labels={ [
-                    "off",
-                    "on"
-                  ] }
-                  fallback={ currentValue ? "on" : "off" }
-                  className="text-foreground"
-                />
-                <span className="text-label">· {currentValue ? "on" : "off"}</span>
-              </span>
-            )}
+          {driven && (
+            <span className="flex items-center gap-1 font-mono tabular-nums">
+              <LiveBindingValue
+                target={ driven.target }
+                labels={ [
+                  "off",
+                  "on"
+                ] }
+                fallback={ currentValue ? "on" : "off" }
+                className="text-foreground"
+              />
+              <span className="text-label">· {currentValue ? "on" : "off"}</span>
+            </span>
+          )}
 
-            {bindingAffordance}
+          {bindingAffordance}
 
-            <label htmlFor={ registeredName } className="cursor-pointer">
-              {renderInput()}
-            </label>
-          </span>
-        </div>
-
-        {error && (
-          <p className="text-red-500 mt-1">{error.message?.toString()}</p>
-        )}
+          <label htmlFor={ registeredName } className="cursor-pointer">
+            {renderInput()}
+          </label>
+        </span>
       </div>
-    );
+
+      {error && (
+        <p className="text-red-500 mt-1">{error.message?.toString()}</p>
+      )}
+    </div> );
   }
 
   // Components whose label can't live inside the control itself: the vector
@@ -964,177 +1002,175 @@ export default function FieldRenderer( {
     config.component === "asset" ||
     config.component === "asset-stack";
 
-  return (
-    <div
-      className={ clsx(
-        "text-sm md:text-xs",
-        learn.armed && "rounded-md outline outline-1 outline-focus outline-offset-2"
-      ) }
-      onPointerDownCapture={ handleSecondaryButtonCapture }
-      onMouseDownCapture={ handleSecondaryButtonCapture }
-      onContextMenu={ handleFieldContextMenu }
-    >
-      {/*
+  return withInactive( <div
+    className={ clsx(
+      "text-sm md:text-xs",
+      learn.armed && "rounded-md outline outline-1 outline-focus outline-offset-2"
+    ) }
+    onPointerDownCapture={ handleSecondaryButtonCapture }
+    onMouseDownCapture={ handleSecondaryButtonCapture }
+    onContextMenu={ handleFieldContextMenu }
+  >
+    {/*
         The context menu closes on click, so the field itself has to say it is
         listening — a control that does nothing otherwise reads as a fault. It
         also reports when no frames are arriving, which is the one case where
         moving a knob genuinely cannot be seen: a paused sketch publishes no
         snapshot to diff against.
       */}
-      {learn.armed && (
-        <button
-          type="button"
-          onClick={ learn.disarm }
-          className="mb-1 flex w-full items-center gap-1.5 text-left text-focus"
-        >
-          <Crosshair className="h-3 w-3 shrink-0" />
-          <span>
-            { learn.seenSignal
-              ? "Move a control to assign it"
-              : "Waiting for frames — is the sketch paused?" }
-          </span>
-        </button>
-      )}
-      {contextMenu.position && (
-        <FieldContextMenu
-          position={ contextMenu.position }
-          onClose={ contextMenu.close }
-          items={ [
-            ...( canApply
-              ? [
-                {
-                  label: config.label
-                    ? `Apply "${ config.label }" to all slides`
-                    : "Apply to all slides",
-                  icon: CopyPlus,
-                  onClick: handleApplyToAllSlides
-                }
-              ]
-              : [] ),
-            ...( canApplyHud
-              ? [
-                {
-                  label: config.label
-                    ? `Apply "${ config.label }" to all HUD layers`
-                    : "Apply to all HUD layers",
-                  icon: CopyPlus,
-                  onClick: () => applyToAllHudLayers(
+    {learn.armed && (
+      <button
+        type="button"
+        onClick={ learn.disarm }
+        className="mb-1 flex w-full items-center gap-1.5 text-left text-focus"
+      >
+        <Crosshair className="h-3 w-3 shrink-0" />
+        <span>
+          { learn.seenSignal
+            ? "Move a control to assign it"
+            : "Waiting for frames — is the sketch paused?" }
+        </span>
+      </button>
+    )}
+    {contextMenu.position && (
+      <FieldContextMenu
+        position={ contextMenu.position }
+        onClose={ contextMenu.close }
+        items={ [
+          ...( canApply
+            ? [
+              {
+                label: config.label
+                  ? `Apply "${ config.label }" to all slides`
+                  : "Apply to all slides",
+                icon: CopyPlus,
+                onClick: handleApplyToAllSlides
+              }
+            ]
+            : [] ),
+          ...( canApplyHud
+            ? [
+              {
+                label: config.label
+                  ? `Apply "${ config.label }" to all HUD layers`
+                  : "Apply to all HUD layers",
+                icon: CopyPlus,
+                onClick: () => applyToAllHudLayers(
+                  getValues,
+                  setValue,
+                  registeredName
+                )
+              }
+            ]
+            : [] ),
+          // Three groups — propagate this value, modulate this field,
+          // visualise it. The separators are written unconditionally; the
+          // menu drops the ones a missing group would leave dangling.
+          {
+            separator: true
+          } as const,
+          ...( canLearn
+            ? [
+              {
+                label: config.label
+                  ? `Learn a control for "${ config.label }"`
+                  : "Learn a control",
+                icon: Crosshair,
+                onClick: () => {
+                  // Order matters: MIDI has to be switched on BEFORE
+                  // listening, or the handler never requests access, no CC
+                  // is ever published, and the knob turns into nothing.
+                  void armLearnForField(
                     getValues,
                     setValue,
                     registeredName
-                  )
+                  );
+                  learn.arm();
                 }
-              ]
-              : [] ),
-            // Three groups — propagate this value, modulate this field,
-            // visualise it. The separators are written unconditionally; the
-            // menu drops the ones a missing group would leave dangling.
-            {
-              separator: true
-            } as const,
-            ...( canLearn
-              ? [
-                {
-                  label: config.label
-                    ? `Learn a control for "${ config.label }"`
-                    : "Learn a control",
-                  icon: Crosshair,
-                  onClick: () => {
-                    // Order matters: MIDI has to be switched on BEFORE
-                    // listening, or the handler never requests access, no CC
-                    // is ever published, and the knob turns into nothing.
-                    void armLearnForField(
-                      getValues,
-                      setValue,
-                      registeredName
-                    );
-                    learn.arm();
-                  }
-                }
-              ]
-              : [] ),
-            {
-              separator: true
-            } as const,
-            ...quickAddKinds.map( ( kind ) => ( {
-              label: config.label
-                ? `Add a ${ ITEM_META[ kind ].label.toLowerCase() } for "${ config.label }"`
-                : `Add a ${ ITEM_META[ kind ].label.toLowerCase() } for this control`,
-              icon: ITEM_META[ kind ].Icon,
-              onClick: () => addHudElementForControl(
-                getValues,
-                setValue,
-                registeredName,
-                config,
-                kind
-              )
-            } ) )
-          ] }
-        />
-      )}
-      {needsOuterLabel &&
+              }
+            ]
+            : [] ),
+          {
+            separator: true
+          } as const,
+          ...quickAddKinds.map( ( kind ) => ( {
+            label: config.label
+              ? `Add a ${ ITEM_META[ kind ].label.toLowerCase() } for "${ config.label }"`
+              : `Add a ${ ITEM_META[ kind ].label.toLowerCase() } for this control`,
+            icon: ITEM_META[ kind ].Icon,
+            onClick: () => addHudElementForControl(
+              getValues,
+              setValue,
+              registeredName,
+              config,
+              kind
+            )
+          } ) )
+        ] }
+      />
+    )}
+    {needsOuterLabel &&
         config.label &&
         !hideLabel && (
-        <div className="flex min-w-0 items-center justify-between gap-1">
-          <div className="flex min-w-0 items-center gap-1">
-            <label
-              htmlFor={ registeredName }
-              className={ `select-none truncate ${
-                isModified
-                  ? "font-medium"
-                  : "text-gray-400"
-              }` }
+      <div className="flex min-w-0 items-center justify-between gap-1">
+        <div className="flex min-w-0 items-center gap-1">
+          <label
+            htmlFor={ registeredName }
+            className={ `select-none truncate ${
+              isModified
+                ? "font-medium"
+                : "text-gray-400"
+            }` }
+          >
+            {config.label}
+          </label>
+          {isModified && (
+            <button
+              type="button"
+              onClick={ handleReset }
+              tabIndex={ -1 }
+              title="Reset to saved value"
+              className={ `shrink-0 ${ CONTROL_RESET_BUTTON_CLASS }` }
             >
-              {config.label}
-            </label>
-            {isModified && (
-              <button
-                type="button"
-                onClick={ handleReset }
-                tabIndex={ -1 }
-                title="Reset to saved value"
-                className={ `shrink-0 ${ CONTROL_RESET_BUTTON_CLASS }` }
-              >
-                <RotateCcw className="h-3.5 w-3.5 md:h-3 md:w-3" />
-              </button>
-            )}
-          </div>
-          {/* The pad's per-field actions, as one cluster: redraw the pair
+              <RotateCcw className="h-3.5 w-3.5 md:h-3 md:w-3" />
+            </button>
+          )}
+        </div>
+        {/* The pad's per-field actions, as one cluster: redraw the pair
               (or triple), then modulate it. Both are hidden with the label
               (an item-list row passes hideLabel), which is where the pad has
               no room for them anyway. */}
-          {isVectorPad && (
-            <div className="flex shrink-0 items-center gap-1">
-              <RandomizeFieldButton
-                name={ registeredName }
-                config={ config }
-              />
-              {bindingAffordance}
-            </div>
-          )}
-        </div>
-      )}
+        {isVectorPad && (
+          <div className="flex shrink-0 items-center gap-1">
+            <RandomizeFieldButton
+              name={ registeredName }
+              config={ config }
+            />
+            {bindingAffordance}
+          </div>
+        )}
+      </div>
+    )}
 
-      {inlineBinding && config.component === "palette-picker" ? (
-        // The picker unfolds a grid under its bar: the pastille is pinned to
-        // the top of the row, level with the bar, not centred on the grid.
-        <div className="flex items-start gap-1.5">
-          <div className="min-w-0 flex-1">{renderInput()}</div>
-          {bindingAffordance}
-        </div>
-      ) : inlineBinding ? (
-        <div className="flex items-center gap-1.5">
-          <div className="min-w-0 flex-1">{renderInput()}</div>
-          {bindingAffordance}
-        </div>
-      ) : (
-        renderInput()
-      )}
+    {inlineBinding && config.component === "palette-picker" ? (
+    // The picker unfolds a grid under its bar: the pastille is pinned to
+    // the top of the row, level with the bar, not centred on the grid.
+      <div className="flex items-start gap-1.5">
+        <div className="min-w-0 flex-1">{renderInput()}</div>
+        {bindingAffordance}
+      </div>
+    ) : inlineBinding ? (
+      <div className="flex items-center gap-1.5">
+        <div className="min-w-0 flex-1">{renderInput()}</div>
+        {bindingAffordance}
+      </div>
+    ) : (
+      renderInput()
+    )}
 
-      {/* Display validation errors */}
-      {error && (
-        <p className="text-red-500 mt-1">{error.message?.toString()}</p>
-      )}
-    </div>
-  );
+    {/* Display validation errors */}
+    {error && (
+      <p className="text-red-500 mt-1">{error.message?.toString()}</p>
+    )}
+  </div> );
 }

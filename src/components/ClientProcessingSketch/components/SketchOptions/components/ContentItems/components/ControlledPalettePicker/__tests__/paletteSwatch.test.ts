@@ -1,7 +1,6 @@
 import {
   paperGradient,
   rampGradient,
-  resolveRelativePath,
   transitionHalfWidth
 } from "../paletteSwatch";
 
@@ -129,45 +128,6 @@ describe(
           top: RED
         } ) ).toBe( "linear-gradient(180deg, rgb(255, 0, 0), rgb(255, 0, 0))" );
         expect( paperGradient( undefined ) ).toBeNull();
-      }
-    );
-  }
-);
-
-describe(
-  "resolveRelativePath",
-  () => {
-    it(
-      "resolves a sibling",
-      () => {
-        expect( resolveRelativePath(
-          "sketch.material.ramp.palette",
-          "stops"
-        ) ).toBe( "sketch.material.ramp.stops" );
-      }
-    );
-
-    it(
-      "climbs to the sketch scope, inside a slide too",
-      () => {
-        expect( resolveRelativePath(
-          "sketch.material.ramp.palette",
-          "../../background"
-        ) ).toBe( "sketch.background" );
-        expect( resolveRelativePath(
-          "slides.2.sketch.material.ramp.palette",
-          "../../background"
-        ) ).toBe( "slides.2.sketch.background" );
-      }
-    );
-
-    it(
-      "refuses to climb past the root",
-      () => {
-        expect( resolveRelativePath(
-          "palette",
-          "../stops"
-        ) ).toBeNull();
       }
     );
   }

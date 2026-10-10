@@ -15,6 +15,10 @@ import {
   VerticalAlign
 } from "@/types/sketch.types";
 
+import type {
+  InactiveUnless
+} from "../../../utils/resolveRelativePath";
+
 // Step 1: Define a common base for all config types
 interface BaseConfig {
   label?: string; // Label is often optional (e.g., inside a group)
@@ -34,6 +38,13 @@ interface BaseConfig {
    * unconditionally.
    */
   managed?: boolean;
+  /**
+   * Grey this field out (and make it inert) while another field does not hold
+   * a given value — for a control whose value something else overrides, like
+   * the colour stops a palette preset replaces. `field` is relative to this
+   * field's parent (`"palette"` for a sibling, `"material/ramp/palette"` from `sketch.background`).
+   */
+  inactiveUnless?: InactiveUnless;
   /**
    * A control this field follows by default, declared by the sketch rather than
    * authored by the user: `binding: { control: "knob.1" }`.
