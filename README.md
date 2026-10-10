@@ -98,7 +98,7 @@ npm run build               # compiles every sketch route — catches broken imp
 
 ## Driving it from Claude (MCP)
 
-`scripts/mcp/sketchbook-mcp.ts` is an MCP server over stdio: Claude (or any MCP client) can list the sketches, read their parameters, **render a frame and look at it**, queue a video and fetch the MP4. It drives a running Sketchbook over its public routes and renders single frames itself in headless Chromium, so start the app first (`npm run dev`, or point it at a deployment). Node ≥ 22.18 runs it straight from TypeScript.
+`scripts/mcp/sketchbook-mcp.ts` is an MCP server over stdio: Claude (or any MCP client) can list the sketches, read their parameters, compose a whole piece (text, images, sound, slides) as a draft, **render frames and look at them**, record the MP4 and fetch it. It drives a running Sketchbook over its public routes and renders single frames itself in headless Chromium, so start the app first (`npm run dev`, or point it at a deployment). Node ≥ 22.18 runs it straight from TypeScript.
 
 ```bash
 claude mcp add sketchbook -- node "$PWD/scripts/mcp/sketchbook-mcp.ts"
@@ -110,7 +110,7 @@ claude mcp add \
   sketchbook -- node "$PWD/scripts/mcp/sketchbook-mcp.ts"
 ```
 
-Three tools, the same three as Atelier's: `sketchbook_status`, `sketchbook_commands` (every command with its JSON Schema and whether it can run now) and `sketchbook_run` (`{ command, params }`). The commands: `app.status`, `sketches.list`, `sketches.describe`, `render.frame`, `render.video`, `jobs.get`, `jobs.wait`, `jobs.result`. A parameter outside its control's range is refused, never clamped. Videos need the recording infra (`docker-compose up -d redis minio postgres`); frames do not. `PW_CHROMIUM` points it at a Chromium binary when Playwright's own is not installed. Decisions and traps: `docs/memory/agent-commands.md`.
+Three tools, the same three as Atelier's: `sketchbook_status`, `sketchbook_commands` (every command with its JSON Schema and whether it can run now) and `sketchbook_run` (`{ command, params }`). The commands: `sketches.list` / `sketches.describe` (a sketch's parameters as a schema), `options.schema` (the rest of a piece: size, clock, text/image/HUD content items, slides), `render.frame` and `render.stills` (pictures the agent sees, saved full size), `drafts.create` / `drafts.update` / `drafts.get` / `drafts.copy` (a whole piece with uploaded images, video and sound, stored on the server like the studio's Save draft), `render.video`, `jobs.wait` / `jobs.result` / `jobs.list` / `jobs.cancel`, `app.status`. A parameter outside its control's range is refused, never clamped. Drafts and videos need the recording infra (`docker-compose up -d redis minio postgres`); frames of a sketch do not. `PW_CHROMIUM` points it at a Chromium binary when Playwright's own is not installed. Decisions and traps: `docs/memory/agent-commands.md`.
 
 ## Useful Commands
 

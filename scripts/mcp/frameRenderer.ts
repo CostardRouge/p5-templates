@@ -1,16 +1,21 @@
 /**
- * One frame of a sketch, rendered the way the recorder renders it, for an
- * agent to look at.
+ * Frames of a sketch, rendered the way the recorder renders them, for an agent
+ * to look at.
  *
- * Headless Chromium opens the PUBLIC `/embed/<id>` route with the parameter
- * delta in `#o=` and the canvas size in `s=` (the contract
- * `src/lib/embedOptions.ts` documents), then drives the page's
- * `window.__sketchCapture` exactly as `src/lib/recordSketch.ts` does —
- * `prepare()`, `renderFrame( i )`, read the surface — so frame `i` here is
+ * Headless Chromium opens a page that runs the sketch — the PUBLIC `/embed`
+ * route with a parameter delta in `#o=` and the size in `s=` (the contract
+ * `src/lib/embedOptions.ts` documents), or a draft's studio page,
+ * `/sketches/<id>?id=<draft>&capturing`, exactly the page the recorder loads —
+ * then drives `window.__sketchCapture` as `src/lib/recordSketch.ts` does:
+ * `prepare()`, `renderFrame( i )`, read the surface. So frame `i` here is
  * frame `i` of an export. `scripts/bench-sketch.mjs` is the same recipe.
  *
+ * Several frames come from ONE page load (the costly part is loading and
+ * compiling the sketch, not drawing it), and are handed back as one contact
+ * sheet so the agent sees the whole series at once.
+ *
  * One browser is kept for the life of the MCP server (a cold Chromium costs a
- * second or two), one context per frame (nothing leaks between renders).
+ * second or two), one context per request (nothing leaks between renders).
  */
 import fs from "node:fs/promises";
 
@@ -18,24 +23,26 @@ import type {
   Browser
 } from "playwright";
 
-export interface FrameRequest {
-  /** `<engine>/<category>/<name>`. */
-  id: string;
-  /** Parameter delta over the sketch's defaults (already checked). */
-  options: Record<string, unknown>;
-  /** Canvas size; absent → the sketch's own. */
-  size?: { width: number;
-    height: number };
-  /** Exactly one of these places the frame; none → frame 0. */
+/** Exactly one of these places a frame; none → frame 0. */
+export interface FramePlacement {
   frame?: number;
   time?: number;
   progress?: number;
+}
+
+export interface FrameRequest {
+  /** The page to open: `embedUrl(…)` or a draft's capture URL. */
+  url: string;
+  /** The browser window; the canvas keeps its own size whatever this is. */
+  viewport: { width: number;
+    height: number };
+  placements: FramePlacement[];
   format: "jpeg" | "png";
-  /** Longest edge of the picture handed back (the saved file stays full size). */
+  /** Longest edge of the picture handed back (saved files stay full size). */
   maxEdge: number;
-  /** Write the full-size PNG here. */
-  savePath?: string;
-  /** Live frames to let land before the clock is pinned (shader compile, image decode). */
+  /** One full-size PNG path per placement, or none. */
+  savePaths?: string[];
+  /** Live time before the clock is pinned (shader compile, image decode). */
   settleMs: number;
   timeoutMs: number;
 }
@@ -48,13 +55,14 @@ export interface FrameTiming {
 
 export interface FrameResult {
   mimeType: "image/jpeg" | "image/png";
+  /** One frame, or a contact sheet of all of them in order. */
   data: string;
   width: number;
   height: number;
-  /** The canvas's own size, before `maxEdge`. */
+  /** The canvas's own size. */
   sourceWidth: number;
   sourceHeight: number;
-  frame: number;
+  frames: number[];
   timing: FrameTiming | null;
   url: string;
   /** Console errors and page errors seen while rendering. */
@@ -62,18 +70,19 @@ export interface FrameResult {
 }
 
 /**
- * The frame index a request asks for, given the page's clock. Out of the loop
- * is refused (an agent asking for second 20 of a 12 s loop should hear that the
- * loop is 12 s long), not wrapped. Throws a plain `Error` with the reason.
+ * The frame index a placement asks for, given the page's clock. Out of the
+ * loop is refused (an agent asking for second 20 of a 12 s loop should hear
+ * that the loop is 12 s long), not wrapped. Throws a plain `Error` with the
+ * reason.
  */
 export function frameIndexFor(
-  request: Pick<FrameRequest, "frame" | "time" | "progress">, timing: FrameTiming | null
+  request: FramePlacement, timing: FrameTiming | null
 ): number {
   const given = [
     "frame",
     "time",
     "progress"
-  ].filter( ( k ) => request[ k as keyof typeof request ] !== undefined );
+  ].filter( ( k ) => request[ k as keyof FramePlacement ] !== undefined );
 
   if ( given.length > 1 ) {
     throw new Error( `give one of frame, time, progress — got ${ given.join( " and " ) }` );
@@ -98,6 +107,11 @@ export function frameIndexFor(
   }
 
   return index;
+}
+
+/** Is this message one of `frameIndexFor`'s refusals (the request's fault, not the render's)? */
+export function isPlacementRefusal( message: string ): boolean {
+  return /^(give one of|frame \d+ is past|this server does not report)/.test( message );
 }
 
 /** The `#o=` token: base64url of the JSON delta (`encodeEmbedOptions`). */
@@ -126,6 +140,36 @@ export function embedUrl(
   ) }/embed/${ id }#${ hash.join( "&" ) }`;
 }
 
+/** The page the recorder itself loads for a stored job (`recordSketch.ts`). */
+export function draftUrl(
+  baseUrl: string, sketchPath: string, draftId: string
+): string {
+  return `${ baseUrl.replace(
+    /\/+$/,
+    ""
+  ) }/${ sketchPath.replace(
+    /^\/+/,
+    ""
+  ) }?id=${ encodeURIComponent( draftId ) }&capturing`;
+}
+
+/** Columns × rows for a contact sheet of `count` cells: as square as it gets. */
+export function sheetGrid( count: number ): { columns: number;
+  rows: number } {
+  const columns = Math.ceil( Math.sqrt( Math.max(
+    1,
+    count
+  ) ) );
+
+  return {
+    columns,
+    rows: Math.ceil( Math.max(
+      1,
+      count
+    ) / columns )
+  };
+}
+
 async function chromiumPath(): Promise<string | undefined> {
   if ( process.env.PW_CHROMIUM ) {
     return process.env.PW_CHROMIUM;
@@ -142,11 +186,6 @@ async function chromiumPath(): Promise<string | undefined> {
 
 export class FrameRenderer {
   private browser: Promise<Browser> | null = null;
-  private readonly baseUrl: string;
-
-  constructor( baseUrl: string ) {
-    this.baseUrl = baseUrl;
-  }
 
   private launch(): Promise<Browser> {
     if ( !this.browser ) {
@@ -184,17 +223,8 @@ export class FrameRenderer {
 
   async render( request: FrameRequest ): Promise<FrameResult> {
     const browser = await this.launch();
-    const url = embedUrl(
-      this.baseUrl,
-      request.id,
-      request.options,
-      request.size
-    );
     const context = await browser.newContext( {
-      viewport: request.size ?? {
-        width: 1080,
-        height: 1350
-      },
+      viewport: request.viewport,
       deviceScaleFactor: 1
     } );
     const problems: string[] = [];
@@ -205,7 +235,7 @@ export class FrameRenderer {
       page.on(
         "console",
         ( message ) => {
-        // A blocked third-party resource is the network, not the sketch.
+          // A blocked third-party resource is the network, not the sketch.
           if ( message.type() === "error" && !/Failed to load resource: net::/.test( message.text() ) ) {
             problems.push( `console.error: ${ message.text() }` );
           }
@@ -219,99 +249,131 @@ export class FrameRenderer {
       );
 
       await page.goto(
-        url,
+        request.url,
         {
           waitUntil: "domcontentloaded",
           timeout: request.timeoutMs
         }
       );
-      await page.waitForFunction(
-        () => {
-          const controller = window.__sketchCapture;
+      try {
+        await page.waitForFunction(
+          () => {
+            const controller = window.__sketchCapture;
 
-          return Boolean( controller ) && Boolean( document.querySelector( controller!.surfaceSelector ) )
-            && ( window.isInteractionVisionReady?.() ?? true );
-        },
-        null,
-        {
-          timeout: request.timeoutMs
+            return Boolean( controller ) && Boolean( document.querySelector( controller!.surfaceSelector ) )
+              && ( window.isInteractionVisionReady?.() ?? true );
+          },
+          null,
+          {
+            timeout: request.timeoutMs
+          }
+        );
+      } catch( error ) {
+        // A page that throws while it loads never becomes ready: say why
+        // rather than only that the wait ran out.
+        if ( problems.length ) {
+          throw new Error( `the page never became ready — it reported: ${ problems.slice(
+            0,
+            3
+          ).join( " | " ) }` );
         }
-      );
+        throw error;
+      }
       await page.waitForTimeout( request.settleMs );
 
       const timing = await page.evaluate( () => window.__sketchCapture?.timing?.() ?? null );
-      const frame = frameIndexFor(
-        request,
+      const frames = request.placements.map( ( placement ) => frameIndexFor(
+        placement,
         timing
-      );
-      const captured = await page.evaluate(
-        async( index ) => {
-          const controller = window.__sketchCapture!;
+      ) );
+      const pngs: string[] = [];
 
-          controller.prepare();
-          await controller.renderFrame( index );
+      await page.evaluate( () => window.__sketchCapture!.prepare() );
 
-          if ( controller.captureKind !== "canvas" ) {
-            return null;
-          }
+      for ( const frame of frames ) {
+        const captured = await page.evaluate(
+          async( index ) => {
+            const controller = window.__sketchCapture!;
 
-          const canvas = document.querySelector( controller.surfaceSelector ) as HTMLCanvasElement;
+            await controller.renderFrame( index );
 
-          return canvas.toDataURL( "image/png" ).replace(
-            /^data:image\/png;base64,/,
-            ""
-          );
-        },
-        frame
-      );
-      const png = captured ?? ( await page.locator( await page.evaluate( () => window.__sketchCapture!.surfaceSelector ) ).first()
-        .screenshot( {
-          type: "png"
-        } ) ).toString( "base64" );
+            if ( controller.captureKind !== "canvas" ) {
+              return null;
+            }
 
-      if ( request.savePath ) {
-        await fs.writeFile(
-          request.savePath,
-          Buffer.from(
-            png,
-            "base64"
-          )
+            const canvas = document.querySelector( controller.surfaceSelector ) as HTMLCanvasElement;
+
+            return canvas.toDataURL( "image/png" ).replace(
+              /^data:image\/png;base64,/,
+              ""
+            );
+          },
+          frame
         );
+        const png = captured ?? ( await page.locator( await page.evaluate( () => window.__sketchCapture!.surfaceSelector ) ).first()
+          .screenshot( {
+            type: "png"
+          } ) ).toString( "base64" );
+
+        pngs.push( png );
       }
 
-      // Scale and re-encode in the page: Chromium is already the image library at hand.
+      if ( request.savePaths ) {
+        await Promise.all( request.savePaths.map( (
+          file, i
+        ) => fs.writeFile(
+          file,
+          Buffer.from(
+            pngs[ i ],
+            "base64"
+          )
+        ) ) );
+      }
+
+      // Scale, tile and re-encode in the page: Chromium is already the image library at hand.
       const picture = await page.evaluate(
         async( {
-          source, maxEdge, mimeType
+          sources, maxEdge, mimeType, columns, rows
         } ) => {
-          const image = new Image();
+          const images = await Promise.all( sources.map( async( source ) => {
+            const image = new Image();
 
-          image.src = `data:image/png;base64,${ source }`;
-          await image.decode();
+            image.src = `data:image/png;base64,${ source }`;
+            await image.decode();
 
+            return image;
+          } ) );
+          const cellWidth = images[ 0 ].naturalWidth;
+          const cellHeight = images[ 0 ].naturalHeight;
+          const gap = images.length > 1 ? Math.round( Math.max(
+            cellWidth,
+            cellHeight
+          ) * 0.02 ) : 0;
+          const fullWidth = columns * cellWidth + ( columns - 1 ) * gap;
+          const fullHeight = rows * cellHeight + ( rows - 1 ) * gap;
           const scale = Math.min(
             1,
             maxEdge / Math.max(
-              image.naturalWidth,
-              image.naturalHeight
+              fullWidth,
+              fullHeight
             )
           );
           const canvas = document.createElement( "canvas" );
 
           canvas.width = Math.max(
             1,
-            Math.round( image.naturalWidth * scale )
+            Math.round( fullWidth * scale )
           );
           canvas.height = Math.max(
             1,
-            Math.round( image.naturalHeight * scale )
+            Math.round( fullHeight * scale )
           );
 
           const ctx = canvas.getContext( "2d" )!;
 
-          if ( mimeType === "image/jpeg" ) {
-          // JPEG has no alpha: a transparent sketch reads against white, as a viewer would show it.
-            ctx.fillStyle = "#fff";
+          // JPEG has no alpha, and a sheet has gaps: both read against mid grey.
+          if ( mimeType === "image/jpeg" || images.length > 1 ) {
+            ctx.fillStyle = images.length > 1 ? "#808080" : "#fff";
             ctx.fillRect(
               0,
               0,
@@ -319,13 +381,20 @@ export class FrameRenderer {
               canvas.height
             );
           }
-          ctx.drawImage(
-            image,
-            0,
-            0,
-            canvas.width,
-            canvas.height
-          );
+          images.forEach( (
+            image, i
+          ) => {
+            const column = i % columns;
+            const row = Math.floor( i / columns );
+
+            ctx.drawImage(
+              image,
+              Math.round( column * ( cellWidth + gap ) * scale ),
+              Math.round( row * ( cellHeight + gap ) * scale ),
+              Math.round( cellWidth * scale ),
+              Math.round( cellHeight * scale )
+            );
+          } );
 
           return {
             data: canvas.toDataURL(
@@ -337,23 +406,24 @@ export class FrameRenderer {
             ),
             width: canvas.width,
             height: canvas.height,
-            sourceWidth: image.naturalWidth,
-            sourceHeight: image.naturalHeight
+            sourceWidth: cellWidth,
+            sourceHeight: cellHeight
           };
         },
         {
-          source: png,
+          sources: pngs,
           maxEdge: request.maxEdge,
-          mimeType: request.format === "png" ? "image/png" : "image/jpeg"
+          mimeType: request.format === "png" ? "image/png" : "image/jpeg",
+          ...sheetGrid( pngs.length )
         }
       );
 
       return {
         mimeType: request.format === "png" ? "image/png" : "image/jpeg",
         ...picture,
-        frame,
+        frames,
         timing,
-        url,
+        url: request.url,
         problems
       };
     } finally {

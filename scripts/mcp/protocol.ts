@@ -34,7 +34,8 @@ export const SERVER_INFO = {
 const INSTRUCTIONS = [
   "Sketchbook renders creative-coding sketches (p5.js, GSAP, Three.js) and exports them as images and MP4s.",
   "Start with sketchbook_status, then sketchbook_commands for what you can do.",
-  "Typical path: sketches.list → sketches.describe (parameters as JSON Schema) → render.frame to LOOK at a variation (it answers an image) → render.video → jobs.wait → jobs.result.",
+  "Quick path: sketches.list → sketches.describe (parameters as JSON Schema) → render.frame to LOOK at a variation (it answers an image) → render.video → jobs.wait → jobs.result.",
+  "Whole piece: options.schema (size, clock, text/image/HUD content items, slides) → drafts.create with your media files → render.frame / render.stills { draft } to look → drafts.update until it is right → render.video { draft } → jobs.wait → jobs.result.",
   "Parameters outside a control's range are refused, never clamped: the error names the field and its bounds."
 ].join( " " );
 

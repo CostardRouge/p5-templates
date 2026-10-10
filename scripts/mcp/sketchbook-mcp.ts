@@ -31,6 +31,9 @@ import {
   createCommands
 } from "./commands.ts";
 import {
+  MEDIA_EXTENSIONS, mediaKind
+} from "./drafts.ts";
+import {
   FrameRenderer
 } from "./frameRenderer.ts";
 import {
@@ -56,7 +59,8 @@ const outputDir = process.env.SKETCHBOOK_OUTPUT_DIR ?? path.join(
   os.tmpdir(),
   "sketchbook-mcp"
 );
-const frames = new FrameRenderer( baseUrl );
+const MAX_MEDIA_BYTES = 500e6;
+const frames = new FrameRenderer();
 const registry = createCommandRegistry();
 
 function log( ...parts: unknown[] ): void {
@@ -97,6 +101,29 @@ registry.register( createCommands( {
   },
   renderFrame: ( request ) => frames.render( request ),
   outputDir,
+  // Only media, and not without bound: an agent could otherwise be talked
+  // into uploading any file this user can read to a public server.
+  readMedia: async( file ) => {
+    const resolved = path.resolve( file );
+
+    if ( !mediaKind( resolved ) ) {
+      throw new Error( `${ file } is not a media file — ${ MEDIA_EXTENSIONS.join( ", " ) }` );
+    }
+
+    const stat = await fs.stat( resolved );
+
+    if ( !stat.isFile() ) {
+      throw new Error( `${ file } is not a file` );
+    }
+    if ( stat.size > MAX_MEDIA_BYTES ) {
+      throw new Error( `${ file } is ${ Math.round( stat.size / 1e6 ) } MB, over the ${ MAX_MEDIA_BYTES / 1e6 } MB a draft takes` );
+    }
+
+    return {
+      bytes: new Uint8Array( await fs.readFile( resolved ) ),
+      name: path.basename( resolved )
+    };
+  },
   writeFile: async(
     file, bytes
   ) => {
