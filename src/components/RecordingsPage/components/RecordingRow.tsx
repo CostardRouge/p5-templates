@@ -145,7 +145,10 @@ export default function RecordingRow( {
       </td>
 
       <td className="px-2 py-2 sm:px-4 sm:py-3">
-        <StatusBadge status={ job.status } />
+        <StatusBadge
+          status={ job.status }
+          reason={ job.error }
+        />
       </td>
 
       <td className="px-2 py-2 sm:px-4 sm:py-3">

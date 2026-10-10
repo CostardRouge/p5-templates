@@ -184,10 +184,12 @@ describe(
           new Error( "job stalled more than allowable limit" )
         );
 
+        // The reason is kept on the row too — the stall's own message here.
         expect( mockedUpdateJob ).toHaveBeenCalledWith(
           JOB_ID,
           {
-            status: "failed"
+            status: "failed",
+            error: "job stalled more than allowable limit"
           }
         );
       }
