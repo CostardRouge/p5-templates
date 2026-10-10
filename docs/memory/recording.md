@@ -26,6 +26,21 @@ Read before touching capture, the job queue, the Playwright/FFmpeg path or how a
 
 2026-10-10 — The row used to say only `failed`; the reason was in the server log and the progression step misled (an FFmpeg failure read "failed during uploading"). Every failure write — `recordSketch`, `runRecording`, the worker's processor catch and its `failed` handler (the only place a stall past `maxStalledCount` is seen) — now stores `jobFailureReason( error )` (`src/lib/jobFailure.ts`), and `updateJob` clears `error` whenever it sets any other status (`withFailureReasonRule`), so retry, start and completion never show a stale reason. The recordings page shows it as the failed badge's tooltip; the agent's `jobs.get` answers it. **How to apply**: a new failure path passes `error: jobFailureReason( error )` with `status: "failed"`; never store `error.stack` or raw stderr — the row is public (`security.md`).
 
+## Front vs back, measured (2026-10-10)
+
+`scripts/bench-recording.mjs` in the cloud container (SwiftShader, software WebCodecs, VP9 — Playwright's Chromium has no H.264 encoder), ms per frame:
+
+| | voronoi 1080×1350 | ping-pong 1080×1350 | dragon-corridor (Three.js) 540×676 |
+| --- | --- | --- | --- |
+| draw only | 32 | 11 | 1071 |
+| back: PNG → FFmpeg | 137 (78 in `toDataURL`) | 97 (60) | 1129 |
+| back: JPEG → FFmpeg | 125 | 93 | 1008 |
+| back: raw RGBA → FFmpeg | 368 (transfer 170) | 290 | — |
+| front: WebCodecs (software VP9) | 105 | 81 | 1086 |
+| back: real job as shipped | 257 | 182 | 1617 |
+
+What it settles: (1) for a 2D sketch the PNG readback is the single largest cost of the backend path, and neither JPEG (−10 %) nor raw pixels (3× worse: base64 over the DevTools protocol) fixes it — the fix is not to leave the page; (2) for a shader sketch the DRAW is everything and the pipeline is noise — a server without a GPU renders WebGL in software at ~1 s a frame at half size, whatever encodes it; (3) the shipped job costs +50–90 % over its own mechanism (browser launch, cold page, the 10 ms wait per frame, upload, thumbnail). **How to apply**: do not optimise the FFmpeg path for speed; the backend's speed is bounded by the server's GPU. The front column here is the worst case — rerun with `--gpu` (and `PW_CHROMIUM` pointing at a Chrome with H.264) on a real machine before quoting front numbers.
+
 ## Multi-slide recordings produce arrays
 
 2026-08-20 — A sketch with `options.slides` records one video per slide, so a job's `videoUrls` and `thumbnails` are arrays even for the single-slide case (`recordSketch.ts` writes a one-element array). Between slides the recorder re-navigates and waits on a `[data-slide="<n>"]` selector — deliberately engine-agnostic: p5 sets that attribute on its canvas, DOM engines on their root element. Per-slide settings are the slide's override merged over the sketch's animation config. **How to apply**: never assume a single video URL when consuming a job. If a new engine is added, it must set `data-slide` or multi-slide capture will hang waiting for a selector that never appears.
