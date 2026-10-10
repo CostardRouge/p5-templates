@@ -1,8 +1,17 @@
 "use client";
 
 import {
+  useMemo, useSyncExternalStore
+} from "react";
+import {
   useWatch
 } from "react-hook-form";
+import {
+  getDeclaredTargetsKey, subscribeDeclaredTargets
+} from "@/lib/channelBridge";
+import {
+  getDeclaredBindings
+} from "@/lib/declaredBindings";
 import {
   selectActiveBindings
 } from "@/p5/utils/interaction/bindings.js";
@@ -44,6 +53,8 @@ export type FieldBindingState = {
   /** Colour: the last playing layer's two-stop ramp, `[r, g, b, a]` bytes. */
   ramp: { from: number[];
     to: number[] } | null;
+  /** The sketch-declared controls driving the field (`knob.1`, …), if any. */
+  declared: string[];
 };
 
 type Span = { min: number;
@@ -158,8 +169,13 @@ export function describeFieldBinding(
     }
   }
 
+  const declared = playing
+    .filter( ( binding ) => typeof binding.id === "string" && binding.id.startsWith( "declared:" ) )
+    .map( ( binding ) => String( binding.control ?? binding.source ) );
+
   return {
     target,
+    declared,
     bound: own.length > 0,
     live: playing.length > 0,
     range,
@@ -178,6 +194,50 @@ export function describeFieldBinding(
 }
 
 /**
+ * The bindings the SKETCH declared on `target` that the engine resolved this
+ * session — a `binding: { control }` on the field, wired because the connected
+ * port maps that control. Never in the form, so the field's own outline would
+ * not see them; the engine says which resolved (`publishDeclaredTargets`), and
+ * the editor still holds their mapping (`getDeclaredBindings`). Shaped like the
+ * engine builds them — same derived id, declared first — so the outline folds
+ * them exactly as the resolver does. Re-renders only when that set changes.
+ */
+export function useResolvedDeclared( target: string | null ): Binding[] {
+  const key = useSyncExternalStore(
+    subscribeDeclaredTargets,
+    getDeclaredTargetsKey,
+    () => ""
+  );
+
+  return useMemo(
+    () => {
+      if ( !target || !key.split( "\n" ).includes( target ) ) {
+        return [];
+      }
+
+      return getDeclaredBindings().bindings
+        .filter( ( entry ) => entry.target === target )
+        .map( ( entry ) => ( {
+          id: `declared:${ entry.control }:${ entry.target }`,
+          source: entry.control,
+          control: entry.control,
+          target: entry.target,
+          kind: entry.kind,
+          mapping: entry.mapping,
+          smoothing: entry.smoothing,
+          enabled: true,
+          weight: 1,
+          blend: "replace"
+        } as Binding ) );
+    },
+    [
+      key,
+      target
+    ]
+  );
+}
+
+/**
  * The binding outline of the field at `fieldPath`, or null when the field
  * cannot be bound (plugin off, or not a sketch parameter). Watches the same
  * `interactive.bindings` array the pastille edits, so the control and the
@@ -189,13 +249,19 @@ export default function useFieldBinding( fieldPath: string | null ): FieldBindin
   const bindings = useWatch( {
     name: scope ? `${ interactiveScopeFor( scope ) }.bindings` : "__no_bindings__"
   } ) as Binding[] | undefined;
+  const declared = useResolvedDeclared( target );
 
   if ( !scope || !target ) {
     return null;
   }
 
   return describeFieldBinding(
-    bindings,
+    declared.length > 0
+      ? [
+        ...declared,
+        ...( Array.isArray( bindings ) ? bindings : [] )
+      ]
+      : bindings,
     target
   );
 }

@@ -101,6 +101,10 @@ option store.
   `collectDeclaredBindings` follows only the LIVE branch of a `conditional-group`;
   walking every branch would let two claim the same knob.
 
+## A declared control needs a PICKABLE port
+
+2026-10-10 — A declaration resolves only once a specific MIDI input is picked (`deviceId`; "" listens to every input and names no port), so a sketch that declares controls must expose the MIDI section in its interaction panel. Both camera-rig sculpts (`sculpt-v2-letter-relief`, `sculpt-v4-sphere`, the only declaring sketches) shipped a trimmed panel without it, which made their `knob.1`–`knob.4` unreachable; they now carry `midi: interactionFormConfiguration.fields.midi`. **How to apply**: a new sketch that declares a `binding: { control }` keeps the MIDI fields in its panel. Verifying one: the Web MIDI stub above, then Input sources → MIDI → Enabled + pick the stub's id in "Input device", then push CCs — under SwiftShader a sculpt takes 30 s+ before the engine's own `requestMIDIAccess` runs (the device picker's call comes first), so poll the stub's `onmidimessage` before sweeping.
+
 ## The MIDI port decides the map — there is no mode to detect
 
 2026-09-17 — `@/p5/utils/interaction/controllerMap.js` maps a **port name** to

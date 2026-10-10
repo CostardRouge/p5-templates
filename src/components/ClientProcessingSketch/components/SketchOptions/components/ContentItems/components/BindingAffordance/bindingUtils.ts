@@ -67,6 +67,9 @@ export type BlendMode =
 export type Binding = {
   id?: string;
   source: string;
+  /** An abstract control (`knob.1`) the connected port resolves to `source` —
+   *  set by a learn, or by a sketch's own declaration. */
+  control?: string;
   project?: string;
   target: string;
   kind: BindingKind;

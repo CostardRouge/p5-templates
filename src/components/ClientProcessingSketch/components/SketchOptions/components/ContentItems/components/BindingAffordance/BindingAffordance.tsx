@@ -41,7 +41,7 @@ import {
 } from "@/p5/utils/interaction/bindings.js";
 import BindingGlyph from "./BindingGlyph";
 import {
-  describeFieldBinding
+  describeFieldBinding, useResolvedDeclared
 } from "./useFieldBinding";
 import ControlledColorInput from "../ControlledColorInput/ControlledColorInput";
 import {
@@ -344,6 +344,10 @@ export default function BindingAffordance( {
     selLayer,
     setSelLayer
   ] = React.useState( 0 );
+
+  // A control the sketch itself declared on this field, wired because the
+  // connected port maps it: never in the form, but it drives the field.
+  const declared = useResolvedDeclared( target );
 
   // Off unless the interaction-bindings plugin is enabled, and only for sketch
   // parameters (so non-bindable panels — size, animation, … — show nothing).
@@ -813,15 +817,27 @@ export default function BindingAffordance( {
   const category = sourceCategory( binding?.source );
   // The glyph speaks for the field, not for the layer being edited: driven as
   // soon as any layer on it plays, whichever one the popover has selected.
-  const playing = describeFieldBinding(
-    list,
+  const outline = describeFieldBinding(
+    [
+      ...declared,
+      ...list
+    ],
     target
-  ).live;
+  );
+  const playing = outline.live;
+  // Declared and nothing hand-made: the glyph says driven, the title says by
+  // what — and that a modulation added here would play on top of it (a
+  // hand-authored layer lands last in the fold, so it wins).
+  const title = bound
+    ? "Edit modulation"
+    : outline.declared.length > 0
+      ? `Driven by ${ outline.declared.join( ", " ) } (declared by the sketch) — click to add your own modulation`
+      : "Modulate this parameter";
 
   return (
     <Popover className="relative shrink-0">
       <PopoverButton
-        title={ bound ? "Edit modulation" : "Modulate this parameter" }
+        title={ title }
         onClick={ () => {
           // First click on an unbound field creates the first layer AND opens
           // the popover (no preventDefault) so it can be configured immediately.

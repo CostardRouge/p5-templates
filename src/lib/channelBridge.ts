@@ -388,6 +388,52 @@ export function subscribeBindingValues( cb: ValueSubscriber ): () => void {
   };
 }
 
+// ── Declared bindings the engine actually resolved ──────────────────────────
+// A sketch declares `binding: { control: "knob.1" }` on a field; the engine
+// turns it into a binding only while the connected port maps that control.
+// The editor needs to know WHICH fields that leaves driven, to give them the
+// same live treatment as a hand-made binding — and only the engine knows,
+// because only it has the port name. A set that changes on a plug or a port
+// switch, never per frame, so subscribers re-render only on a real change.
+
+let declaredTargetsKey = "";
+const declaredTargetSubscribers = new Set<() => void>();
+
+/** The targets of the declared bindings resolved this frame. */
+export function publishDeclaredTargets( targets: string[] ): void {
+  const key = [
+    ...new Set( targets )
+  ].sort().join( "\n" );
+
+  if ( key === declaredTargetsKey ) {
+    return;
+  }
+
+  declaredTargetsKey = key;
+
+  for ( const subscriber of declaredTargetSubscribers ) {
+    try {
+      subscriber();
+    } catch {
+      // A subscriber must never break the publish loop.
+    }
+  }
+}
+
+/** A stable string snapshot of the resolved declared targets (one per line). */
+export function getDeclaredTargetsKey(): string {
+  return declaredTargetsKey;
+}
+
+/** Notified when the set of resolved declared targets changes. */
+export function subscribeDeclaredTargets( cb: () => void ): () => void {
+  declaredTargetSubscribers.add( cb );
+
+  return () => {
+    declaredTargetSubscribers.delete( cb );
+  };
+}
+
 /**
  * The name of the MIDI input the engine is listening to, or "" when none is
  * picked (or every input is, which is the same as none for a controller map).

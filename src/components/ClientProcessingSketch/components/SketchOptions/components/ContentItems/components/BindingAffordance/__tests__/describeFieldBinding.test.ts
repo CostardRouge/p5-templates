@@ -43,7 +43,8 @@ describe(
           range: null,
           values: null,
           area: null,
-          ramp: null
+          ramp: null,
+          declared: []
         } );
       }
     );
@@ -175,6 +176,59 @@ describe(
             min: -0.5,
             max: 1
           }
+        } );
+      }
+    );
+
+    it(
+      "names the sketch-declared controls driving the field, folded like any layer",
+      () => {
+        const declared: Binding = {
+          id: "declared:knob.1:camera.tilt",
+          source: "knob.1",
+          control: "knob.1",
+          target: "camera.tilt",
+          kind: "continuous",
+          mapping: {
+            min: 0,
+            max: 90
+          }
+        };
+
+        const alone = describeFieldBinding(
+          [
+            declared
+          ],
+          "camera.tilt"
+        );
+
+        expect( alone.live ).toBe( true );
+        expect( alone.declared ).toEqual( [
+          "knob.1"
+        ] );
+        expect( alone.range ).toEqual( {
+          min: 0,
+          max: 90
+        } );
+
+        // A solo on a hand-made binding elsewhere silences it, as in the
+        // resolver, whose list holds both.
+        expect( describeFieldBinding(
+          [
+            declared,
+            osc(
+              "camera.spin",
+              0,
+              1,
+              {
+                solo: true
+              }
+            )
+          ],
+          "camera.tilt"
+        ) ).toMatchObject( {
+          live: false,
+          declared: []
         } );
       }
     );
