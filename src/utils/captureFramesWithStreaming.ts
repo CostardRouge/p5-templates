@@ -138,8 +138,10 @@ export async function captureFramesWithStreaming( {
         frameIndex
       );
 
-      // Small delay to ensure frame is rendered
-      await page.waitForTimeout( 10 );
+      // No wait here: `renderFrame` resolves once the engine has drawn (a
+      // canvas engine draws synchronously, the DOM engine awaits its layout),
+      // and an element screenshot renders the page itself. A fixed sleep only
+      // added its own length to every frame.
 
       // Grab the frame (canvas pixels or DOM screenshot per engine).
       const frameBuffer = await readCaptureFrame(
