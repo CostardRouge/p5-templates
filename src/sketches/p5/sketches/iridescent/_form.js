@@ -31,12 +31,146 @@
 // Named looks for the ramp, picked in `ramp.palette` with the palette picker
 // (a grid of swatches, `palette-picker` in the form). Picking one REPLACES the stops,
 // the band hardness and the background (its `paper`); "custom" keeps the
-// form's own stops and background. The riso four use Risograph ink colours
+// form's own stops and background. The two classics keep the house looks
+// reachable from the grid: `rainbow` is the peaks originals' `colors.rainbow`
+// (RGB sin / cos sweeps, sampled at twelve steps, soft) on their black, and
+// `iridescent` the ramp first read off the reference video, which the custom
+// look starts from but stops being once its stops are edited. The riso four use Risograph ink colours
 // (fluorescent pink, blue, yellow, teal, orange, federal blue, mint, aqua,
 // sunflower, bright red, burgundy, purple, medium blue) plus the paper as an
 // unprinted stop and an overprint mix, with near-flat bands — pair them with
 // `finish.grain` for the stipple of a real print.
 export const PALETTES = {
+  rainbow: {
+    label: "Rainbow",
+    group: "Classics",
+    description: "The peaks sketches' own colors.rainbow — sin / cos sweeps of red, green and blue — sampled at twelve steps, on black",
+    stops: [
+      [
+        180,
+        0,
+        180
+      ],
+      [
+        255,
+        24,
+        90
+      ],
+      [
+        255,
+        90,
+        24
+      ],
+      [
+        255,
+        180,
+        0
+      ],
+      [
+        255,
+        255,
+        24
+      ],
+      [
+        255,
+        255,
+        90
+      ],
+      [
+        180,
+        255,
+        180
+      ],
+      [
+        90,
+        255,
+        255
+      ],
+      [
+        24,
+        255,
+        255
+      ],
+      [
+        0,
+        180,
+        255
+      ],
+      [
+        24,
+        90,
+        255
+      ],
+      [
+        90,
+        24,
+        255
+      ]
+    ],
+    hardness: 0,
+    paper: {
+      top: [
+        0,
+        0,
+        0
+      ],
+      bottom: [
+        10,
+        10,
+        14
+      ]
+    }
+  },
+  iridescent: {
+    label: "Iridescent",
+    group: "Classics",
+    description: "The ramp read off the reference video — blue, green, cream, pink, burgundy, navy — on its blue-grey paper",
+    stops: [
+      [
+        52,
+        72,
+        228
+      ],
+      [
+        72,
+        150,
+        30
+      ],
+      [
+        242,
+        232,
+        196
+      ],
+      [
+        242,
+        84,
+        136
+      ],
+      [
+        128,
+        6,
+        46
+      ],
+      [
+        16,
+        18,
+        56
+      ]
+    ],
+    hardness: 0.35,
+    paper: {
+      top: [
+        178,
+        188,
+        206
+      ],
+      bottom: [
+        202,
+        210,
+        226
+      ]
+    }
+  },
   "riso-pink-blue": {
     label: "Riso pink × blue",
     group: "Risograph",
