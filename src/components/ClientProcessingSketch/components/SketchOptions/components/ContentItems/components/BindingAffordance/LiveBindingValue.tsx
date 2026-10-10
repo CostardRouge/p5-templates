@@ -15,7 +15,7 @@ function formatValue(
   }: {
     decimals: number;
     list: string[] | null;
-    axis?: "x" | "y";
+    axis?: "x" | "y" | "z";
     hex: boolean;
   }
 ): string | null {
@@ -42,7 +42,7 @@ function formatValue(
  * source that is not arriving) it shows `fallback` — the field's base value.
  *
  * `labels` turns an enum's published index into the option's label, `axis`
- * picks one coordinate of a pad's `{ x, y }`, `hex` prints a colour's bytes as
+ * picks one coordinate of a pad's `{ x, y }` or a vector's `{ x, y, z }`, `hex` prints a colour's bytes as
  * `#rrggbb`; otherwise the value is a number printed with `decimals`.
  */
 export default function LiveBindingValue( {
@@ -58,7 +58,7 @@ export default function LiveBindingValue( {
   fallback: string;
   decimals?: number;
   labels?: string[];
-  axis?: "x" | "y";
+  axis?: "x" | "y" | "z";
   hex?: boolean;
   className?: string;
 } ) {

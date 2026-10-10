@@ -723,7 +723,9 @@ export const formConfiguration: Record<string, any> = {
     }
   },
 
-  // The modalities this sketch reads: mouse, touch, camera hands.
+  // The modalities this sketch reads: mouse, touch, camera hands — and MIDI,
+  // whose port is what resolves the knobs the camera rig declares (no port
+  // picked, no declared binding: see docs/memory/interaction-midi.md).
   interaction: {
     component: "nested-object",
     label: "Input sources",
@@ -731,7 +733,8 @@ export const formConfiguration: Record<string, any> = {
       enabled: interactionFormConfiguration.fields.enabled,
       mouse: interactionFormConfiguration.fields.mouse,
       touch: interactionFormConfiguration.fields.touch,
-      vision: interactionFormConfiguration.fields.vision
+      vision: interactionFormConfiguration.fields.vision,
+      midi: interactionFormConfiguration.fields.midi
     }
   },
 
