@@ -90,6 +90,7 @@ export default function RecordingCard( {
         <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-40">
           <StatusBadge
             status={ job.status }
+            reason={ job.error }
             className="shadow-lg backdrop-blur-sm"
           />
         </div>

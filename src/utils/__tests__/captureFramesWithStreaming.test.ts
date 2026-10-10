@@ -7,7 +7,7 @@ import {
 } from "child_process";
 
 import {
-  captureFramesWithStreaming
+  captureFramesWithStreaming, EVEN_DIMENSIONS_FILTER, recorderFfmpegArgs
 } from "../captureFramesWithStreaming";
 import {
   muxSketchAudio
@@ -51,9 +51,9 @@ jest.mock(
 const realSpawn: typeof spawn = jest.requireActual( "child_process" ).spawn;
 const mockedSpawn = spawn as jest.MockedFunction<typeof spawn>;
 
-const page = {
-  waitForTimeout: () => Promise.resolve()
-} as unknown as Page;
+// No `waitForTimeout`: the loop must not sleep between frames (a fixed 10 ms
+// used to be added to every frame), so a sleep coming back throws here.
+const page = {} as unknown as Page;
 
 function fakeFfmpeg( script: string ) {
   mockedSpawn.mockImplementation( () => realSpawn(
@@ -121,6 +121,31 @@ describe(
 
         await expect( capture( 2 ) ).rejects.toThrow( /code 1[\s\S]*encoder said no/ );
         expect( muxSketchAudio ).not.toHaveBeenCalled();
+      }
+    );
+  }
+);
+
+describe(
+  "recorderFfmpegArgs",
+  () => {
+    it(
+      "pads the frames to even dimensions before the H.264 encoder sees them",
+      () => {
+        const args = recorderFfmpegArgs(
+          30,
+          "/tmp/out.mp4"
+        );
+        const filter = args.indexOf( "-vf" );
+
+        expect( args[ filter + 1 ] ).toBe( EVEN_DIMENSIONS_FILTER );
+        expect( EVEN_DIMENSIONS_FILTER ).toBe( "pad=ceil(iw/2)*2:ceil(ih/2)*2" );
+        // A filter after the encoder options would apply to nothing.
+        expect( filter ).toBeLessThan( args.indexOf( "-c:v" ) );
+        expect( args.slice( -1 ) ).toEqual( [
+          "/tmp/out.mp4"
+        ] );
+        expect( args[ args.indexOf( "-framerate" ) + 1 ] ).toBe( "30" );
       }
     );
   }

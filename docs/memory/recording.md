@@ -14,6 +14,33 @@ Read before touching capture, the job queue, the Playwright/FFmpeg path or how a
 
 2026-10-02 — The recordings page watches every in-flight job over ONE `EventSource` (`useMultiRecordingStatusStream`), whose `subscribe`/`unsubscribe` are stable and re-open the stream only when the set of ids changes; `useRecordings` keys its subscription on the sorted id string, never on the job array (which every progress message replaces — an effect on it re-opened the connection per message and lost what was sent in between). `onerror` leaves the source open so the browser's own reconnect runs. **How to apply**: an effect that owns a connection depends on the identity of what it connects to, not on state the connection's own messages update; `useRecordings.stream.test.ts` counts connections with a fake `EventSource`.
 
+## `__sketchCapture` also tells its clock
+
+2026-10-09 — `window.__sketchCapture.timing()` answers `{ frameRate, duration, totalFrames }` for the live option store and the current slide — the clock `renderFrame( i )` counts in (frame `i` is `i / frameRate` seconds). `registerServerCaptureController` fills it in, so no engine declares it and every engine has it; it resolves through `getEffectiveSlideSettings` + `totalFramesFor`, the recorders' own path. It exists for callers outside the page that are handed a time rather than an index — the agent's `render.frame` (`agent-commands.md`). **How to apply**: never re-derive fps/duration outside the page from `options.json` — `/embed` and the studio may hold a different animation than the file.
+
+## The recorder pads odd sizes to even, it does not refuse them
+
+2026-10-10 — libx264 in yuv420p refuses an odd width or height ("height not divisible by 2") and the whole job died at encode time — a 540 × 675 canvas was enough, and nothing upstream checked. `recorderFfmpegArgs` (`captureFramesWithStreaming.ts`) now runs every recording through `EVEN_DIMENSIONS_FILTER`, `pad=ceil(iw/2)*2:ceil(ih/2)*2`: one black column and/or row on the right/bottom edge, nothing scaled or cropped, an even canvas untouched — so a 540 × 675 piece comes out 540 × 676. **How to apply**: the `-vf` goes before the encoder options, and test it on a TRUE odd frame — `testsrc2=size=541x675` silently generates 540 × 674, which made the filter look broken. The worker is a singleton inside the Next process: after editing recorder code, restart `next dev` (and load the sketch page once, or the first job times out in `page.goto` on the cold compile) before believing a recording.
+
+## A failed job keeps its reason in `Job.error`
+
+2026-10-10 — The row used to say only `failed`; the reason was in the server log and the progression step misled (an FFmpeg failure read "failed during uploading"). Every failure write — `recordSketch`, `runRecording`, the worker's processor catch and its `failed` handler (the only place a stall past `maxStalledCount` is seen) — now stores `jobFailureReason( error )` (`src/lib/jobFailure.ts`), and `updateJob` clears `error` whenever it sets any other status (`withFailureReasonRule`), so retry, start and completion never show a stale reason. The recordings page shows it as the failed badge's tooltip; the agent's `jobs.get` answers it. **How to apply**: a new failure path passes `error: jobFailureReason( error )` with `status: "failed"`; never store `error.stack` or raw stderr — the row is public (`security.md`).
+
+## Front vs back, measured (2026-10-10)
+
+`scripts/bench-recording.mjs` in the cloud container (SwiftShader, software WebCodecs, VP9 — Playwright's Chromium has no H.264 encoder), ms per frame:
+
+| | voronoi 1080×1350 | ping-pong 1080×1350 | dragon-corridor (Three.js) 540×676 |
+| --- | --- | --- | --- |
+| draw only | 32 | 11 | 1071 |
+| back: PNG → FFmpeg | 137 (78 in `toDataURL`) | 97 (60) | 1129 |
+| back: JPEG → FFmpeg | 125 | 93 | 1008 |
+| back: raw RGBA → FFmpeg | 368 (transfer 170) | 290 | — |
+| front: WebCodecs (software VP9) | 105 | 81 | 1086 |
+| back: real job as shipped | 257 | 182 | 1617 |
+
+What it settles: (1) for a 2D sketch the PNG readback is the single largest cost of the backend path, and neither JPEG (−10 %) nor raw pixels (3× worse: base64 over the DevTools protocol) fixes it — the fix is not to leave the page; (2) for a shader sketch the DRAW is everything and the pipeline is noise — a server without a GPU renders WebGL in software at ~1 s a frame at half size, whatever encodes it; (3) the shipped job costs +50–90 % over its own mechanism (browser launch, cold page, upload, thumbnail — and, when measured, a 10 ms sleep per frame since removed: see the entry below). **How to apply**: do not optimise the FFmpeg path for speed; the backend's speed is bounded by the server's GPU. The front column here is the worst case — rerun with `--gpu` (and `PW_CHROMIUM` pointing at a Chrome with H.264) on a real machine before quoting front numbers.
+
 ## Multi-slide recordings produce arrays
 
 2026-08-20 — A sketch with `options.slides` records one video per slide, so a job's `videoUrls` and `thumbnails` are arrays even for the single-slide case (`recordSketch.ts` writes a one-element array). Between slides the recorder re-navigates and waits on a `[data-slide="<n>"]` selector — deliberately engine-agnostic: p5 sets that attribute on its canvas, DOM engines on their root element. Per-slide settings are the slide's override merged over the sketch's animation config. **How to apply**: never assume a single video URL when consuming a job. If a new engine is added, it must set `data-slide` or multi-slide capture will hang waiting for a selector that never appears.
@@ -88,3 +115,7 @@ So the share sheet is not only the one route to Photos (above): it is the one de
 **How to apply**: never put a download back inside the run — `runExportBatch.test.ts` asserts the runner delivers nothing, and `delivery.test.ts` asserts the one-prompt rule on every branch. Adding a delivery route means a branch in `delivery.ts`, not a call to `triggerDownload` somewhere new. And note `downloadArtifacts` exists separately from `saveArtifacts` on purpose: the automatic path must never open a share sheet by itself, minutes after the Export tap, on a desktop that merely happens to have one.
 
 **Verifying it needs no phone**: stub `navigator.canShare`/`navigator.share` and `matchMedia( "coarse" )` through Playwright's `addInitScript`, count clicks on anchors carrying a `download` attribute, and run a batch of two **still-image** variants — stills need no encoder, so the run takes seconds while exercising the identical delivery path.
+
+## The recorder does not sleep between frames
+
+2026-10-10 — Both server capture loops (`captureFramesWithStreaming` for jobs, `captureFramesServerSide` for previews) used to `page.waitForTimeout( 10 )` between `renderCaptureFrame` and `readCaptureFrame` "to ensure the frame is rendered". It ensured nothing: `renderFrame` resolves after the engine's `seekAndDraw` (a canvas engine draws synchronously, the DOM engine awaits its layout — see the `requestAnimationFrame` entry), and an element screenshot renders the page itself. Removed: −10 ms a frame (voronoi 209 → 200, ping-pong 144 → 138 ms of server recording at 1080 × 1350), with ping-pong and a GSAP sketch bit-identical before/after (framemd5). The streaming test's fake page has no `waitForTimeout`, so a sleep coming back throws. **How to apply**: never add a timed wait to a capture loop; if a frame reads stale, fix that engine's `seekAndDraw`. To compare two recordings, pick a deterministic sketch — `voronoi-v1-cells` draws its sites at random on each page load, so two jobs of the SAME code differ on every frame.

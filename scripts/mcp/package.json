@@ -1,0 +1,5 @@
+{
+  "//": "The agent commands and their MCP server run straight from source through Node's type stripping (Node >= 22.18), so this folder is ESM and imports carry their .ts extension. See docs/memory/agent-commands.md.",
+  "type": "module",
+  "private": true
+}

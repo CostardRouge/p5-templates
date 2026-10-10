@@ -2,7 +2,7 @@ import dynamic from "next/dynamic";
 import clsx from "clsx";
 import type React from "react";
 import {
-  useCallback, useEffect, useRef, useState
+  useCallback, useEffect, useMemo, useRef, useState
 } from "react";
 import {
   createPortal
@@ -28,6 +28,7 @@ import type {
 import useBrowserRecordingSupported from "./components/CaptureActions/hooks/useBrowserRecordingSupported";
 import useDeclaredBindings from "./hooks/useDeclaredBindings";
 import OptionsPanel from "./components/OptionsPanel";
+import StudioCommands from "./components/StudioCommands";
 import {
   FormUndoRedo
 } from "./components/FormUndoRedo";
@@ -650,6 +651,35 @@ export default function SketchOptions( {
     onRename: handleRenameSlide
   };
 
+  const studioSlideHandlers = useMemo(
+    () => ( {
+      select: ( index: number ) => handleSlideSelect( index ),
+      add: () => handleAddSlide(),
+      duplicate: ( index: number ) => handleDuplicateSlide( index ),
+      remove: ( index: number ) => handleDeleteSlide( index ),
+      move: (
+        from: number, to: number
+      ) => handleReorderSlides(
+        from,
+        to
+      ),
+      rename: (
+        index: number, name: string
+      ) => handleRenameSlide(
+        index,
+        name
+      )
+    } ),
+    [
+      handleSlideSelect,
+      handleAddSlide,
+      handleDuplicateSlide,
+      handleDeleteSlide,
+      handleReorderSlides,
+      handleRenameSlide
+    ]
+  );
+
   const captureProps = {
     name,
     options: methods.watch(),
@@ -685,6 +715,14 @@ export default function SketchOptions( {
               setSection={ setSection }
               onSelectSlide={ handleSlideSelect }
               activeSlideIndex={ activeSlideIndex }
+            />
+            {/* The agent commands (MCP level 1): registered while this form
+                is mounted, wired to the same handlers as the controls. */}
+            <StudioCommands
+              activeSlideIndex={ activeSlideIndex }
+              slides={ studioSlideHandlers }
+              name={ name }
+              exportSupported={ browserRecordingSupported }
             />
             {/* Everything from here to the mixer is studio chrome: the rails,
                 the filmstrip, the mobile drawer, the transport bar. A
