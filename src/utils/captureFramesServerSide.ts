@@ -54,8 +54,8 @@ export async function captureFramesServerSide( {
       frameIndex
     );
 
-    // Small delay to ensure frame is rendered
-    await page.waitForTimeout( 10 );
+    // No wait: `renderFrame` resolves once the frame is drawn (see
+    // captureFramesWithStreaming).
 
     // Grab the frame (canvas pixels or DOM screenshot per engine).
     const frameBuffer = await readCaptureFrame(

@@ -33,8 +33,8 @@
  *
  * `--job` also posts a real backend job (`/api/recordings/enqueue`, needs
  * Redis, Postgres and S3) and reports the server's own `recordingDuration`:
- * the pipeline as it ships — browser launch, page load, the recorder's 10 ms
- * wait per frame, upload — not only the encode.
+ * the pipeline as it ships — browser launch, page load, upload — not only
+ * the encode.
  *
  * Read the numbers where they are measured: without `--gpu` the browser draws
  * WebGL on SwiftShader and WebCodecs encodes in software, so the FRONT column

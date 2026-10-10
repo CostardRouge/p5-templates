@@ -51,9 +51,9 @@ jest.mock(
 const realSpawn: typeof spawn = jest.requireActual( "child_process" ).spawn;
 const mockedSpawn = spawn as jest.MockedFunction<typeof spawn>;
 
-const page = {
-  waitForTimeout: () => Promise.resolve()
-} as unknown as Page;
+// No `waitForTimeout`: the loop must not sleep between frames (a fixed 10 ms
+// used to be added to every frame), so a sleep coming back throws here.
+const page = {} as unknown as Page;
 
 function fakeFfmpeg( script: string ) {
   mockedSpawn.mockImplementation( () => realSpawn(
