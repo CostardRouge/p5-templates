@@ -50,6 +50,16 @@ interface BaseConfig {
   binding?: {
     control: string;
   };
+  /**
+   * Show the field only while a sibling field of the same content item holds
+   * one of these values — the Vector 3D element's spin, which means something
+   * only in the two views that have a camera. Hiding never clears the value,
+   * so switching back finds it where it was. Read by GenericItemForm.
+   */
+  visibleWhen?: {
+    field: string;
+    in: readonly unknown[];
+  };
 }
 
 // Step 2: Define the config shape for each component type
@@ -286,9 +296,18 @@ interface SourceSelectConfig extends BaseConfig {
    * lists. "scalar" (the default) offers every scalar key-path plus the live
    * built-ins; "point" offers only the `{ x, y }` key-paths and the point
    * built-ins — a crosshair or a vector map bound to a number draws nothing,
-   * so offering numbers there is offering a dead end.
+   * so offering numbers there is offering a dead end. "triple" offers the
+   * `{ x, y, z }` key-paths, for the Vector 3D element.
    */
-  kind?: "scalar" | "point";
+  kind?: "scalar" | "point" | "triple";
+}
+
+// The Vector 3D element's view picker: five live tiles, each drawing the
+// element's own value in that view (ControlledVector3DViewPicker). Reads its
+// sibling fields (source, kind, domain, yDown), so it only makes sense inside
+// a hud-vector3d item.
+interface Vector3DViewConfig extends BaseConfig {
+  component: "vector3d-view";
 }
 
 // Parameter-key picker for key lists (breakdown snap / exclude): the sketch's
@@ -364,6 +383,7 @@ export type FieldConfig =
   | Vector2DConfig
   | Vector3DConfig
   | SourceSelectConfig
+  | Vector3DViewConfig
   | KeySelectConfig
   | AssetInputConfig
   | AssetStackConfig
@@ -1434,6 +1454,106 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
         {
           value: "absolute",
           label: "Absolute (canvas pixels)"
+        },
+        {
+          value: "none",
+          label: "None"
+        }
+      ]
+    },
+    decimals: hudDecimalsField,
+    label: hudLabelField,
+    ...hudWindowFields,
+    ...hudElementStyleFields,
+    ...hudBoxStyleFields
+  },
+  "hud-vector3d": {
+    enabled: hudEnabledField,
+    source: {
+      label: "Source",
+      component: "source-select",
+      kind: "triple"
+    },
+    view: {
+      label: "View",
+      component: "vector3d-view"
+    },
+    kind: {
+      label: "Value",
+      component: "select",
+      options: [
+        {
+          value: "position",
+          label: "Position (floor and shadow)"
+        },
+        {
+          value: "direction",
+          label: "Direction (arrow from the centre)"
+        }
+      ]
+    },
+    anchor: hudAnchorField,
+    offset: hudOffsetField,
+    size: hudSizeField( 48 ),
+    domain: {
+      label: "Domain",
+      component: "nested-object",
+      fields: {
+        xMin: {
+          label: "X min",
+          component: "number"
+        },
+        xMax: {
+          label: "X max",
+          component: "number"
+        },
+        yMin: {
+          label: "Y min",
+          component: "number"
+        },
+        yMax: {
+          label: "Y max",
+          component: "number"
+        },
+        zMin: {
+          label: "Z min",
+          component: "number"
+        },
+        zMax: {
+          label: "Z max",
+          component: "number"
+        }
+      }
+    },
+    yDown: {
+      label: "Y grows downward",
+      component: "checkbox"
+    },
+    trail: {
+      label: "Trail",
+      component: "checkbox"
+    },
+    spin: {
+      label: "Spin (turns per loop)",
+      component: "slider",
+      min: 0,
+      max: 4,
+      step: 0.25,
+      visibleWhen: {
+        field: "view",
+        in: [
+          "box",
+          "gizmo"
+        ]
+      }
+    },
+    coordinates: {
+      label: "Coordinates",
+      component: "select",
+      options: [
+        {
+          value: "relative",
+          label: "Relative (parameter units)"
         },
         {
           value: "none",

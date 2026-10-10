@@ -987,3 +987,131 @@ describe(
     );
   }
 );
+
+describe(
+  "content drag — canvas item menu",
+  () => {
+    // A right-click on an item that has a canvas menu (the Vector 3D element's
+    // views) opens it and selects the item; on anything else the browser's own
+    // menu is left alone.
+    beforeEach( () => {
+      store = {
+        content: [
+          {
+            type: "hud-vector3d",
+            enabled: true,
+            view: "box",
+            offset: {
+              x: 0.9,
+              y: 0.9
+            }
+          },
+          {
+            type: "hud-gauge",
+            enabled: true,
+            offset: {
+              x: 0.1,
+              y: 0.1
+            }
+          }
+        ]
+      };
+      registerContentDrag();
+
+      beginItemBounds(
+        "global",
+        0
+      );
+      reportItemBounds(
+        800,
+        800,
+        120,
+        120
+      );
+      endItemBounds();
+      beginItemBounds(
+        "global",
+        1
+      );
+      reportItemBounds(
+        60,
+        60,
+        200,
+        60
+      );
+      endItemBounds();
+    } );
+
+    function listen( name: string ) {
+      const received: Array<Record<string, unknown>> = [];
+      const listener = ( event: Event ) => received.push( ( event as CustomEvent ).detail );
+
+      window.addEventListener(
+        name,
+        listener
+      );
+
+      return {
+        received,
+        stop: () => window.removeEventListener(
+          name,
+          listener
+        )
+      };
+    }
+
+    it(
+      "opens the Vector 3D menu at the pointer and selects the item",
+      () => {
+        const menu = listen( "studio:content-item-menu" );
+        const select = listen( "studio:content-item-select" );
+        const event = pressAt(
+          "contextmenu",
+          850,
+          850
+        );
+
+        expect( event.defaultPrevented ).toBe( true );
+        expect( menu.received ).toEqual( [
+          {
+            scope: "global",
+            index: 0,
+            type: "hud-vector3d",
+            clientX: 850,
+            clientY: 850
+          }
+        ] );
+        expect( select.received ).toEqual( [
+          {
+            scope: "global",
+            index: 0
+          }
+        ] );
+
+        menu.stop();
+        select.stop();
+      }
+    );
+
+    it(
+      "leaves the browser menu alone on an item without one, and on empty canvas",
+      () => {
+        const menu = listen( "studio:content-item-menu" );
+
+        expect( pressAt(
+          "contextmenu",
+          100,
+          80
+        ).defaultPrevented ).toBe( false );
+        expect( pressAt(
+          "contextmenu",
+          500,
+          500
+        ).defaultPrevented ).toBe( false );
+        expect( menu.received ).toEqual( [] );
+
+        menu.stop();
+      }
+    );
+  }
+);

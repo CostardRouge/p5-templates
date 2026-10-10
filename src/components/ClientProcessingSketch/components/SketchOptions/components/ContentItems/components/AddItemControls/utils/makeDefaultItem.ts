@@ -10,6 +10,7 @@ import {
   HudSparklineItemSchema,
   HudSwatchItemSchema,
   HudVectorItemSchema,
+  HudVector3dItemSchema,
   ImageItemSchema,
   ImagesStackItemSchema,
   MetaItemSchema,
@@ -108,6 +109,11 @@ export default function makeDefaultItem(
       } );
     case "hud-vector":
       return HudVectorItemSchema.parse( {
+        ...seed,
+        type
+      } );
+    case "hud-vector3d":
+      return HudVector3dItemSchema.parse( {
         ...seed,
         type
       } );

@@ -1220,6 +1220,73 @@ const hudVectorFields = {
   ...hudWindow
 };
 
+// The 3D vector element's views — mirrored by VECTOR3D_VIEW_IDS in
+// src/sketches/p5/utils/hud/vector3dViews.js (a test keeps the two in step).
+// box = the vector3d control's own orbit view · planes = XY / XZ / ZY maps ·
+// map-depth = the 2D map plus a z gauge · bars = three axis gauges · gizmo =
+// an arrow in a wireframe sphere.
+export const HUD_VECTOR3D_VIEWS = [
+  "box",
+  "planes",
+  "map-depth",
+  "bars",
+  "gizmo"
+] as const;
+
+// What the triple means, copied from the control: a position gets a floor
+// and a shadow in the box, a direction an arrow from the centre.
+export const HUD_VECTOR3D_KINDS = [
+  "position",
+  "direction"
+] as const;
+
+const hudVector3dFields = {
+  // A `{ x, y, z }` sketch parameter (a vector3d control's key-path).
+  source: z.string().default( "" ),
+  view: z.enum( HUD_VECTOR3D_VIEWS ).default( "box" ),
+  kind: z.enum( HUD_VECTOR3D_KINDS ).default( "position" ),
+  anchor: HudAnchor.default( "bottom-right" ),
+  offset: hudOffset(
+    0.95,
+    0.75
+  ),
+  size: z.number().positive()
+    .default( 16 ),
+  // Each axis' own domain, as the control resolves it (resolveAxes3D): the
+  // views map every axis to the same box, so per-axis bounds keep a
+  // [-1, 1] × [-0.5, 0.5] × [-1, 1] position honest instead of squashed.
+  domain: z
+    .object( {
+      xMin: z.number().default( -1 ),
+      xMax: z.number().default( 1 ),
+      yMin: z.number().default( -1 ),
+      yMax: z.number().default( 1 ),
+      zMin: z.number().default( -1 ),
+      zMax: z.number().default( 1 )
+    } )
+    .prefault( {} ),
+  // p5's WEBGL y points down; true keeps "up in the widget" = up on canvas.
+  yDown: z.boolean().default( true ),
+  // The last ~48 frames of the point, fading: without it a box seen at an
+  // angle cannot tell height from depth on a still frame.
+  trail: z.boolean().default( true ),
+  // Whole turns of the camera per loop, for the two views that have one (box,
+  // gizmo). Read from the loop clock, so a capture matches the preview.
+  spin: z.number().min( 0 )
+    .max( 4 )
+    .default( 0 ),
+  coordinates: z.enum( [
+    "relative",
+    "none"
+  ] ).default( "relative" ),
+  decimals: z.number().int()
+    .min( 0 )
+    .max( 4 )
+    .default( 2 ),
+  label: z.string().default( "" ),
+  ...hudWindow
+};
+
 const hudBoundingBoxFields = {
   source: z.string().default( "" ),
   size: z.number().positive()
@@ -1313,6 +1380,14 @@ export const HudVectorItemSchema = z.object( {
   type: z.literal( "hud-vector" ),
   enabled: hudEnabled,
   ...hudVectorFields,
+  ...hudElementStyle,
+  ...hudBoxStyle
+} );
+
+export const HudVector3dItemSchema = z.object( {
+  type: z.literal( "hud-vector3d" ),
+  enabled: hudEnabled,
+  ...hudVector3dFields,
   ...hudElementStyle,
   ...hudBoxStyle
 } );
@@ -1435,6 +1510,7 @@ export const ContentItemSchema = z.discriminatedUnion(
     HudSwatchItemSchema,
     HudReadoutItemSchema,
     HudVectorItemSchema,
+    HudVector3dItemSchema,
     HudBoundingBoxItemSchema
   ]
 );

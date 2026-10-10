@@ -280,6 +280,7 @@ const slides = {
         case "hud-swatch":
         case "hud-readout":
         case "hud-vector":
+        case "hud-vector3d":
         case "hud-bounding-box":
           drawHudElement( item );
           break;

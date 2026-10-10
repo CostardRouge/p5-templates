@@ -41,3 +41,7 @@ The outline is **what a press picks up** (the drawn rectangle, or the pick-up di
 - `meta` — four corner labels, each pinned to its corner by design; the schema carries no per-corner position, and giving it one would turn a "corner metadata overlay" into four loose texts.
 - HUD `crosshairs` (placed by its data source) and `boundingBox` (a region rect); the five offset-anchored widgets are each their own grab target.
 - A `breakdown` with `placement: "roaming"` — it ignores `item.position` entirely, so it is excluded *before* the hit-test, or the anchor-disc fallback would grab it at a position it never uses.
+
+## A right-click on an item can open a canvas menu (2026-10-10)
+
+`contentDrag.js` also listens to `contextmenu` (window, capture): when the hit item's type is in `ITEM_MENU_TYPES` (today only `hud-vector3d`), it prevents the browser menu, emits the usual select event and `studio:content-item-menu` (`CONTENT_ITEM_MENU_EVENT`, duplicated literal) with scope, index, type and client coordinates; `CanvasItemMenu` (mounted in `SketchOptions`, inside the form) answers it with `FieldContextMenu` and writes through `setValue`, so the edit reaches the sketch, the inspector and undo like a field edit. Anything else — another item type, empty canvas — keeps the browser's menu. Left press stays the drag; the menu is right-click only by the maintainer's choice. Adding a menu to another type: one entry in `ITEM_MENU_TYPES` plus a branch in `CanvasItemMenu`. Offset targets now carry `type` for this.

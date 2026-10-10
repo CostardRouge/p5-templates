@@ -21,6 +21,8 @@ import ControlledFormatSelect
   from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/ControlledFormatSelect/ControlledFormatSelect";
 import ControlledSourceSelect
   from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/ControlledSourceSelect/ControlledSourceSelect";
+import ControlledVector3DViewPicker
+  from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/ControlledVector3DViewPicker/ControlledVector3DViewPicker";
 import ControlledKeySelect
   from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/ControlledKeySelect/ControlledKeySelect";
 import ControlledEasingInput
@@ -811,6 +813,17 @@ export default function FieldRenderer( {
             name={ registeredName }
             label={ inlineLabel }
             kind={ config.kind }
+            isModified={ isModified }
+            onReset={ handleReset }
+          />
+        );
+
+      case "vector3d-view":
+        return (
+          <ControlledVector3DViewPicker
+            name={ registeredName }
+            itemPath={ fieldBasePath }
+            label={ inlineLabel }
             isModified={ isModified }
             onReset={ handleReset }
           />
