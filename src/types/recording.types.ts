@@ -35,6 +35,7 @@ export type JobModel = {
   recordingStartAt: Date | null; // When recording processing started
   recordingEndAt: Date | null; // When recording processing completed
   recordingDuration: number | null; // Recording duration in milliseconds
+  error: string | null; // Why the job failed (src/lib/jobFailure.ts); null unless failed
   options: Prisma.JsonValue;
   createdAt: Date;
   updatedAt: Date;

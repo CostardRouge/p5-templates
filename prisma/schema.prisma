@@ -61,6 +61,9 @@ model Job {
   recordingStartAt  DateTime? // When recording processing started
   recordingEndAt    DateTime? // When recording processing completed
   recordingDuration Int? // Recording duration in milliseconds
+  // Why the job failed, as the worker caught it (credentials redacted, capped;
+  // src/lib/jobFailure.ts). Null unless status is failed; cleared on retry.
+  error             String?
   progress          Int
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt

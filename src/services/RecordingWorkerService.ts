@@ -3,6 +3,9 @@ import {
 } from "bullmq";
 import Redis from "@/lib/connections/redis";
 import {
+  jobFailureReason
+} from "@/lib/jobFailure";
+import {
   updateJob
 } from "@/lib/jobStore";
 
@@ -111,7 +114,8 @@ export class RecordingWorkerService {
         job.id,
         {
           status: "failed",
-          progress: 0
+          progress: 0,
+          error: jobFailureReason( error )
         }
       );
 
@@ -190,7 +194,8 @@ export class RecordingWorkerService {
       await updateJob(
         jobId,
         {
-          status: "failed"
+          status: "failed",
+          error: jobFailureReason( error )
         }
       );
 

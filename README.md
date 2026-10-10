@@ -96,6 +96,22 @@ npm run build               # compiles every sketch route — catches broken imp
 
 `npm run lint:fix` is the formatter (ESLint `@stylistic`; there is no Prettier). A new or renamed sketch needs `npm run sketch:meta:write` to regenerate the catalogue; the pre-commit hook does it for you when a sketch is staged.
 
+## Driving it from Claude (MCP)
+
+`scripts/mcp/sketchbook-mcp.ts` is an MCP server over stdio: Claude (or any MCP client) can list the sketches, read their parameters, compose a whole piece (text, images, sound, slides) as a draft, **render frames and look at them**, record the MP4 and fetch it. It drives a running Sketchbook over its public routes and renders single frames itself in headless Chromium, so start the app first (`npm run dev`, or point it at a deployment). Node ≥ 22.18 runs it straight from TypeScript.
+
+```bash
+claude mcp add sketchbook -- node "$PWD/scripts/mcp/sketchbook-mcp.ts"
+
+# against another server, with frames and videos written somewhere you choose
+claude mcp add \
+  --env SKETCHBOOK_URL=https://p5.steeve.website \
+  --env SKETCHBOOK_OUTPUT_DIR="$HOME/Movies/sketchbook" \
+  sketchbook -- node "$PWD/scripts/mcp/sketchbook-mcp.ts"
+```
+
+Three tools, the same three as Atelier's: `sketchbook_status`, `sketchbook_commands` (every command with its JSON Schema and whether it can run now) and `sketchbook_run` (`{ command, params }`). The commands: `sketches.list` / `sketches.describe` (a sketch's parameters as a schema), `options.schema` (the rest of a piece: size, clock, text/image/HUD content items, slides), `render.frame` and `render.stills` (pictures the agent sees, saved full size), `drafts.create` / `drafts.update` / `drafts.get` / `drafts.copy` (a whole piece with uploaded images, video and sound, stored on the server like the studio's Save draft), `render.video`, `jobs.wait` / `jobs.result` / `jobs.list` / `jobs.cancel`, `app.status`. A parameter outside its control's range is refused, never clamped. Drafts and videos need the recording infra (`docker-compose up -d redis minio postgres`); frames of a sketch do not. `PW_CHROMIUM` points it at a Chromium binary when Playwright's own is not installed. Decisions and traps: `docs/memory/agent-commands.md`.
+
 ## Useful Commands
 
 ```bash
@@ -120,7 +136,7 @@ src/
 ├── hooks/ utils/ types/
 prisma/               # DB schema & migrations
 public/assets/        # Fonts, images, libraries
-scripts/              # Build & dev scripts (sketch catalogue, bench, VAPID keys)
+scripts/              # Build & dev scripts (sketch catalogue, bench, VAPID keys); mcp/ is the MCP server
 docs/memory/          # Maintained project memory: decisions, traps, conventions
 ```
 

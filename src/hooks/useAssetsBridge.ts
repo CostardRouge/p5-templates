@@ -6,33 +6,7 @@ import useAssetDrop, {
   AssetType
 } from "@/hooks/useAssetDrop";
 import useSketchAssets from "@/components/ClientProcessingSketch/components/SketchOptions/components/SketchAssetsProvider/hooks/useSketchAssets";
-
-/**
- * Counts how many content items across all slides still reference a given
- * image path. Used to decide whether removing the path from the global
- * `assets.images` pool would leave a dangling reference.
- *
- * Only images have content-item types (`image`, `images-stack`) today, so
- * this helper stays image-specific. Other kinds skip pool cleanup until
- * a generic reference visitor is added.
- */
-function countImageRefs(
-  slides: any[], target: string
-): number {
-  let n = 0;
-
-  for ( const s of slides ?? [] ) {
-    for ( const it of s?.content ?? [] ) {
-      if ( it?.type === "image" && it?.src === target ) {
-        n++;
-      }
-      if ( it?.type === "images-stack" && Array.isArray( it.items ) ) {
-        n += it.items.filter( ( p: string ) => p === target ).length;
-      }
-    }
-  }
-  return n;
-}
+import countImageRefs from "@/lib/assets/countImageRefs";
 
 export default function useAssetsBridge() {
   const {
@@ -72,14 +46,21 @@ export default function useAssetsBridge() {
   ) {
     // Only the images pool has known content-item references to guard
     // against. Other kinds always remove on request — callers decide.
+    //
+    // Callers clear or remove their own reference BEFORE calling this
+    // (`setSinglePath( "" )`, `removeAt`), and react-hook-form writes the
+    // form values synchronously, so the item being edited is no longer
+    // counted: any remaining reference is someone else's, hence `> 0`.
     if ( kind === "images" ) {
-      const slides = getValues( "slides" ) ?? [];
       const refs = countImageRefs(
-        slides,
+        {
+          content: getValues( "content" ),
+          slides: getValues( "slides" )
+        },
         path
       );
 
-      if ( refs > 1 ) {
+      if ( refs > 0 ) {
         return;
       }
     }

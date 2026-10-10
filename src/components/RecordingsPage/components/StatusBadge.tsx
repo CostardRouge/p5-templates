@@ -4,11 +4,14 @@ import type {
 
 interface StatusBadgeProps {
   status: JobModel[ "status" ];
+  /** Why the job failed (`Job.error`), shown on hover of a failed badge. */
+  reason?: string | null;
   className?: string;
 }
 
 export default function StatusBadge( {
   status,
+  reason,
   className = ""
 }: StatusBadgeProps ) {
   const classes: Record<string, string> = {
@@ -26,6 +29,7 @@ export default function StatusBadge( {
 
   return (
     <span
+      title={ status === "failed" && reason ? reason : undefined }
       className={ `inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${ classes[ status ] || classes.queued } ${ className }` }
     >
       {status}

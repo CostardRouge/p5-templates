@@ -30,16 +30,33 @@ export async function createJob(
  * Update a Job record by ID.
  * Only the provided fields in `data` will be updated.
  */
+/**
+ * A reason belongs to a failure: an update that sets any other status clears
+ * `error`, so a retried, restarted or completed job never shows the last
+ * attempt's reason — one rule here instead of one line in every route that
+ * re-queues a job.
+ */
+export function withFailureReasonRule( data: Partial<JobModel> ): Partial<JobModel> {
+  return data.status && data.status !== "failed" && !( "error" in data )
+    ? {
+      ...data,
+      error: null
+    }
+    : data;
+}
+
 export async function updateJob(
   jobId: string,
   data: Partial<JobModel>
 ): Promise<void> {
+  const write = withFailureReasonRule( data );
+
   await prisma.job.update( {
     where: {
       id: jobId
     },
     // @ts-ignore
-    data
+    data: write
   } );
 
   if ( data.status ) {
