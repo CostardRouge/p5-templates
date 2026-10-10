@@ -157,6 +157,11 @@ export function sayHello( sketch: string ): void {
 
 let currentSketch = "";
 
+/** The sketch whose commands are registered now (`engine/category/name`). */
+export function getBridgeSketch(): string {
+  return currentSketch;
+}
+
 export function setBridgeSketch( sketch: string ): void {
   currentSketch = sketch;
   sayHello( sketch );

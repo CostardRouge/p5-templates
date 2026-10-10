@@ -18,6 +18,9 @@ import type {
 import type {
   ExportVariant, ExportVariantPreset
 } from "../export/variants";
+import type {
+  CatalogueEntry
+} from "./commands/navigationCommands";
 
 export interface StudioHandles {
   /** `<engine>/<category>/<name>`. */
@@ -117,6 +120,14 @@ export interface StudioHandles {
    * that slide or the root; answers the path.
    */
   addAsset: ( file: File, kind: "images" | "videos" | "audios" | "json", slide: number | undefined ) => Promise<string>;
+  /** The gallery, and moving this tab to another sketch. */
+  navigation: {
+    catalogue: () => CatalogueEntry[];
+    /** Client-side navigation to `href`, as a gallery link does. */
+    open: ( href: string ) => void;
+    /** The sketch whose commands are registered now. */
+    currentSketch: () => string;
+  };
   /** The app's own schema verdict on a document (`validateOptionsDocument`). */
   validateDocument: ( document: unknown ) => { issues: { path: string;
     message: string }[];

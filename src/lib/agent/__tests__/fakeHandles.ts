@@ -13,6 +13,7 @@ export function fakeHandles(
   const calls: string[] = [];
   let active: number | undefined;
   let variants: ExportVariant[] = [];
+  let opened = "p5/noise/noise-v1";
   let made = 0;
 
   function makeVariant( key: string ): ExportVariant {
@@ -229,6 +230,34 @@ export function fakeHandles(
       bytes: 3
     } ),
     relayConnected: () => true,
+    navigation: {
+      catalogue: () => [
+        {
+          engine: "p5",
+          category: "voronoi",
+          name: "voronoi-v1-cells"
+        },
+        {
+          engine: "p5",
+          category: "voronoi",
+          name: "voronoi-v2-draft",
+          hiddenFromGallery: true
+        },
+        {
+          engine: "threejs",
+          category: "dragon",
+          name: "dragon-corridor"
+        }
+      ],
+      open: ( href ) => {
+        calls.push( `open ${ href }` );
+        opened = href.replace(
+          "/sketches/",
+          ""
+        );
+      },
+      currentSketch: () => opened
+    },
     addAsset: async(
       file, kind, slide
     ) => {

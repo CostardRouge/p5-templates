@@ -4,6 +4,9 @@ import {
   useEffect, useLayoutEffect, useRef
 } from "react";
 import {
+  useRouter
+} from "next/navigation";
+import {
   useFormContext
 } from "react-hook-form";
 
@@ -15,6 +18,9 @@ import {
 import {
   contentCommands
 } from "@/lib/agent/commands/contentCommands";
+import {
+  navigationCommands
+} from "@/lib/agent/commands/navigationCommands";
 import {
   exportCommands
 } from "@/lib/agent/commands/exportCommands";
@@ -31,8 +37,11 @@ import {
   blobToImageResult
 } from "@/lib/agent/imageResult";
 import {
-  getBridgeStatus, resumeBridge, sendFileToRelay, setBridgeSketch, studioCommands
+  getBridgeSketch, getBridgeStatus, resumeBridge, sendFileToRelay, setBridgeSketch, studioCommands
 } from "@/lib/agent/studioBridge";
+import {
+  getMetadata
+} from "@/engines/metadata";
 import {
   getAnimationBridge
 } from "@/lib/animationBridge";
@@ -158,6 +167,7 @@ export default function StudioCommands( {
   ] = useSketch();
   const history = useFormUndoRedo();
   const selectPath = useSelectContentPath();
+  const router = useRouter();
   const {
     addAssets
   } = useAssetDrop();
@@ -242,8 +252,18 @@ export default function StudioCommands( {
         history: {
           undo: () => now().history.undo(),
           redo: () => now().history.redo(),
-          canUndo: () => now().history.canUndo,
-          canRedo: () => now().history.canRedo
+          // The flags follow a 400 ms debounced capture: flush it and read the
+          // stacks, or a write made just now would not count yet.
+          canUndo: () => {
+            now().history.capture();
+
+            return now().history.getHistory().past.length > 0;
+          },
+          canRedo: () => {
+            now().history.capture();
+
+            return now().history.getHistory().future.length > 0;
+          }
         },
         playback: {
           isPlaying: () => now().state.looping,
@@ -464,6 +484,11 @@ export default function StudioCommands( {
 
           return path;
         },
+        navigation: {
+          catalogue: getMetadata,
+          open: ( href ) => router.push( href ),
+          currentSketch: getBridgeSketch
+        },
         saveFile: sendFileToRelay,
         relayConnected: () => getBridgeStatus().state === "connected"
       };
@@ -472,7 +497,8 @@ export default function StudioCommands( {
         ...contentCommands( handles ),
         ...slideCommands( handles ),
         ...exportCommands( handles ),
-        ...assetCommands( handles )
+        ...assetCommands( handles ),
+        ...navigationCommands( handles )
       ] );
 
       setBridgeSketch( sketchId );
@@ -483,7 +509,8 @@ export default function StudioCommands( {
     [
       sketchId,
       state.engineId,
-      name
+      name,
+      router
     ]
   );
 
