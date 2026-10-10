@@ -59,6 +59,28 @@ export interface StudioHandles {
   selectPath: ( path: string | null ) => void;
   /** A content item of `kind` with every default, `seed` over them (`makeDefaultItem`). */
   makeItem: ( kind: string, seed: Record<string, unknown> ) => Record<string, unknown>;
+  /**
+   * A sketch layer's seed — `{ sketch, settings }` with that sketch's own
+   * defaults — as the layer picker builds it; throws when it cannot be a layer.
+   */
+  sketchLayerSeed: ( path: string ) => Promise<Record<string, unknown>>;
+  /**
+   * The HUD quick-add: a widget bound to the sketch control at
+   * `registeredName` (e.g. `sketch.render.hueSpeed`), into that control's own
+   * scope. Answers the new item's path and the kinds the control allows.
+   */
+  addHudForControl: ( registeredName: string, kind: string | undefined ) => { path: string | null;
+    kinds: string[] };
+  /**
+   * Where the item at `path` (`content.N` / `slides.S.content.N`) was last
+   * DRAWN, as fractions of the canvas — the rectangle its renderer reports for
+   * on-canvas grabbing. Null when nothing reported it (another engine, an item
+   * on a slide not on screen, not drawn yet).
+   */
+  itemBounds: ( path: string ) => Promise<{ x: number;
+    y: number;
+    w: number;
+    h: number } | null>;
   /** The app's own schema verdict on a document (`validateOptionsDocument`). */
   validateDocument: ( document: unknown ) => { issues: { path: string;
     message: string }[];

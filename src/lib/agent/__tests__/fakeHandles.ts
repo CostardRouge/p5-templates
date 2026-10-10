@@ -198,6 +198,48 @@ export function fakeHandles(
       bytes: 3
     } ),
     relayConnected: () => true,
+    // Only the second item is "on screen", drawn at its own offset.
+    itemBounds: async( path ) => path === "content.1" ? {
+      x: 0.1,
+      y: 0.1,
+      w: 0.2,
+      h: 0.1
+    } : null,
+    sketchLayerSeed: async( path ) => {
+      if ( path !== "noise/noise-v1" ) {
+        throw new Error( `no sketch "${ path }" can be a layer` );
+      }
+
+      return {
+        sketch: path,
+        settings: {
+          amount: 1
+        }
+      };
+    },
+    addHudForControl: (
+      registeredName, kind
+    ) => {
+      const kinds = registeredName.endsWith( "hueSpeed" ) ? [
+        "hud-counter",
+        "hud-gauge",
+        "hud-sparkline"
+      ] : [];
+      const chosen = kind ?? kinds[ 0 ];
+
+      if ( !chosen || !kinds.includes( chosen ) ) {
+        return {
+          path: null,
+          kinds
+        };
+      }
+      calls.push( `hud ${ registeredName } ${ chosen }` );
+
+      return {
+        path: "content.0",
+        kinds
+      };
+    },
     ...overrides
   };
 
