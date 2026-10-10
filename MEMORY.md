@@ -88,7 +88,7 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 - Baked cards on WEBGL quads remain the cheap board (v2), at the cost of lighting that no longer turns; the GPU renderer's `offscreen` mode is what bakes them → `sketches.md`.
 - A cascade's tree is a pure function of the clock, or it cannot be captured → `sketches.md`.
 - A `conditional-group` branch switch rebuilds the whole object from each field's `default`, falling back to a slider's `min` → `sketches.md`.
-- A palette is picked by its swatch, never by its name: `palette-picker` draws each look's ramp on its own paper (the bake reproduced in CSS), tiles are native radios, and "edit a copy" writes a preset into the custom look → `studio-ui.md`.
+- A palette is picked by its swatch, never by its name: `palette-picker` draws each look's ramp on its own paper (the bake reproduced in CSS), tiles are native radios, and "edit a copy" writes a preset into the custom look; it binds as an enum, its swatch showing the palette playing → `studio-ui.md`, `interaction-bindings.md`.
 - A 3D vector is one `vector3d` field kind storing `{ x, y, z }`, edited in an orbitable box: four presentations were built, compared live and cut to that one, and p5 pads set `yDown` → `studio-ui.md`, `docs/vector3d-control.md`.
 - A control whose shape is genuinely open is settled by building the variants, publishing them bound to ONE value, and letting the maintainer drive them — not by arguing in a document → `studio-ui.md`.
 - A sketch's mutable module-level state goes through `sketch.state()` (one record per page/layer instance, drift-tested), GPU helpers keep GL resources per surface, and layer imports are serialised because there is one registration capture → `architecture.md`, `sketches.md`.

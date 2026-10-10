@@ -23,6 +23,10 @@ import {
 } from "../ControlChrome";
 import CollapsibleItem from "@/components/CollapsibleItem";
 import {
+  bindingValueVarName
+} from "@/lib/channelBridge";
+import LiveBindingValue from "../BindingAffordance/LiveBindingValue";
+import {
   paperGradient, rampGradient, resolveRelativePath, type Paper, type Rgb
 } from "./paletteSwatch";
 
@@ -32,6 +36,12 @@ type Props = {
   label?: string;
   isModified?: boolean;
   onReset?: ( event: React.MouseEvent ) => void;
+  // An enum binding driving the field: the palette ids it cycles through, in
+  // order, and the target whose published index says which one plays now.
+  live?: {
+    target: string;
+    values: unknown[];
+  } | null;
 };
 
 type Look = {
@@ -47,10 +57,12 @@ type Look = {
  */
 function Swatch( {
   look,
-  className
+  className,
+  style
 }: {
   look: Look;
   className?: string;
+  style?: React.CSSProperties;
 } ) {
   const ramp = rampGradient(
     look.stops,
@@ -66,6 +78,7 @@ function Swatch( {
         className
       ) }
       style={ {
+        ...style,
         background: paper ?? undefined
       } }
     >
@@ -79,6 +92,15 @@ function Swatch( {
   );
 }
 
+// Opacity of cycle slot `index` under the published index `v`: 1 on it, 0 one
+// slot away, written `1 - |v - i|` floored at 0 — CSS has max(), not abs()
+// everywhere. The select's option lane uses the same expression.
+function litAt(
+  indexVar: string, index: number
+): string {
+  return `max(0, 1 - max(${ indexVar } - ${ index }, ${ index } - ${ indexVar }))`;
+}
+
 /**
  * The palette chooser: a one-line bar naming the current look and showing its
  * swatch, which unfolds into a grid of swatch tiles grouped by kind. The tiles
@@ -87,13 +109,20 @@ function Swatch( {
  * preset is chosen, "edit a copy" writes its stops, hardness and paper into
  * the form's own fields and switches to the custom look — the way to start
  * from a preset and change one ink.
+ *
+ * Driven by an enum binding, it shows the palette the SKETCH is on, frame by
+ * frame, without a React render: every palette of the cycle is stacked in the
+ * bar's swatch and only the published index's is opaque, a lane along the
+ * bar's bottom edge lights the same slot, and each tile in the cycle carries
+ * its own segment of it — so the grid also says which looks the knob walks.
  */
 export default function ControlledPalettePicker( {
   name,
   config,
   label,
   isModified = false,
-  onReset
+  onReset,
+  live
 }: Props ) {
   const {
     control, register, getValues, setValue
@@ -189,6 +218,19 @@ export default function ControlledPalettePicker( {
     ]
   );
 
+  const cycle = live?.values?.length ? live.values : null;
+  const optionOf = ( value: unknown ) => config.options.find( ( option ) => option.value === String( value ) );
+  const cycleLabels = cycle?.map( ( value ) => optionOf( value )?.label ?? String( value ) );
+  const baseIndex = cycle
+    ? cycle.findIndex( ( value ) => String( value ) === ( current ?? customValue ) )
+    : -1;
+  // Before the first frame (or once the binding stops playing) the var is
+  // absent and the base palette's slot is the lit one; a base outside the
+  // cycle lights none.
+  const indexVar = live && cycle
+    ? `var(${ bindingValueVarName( live.target ) }, ${ baseIndex >= 0 ? baseIndex : -9 })`
+    : "";
+
   const canCopy = !!selected && selected.value !== customValue && !!selected.stops && !!paths.stops;
 
   const copyIntoCustom = () => {
@@ -248,7 +290,8 @@ export default function ControlledPalettePicker( {
       header={ () => (
         <div className={ clsx(
           CONTROL_BAR_CLASS,
-          "cursor-pointer hover:bg-hover"
+          "relative cursor-pointer hover:bg-hover",
+          cycle && "binding-live-ring"
         ) }>
           <BarLabelSegment
             label={ label }
@@ -257,9 +300,40 @@ export default function ControlledPalettePicker( {
             onReset={ onReset }
           />
 
-          <span className="flex h-full min-w-0 flex-1 items-center gap-2 px-2.5">
-            <Swatch look={ selectedLook } className="h-4 w-10 shrink-0 p-[2px] md:h-3.5" />
-            <span className="min-w-0 flex-1 truncate">{selected?.label ?? current ?? "—"}</span>
+          <span className="relative flex h-full min-w-0 flex-1 items-center gap-2 px-2.5">
+            <span className="relative h-4 w-10 shrink-0 md:h-3.5">
+              <Swatch look={ selectedLook } className="h-full w-full p-[2px]" />
+              {cycle?.map( (
+                value, index
+              ) => (
+                <Swatch
+                  key={ `${ String( value ) }-${ index }` }
+                  look={ lookOf( optionOf( value ) ) }
+                  className="absolute inset-0 p-[2px]"
+                  style={ {
+                    opacity: litAt(
+                      indexVar,
+                      index
+                    )
+                  } }
+                />
+              ) )}
+            </span>
+            {cycle && live && cycleLabels ? (
+              <span className="flex min-w-0 flex-1 items-center gap-1">
+                <LiveBindingValue
+                  target={ live.target }
+                  fallback={ selected?.label ?? current ?? "—" }
+                  labels={ cycleLabels }
+                  className="min-w-0 truncate text-foreground"
+                />
+                {/* The base yields its room first: the live palette is the
+                    news, and its swatch already sits beside it. */}
+                <span className="min-w-0 shrink-[99] truncate text-label">· {selected?.label ?? current ?? "—"}</span>
+              </span>
+            ) : (
+              <span className="min-w-0 flex-1 truncate">{selected?.label ?? current ?? "—"}</span>
+            )}
             <ChevronDown
               className={ clsx(
                 CONTROL_CHEVRON_CLASS,
@@ -267,6 +341,35 @@ export default function ControlledPalettePicker( {
                 open && "rotate-180"
               ) }
             />
+
+            {cycle && (
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-x-2.5 bottom-0.5 grid h-[3px] gap-0.5"
+                style={ {
+                  gridTemplateColumns: `repeat(${ cycle.length }, minmax(0, 1fr))`
+                } }
+              >
+                {cycle.map( (
+                  value, index
+                ) => (
+                  <span
+                    key={ `${ String( value ) }-${ index }` }
+                    className="relative overflow-hidden rounded-full bg-foreground/15"
+                  >
+                    <span
+                      className="binding-iridescent absolute inset-0"
+                      style={ {
+                        opacity: litAt(
+                          indexVar,
+                          index
+                        )
+                      } }
+                    />
+                  </span>
+                ) )}
+              </span>
+            )}
           </span>
         </div>
       ) }
@@ -288,6 +391,9 @@ export default function ControlledPalettePicker( {
             <div className="grid grid-cols-2 gap-1.5">
               {options.map( ( option ) => {
                 const isSelected = option.value === ( current ?? customValue );
+                const cycleIndex = cycle
+                  ? cycle.findIndex( ( value ) => String( value ) === option.value )
+                  : -1;
 
                 return (
                   <label
@@ -311,6 +417,25 @@ export default function ControlledPalettePicker( {
                       ) }
                     >
                       <Swatch look={ lookOf( option ) } className="h-7 p-1 md:h-6" />
+                      {/* A tile the binding does not reach keeps the row's
+                          height with an empty slot. */}
+                      {cycle && cycleIndex < 0 && <span aria-hidden className="mx-0.5 h-[3px]" />}
+                      {cycleIndex >= 0 && (
+                        <span
+                          aria-hidden
+                          className="relative mx-0.5 h-[3px] overflow-hidden rounded-full bg-foreground/15"
+                        >
+                          <span
+                            className="binding-iridescent absolute inset-0"
+                            style={ {
+                              opacity: litAt(
+                                indexVar,
+                                cycleIndex
+                              )
+                            } }
+                          />
+                        </span>
+                      )}
                       <span className="flex min-w-0 items-center gap-1 px-0.5">
                         <span
                           className={ clsx(

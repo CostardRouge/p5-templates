@@ -45,6 +45,7 @@ export function bindingKindFor( component: FieldConfig[ "component" ] ): Binding
     case "checkbox":
       return "boolean";
     case "select":
+    case "palette-picker":
       return "enum";
     case "color":
       return "color";

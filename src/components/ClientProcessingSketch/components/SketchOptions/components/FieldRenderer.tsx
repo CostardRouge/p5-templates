@@ -777,6 +777,10 @@ export default function FieldRenderer( {
             label={ inlineLabel }
             isModified={ isModified }
             onReset={ handleReset }
+            live={ driven?.values?.length ? {
+              target: driven.target,
+              values: driven.values
+            } : null }
           />
         );
 
@@ -854,7 +858,8 @@ export default function FieldRenderer( {
   };
 
   // Interactive-binding affordance. `bindingKindFor` is the single list of what
-  // can be modulated (slider / number, the 2D pad, checkbox, select, colour —
+  // can be modulated (slider / number, the 2D pad, checkbox, select and the
+  // palette picker, colour —
   // see bindingUtils); the affordance hides itself for non-sketch fields.
   // Gated by the interaction-bindings plugin so a field doesn't even mount the
   // affordance (and its per-field useWatch) when the feature is off.
@@ -1085,7 +1090,15 @@ export default function FieldRenderer( {
         </div>
       )}
 
-      {inlineBinding ? (
+      {inlineBinding && config.component === "palette-picker" ? (
+        // The picker unfolds a grid under its bar: the pastille stays level
+        // with the bar (its own height on both breakpoints), not centred on
+        // the open grid.
+        <div className="flex items-start gap-1.5">
+          <div className="min-w-0 flex-1">{renderInput()}</div>
+          <div className="flex h-10 shrink-0 items-center md:h-7">{bindingAffordance}</div>
+        </div>
+      ) : inlineBinding ? (
         <div className="flex items-center gap-1.5">
           <div className="min-w-0 flex-1">{renderInput()}</div>
           {bindingAffordance}
