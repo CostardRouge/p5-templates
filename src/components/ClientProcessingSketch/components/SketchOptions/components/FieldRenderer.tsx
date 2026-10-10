@@ -309,6 +309,10 @@ export default function FieldRenderer( {
               "aria-invalid": !!error,
               ...register( registeredName )
             } }
+            live={ driven ? {
+              varName: bindingValueVarName( driven.target ),
+              base: !!currentValue
+            } : null }
           />
         );
 
@@ -811,6 +815,10 @@ export default function FieldRenderer( {
           <ControlledVector3DInput
             name={ registeredName }
             config={ config }
+            live={ driven ? {
+              target: driven.target,
+              area: driven.area
+            } : null }
           />
         );
 
@@ -912,6 +920,23 @@ export default function FieldRenderer( {
               >
                 <RotateCcw className="h-3.5 w-3.5 md:h-3 md:w-3" />
               </button>
+            )}
+
+            {/* Driven: the switch shows the live state, so the row also
+                names both — live first, then the base a click edits. */}
+            {driven && (
+              <span className="flex items-center gap-1 font-mono tabular-nums">
+                <LiveBindingValue
+                  target={ driven.target }
+                  labels={ [
+                    "off",
+                    "on"
+                  ] }
+                  fallback={ currentValue ? "on" : "off" }
+                  className="text-foreground"
+                />
+                <span className="text-label">· {currentValue ? "on" : "off"}</span>
+              </span>
             )}
 
             {bindingAffordance}
@@ -1077,8 +1102,7 @@ export default function FieldRenderer( {
           {/* The pad's per-field actions, as one cluster: redraw the pair
               (or triple), then modulate it. Both are hidden with the label
               (an item-list row passes hideLabel), which is where the pad has
-              no room for them anyway. The 3D pad is not bindable yet, so its
-              cluster is the shuffle alone. */}
+              no room for them anyway. */}
           {isVectorPad && (
             <div className="flex shrink-0 items-center gap-1">
               <RandomizeFieldButton

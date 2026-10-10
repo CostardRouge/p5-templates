@@ -11,7 +11,10 @@ import {
   publishBindingSignals,
   publishBindingValues,
   subscribeBindingValues,
-  getBindingValues
+  getBindingValues,
+  publishDeclaredTargets,
+  getDeclaredTargetsKey,
+  subscribeDeclaredTargets
 } from "../channelBridge";
 
 function bindVar( name: string ): string {
@@ -144,6 +147,17 @@ describe(
         expect( bindVar( "--binding-value-backgroundColor-a" ) ).toBe( "0.2" );
         expect( bindVar( "--binding-value-orientation-x" ) ).toBe( "0.25" );
         expect( bindVar( "--binding-value-orientation-y" ) ).toBe( "-0.5" );
+        expect( bindVar( "--binding-value-orientation-z" ) ).toBe( "" );
+
+        publishBindingValues( {
+          light: {
+            x: 1,
+            y: 2,
+            z: -3
+          }
+        } );
+
+        expect( bindVar( "--binding-value-light-z" ) ).toBe( "-3" );
 
         // Every part goes with its target.
         publishBindingValues( {} );
@@ -178,6 +192,47 @@ describe(
         expect( getBindingValues() ).toEqual( {
           seed: 600
         } );
+      }
+    );
+  }
+);
+
+describe(
+  "publishDeclaredTargets",
+  () => {
+    afterEach( () => {
+      publishDeclaredTargets( [] );
+    } );
+
+    it(
+      "notifies only when the set of targets changes, whatever its order",
+      () => {
+        let calls = 0;
+        const unsubscribe = subscribeDeclaredTargets( () => {
+          calls += 1;
+        } );
+
+        publishDeclaredTargets( [
+          "camera.tilt",
+          "camera.spin"
+        ] );
+        publishDeclaredTargets( [
+          "camera.spin",
+          "camera.tilt",
+          "camera.tilt"
+        ] );
+
+        expect( calls ).toBe( 1 );
+        expect( getDeclaredTargetsKey().split( "\n" ) ).toEqual( [
+          "camera.spin",
+          "camera.tilt"
+        ] );
+
+        publishDeclaredTargets( [] );
+
+        expect( calls ).toBe( 2 );
+        expect( getDeclaredTargetsKey() ).toBe( "" );
+        unsubscribe();
       }
     );
   }

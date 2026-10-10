@@ -165,9 +165,9 @@ playable on the bench artifact.
   to that axis (drei `GizmoViewport` gesture).
 - **Remember the chosen view** per sketch in `usePanelState` — only relevant if
   a second view ever comes back.
-- **Bindings**: `bindingKindFor( "vector3d" )` is `null`, so a 3D field cannot
-  yet be modulated from a channel; a `vector3d` kind would need a third
-  projection in `interaction/bindings.js`.
+- **Bindings**: shipped 2026-10-09 as a scalar-driven `vector3d` kind (one
+  signal sweeps per-axis `min` → `max`); driving the three axes from separate
+  generators or a channel is still open (`docs/memory/interaction-bindings.md`).
 - **HUD**: no widget reads a `{ x, y, z }`; `hud-vector` plots x·y only
   (`isPointValue` accepts a triple, so a 3D param already appears in the point
   pickers and plots its x·y).
