@@ -6,6 +6,7 @@ import {
 import clsx from "clsx";
 import {
   Bell,
+  Bot,
   BellOff,
   Check,
   ExternalLink,
@@ -33,7 +34,7 @@ import {
 } from "next-themes";
 import type React from "react";
 import {
-  useCallback, useEffect, useState
+  useCallback, useEffect, useState, useSyncExternalStore
 } from "react";
 import {
   createPortal
@@ -55,6 +56,9 @@ import {
 import {
   useDevActions
 } from "@/hooks/useDevActions";
+import {
+  connectBridge, disconnectBridge, getBridgeStatus, subscribeBridge, type BridgeStatus
+} from "@/lib/agent/studioBridge";
 import sleep from "@/utils/sleep";
 
 type MenuBarProps = {
@@ -146,6 +150,21 @@ function Divider() {
 }
 
 const itemClass = "flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors disabled:opacity-50";
+
+const OFF_BRIDGE: BridgeStatus = {
+  state: "off"
+};
+
+function bridgeLabel( bridge: BridgeStatus ): string {
+  switch ( bridge.state ) {
+    case "connected":
+      return "Agent connected — disconnect";
+    case "connecting":
+      return "Connecting an agent…";
+    default:
+      return "Connect an agent";
+  }
+}
 
 function MenuBar( {
   showRecordings = false,
@@ -342,6 +361,14 @@ function MenuBar( {
     devActionsVisible, devActionsAvailable, toggleDevActions
   } = useDevActions();
 
+  // The agent relay (MCP level 1). Shown whenever it is on: a tab an agent
+  // can write to must never look like one it cannot.
+  const bridge = useSyncExternalStore(
+    subscribeBridge,
+    getBridgeStatus,
+    () => OFF_BRIDGE
+  );
+
   if ( searchParams.get( "capturing" ) === "" ) {
     return null;
   }
@@ -431,6 +458,12 @@ function MenuBar( {
           <span
             aria-hidden
             className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-red-500 border-2 border-background animate-pulse-soft"
+          />
+        )}
+        {bridge.state === "connected" && (
+          <span
+            title="An agent is connected to this tab"
+            className="absolute -bottom-1 -right-1 h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-background"
           />
         )}
       </MenuButton>
@@ -621,6 +654,39 @@ function MenuBar( {
               )}
             </MenuItem>
           </>
+        )}
+
+        {/* Connect this tab to a Sketchbook studio relay running on this
+            machine, so an agent (Claude, any MCP client) can drive the studio
+            — scripts/mcp/studioRelay.ts, served at /mcp/sketchbook-studio-mcp.mjs. */}
+        <MenuItem>
+          {( {
+            focus
+          } ) => (
+            <button
+              type="button"
+              onClick={ () => bridge.state === "connected" || bridge.state === "connecting"
+                ? disconnectBridge()
+                : connectBridge() }
+              className={ clsx(
+                itemClass,
+                focus && "bg-hover"
+              ) }
+            >
+              <Bot className="h-4 w-4 text-foreground/70" />
+              <span className="flex-1 text-left">
+                {bridgeLabel( bridge )}
+              </span>
+              {bridge.state === "connected" && (
+                <Check className="h-4 w-4 text-emerald-500" />
+              )}
+            </button>
+          )}
+        </MenuItem>
+        {bridge.state === "error" && (
+          <p className="px-3 pb-2 text-xs text-foreground/60">
+            {bridge.message}
+          </p>
         )}
 
         {/* The studio's dev affordances — the pending badge, the Debug section,
