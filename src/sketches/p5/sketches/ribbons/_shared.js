@@ -4,6 +4,17 @@ import {
 import mappers from "@/p5/utils/mappers.js";
 import converters from "@/p5/utils/converters.js";
 import iterators from "@/p5/utils/iterators.js";
+import {
+  PALETTE_OPTIONS,
+  getPaletteSelectField
+} from "./_paletteOptions.js";
+
+// Re-exported for the runtime consumers; the FORMS import _paletteOptions.js
+// directly, since this module reaches the p5 runtime (see that file).
+export {
+  PALETTE_OPTIONS,
+  getPaletteSelectField
+};
 
 export function drawer(
   lerper, positioner, shaper, time, index = 0, targets = null
@@ -215,41 +226,6 @@ export const palettes = {
     );
   }
 };
-
-export const PALETTE_OPTIONS = [
-  {
-    value: "rainbow",
-    label: "Rainbow"
-  },
-  {
-    value: "rainbow-trip",
-    label: "Rainbow trip"
-  },
-  {
-    value: "purple",
-    label: "Purple"
-  },
-  {
-    value: "pink",
-    label: "Pink"
-  },
-  {
-    value: "red",
-    label: "Red"
-  },
-  {
-    value: "gold",
-    label: "Gold"
-  },
-  {
-    value: "ember",
-    label: "Ember"
-  },
-  {
-    value: "ocean",
-    label: "Ocean"
-  }
-];
 
 export function resolvePalette( name ) {
   return palettes[ name ] ?? palettes.rainbow;
@@ -517,14 +493,6 @@ export function drawRadialPattern( {
     }
   );
   p.pop();
-}
-
-export function getPaletteSelectField() {
-  return {
-    component: "select",
-    label: "Palette",
-    options: PALETTE_OPTIONS
-  };
 }
 
 export function createPixilatedBuffer( density ) {

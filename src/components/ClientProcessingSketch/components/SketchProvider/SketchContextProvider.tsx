@@ -9,6 +9,7 @@ import type {
 } from "./types/SketchContextType";
 import {
   extractOptionsSubset,
+  replaceSketchOptions,
   setSketchOptions,
   subscribeSketchOptions
 } from "@/lib/syncSketchOptions";
@@ -104,8 +105,27 @@ export default function SketchContextProvider( {
   engineRef.current = state.engine;
   loopingRef.current = state.looping;
 
+  // The first push of this provider's life SEEDS the store rather than merging
+  // into it: the store is global and still holds the previous sketch after a
+  // client-side navigation (see replaceSketchOptions).
+  const seededRef = useRef( false );
+
   useEffect(
     () => {
+      if ( !seededRef.current ) {
+        seededRef.current = true;
+        replaceSketchOptions(
+          state.options,
+          "react"
+        );
+
+        if ( !loopingRef.current && engineRef.current ) {
+          engineRef.current.redraw();
+        }
+
+        return;
+      }
+
       // When the changed form paths are known, push only those subtrees into
       // the store — the store's merge then touches a handful of values
       // instead of walking the entire options tree on every form tick.

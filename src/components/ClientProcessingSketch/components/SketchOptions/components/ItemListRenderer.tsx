@@ -532,7 +532,8 @@ function getDefaultValueForConfig( config: FieldConfig ): any {
         255,
         255
       ];
-    case "select": {
+    case "select":
+    case "palette-picker": {
       return config.options[ 0 ]?.value ?? "";
     }
     // The pad edits an { x, y } pair in place: without a shaped default a new
