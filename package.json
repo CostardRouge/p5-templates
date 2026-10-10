@@ -6,6 +6,7 @@
     "sketch:meta": "node scripts/watch-sketches.mjs",
     "sketch:meta:write": "node scripts/watch-sketches.mjs --once",
     "sketch:clean-assets": "node scripts/remove-orphan-thumbnails.mjs",
+    "mcp:relay:write": "node scripts/mcp/writeRelay.ts",
     "dev": "next dev --turbopack",
     "watch": "node scripts/dev-watch.mjs",
     "build": "next build",
