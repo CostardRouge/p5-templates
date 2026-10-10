@@ -1,4 +1,7 @@
 import type {
+  ExportVariant
+} from "../../export/variants";
+import type {
   StudioHandles
 } from "../handles";
 
@@ -9,6 +12,28 @@ export function fakeHandles(
   const writes: [ string, unknown ][] = [];
   const calls: string[] = [];
   let active: number | undefined;
+  let variants: ExportVariant[] = [];
+  let made = 0;
+
+  function makeVariant( key: string ): ExportVariant {
+    made += 1;
+
+    return {
+      id: `v${ made }`,
+      name: key === "still" ? "Still image" : "Square",
+      kind: key === "still" ? "image" : "video",
+      size: key === "still" ? null : {
+        width: 1080,
+        height: 1080
+      },
+      framerate: null,
+      format: "mp4",
+      frameCount: 10,
+      slides: "current",
+      delivery: "separate",
+      sizeStrategy: "smallest"
+    };
+  }
 
   function at( path?: string ) {
     if ( !path ) {
@@ -204,6 +229,79 @@ export function fakeHandles(
       bytes: 3
     } ),
     relayConnected: () => true,
+    exports: {
+      supported: () => true,
+      presets: [
+        {
+          key: "square",
+          label: "Square",
+          size: {
+            width: 1080,
+            height: 1080
+          }
+        },
+        {
+          key: "still",
+          label: "Still image",
+          kind: "image"
+        }
+      ],
+      list: () => variants,
+      add: ( key ) => {
+        const variant = makeVariant( key );
+
+        variants.push( variant );
+
+        return variant;
+      },
+      make: makeVariant,
+      patch: (
+        id, patch
+      ) => {
+        const index = variants.findIndex( ( variant ) => variant.id === id );
+
+        variants[ index ] = {
+          ...variants[ index ],
+          ...patch
+        };
+      },
+      remove: ( id ) => {
+        variants = variants.filter( ( variant ) => variant.id !== id );
+      },
+      nativeFramerate: () => 30,
+      run: async(
+        list, onArtifacts, onProgress
+      ) => {
+        calls.push( `export ${ list.map( ( variant ) => variant.name ).join( "," ) }` );
+
+        const items = list.map( ( variant ) => {
+          onArtifacts(
+            variant.id,
+            [
+              {
+                fileName: `${ variant.name }.${ variant.kind === "image" ? "png" : variant.format }`,
+                blob: new Blob( [
+                  "x"
+                ] )
+              }
+            ],
+            `${ variant.name }.zip`
+          );
+
+          return {
+            variantId: variant.id,
+            status: "done" as const,
+            percentage: 100,
+            phase: "encoding" as const,
+            phaseProgress: 1
+          };
+        } );
+
+        onProgress( items );
+
+        return items;
+      }
+    },
     // Only the second item is "on screen", drawn at its own offset.
     itemBounds: async( path ) => path === "content.1" ? {
       x: 0.1,

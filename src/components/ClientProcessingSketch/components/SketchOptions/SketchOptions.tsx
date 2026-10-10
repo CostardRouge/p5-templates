@@ -721,6 +721,8 @@ export default function SketchOptions( {
             <StudioCommands
               activeSlideIndex={ activeSlideIndex }
               slides={ studioSlideHandlers }
+              name={ name }
+              exportSupported={ browserRecordingSupported }
             />
             {/* Everything from here to the mixer is studio chrome: the rails,
                 the filmstrip, the mobile drawer, the transport bar. A

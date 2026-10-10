@@ -12,6 +12,9 @@ import {
   contentCommands
 } from "@/lib/agent/commands/contentCommands";
 import {
+  exportCommands
+} from "@/lib/agent/commands/exportCommands";
+import {
   sketchCommands
 } from "@/lib/agent/commands/sketchCommands";
 import {
@@ -33,8 +36,20 @@ import {
   captureFreshPngBlob
 } from "@/lib/canvasSnapshot";
 import {
+  runExportBatch
+} from "@/lib/export/runExportBatch";
+import {
+  addVariant, ensureVariants, getVariantSnapshot, patchVariant, removeVariant
+} from "@/lib/export/variantStore";
+import {
+  makeVariant, nativeFramerateFor, VARIANT_PRESETS
+} from "@/lib/export/variants";
+import {
   validateOptionsDocument
 } from "@/lib/optionsDocument";
+import type {
+  SketchOption
+} from "@/types/sketch.types";
 import {
   findEmbeddableSketch, loadSketchForm
 } from "@/lib/sketchLayerCatalogue";
@@ -122,10 +137,15 @@ export type SlideHandlers = StudioHandles[ "slides" ];
  */
 export default function StudioCommands( {
   activeSlideIndex,
-  slides
+  slides,
+  name,
+  exportSupported
 }: {
   activeSlideIndex: number | undefined;
   slides: SlideHandlers;
+  /** The sketch's name as the Export dialog keys its variants and files. */
+  name: string;
+  exportSupported: boolean;
 } ) {
   const form = useFormContext();
   const [
@@ -141,7 +161,8 @@ export default function StudioCommands( {
     history,
     selectPath,
     activeSlideIndex,
-    slides
+    slides,
+    exportSupported
   } );
 
   // The latest of everything, for handles that run long after this render.
@@ -153,7 +174,8 @@ export default function StudioCommands( {
       history,
       selectPath,
       activeSlideIndex,
-      slides
+      slides,
+      exportSupported
     };
   } );
 
@@ -166,6 +188,9 @@ export default function StudioCommands( {
   useEffect(
     () => {
       const now = () => latest.current;
+      // The Export dialog's key: its variant list is stored per sketch.
+      const variantKey = `${ state.engineId }/${ name }`;
+      const preset = ( key: string ) => VARIANT_PRESETS.find( ( candidate ) => candidate.key === key ) ?? VARIANT_PRESETS[ 0 ];
       const handles: StudioHandles = {
         sketchId,
         engineId: state.engineId,
@@ -341,13 +366,63 @@ export default function StudioCommands( {
 
           return null;
         },
+        exports: {
+          supported: () => now().exportSupported || "this browser cannot export (no WebCodecs encoder) — use a recent Chrome, Edge or Safari",
+          presets: VARIANT_PRESETS,
+          list: () => ensureVariants( variantKey ).variants,
+          add: ( key ) => {
+            addVariant(
+              variantKey,
+              preset( key )
+            );
+
+            return getVariantSnapshot( variantKey ).variants.at( -1 ) as ReturnType<typeof makeVariant>;
+          },
+          make: ( key ) => makeVariant( preset( key ) ),
+          patch: (
+            id, patch
+          ) => patchVariant(
+            variantKey,
+            id,
+            patch
+          ),
+          remove: ( id ) => removeVariant(
+            variantKey,
+            id
+          ),
+          nativeFramerate: () => nativeFramerateFor(
+            now().form.getValues() as SketchOption,
+            now().activeSlideIndex
+          ),
+          run: (
+            variants, onArtifacts, onProgress, signal
+          ) => {
+            const engine = now().state.engine;
+
+            if ( !engine ) {
+              throw new Error( "the sketch is not running yet" );
+            }
+
+            return runExportBatch( {
+              engine,
+              options: now().form.getValues() as SketchOption,
+              sketchName: name,
+              activeSlideIndex: now().activeSlideIndex,
+              variants,
+              onArtifacts,
+              onProgress,
+              signal
+            } );
+          }
+        },
         saveFile: sendFileToRelay,
         relayConnected: () => getBridgeStatus().state === "connected"
       };
       const off = studioCommands.register( [
         ...sketchCommands( handles ),
         ...contentCommands( handles ),
-        ...slideCommands( handles )
+        ...slideCommands( handles ),
+        ...exportCommands( handles )
       ] );
 
       setBridgeSketch( sketchId );
@@ -357,7 +432,8 @@ export default function StudioCommands( {
     },
     [
       sketchId,
-      state.engineId
+      state.engineId,
+      name
     ]
   );
 

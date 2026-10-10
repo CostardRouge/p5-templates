@@ -12,6 +12,12 @@
 import type {
   ImageResult
 } from "../../../scripts/mcp/registry.ts";
+import type {
+  ExportArtifact, ExportItemState
+} from "../export/runExportBatch";
+import type {
+  ExportVariant, ExportVariantPreset
+} from "../export/variants";
 
 export interface StudioHandles {
   /** `<engine>/<category>/<name>`. */
@@ -81,6 +87,30 @@ export interface StudioHandles {
     y: number;
     w: number;
     h: number } | null>;
+  /**
+   * The Export dialog's model: its variant list (`variantStore`, the same one
+   * the dialog edits, per sketch) and the runner it starts (`runExportBatch`).
+   */
+  exports: {
+    /** True, or why this browser cannot export (no WebCodecs…). */
+    supported: () => true | string;
+    presets: ReadonlyArray<ExportVariantPreset>;
+    list: () => ExportVariant[];
+    /** Append a variant from a preset to the dialog's list; answers it. */
+    add: ( presetKey: string ) => ExportVariant;
+    /** A variant from a preset that joins no list (a one-off run). */
+    make: ( presetKey: string ) => ExportVariant;
+    patch: ( id: string, patch: Partial<ExportVariant> ) => void;
+    remove: ( id: string ) => void;
+    /** The framerate a capture may not exceed on the active slide. */
+    nativeFramerate: () => number;
+    run: (
+      variants: ExportVariant[],
+      onArtifacts: ( variantId: string, artifacts: ExportArtifact[], bundleFileName: string ) => void,
+      onProgress: ( items: ExportItemState[] ) => void,
+      signal: AbortSignal
+    ) => Promise<ExportItemState[]>;
+  };
   /** The app's own schema verdict on a document (`validateOptionsDocument`). */
   validateDocument: ( document: unknown ) => { issues: { path: string;
     message: string }[];
