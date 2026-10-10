@@ -86,6 +86,10 @@ type Props = {
   fieldPath: string;
   component: FieldConfig[ "component" ];
   config: FieldConfig;
+  // Beside a one-line bar control: the button takes the bar's own height on
+  // both breakpoints (h-10 on a phone, h-7 from md) so the pair reads as one
+  // row. Elsewhere (checkbox row, pad label row) it stays a compact h-7.
+  matchBar?: boolean;
 };
 
 // Opaque black — the stop a colour ramp falls back to when the field carries
@@ -319,7 +323,8 @@ function SourceBar( {
 export default function BindingAffordance( {
   fieldPath,
   component,
-  config
+  config,
+  matchBar = false
 }: Props ) {
   const {
     setValue, register, getValues
@@ -806,7 +811,8 @@ export default function BindingAffordance( {
           }
         } }
         className={ clsx(
-          "relative grid h-7 w-7 place-items-center rounded-md border transition-colors outline-none focus-visible:ring-1 focus-visible:ring-focus",
+          "relative grid place-items-center rounded-md border transition-colors outline-none focus-visible:ring-1 focus-visible:ring-focus",
+          matchBar ? "h-10 w-10 md:h-7 md:w-7" : "h-7 w-7",
           playing
             ? "border-focus/60 text-focus hover:bg-hover"
             : bound

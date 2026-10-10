@@ -865,13 +865,6 @@ export default function FieldRenderer( {
   // affordance (and its per-field useWatch) when the feature is off.
   const bindable =
     bindingKindFor( config.component ) !== null && interactionBindingsEnabled();
-  const bindingAffordance = bindable ? (
-    <BindingAffordance
-      fieldPath={ registeredName }
-      component={ config.component }
-      config={ config }
-    />
-  ) : null;
   // One-line bar controls take the pastille beside the bar; the checkbox row
   // and the vector pads place it themselves, below.
   const isVectorPad =
@@ -880,6 +873,14 @@ export default function FieldRenderer( {
     bindable &&
     !isVectorPad &&
     config.component !== "checkbox";
+  const bindingAffordance = bindable ? (
+    <BindingAffordance
+      fieldPath={ registeredName }
+      component={ config.component }
+      config={ config }
+      matchBar={ inlineBinding }
+    />
+  ) : null;
 
   // Checkbox: label and switch share a single row — denser, and the whole
   // row is a finger-sized tap target. The reset button lives outside the
@@ -1091,12 +1092,11 @@ export default function FieldRenderer( {
       )}
 
       {inlineBinding && config.component === "palette-picker" ? (
-        // The picker unfolds a grid under its bar: the pastille stays level
-        // with the bar (its own height on both breakpoints), not centred on
-        // the open grid.
+        // The picker unfolds a grid under its bar: the pastille is pinned to
+        // the top of the row, level with the bar, not centred on the grid.
         <div className="flex items-start gap-1.5">
           <div className="min-w-0 flex-1">{renderInput()}</div>
-          <div className="flex h-10 shrink-0 items-center md:h-7">{bindingAffordance}</div>
+          {bindingAffordance}
         </div>
       ) : inlineBinding ? (
         <div className="flex items-center gap-1.5">

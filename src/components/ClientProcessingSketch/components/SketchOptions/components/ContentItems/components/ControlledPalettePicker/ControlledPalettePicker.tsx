@@ -286,7 +286,6 @@ export default function ControlledPalettePicker( {
       expanded={ open }
       onToggle={ setOpen }
       headerContainerClassName="rounded-lg"
-      contentClassName="pt-1.5 pb-1"
       header={ () => (
         <div className={ clsx(
           CONTROL_BAR_CLASS,
@@ -374,10 +373,13 @@ export default function ControlledPalettePicker( {
         </div>
       ) }
     >
+      {/* The spacing lives inside the content, never on CollapsibleItem's
+          own wrapper: padding there survives the 0fr collapse and left the
+          shut picker 10px taller than its bar. */}
       <div
         role="radiogroup"
         aria-label={ label ?? name }
-        className="space-y-2 pb-1 pt-0.5"
+        className="space-y-2 pb-2 pt-2"
       >
         {groups.map( ( [
           group,
