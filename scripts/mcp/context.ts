@@ -354,10 +354,16 @@ export function createContext( deps: CommandDeps ) {
     };
 
     if ( status === "failed" ) {
-      // The job row keeps no error text: the reason is only in the server's log.
       const where = isRecord( progression?.currentStep ) ? progression.currentStep.name : null;
 
-      state.failure = `failed${ where ? ` during ${ String( where ) }` : "" } — the reason is in the Sketchbook server's log (the job record does not keep it)`;
+      // `Job.error` holds what the worker caught; a server older than that
+      // column only has its log.
+      state.failure = typeof job.error === "string" && job.error
+        ? job.error
+        : `failed${ where ? ` during ${ String( where ) }` : "" } — the reason is in the Sketchbook server's log (this server does not store it)`;
+      if ( where ) {
+        state.failedStep = where;
+      }
     }
 
     if ( status === "completed" ) {

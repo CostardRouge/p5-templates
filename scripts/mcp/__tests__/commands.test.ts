@@ -1276,6 +1276,60 @@ describe(
     );
 
     it(
+      "jobs.get answers the reason the server stored for a failed job",
+      async() => {
+        const {
+          registry
+        } = setup( {
+          ...UP,
+          "/api/recordings/f-1": () => ( {
+            id: "f-1",
+            status: "failed",
+            error: "FFmpeg exited with code 187"
+          } ),
+          "/api/progression/f-1": () => ( {
+            percentage: 0,
+            currentStep: {
+              name: "uploading",
+              percentage: 0
+            }
+          } ),
+          "/api/recordings/f-2": () => ( {
+            id: "f-2",
+            status: "failed",
+            error: null
+          } ),
+          "/api/progression/f-2": () => ( {
+            percentage: 0,
+            currentStep: {
+              name: "uploading",
+              percentage: 0
+            }
+          } )
+        } );
+
+        await expect( registry.execute(
+          "jobs.get",
+          {
+            jobId: "f-1"
+          }
+        ) ).resolves.toMatchObject( {
+          failure: "FFmpeg exited with code 187",
+          failedStep: "uploading"
+        } );
+        // A server older than the column still says where to look.
+        await expect( registry.execute(
+          "jobs.get",
+          {
+            jobId: "f-2"
+          }
+        ) ).resolves.toMatchObject( {
+          failure: expect.stringContaining( "server's log" )
+        } );
+      }
+    );
+
+    it(
       "refuses a job id the server could not have minted before calling it",
       async() => {
         const {
