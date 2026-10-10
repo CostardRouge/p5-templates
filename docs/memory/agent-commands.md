@@ -21,9 +21,9 @@ Sixteen commands in four files (`scripts/mcp/commands.ts` assembles them; `conte
 - `drafts.update` re-sends every file the draft keeps (fetched back from `/api/s3/<id>/assets/…`): the enqueue route rebuilds `assets` from the files in the request, as the studio's own re-save does. A slide asset whose slide a new `slides` list removed is dropped and reported.
 - Uploaded media are referenced as `global/<images|videos|audios>/<name>` (`getScopeAssetPath`); the name is reduced to `[A-Za-z0-9._-]`. `readMedia` reads only media extensions, ≤ 500 MB: an agent could otherwise be talked into uploading any file the user can read to a public server.
 - `render.frame` places the frame by `time`, `progress` or `frame`, converted with the page's own clock (`__sketchCapture.timing()`, `recording.md`); a time past the loop is refused, not wrapped. `render.stills` takes `count` positions `from + (to − from)·i/count` (end excluded so a closed loop does not repeat), renders them in ONE page load, saves each PNG and answers a contact sheet.
-- A video needs EVEN dimensions: the server encodes H.264 yuv420p, and 540 × 675 fails in FFmpeg ("height not divisible by 2"). `render.video` refuses an odd global or slide size before a job exists. The studio's own backend recording has the same limit and no such check.
+- An odd width or height is recorded padded to even by the recorder (`recording.md`), so `render.video` no longer refuses it: its answer carries `padded`, one line per size that will change (540 × 675 → 540 × 676), so the agent is not surprised by the file.
 - `render.video`, `drafts.*` and `jobs.*` are `unavailable` until `/api/recordings/health` answers (Redis + Postgres + worker; that call also boots the worker), while frames of a sketch still render — a dev server without infra can do half the work.
-- A failed job's REASON is not stored anywhere but the server log (the `Job` row has no error column, progression keeps only the step, and the step names mislead — an FFmpeg failure reads "failed during uploading"), so `jobs.get` names the step and says so.
+- A failed job's REASON is not stored anywhere but the server log (the `Job` row has no error column, progression keeps only the step, and the step names mislead — an FFmpeg failure read "failed during uploading"), so `jobs.get` names the step and says so.
 - A page that throws while it loads never becomes ready; the renderer then reports the page's errors instead of a bare timeout.
 - Verifying a video needs the infra: `redis-server`, a Postgres with `prisma migrate deploy`, and any S3 — when the MinIO binary is unavailable, `moto_server -p 9000` plus a `PUT /recordings` bucket works, with `S3_ENDPOINT=http://localhost:9000` and any key pair. A sketch that draws at absolute pixel sizes (ping-pong's 186 px ball) does nothing at a small test size — no bounce, no sound — so test sound at the sketch's own size and a low framerate instead.
 
@@ -36,7 +36,6 @@ Sixteen commands in four files (`scripts/mcp/commands.ts` assembles them; `conte
 - No command writes a preset (the `Preset` model), only drafts and jobs.
 - A front-end export (several variants — Reel, square — from one run, GIF, image sequence) has no server equivalent; an agent gets MP4 per slide, and stills through `render.stills`.
 - A failed job's reason lives only in the server log (above); persisting it is a schema change.
-- The recorder could pad odd sizes to even (`-vf pad=ceil(iw/2)*2:ceil(ih/2)*2`) instead of failing; left to the maintainer, the MCP refuses them meanwhile.
 
 ## A stored job's options reach the page UNPARSED — store the normalised document (2026-10-09)
 

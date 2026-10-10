@@ -650,6 +650,13 @@ describe(
             success: true,
             jobId: "copy-1"
           } ),
+          "/api/recordings/d-odd/clone": () => ( {
+            success: true,
+            jobId: "copy-2"
+          } ),
+          "/api/recordings/copy-2/start": () => ( {
+            started: true
+          } ),
           "/api/recordings/copy-1/start": () => ( {
             started: true
           } )
@@ -669,27 +676,18 @@ describe(
           "/api/recordings/d-1/clone",
           "/api/recordings/copy-1/start"
         ] );
-        // H.264 takes even dimensions only: refused before any job exists.
+        // The recorder pads an odd size: the answer says what will come out.
         await expect( registry.execute(
           "render.video",
           {
             draft: "d-odd"
           }
-        ) ).rejects.toMatchObject( {
-          code: "invalid",
-          message: "a video needs even dimensions (H.264, yuv420p) — size is 540×675, slides.1.size is 1081×1080"
+        ) ).resolves.toMatchObject( {
+          padded: [
+            "size 540×675 is recorded as 540×676 (H.264 takes even sizes; one black edge row/column is added)",
+            "slides.1.size 1081×1080 is recorded as 1082×1080 (H.264 takes even sizes; one black edge row/column is added)"
+          ]
         } );
-        await expect( registry.execute(
-          "render.video",
-          {
-            sketch: "voronoi-v1-cells",
-            width: 540,
-            height: 675
-          }
-        ) ).rejects.toMatchObject( {
-          code: "invalid"
-        } );
-        expect( calls.some( ( c ) => c.path.includes( "d-odd/clone" ) || c.path === "/api/recordings/enqueue" ) ).toBe( false );
         await expect( registry.execute(
           "render.video",
           {

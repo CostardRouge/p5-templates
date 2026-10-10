@@ -95,11 +95,12 @@ type Target = { url: string;
   label: string };
 
 /**
- * The server encodes H.264 in yuv420p, which takes even dimensions only: a
- * 540 × 675 canvas records nothing and the job fails in FFmpeg. Refused here,
- * before a job exists, naming every size at fault.
+ * The recorder pads an odd width or height to the next even one (H.264 in
+ * yuv420p takes nothing else; `EVEN_DIMENSIONS_FILTER` in
+ * `captureFramesWithStreaming.ts`). Said in the answer, so an agent that
+ * asked for 540 × 675 is not surprised by a 540 × 676 file.
  */
-export function checkVideoSizes( options: Record<string, unknown> ): void {
+export function paddedSizes( options: Record<string, unknown> ): string[] {
   const sizes: [ string, unknown ][] = [
     [
       "size",
@@ -112,22 +113,24 @@ export function checkVideoSizes( options: Record<string, unknown> ): void {
       isRecord( slide ) ? slide.size : undefined
     ] )
   ];
-  const odd = sizes.filter( ( [
-    , size
-  ] ) => isRecord( size ) && [
-    size.width,
-    size.height
-  ].some( ( side ) => typeof side === "number" && side % 2 !== 0 ) );
 
-  if ( odd.length ) {
-    throw new CommandError(
-      "invalid",
-      `a video needs even dimensions (H.264, yuv420p) — ${ odd.map( ( [
-        where,
-        size
-      ] ) => `${ where } is ${ ( size as Record<string, unknown> ).width }×${ ( size as Record<string, unknown> ).height }` ).join( ", " ) }`
-    );
-  }
+  return sizes.flatMap( ( [
+    where,
+    size
+  ] ) => {
+    if ( !isRecord( size ) || typeof size.width !== "number" || typeof size.height !== "number" ) {
+      return [];
+    }
+
+    const width = Math.ceil( size.width / 2 ) * 2;
+    const height = Math.ceil( size.height / 2 ) * 2;
+
+    return width !== size.width || height !== size.height
+      ? [
+        `${ where } ${ size.width }×${ size.height } is recorded as ${ width }×${ height } (H.264 takes even sizes; one black edge row/column is added)`
+      ]
+      : [];
+  } );
 }
 
 export function renderCommands( ctx: Context ): CommandSpec[] {
@@ -466,7 +469,7 @@ export function renderCommands( ctx: Context ): CommandSpec[] {
         if ( params.draft !== undefined ) {
           const job = await ctx.getJob( params.draft );
 
-          checkVideoSizes( isRecord( job.options ) ? job.options : {} );
+          const padded = paddedSizes( isRecord( job.options ) ? job.options : {} );
 
           // A job is recorded once: start a copy, keep the draft to edit.
           const copy = await ctx.getJson(
@@ -493,7 +496,10 @@ export function renderCommands( ctx: Context ): CommandSpec[] {
             jobId: copy.jobId,
             fromDraft: params.draft,
             status: "queued",
-            next: "jobs.wait { jobId } until completed, then jobs.result { jobId }"
+            next: "jobs.wait { jobId } until completed, then jobs.result { jobId }",
+            ...( padded.length ? {
+              padded
+            } : {} )
           };
         }
 
@@ -534,7 +540,7 @@ export function renderCommands( ctx: Context ): CommandSpec[] {
           } : {} )
         };
 
-        checkVideoSizes( options );
+        const padded = paddedSizes( options );
 
         const body = new FormData();
 
@@ -569,7 +575,10 @@ export function renderCommands( ctx: Context ): CommandSpec[] {
         return {
           jobId: answer.jobId,
           status: "queued",
-          next: "jobs.wait { jobId } until completed, then jobs.result { jobId }"
+          next: "jobs.wait { jobId } until completed, then jobs.result { jobId }",
+          ...( padded.length ? {
+            padded
+          } : {} )
         };
       }
     }
