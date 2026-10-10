@@ -98,6 +98,31 @@ npm run build               # compiles every sketch route — catches broken imp
 
 ## Driving it from Claude (MCP)
 
+Two MCP servers, for two situations: one drives a studio **tab you have open** (any deployment, static ones included, nothing to install but one file), the other works **headless** against a server and records videos without a browser.
+
+### An open studio tab — no repository needed
+
+Every deployment serves the relay as `/mcp/sketchbook-studio-mcp.mjs`: one file, Node ≥ 18, no dependencies. Download it once and register it:
+
+```bash
+curl -fsSLo ~/.sketchbook-studio-mcp.mjs https://p5.steeve.website/mcp/sketchbook-studio-mcp.mjs
+claude mcp add sketchbook-studio -- node ~/.sketchbook-studio-mcp.mjs
+```
+
+Then open any sketch, and in the studio menu choose **Connect an agent** (the menu button gets a green dot). The agent now drives that tab — what it does shows up live, lands in the undo history, and is saved with the piece like a click. The relay listens on `127.0.0.1:7982` only and answers loopback pages and the official site; for a self-hosted copy add its origin with `SKETCHBOOK_ORIGINS=https://your.host`. `--port` changes the port, `--out DIR` where exports land (default `~/Movies/Sketchbook`).
+
+Tools: `sketchbook_studio_status`, `sketchbook_studio_commands` (every command with its JSON Schema and whether it can run now) and `sketchbook_studio_run` (`{ command, params }`). The commands:
+
+- **sketch** — `sketches.list`, `studio.open`, `studio.status`, `sketch.describe` / `sketch.set` / `sketch.reset` / `sketch.randomize`, `canvas.set` (size, framerate, duration), `document.get`, `history.undo` / `history.redo`
+- **slides** — `slides.list` / `add` / `duplicate` / `remove` / `move` / `select` / `rename`
+- **content** — `content.kinds` / `list` / `add` / `update` / `remove` / `duplicate` / `move` / `toggle` / `place` (by the item's visible centre) / `select`, and `content.hudFor` (a HUD widget bound to a sketch control)
+- **media** — `assets.add` (base64 or a URL) / `assets.list` / `assets.remove`
+- **look and export** — `playback.play` / `pause` / `seek`, `studio.snapshot` (a picture the agent sees), `export.variants` / `add` / `update` / `remove` / `run` / `status` / `cancel` (the Export dialog's own list and runner; files are written by the relay)
+
+A value outside its control's range is refused, never clamped. Decisions and traps: `docs/memory/agent-commands.md`.
+
+### Headless, against a server
+
 `scripts/mcp/sketchbook-mcp.ts` is an MCP server over stdio: Claude (or any MCP client) can list the sketches, read their parameters, compose a whole piece (text, images, sound, slides) as a draft, **render frames and look at them**, record the MP4 and fetch it. It drives a running Sketchbook over its public routes and renders single frames itself in headless Chromium, so start the app first (`npm run dev`, or point it at a deployment). Node ≥ 22.18 runs it straight from TypeScript.
 
 ```bash
