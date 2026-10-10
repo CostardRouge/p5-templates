@@ -8,6 +8,10 @@ import {
 } from "react-hook-form";
 
 import useSketch from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
+import useAssetDrop from "@/hooks/useAssetDrop";
+import {
+  assetCommands
+} from "@/lib/agent/commands/assetCommands";
 import {
   contentCommands
 } from "@/lib/agent/commands/contentCommands";
@@ -154,12 +158,16 @@ export default function StudioCommands( {
   ] = useSketch();
   const history = useFormUndoRedo();
   const selectPath = useSelectContentPath();
+  const {
+    addAssets
+  } = useAssetDrop();
   const latest = useRef( {
     form,
     state,
     dispatch,
     history,
     selectPath,
+    addAssets,
     activeSlideIndex,
     slides,
     exportSupported
@@ -173,6 +181,7 @@ export default function StudioCommands( {
       dispatch,
       history,
       selectPath,
+      addAssets,
       activeSlideIndex,
       slides,
       exportSupported
@@ -415,6 +424,46 @@ export default function StudioCommands( {
             } );
           }
         },
+        addAsset: async(
+          file, kind, slide
+        ) => {
+          const files = new DataTransfer();
+
+          files.items.add( file );
+
+          const [
+            path
+          ] = await now().addAssets( {
+            files: files.files,
+            type: kind,
+            scope: slide === undefined ? "global" : {
+              slide
+            }
+          } );
+
+          if ( !path ) {
+            throw new Error( `${ file.name } could not be read as ${ kind }` );
+          }
+
+          // The form is the source of truth (as useAssetsBridge does after the picker).
+          const listPath = `${ slide === undefined ? "assets" : `slides.${ slide }.assets` }.${ kind }`;
+          const current = now().form.getValues( listPath );
+
+          now().form.setValue(
+            listPath,
+            [
+              ...new Set( [
+                ...( Array.isArray( current ) ? current : [] ),
+                path
+              ] )
+            ],
+            {
+              shouldDirty: true
+            }
+          );
+
+          return path;
+        },
         saveFile: sendFileToRelay,
         relayConnected: () => getBridgeStatus().state === "connected"
       };
@@ -422,7 +471,8 @@ export default function StudioCommands( {
         ...sketchCommands( handles ),
         ...contentCommands( handles ),
         ...slideCommands( handles ),
-        ...exportCommands( handles )
+        ...exportCommands( handles ),
+        ...assetCommands( handles )
       ] );
 
       setBridgeSketch( sketchId );

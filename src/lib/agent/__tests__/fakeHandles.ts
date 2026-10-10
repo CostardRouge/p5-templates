@@ -229,6 +229,23 @@ export function fakeHandles(
       bytes: 3
     } ),
     relayConnected: () => true,
+    addAsset: async(
+      file, kind, slide
+    ) => {
+      const path = `${ slide === undefined ? "global" : `slide-${ slide }` }/${ kind }/${ file.name }`;
+      const base = slide === undefined ? "assets" : `slides.${ slide }.assets`;
+
+      put(
+        `${ base }.${ kind }`,
+        [
+          ...( at( `${ base }.${ kind }` ) ?? [] ),
+          path
+        ]
+      );
+      calls.push( `asset ${ path } ${ file.size }` );
+
+      return path;
+    },
     exports: {
       supported: () => true,
       presets: [

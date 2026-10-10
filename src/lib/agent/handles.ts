@@ -111,6 +111,12 @@ export interface StudioHandles {
       signal: AbortSignal
     ) => Promise<ExportItemState[]>;
   };
+  /**
+   * Register `file` as the asset picker does (`useAssetDrop().addAssets`: a
+   * blob under a unique scoped path) and list it in the form's `assets` of
+   * that slide or the root; answers the path.
+   */
+  addAsset: ( file: File, kind: "images" | "videos" | "audios" | "json", slide: number | undefined ) => Promise<string>;
   /** The app's own schema verdict on a document (`validateOptionsDocument`). */
   validateDocument: ( document: unknown ) => { issues: { path: string;
     message: string }[];
