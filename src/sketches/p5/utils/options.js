@@ -61,7 +61,7 @@ import {
   publishMidiPortName
 } from "@/lib/channelBridge";
 import {
-  publishChannels, publishBindingSignals, publishBindingValues
+  publishChannels, publishBindingSignals, publishBindingValues, publishDeclaredTargets
 } from "@/lib/channelBridge";
 
 import {
@@ -797,9 +797,17 @@ function publishChannelsFrame() {
     if ( !Array.isArray( bindings ) || bindings.length === 0 ) {
       publishBindingSignals( {} );
       publishBindingValues( {} );
+      publishDeclaredTargets( [] );
 
       return;
     }
+
+    // Which declared controls the connected port resolved (withResolvedControls
+    // only keeps those, under a derived `declared:` id): the editor gives their
+    // fields the driven treatment, and cannot work this out itself.
+    publishDeclaredTargets( bindings
+      .filter( ( binding ) => typeof binding?.id === "string" && binding.id.startsWith( "declared:" ) )
+      .map( ( binding ) => binding.target ) );
 
     publishBindingSignals( computeBindingSignals(
       {

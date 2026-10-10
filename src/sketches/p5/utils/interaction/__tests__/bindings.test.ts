@@ -26,6 +26,7 @@ import {
   shapedScalar,
   computeBindingSignals,
   computeBindingValues,
+  mapVector3,
   isGenerator,
   selectActiveBindings,
   getPath,
@@ -2030,6 +2031,98 @@ describe(
 
         expect( values ).toEqual( {
           b: 2
+        } );
+      }
+    );
+  }
+);
+
+describe(
+  "vector3d bindings",
+  () => {
+    const sweep = {
+      source: "oscillator",
+      target: "light",
+      kind: "vector3d",
+      mapping: {
+        x: {
+          min: -1,
+          max: 1
+        },
+        y: {
+          min: 0,
+          max: 2
+        },
+        z: {
+          min: 4,
+          max: -4
+        }
+      }
+    };
+
+    it(
+      "sweeps every axis from its min to its max on one signal",
+      () => {
+        expect( mapVector3(
+          0.25,
+          sweep
+        ) ).toEqual( {
+          x: -0.5,
+          y: 0.5,
+          z: 2
+        } );
+        expect( mapVector3(
+          2,
+          sweep
+        ) ).toEqual( {
+          x: 1,
+          y: 2,
+          z: -4
+        } );
+      }
+    );
+
+    it(
+      "resolves onto the target triple, keeping the keys stored beside it",
+      () => {
+        const resolved = resolveBindings(
+          {
+            light: {
+              x: 0,
+              y: 0,
+              z: 0,
+              label: "key"
+            },
+            bindings: [
+              {
+                ...sweep,
+                oscillator: {
+                  wave: "sine",
+                  cycles: 1
+                }
+              }
+            ]
+          },
+          {},
+          -1,
+          {
+            progression: 0.5
+          }
+        ) as Record<string, any>;
+
+        // The sine wave peaks at half a cycle: every axis at its max.
+        expect( resolved.light.x ).toBeCloseTo( 1 );
+        expect( resolved.light.y ).toBeCloseTo( 2 );
+        expect( resolved.light.z ).toBeCloseTo( -4 );
+        expect( resolved.light.label ).toBe( "key" );
+
+        expect( ( computeBindingValues(
+          resolved,
+          resolved.bindings
+        ) as Record<string, unknown> ).light ).toEqual( {
+          x: resolved.light.x,
+          y: resolved.light.y,
+          z: resolved.light.z
         } );
       }
     );

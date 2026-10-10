@@ -25,6 +25,7 @@ import type {
 export type BindingKind =
   | "continuous"
   | "vector2d"
+  | "vector3d"
   | "boolean"
   | "enum"
   | "color";
@@ -42,6 +43,8 @@ export function bindingKindFor( component: FieldConfig[ "component" ] ): Binding
       return "continuous";
     case "vector2d":
       return "vector2d";
+    case "vector3d":
+      return "vector3d";
     case "checkbox":
       return "boolean";
     case "select":
@@ -64,6 +67,9 @@ export type BlendMode =
 export type Binding = {
   id?: string;
   source: string;
+  /** An abstract control (`knob.1`) the connected port resolves to `source` —
+   *  set by a learn, or by a sketch's own declaration. */
+  control?: string;
   project?: string;
   target: string;
   kind: BindingKind;
@@ -789,6 +795,39 @@ export function makeDefaultBinding(
         curve: "linear"
       },
       smoothing: 0.2,
+      enabled: true,
+      weight: 1,
+      blend: "replace"
+    };
+  }
+
+  if ( kind === "vector3d" ) {
+    // Each axis sweeps its whole range, so the point travels the box's
+    // diagonal — the one path that moves all three numbers at once and reads
+    // as motion in the box. A generator, like every scalar family: no channel
+    // carries a triple.
+    const min = anyConfig.min ?? ( anyConfig.allowNegative === false ? 0 : -1 );
+    const max = anyConfig.max ?? 1;
+    const axis = ( key: "xAxis" | "yAxis" | "zAxis" ) => ( {
+      min: anyConfig[ key ]?.min ?? min,
+      max: anyConfig[ key ]?.max ?? max
+    } );
+
+    return {
+      id: makeId(),
+      source: "oscillator",
+      target,
+      kind: "vector3d",
+      oscillator: {
+        ...DEFAULT_OSCILLATOR
+      },
+      mapping: {
+        x: axis( "xAxis" ),
+        y: axis( "yAxis" ),
+        z: axis( "zAxis" ),
+        curve: "linear"
+      },
+      smoothing: 0.15,
       enabled: true,
       weight: 1,
       blend: "replace"

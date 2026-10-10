@@ -250,14 +250,15 @@ export function publishBindingSignals( signals: Record<string, number> ): void {
 //   number (slider, enum index, boolean) → --binding-value-<t>
 //   [r, g, b, a] bytes (colour)          → --binding-value-<t>    rgb(r g b / α)
 //                                          --binding-value-<t>-a  α, 0..1
-//   { x, y } (pad)                       → --binding-value-<t>-x, -y
+//   { x, y } / { x, y, z } (pads)        → --binding-value-<t>-x, -y (, -z)
 
 export type BindingValue = number | number[] | { x: number;
-  y: number };
+  y: number;
+  z?: number };
 
 /** CSS variable name for a driven target's resolved value, or one part of it. */
 export function bindingValueVarName(
-  target: string, part?: "x" | "y" | "a"
+  target: string, part?: "x" | "y" | "z" | "a"
 ): string {
   return `--binding-value-${ cssId( target ) }${ part ? `-${ part }` : "" }`;
 }
@@ -292,7 +293,7 @@ function bindingValueVars(
     ];
   }
 
-  return [
+  const axes: Array<[string, string]> = [
     [
       bindingValueVarName(
         target,
@@ -308,6 +309,18 @@ function bindingValueVars(
       String( value.y )
     ]
   ];
+
+  if ( typeof value.z === "number" ) {
+    axes.push( [
+      bindingValueVarName(
+        target,
+        "z"
+      ),
+      String( value.z )
+    ] );
+  }
+
+  return axes;
 }
 
 type ValueSubscriber = ( values: Record<string, BindingValue> ) => void;
@@ -372,6 +385,52 @@ export function subscribeBindingValues( cb: ValueSubscriber ): () => void {
 
   return () => {
     valueSubscribers.delete( cb );
+  };
+}
+
+// ── Declared bindings the engine actually resolved ──────────────────────────
+// A sketch declares `binding: { control: "knob.1" }` on a field; the engine
+// turns it into a binding only while the connected port maps that control.
+// The editor needs to know WHICH fields that leaves driven, to give them the
+// same live treatment as a hand-made binding — and only the engine knows,
+// because only it has the port name. A set that changes on a plug or a port
+// switch, never per frame, so subscribers re-render only on a real change.
+
+let declaredTargetsKey = "";
+const declaredTargetSubscribers = new Set<() => void>();
+
+/** The targets of the declared bindings resolved this frame. */
+export function publishDeclaredTargets( targets: string[] ): void {
+  const key = [
+    ...new Set( targets )
+  ].sort().join( "\n" );
+
+  if ( key === declaredTargetsKey ) {
+    return;
+  }
+
+  declaredTargetsKey = key;
+
+  for ( const subscriber of declaredTargetSubscribers ) {
+    try {
+      subscriber();
+    } catch {
+      // A subscriber must never break the publish loop.
+    }
+  }
+}
+
+/** A stable string snapshot of the resolved declared targets (one per line). */
+export function getDeclaredTargetsKey(): string {
+  return declaredTargetsKey;
+}
+
+/** Notified when the set of resolved declared targets changes. */
+export function subscribeDeclaredTargets( cb: () => void ): () => void {
+  declaredTargetSubscribers.add( cb );
+
+  return () => {
+    declaredTargetSubscribers.delete( cb );
   };
 }
 
