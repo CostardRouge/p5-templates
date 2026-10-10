@@ -111,6 +111,7 @@ export function fakeHandles(
           0,
           structuredClone( document.slides[ index ] )
         );
+        active = index + 1;
       },
       remove: ( index ) => {
         calls.push( `remove ${ index }` );
@@ -118,6 +119,10 @@ export function fakeHandles(
           index,
           1
         );
+        active = document.slides.length ? Math.min(
+          index,
+          document.slides.length - 1
+        ) : undefined;
       },
       move: (
         from, to
@@ -135,6 +140,7 @@ export function fakeHandles(
           0,
           slide
         );
+        active = to;
       },
       rename: (
         index, name

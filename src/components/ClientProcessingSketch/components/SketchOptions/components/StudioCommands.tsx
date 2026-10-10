@@ -14,6 +14,9 @@ import {
 import {
   sketchCommands
 } from "@/lib/agent/commands/sketchCommands";
+import {
+  slideCommands
+} from "@/lib/agent/commands/slideCommands";
 import type {
   StudioHandles
 } from "@/lib/agent/handles";
@@ -343,7 +346,8 @@ export default function StudioCommands( {
       };
       const off = studioCommands.register( [
         ...sketchCommands( handles ),
-        ...contentCommands( handles )
+        ...contentCommands( handles ),
+        ...slideCommands( handles )
       ] );
 
       setBridgeSketch( sketchId );
