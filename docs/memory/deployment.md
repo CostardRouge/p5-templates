@@ -15,3 +15,8 @@ Read before touching the Dockerfile, `docker-compose.yml`, the deploy workflow o
 ## Local infra is the same four services
 
 2026-08-20 — `docker-compose.yml` defines `app`, `redis`, `minio`, `postgres` with named volumes, on a `pipeline` network. The `Makefile` wraps the common combinations (`make help` lists them): `services-up` for infra only, `app-dev` for full-Docker development with hot reload, `app-prod` = rebuild + up, `clean` to stop and drop volumes. **How to apply**: `make clean` removes the volumes — it destroys the local database, presets and MinIO objects. It is the right tool for a corrupt local state and the wrong one for "restart the stack" (that is `make dc-stop` / `dc-up`).
+
+
+## The NAS hardware (2026-10-10)
+
+An Intel 2nd-generation i7 (Sandy Bridge, amd64), per the maintainer, who expects its integrated GPU to serve headless Chromium. Not yet verified in the container: Sandy Bridge HD graphics is old enough that Chrome may blocklist it or offer no WebGL2, in which case the backend renders on SwiftShader (`recording.md`'s numbers). **How to apply**: amd64 means Google Chrome (with H.264) can go in the image if the server-side front encoder is ever built; check GPU use with `chrome://gpu` from inside the container, and pass the render device through (`/dev/dri`) in `docker-compose.yml`, before quoting any GPU speed.
