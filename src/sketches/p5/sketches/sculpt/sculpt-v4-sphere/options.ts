@@ -588,7 +588,8 @@ export const formConfiguration: Record<string, any> = {
   },
 
   // Focused subset of the shared interaction form: only the modalities this
-  // sketch reads (mouse, touch, camera hands).
+  // sketch reads (mouse, touch, camera hands), plus MIDI, whose port is what
+  // resolves the knobs the camera rig declares.
   interaction: {
     component: "nested-object",
     label: "Input sources",
@@ -614,7 +615,8 @@ export const formConfiguration: Record<string, any> = {
             }
           }
         }
-      }
+      },
+      midi: interactionFormConfiguration.fields.midi
     }
   },
 

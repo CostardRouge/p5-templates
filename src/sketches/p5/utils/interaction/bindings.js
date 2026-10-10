@@ -12,10 +12,11 @@
 // frame number) are injected by the caller — see options.js, which wires this
 // into the live `options.sketch` proxy.
 //
-// Five families, one per `kind`: "continuous" (slider / number), "vector2d"
+// Six families, one per `kind`: "continuous" (slider / number), "vector2d"
 // (an {x,y} passthrough), "boolean" (a Schmitt trigger, optionally edge-
 // toggled), "enum" (the shaped signal quantized to one of the target's option
-// values) and "color" (a two-stop [r,g,b,a] ramp). Everything upstream of the
+// values), "color" (a two-stop [r,g,b,a] ramp) and "vector3d" (an {x,y,z}
+// swept along per-axis ranges by one scalar signal). Everything upstream of the
 // mapping — sources, generators, projection, invert, curve — is shared, so a
 // new family is a `kind` branch in `bindingValue` plus a fold rule.
 
@@ -523,6 +524,34 @@ export function mapVector(
   };
 }
 
+// Vector3d: one shaped 0..1 signal sweeps every axis from its `min` to its
+// `max` at once — a straight path between two corners of the box. Driven by a
+// scalar on purpose: no channel publishes a triple, and a generator keeps the
+// 3D target deterministic under capture, which a device never would.
+export function mapVector3(
+  signal, binding
+) {
+  const mapping = binding.mapping ?? {};
+  const s = clamp01( signal );
+  const axis = ( range ) => lerp(
+    num(
+      range?.min,
+      0
+    ),
+    num(
+      range?.max,
+      1
+    ),
+    s
+  );
+
+  return {
+    x: axis( mapping.x ),
+    y: axis( mapping.y ),
+    z: axis( mapping.z )
+  };
+}
+
 // Boolean: a Schmitt trigger over the shaped signal. `threshold` is where it
 // rises; `hysteresis` widens the gap it must fall back through before it goes
 // low again, so a signal hovering on the line does not chatter. In "toggle"
@@ -537,7 +566,8 @@ export function mapVector(
 const SIGNAL_SMOOTHED_KINDS = new Set( [
   "boolean",
   "enum",
-  "color"
+  "color",
+  "vector3d"
 ] );
 
 const _triggerState = new Map();
@@ -872,6 +902,13 @@ function bindingValue(
     );
   }
 
+  if ( kind === "vector3d" ) {
+    return mapVector3(
+      signal,
+      binding
+    );
+  }
+
   return mapColor(
     signal,
     binding
@@ -1066,6 +1103,51 @@ function foldTarget(
           ),
           num(
             value.y,
+            0
+          ),
+          mode,
+          weight
+        )
+      };
+    } else if ( kind === "vector3d" ) {
+      // Per axis, like the 2D pad; every blend mode applies to each axis.
+      const prev = started && acc && typeof acc === "object"
+        ? acc
+        : ( baseValue && typeof baseValue === "object" ? baseValue : {} );
+
+      acc = {
+        ...( baseValue && typeof baseValue === "object" ? baseValue : {} ),
+        x: blendAxis(
+          num(
+            prev.x,
+            0
+          ),
+          num(
+            value.x,
+            0
+          ),
+          mode,
+          weight
+        ),
+        y: blendAxis(
+          num(
+            prev.y,
+            0
+          ),
+          num(
+            value.y,
+            0
+          ),
+          mode,
+          weight
+        ),
+        z: blendAxis(
+          num(
+            prev.z,
+            0
+          ),
+          num(
+            value.z,
             0
           ),
           mode,
@@ -1315,7 +1397,8 @@ export function computeBindingSignals(
 // sketch actually reads this frame, taken from the resolved clone so layering,
 // blend, weight and smoothing are all already applied. A number for a
 // continuous target, the index in the winning layer's option list for an enum,
-// 0/1 for a boolean, `[r, g, b, a]` bytes for a colour, `{ x, y }` for a pad.
+// 0/1 for a boolean, `[r, g, b, a]` bytes for a colour, `{ x, y }` for a pad,
+// `{ x, y, z }` for a 3D vector.
 // Keyed by target. Pure so it can be unit-tested.
 
 export function computeBindingValues(
@@ -1367,6 +1450,18 @@ export function computeBindingValues(
         out[ binding.target ] = {
           x: value.x,
           y: value.y
+        };
+      }
+    } else if ( kind === "vector3d" ) {
+      if ( value && [
+        value.x,
+        value.y,
+        value.z
+      ].every( Number.isFinite ) ) {
+        out[ binding.target ] = {
+          x: value.x,
+          y: value.y,
+          z: value.z
         };
       }
     }
