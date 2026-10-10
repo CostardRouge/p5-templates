@@ -29,3 +29,7 @@ Read before adding or changing an API route, a server action, anything that turn
 ## `/api/options/schema` and `/api/options/validate` are pure on purpose
 
 2026-10-09 — Two routes describe and check an options document for callers outside the browser (the agent commands, `agent-commands.md`): the schema is `OptionsSchema` exported by zod's `toJSONSchema`, and validation is `OptionsSchema.safeParse` plus every key the parse would drop, answering the parsed document (`normalized`) when it is clean. Neither stores, fetches, spawns or reads a file, and the validate body is capped (2 M characters, 413 beyond) so the one cost a caller can impose is one bounded parse. **How to apply**: keep them that way — a "validate and save" or "validate and render" variant belongs behind whatever auth the maintainer decides on, not here.
+
+## A job's failure reason is public, so it is redacted before it is stored
+
+2026-10-10 — `Job.error` is returned by `GET /api/recordings/<id>` to anyone. `jobFailureReason` keeps the error's message only (never the stack), masks credentials in URLs (`redis://***@…` — a connection error quotes its URL verbatim), masks presigned-URL secrets (`X-Amz-Signature=***`), turns the server's temp directory into `<tmp>`, strips colour codes and caps at 2 000 characters. **How to apply**: extend that function, not the call sites, when a new kind of secret can appear in an error.
