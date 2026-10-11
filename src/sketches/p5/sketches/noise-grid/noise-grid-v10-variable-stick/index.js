@@ -6,6 +6,12 @@ import animation from "@/p5/utils/animation.js";
 import createNoiseFieldRenderer, {
   computeFieldRange
 } from "@/p5/utils/noiseFieldGpu.js";
+import {
+  PALETTE_RAINBOW_GLSL
+} from "@/p5/utils/paletteGlsl.js";
+import {
+  shaderPalette, shaderPaletteBackground
+} from "@/p5/utils/palettes.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GPU port of "noise grid v10 — variable stick".
@@ -25,6 +31,8 @@ const FRAGMENT = `
   uniform float uMax;
   uniform float uHueRange;
   uniform float uHueOffset;
+
+  ${ PALETTE_RAINBOW_GLSL }
   uniform float uOpacityFactor;
   uniform float uStrokeWeight;
   uniform float uLengthMin;
@@ -93,7 +101,7 @@ const FRAGMENT = `
             uHueRange
           );
 
-          bestColor = paletteRainbow(uHueOffset, hueIndex, uOpacityFactor);
+          bestColor = paletteRainbowRamp(uHueOffset, hueIndex, uOpacityFactor);
           bestMask = m;
         }
       }
@@ -119,7 +127,10 @@ sketch.draw( () => {
   const p = getP5();
 
   p.clear();
-  p.background( ...( options.sketch.backgroundColor ?? [
+  p.background( ...( shaderPaletteBackground(
+    options.sketch.colors,
+    options.sketch.backgroundColor
+  ) ?? [
     0
   ] ) );
 
@@ -169,7 +180,10 @@ sketch.draw( () => {
     }
   } );
 
+  const palette = shaderPalette( options.sketch.colors );
+
   field.render( {
+    textures: palette.textures,
     seed,
     octaves: detail,
     falloff,
@@ -183,6 +197,7 @@ sketch.draw( () => {
       uMin: range.min,
       uMax: range.max,
       uHueRange: hueRange,
+      uPaletteOn: palette.uniforms.uPaletteOn,
       uHueOffset: hueOffset,
       uOpacityFactor: opacityFactor,
       uStrokeWeight: strokeWeight,

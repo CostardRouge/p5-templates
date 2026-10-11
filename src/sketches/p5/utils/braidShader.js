@@ -25,6 +25,10 @@
 // The noiseFieldGpu stdlib already provides `vUv`, `uResolution`, `PI`, `TAU`.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import {
+  PALETTE_RAMP_GLSL
+} from "./paletteGlsl.js";
+
 // Every uniform the shared chunks read. `uRoll` is new relative to the v2-pipes
 // camera: it rotates the screen-space ray basis so the scene's vertical axis can
 // point along any on-screen direction (driven by a vector2d "orientation"
@@ -92,26 +96,7 @@ export const IRIDESCENT_GLSL = `
 // and brightness still grade it. The ramp is a noiseFieldGpu data texture
 // (NEAREST), interpolated by hand between texels. `shaderPalette()` supplies
 // both the texture and the switch.
-export const PALETTE_IRIDESCENT_GLSL = `
-  uniform sampler2D uPaletteRamp;
-  uniform float uPaletteOn;
-
-  const float PALETTE_RAMP_WIDTH = 256.0;
-
-  vec3 paletteRamp(float x) {
-    float s  = fract(x) * PALETTE_RAMP_WIDTH - 0.5;
-    float i0 = floor(s);
-    float f  = s - i0;
-    float x0 = (mod(i0, PALETTE_RAMP_WIDTH) + 0.5) / PALETTE_RAMP_WIDTH;
-    float x1 = (mod(i0 + 1.0, PALETTE_RAMP_WIDTH) + 0.5) / PALETTE_RAMP_WIDTH;
-
-    return mix(
-      texture2D(uPaletteRamp, vec2(x0, 0.5)).rgb,
-      texture2D(uPaletteRamp, vec2(x1, 0.5)).rgb,
-      f
-    );
-  }
-
+export const PALETTE_IRIDESCENT_GLSL = `${ PALETTE_RAMP_GLSL }
   vec3 iridescent(float t) {
     vec3 spectrum;
 

@@ -8,6 +8,12 @@ import animation from "@/p5/utils/animation.js";
 import createNoiseFieldRenderer, {
   computeFieldRange
 } from "@/p5/utils/noiseFieldGpu.js";
+import {
+  PALETTE_RAINBOW_GLSL
+} from "@/p5/utils/paletteGlsl.js";
+import {
+  shaderPalette, shaderPaletteBackground
+} from "@/p5/utils/palettes.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GPU port of "noise grid v7 — pulse field".
@@ -29,6 +35,8 @@ const FRAGMENT = `
   uniform float uMax;
   uniform float uHueRange;
   uniform float uHueOffset;
+
+  ${ PALETTE_RAINBOW_GLSL }
   uniform float uOpacityMax;
   uniform float uOpacityMin;
   uniform float uWeightTop;
@@ -92,7 +100,7 @@ const FRAGMENT = `
           float opacityFactor = remap(angle, uMin, uMax, uOpacityMax, uOpacityMin);
           float hueIndex = remap(angle, uMin, TAU, -uHueRange, uHueRange);
 
-          bestColor = paletteRainbow(uHueOffset, hueIndex, opacityFactor);
+          bestColor = paletteRainbowRamp(uHueOffset, hueIndex, opacityFactor);
           bestMask = m;
         }
       }
@@ -118,7 +126,10 @@ sketch.draw( () => {
   const p = getP5();
 
   p.clear();
-  p.background( ...( options.sketch.backgroundColor ?? [
+  p.background( ...( shaderPaletteBackground(
+    options.sketch.colors,
+    options.sketch.backgroundColor
+  ) ?? [
     0
   ] ) );
 
@@ -196,7 +207,10 @@ sketch.draw( () => {
     }
   } );
 
+  const palette = shaderPalette( options.sketch.colors );
+
   field.render( {
+    textures: palette.textures,
     seed,
     octaves: detailLod,
     falloff,
@@ -211,6 +225,7 @@ sketch.draw( () => {
       uMin: range.min,
       uMax: range.max,
       uHueRange: hueRange,
+      uPaletteOn: palette.uniforms.uPaletteOn,
       uHueOffset: hueOffset,
       uOpacityMax: opacityMax,
       uOpacityMin: opacityMin,

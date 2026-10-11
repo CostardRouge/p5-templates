@@ -1,6 +1,10 @@
 import {
   fontNames
 } from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/constants/field-config";
+import {
+  shaderPaletteFormFields,
+  shaderPaletteFormValues
+} from "@/p5/utils/palettes.js";
 
 // A board of turning tiles where the turn is also what multiplies them: a tile
 // goes edge-on and comes back as two, then four, then eight. See index.js for
@@ -100,6 +104,7 @@ export const formValues = {
   },
 
   colors: {
+    ...shaderPaletteFormValues,
     huePhase: 161,
     hueSpread: 0.6,
     faceHueShift: 55,
@@ -557,6 +562,7 @@ export const formConfiguration: Record<string, any> = {
     component: "nested-object",
     label: "Iridescent",
     fields: {
+      ...shaderPaletteFormFields,
       huePhase: {
         label: "Base hue °",
         component: "slider",

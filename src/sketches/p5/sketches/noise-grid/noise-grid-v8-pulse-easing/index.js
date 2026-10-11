@@ -10,6 +10,12 @@ import {
   computeFieldRange,
   easingId
 } from "@/p5/utils/noiseFieldGpu.js";
+import {
+  PALETTE_RAINBOW_GLSL
+} from "@/p5/utils/paletteGlsl.js";
+import {
+  shaderPalette, shaderPaletteBackground
+} from "@/p5/utils/palettes.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GPU port of "noise grid v8 — pulse easing" (instanced).
@@ -30,6 +36,8 @@ const VERTEX = `
   uniform float uMin;
   uniform float uHueRange;
   uniform float uHueOffset;
+
+  ${ PALETTE_RAINBOW_GLSL }
   uniform float uOpacityFactor;
   uniform float uWeightMin;
   uniform float uWeightMax;
@@ -62,7 +70,7 @@ const VERTEX = `
     params = vec4(radius, 0.0, 0.0, 0.0);
 
     float hueIndex = remap(angle, uMin, TAU, -uHueRange, uHueRange);
-    color = paletteRainbow(uHueOffset, hueIndex, uOpacityFactor);
+    color = paletteRainbowRamp(uHueOffset, hueIndex, uOpacityFactor);
   }
 `;
 
@@ -89,7 +97,10 @@ sketch.draw( () => {
   const p = getP5();
 
   p.clear();
-  p.background( ...( options.sketch.backgroundColor ?? [
+  p.background( ...( shaderPaletteBackground(
+    options.sketch.colors,
+    options.sketch.backgroundColor
+  ) ?? [
     0
   ] ) );
 
@@ -156,13 +167,19 @@ sketch.draw( () => {
     }
   } );
 
+  const palette = shaderPalette( options.sketch.colors );
+
   field.render( {
+    textures: palette.textures,
     seed,
     octaves: detailLod,
     falloff: bass,
     columns,
     rows,
-    background: options.sketch.backgroundColor ?? [
+    background: shaderPaletteBackground(
+      options.sketch.colors,
+      options.sketch.backgroundColor
+    ) ?? [
       0,
       0,
       0
@@ -174,6 +191,7 @@ sketch.draw( () => {
       uT: t,
       uMin: range.min,
       uHueRange: hueRange,
+      uPaletteOn: palette.uniforms.uPaletteOn,
       uHueOffset: hueOffset,
       uOpacityFactor: opacityFactor,
       uWeightMin: weightMin,

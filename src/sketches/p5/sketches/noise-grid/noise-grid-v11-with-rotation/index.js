@@ -4,6 +4,12 @@ import sketch, {
 } from "@/p5/utils/sketch.js";
 import animation from "@/p5/utils/animation.js";
 import createNoiseFieldRenderer from "@/p5/utils/noiseFieldGpu.js";
+import {
+  PALETTE_RAINBOW_GLSL
+} from "@/p5/utils/paletteGlsl.js";
+import {
+  shaderPalette, shaderPaletteBackground
+} from "@/p5/utils/palettes.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GPU port of the "noise grid with rotation" sketch.
@@ -23,6 +29,8 @@ const FRAGMENT = `
   uniform float uAngleCycles;
   uniform float uHueRange;
   uniform float uHueOffset;
+
+  ${ PALETTE_RAINBOW_GLSL }
   uniform float uOpacityFactor;
 
   vec3 dotColor(vec2 cellCenter) {
@@ -31,7 +39,7 @@ const FRAGMENT = `
     float angle = noiseValue * TAU * uAngleCycles;
     float hueIndex = -uHueRange + (angle / TAU) * 2.0 * uHueRange;
 
-    return paletteRainbow(uHueOffset, hueIndex, uOpacityFactor);
+    return paletteRainbowRamp(uHueOffset, hueIndex, uOpacityFactor);
   }
 
   void main() {
@@ -70,7 +78,10 @@ sketch.draw( (
   const p = getP5();
 
   p.clear();
-  p.background( ...( options.sketch.backgroundColor ?? [
+  p.background( ...( shaderPaletteBackground(
+    options.sketch.colors,
+    options.sketch.backgroundColor
+  ) ?? [
     0
   ] ) );
 
@@ -87,7 +98,10 @@ sketch.draw( (
     rotationAngleMax
   );
 
+  const palette = shaderPalette( options.sketch.colors );
+
   field.render( {
+    textures: palette.textures,
     seed: options.sketch.noise?.seed ?? 42,
     octaves: options.sketch.noise?.detail ?? 4,
     falloff: options.sketch.noise?.falloff ?? 0.3,
@@ -102,6 +116,7 @@ sketch.draw( (
       uSceneAngle: sceneAngle,
       uAngleCycles: options.sketch.angle?.cycles ?? 4,
       uHueRange: options.sketch.colors?.hueRange ?? p.PI / 2,
+      uPaletteOn: palette.uniforms.uPaletteOn,
       uHueOffset: options.sketch.colors?.hueOffset ?? 0,
       uOpacityFactor: options.sketch.colors?.opacityFactor ?? 1.5
     }

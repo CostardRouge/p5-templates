@@ -8,10 +8,15 @@ import string from "@/p5/utils/string.js";
 import createNoiseFieldRenderer from "@/p5/utils/noiseFieldGpu.js";
 import {
   BRAID_UNIFORMS_GLSL,
-  IRIDESCENT_GLSL,
+  PALETTE_IRIDESCENT_GLSL,
   braidShadingGlsl,
   lightDirFrom
 } from "@/p5/utils/braidShader.js";
+import {
+  paletteColorAt,
+  shaderPalette,
+  shaderPaletteBackground
+} from "@/p5/utils/palettes.js";
 import {
   flipBeat,
   mod,
@@ -145,7 +150,7 @@ const CARD_FRAGMENT = `
   uniform float uOrthoSpan;                     // world height the card covers
   uniform float uCamDistance;
 
-  ${ IRIDESCENT_GLSL }
+  ${ PALETTE_IRIDESCENT_GLSL }
 
   float smin(float a, float b, float k) {
     float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0);
@@ -327,15 +332,29 @@ function bakeStrokeCard(
 
         walked++;
 
-        g.stroke(
-          mod(
-            spec.hue + along * spec.hueSpread * 360,
-            360
-          ),
-          pass.sat,
-          pass.bri * spec.brightness,
-          100
+        const ramp = paletteColorAt(
+          spec.colors,
+          spec.hue / 360 + along * spec.hueSpread
         );
+
+        if ( ramp ) {
+          g.stroke( rampStroke(
+            g,
+            ramp,
+            pass,
+            spec
+          ) );
+        } else {
+          g.stroke(
+            mod(
+              spec.hue + along * spec.hueSpread * 360,
+              360
+            ),
+            pass.sat,
+            pass.bri * spec.brightness,
+            100
+          );
+        }
 
         // Glyph space is y-up and centred on the origin; the card is y-down
         // and centred on its middle.
@@ -350,6 +369,44 @@ function bakeStrokeCard(
   }
 
   return g;
+}
+
+// A palette colour through the same two passes as the HSB path: the body is
+// the ramp darkened to the pass's brightness, the core the ramp washed toward
+// white as the core's lower saturation washes the hue.
+function rampStroke(
+  g, rgb, pass, spec
+) {
+  const level = pass.bri / 100 * spec.brightness;
+  const wash = 1 - pass.sat / Math.max(
+    spec.saturation,
+    1
+  );
+
+  // The card draws in HSB; a p5 colour keeps its levels once made, so the
+  // mode only has to be RGB while this one is built.
+  g.colorMode(
+    g.RGB,
+    255
+  );
+
+  const color = g.color(
+    ...rgb.map( ( c ) => Math.min(
+      255,
+      ( c + ( 255 - c ) * wash ) * level
+    ) ),
+    255
+  );
+
+  g.colorMode(
+    g.HSB,
+    360,
+    100,
+    100,
+    100
+  );
+
+  return color;
 }
 
 // Shader: v1's material, raymarched — real iridescence, specular, ambient
@@ -428,6 +485,10 @@ function bakeShaderCard(
     ];
   }
 
+  const palette = shaderPalette( spec.colors );
+
+  uniforms.uPaletteOn = palette.uniforms.uPaletteOn;
+
   const buffer = cardRenderer.render( {
     columns: 1,
     rows: 1,
@@ -435,6 +496,7 @@ function bakeShaderCard(
       width: spec.size,
       height: spec.size
     },
+    textures: palette.textures,
     uniforms
   } );
 
@@ -485,6 +547,7 @@ function getCard(
     spec.shimmer,
     spec.saturation,
     spec.brightness,
+    spec.colors?.palette ?? "original",
     spec.size,
     spec.renderer === "shader" ? JSON.stringify( spec.light ) : ""
   ].join( "|" );
@@ -879,7 +942,10 @@ sketch.draw( () => {
   const camera = o.camera ?? {};
 
   p.clear();
-  p.background( ...( o.backgroundColor ?? [
+  p.background( ...( shaderPaletteBackground(
+    colors,
+    o.backgroundColor
+  ) ?? [
     0,
     0,
     0
@@ -941,6 +1007,7 @@ sketch.draw( () => {
       shimmer: colors.shimmer ?? 2.2,
       saturation: colors.saturation ?? 55,
       brightness: colors.brightness ?? 1,
+      colors,
       light: {
         azimuth: light.azimuth ?? -1.1,
         elevation: light.elevation ?? 0.45,
@@ -1299,25 +1366,48 @@ sketch.draw( () => {
       g.rotateY( angle );
     }
 
-    g.colorMode(
-      g.HSB,
-      360,
-      100,
-      100,
-      100
+    // With a palette the tint reads the ramp where the HSB path reads the
+    // hue wheel, washed the same 42% toward white.
+    const tintRamp = paletteColorAt(
+      colors,
+      hue / 360
     );
-    g.tint(
-      hue,
-      Math.min(
+
+    if ( tintRamp ) {
+      const wash = cellHueShift > 0 ? 0.42 : 0;
+
+      g.colorMode(
+        g.RGB,
+        255
+      );
+      g.tint(
+        ...tintRamp.map( ( c ) => Math.min(
+          255,
+          ( 255 - wash * ( 255 - c ) ) * level
+        ) ),
+        255
+      );
+    } else {
+      g.colorMode(
+        g.HSB,
+        360,
         100,
-        cellHueShift > 0 ? 42 : 0
-      ),
-      Math.min(
         100,
-        level * 100
-      ),
-      100
-    );
+        100
+      );
+      g.tint(
+        hue,
+        Math.min(
+          100,
+          cellHueShift > 0 ? 42 : 0
+        ),
+        Math.min(
+          100,
+          level * 100
+        ),
+        100
+      );
+    }
 
     if ( content.inherit ) {
       // Fragmentation: every cell samples ITS OWN rectangle of one card

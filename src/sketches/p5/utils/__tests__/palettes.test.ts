@@ -4,6 +4,7 @@ import {
   PALETTE_RAMP_WIDTH,
   SHADER_PALETTE_OPTIONS,
   bakePaletteRamp,
+  paletteColorAt,
   shaderPalette,
   shaderPaletteBackground
 } from "../palettes.js";
@@ -147,6 +148,47 @@ describe(
           221,
           255
         ] );
+      }
+    );
+
+    it(
+      "samples the CPU ramp at texel centres and loops past the ends",
+      () => {
+        const colors = {
+          palette: "riso-pink-blue"
+        };
+        const bytes = shaderPalette( colors ).textures.uPaletteRamp.data;
+        const texel = ( i: number ) => [
+          bytes[ i * 4 ],
+          bytes[ i * 4 + 1 ],
+          bytes[ i * 4 + 2 ]
+        ];
+
+        expect( paletteColorAt(
+          {
+            palette: "original"
+          },
+          0.3
+        ) ).toBeNull();
+        expect( paletteColorAt(
+          colors,
+          10.5 / PALETTE_RAMP_WIDTH
+        ) ).toEqual( texel( 10 ) );
+        expect( paletteColorAt(
+          colors,
+          1 + 10.5 / PALETTE_RAMP_WIDTH
+        ) ).toEqual( texel( 10 ) );
+        // Halfway between the last texel and the first: the ramp wraps.
+        const seam = paletteColorAt(
+          colors,
+          0
+        ) as number[];
+
+        seam.forEach( (
+          channel, i
+        ) => {
+          expect( channel ).toBeCloseTo( ( texel( 255 )[ i ] + texel( 0 )[ i ] ) / 2 );
+        } );
       }
     );
   }

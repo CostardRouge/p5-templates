@@ -52,7 +52,23 @@ export const PALETTE_FORMULAS = {
     0,
     0.33,
     0.67
-  ].map( ( offset ) => 255 * ( 0.5 + 0.5 * Math.cos( TAU * ( x + offset ) ) ) )
+  ].map( ( offset ) => 255 * ( 0.5 + 0.5 * Math.cos( TAU * ( x + offset ) ) ) ),
+  // utils/colors.js `purple()` and `darkBlueYellow()`, hueOffset 0 — only
+  // drawn as swatches: the sketches that offer them keep their own GLSL path.
+  purple: ( x ) => [
+    90,
+    clampByte( ( 1 + Math.sin( x * TAU ) ) * 90 ),
+    255
+  ],
+  "dark-blue-yellow": ( x ) => {
+    const rg = clampByte( ( Math.cos( x * TAU ) * 0.5 + 0.5 ) * 360 );
+
+    return [
+      rg,
+      rg,
+      clampByte( ( 1 - Math.sin( x * TAU ) ) * 0.5 * 360 )
+    ];
+  }
 };
 
 /** A formula sampled at `count` steps, rounded — the swatch's stops. */
@@ -916,38 +932,62 @@ export const PALETTE_PRESET_OPTIONS = Object.entries( PALETTES ).map( ( [
 // is ticked (off by default): these sketches have ONE background colour, so
 // the paper's two colours are averaged into it.
 
-export const SHADER_PALETTE_OPTIONS = [
-  {
-    value: "original",
-    label: "Original",
-    group: "Your own",
-    description: "The sketch's own oil-slick spectrum, graded by the sliders below",
-    stops: formulaStops( "oil-slick" ),
-    hardness: 0
-  },
-  // Oil slick IS the original here, so it is not listed twice.
-  ...PALETTE_PRESET_OPTIONS.filter( ( option ) => option.value !== "oil-slick" )
-];
+const ORIGINAL_DESCRIPTIONS = {
+  "oil-slick": "The sketch's own oil-slick spectrum, graded by the sliders below",
+  rainbow: "The sketch's own colors.rainbow sweep"
+};
+
+/**
+ * The picker's options for a shader family: "original" first — drawn with the
+ * formula the sketch already runs — then the shared presets, minus the one
+ * that IS that formula (it would be listed twice).
+ *
+ * @param {"oil-slick"|"rainbow"} [original]
+ */
+export function shaderPaletteOptions( original = "oil-slick" ) {
+  return [
+    {
+      value: "original",
+      label: "Original",
+      group: "Your own",
+      description: ORIGINAL_DESCRIPTIONS[ original ],
+      stops: formulaStops( original ),
+      hardness: 0
+    },
+    ...PALETTE_PRESET_OPTIONS.filter( ( option ) => option.value !== original )
+  ];
+}
+
+export const SHADER_PALETTE_OPTIONS = shaderPaletteOptions();
 
 export const shaderPaletteFormValues = {
   palette: "original",
   paletteBackground: false
 };
 
-export const shaderPaletteFormFields = {
-  palette: {
-    label: "Palette",
-    component: "palette-picker",
-    options: SHADER_PALETTE_OPTIONS
-  },
-  paletteBackground: {
-    label: "Use the palette's background",
-    component: "checkbox"
-  }
-};
+/** The colour group's palette fields, for a family whose own colour is `original`. */
+export function shaderPaletteFields( original = "oil-slick" ) {
+  return {
+    palette: {
+      label: "Palette",
+      component: "palette-picker",
+      options: shaderPaletteOptions( original )
+    },
+    paletteBackground: {
+      label: "Use the palette's background",
+      component: "checkbox"
+    }
+  };
+}
 
-function presetFor( id ) {
-  return id && id !== "original" ? PALETTES[ id ] ?? null : null;
+export const shaderPaletteFormFields = shaderPaletteFields();
+
+// `own`: palette ids a sketch draws on its own path (shader-loops' four house
+// formulas), which must never be read as a shared preset of the same name.
+function presetFor(
+  id, own = []
+) {
+  return id && id !== "original" && !own.includes( id ) ? PALETTES[ id ] ?? null : null;
 }
 
 /**
@@ -956,9 +996,14 @@ function presetFor( id ) {
  * averaged, keeping the sketch's own alpha).
  */
 export function shaderPaletteBackground(
-  colors, background
+  colors, background, {
+    own = []
+  } = {}
 ) {
-  const preset = presetFor( colors?.palette );
+  const preset = presetFor(
+    colors?.palette,
+    own
+  );
 
   if ( !colors?.paletteBackground || !preset?.paper ) {
     return background;
@@ -1005,14 +1050,23 @@ const shaderRampCache = new Map();
  * `PALETTE_IRIDESCENT_GLSL` (braidShader.js). Ramps are baked once per palette
  * id, so a binding cycling the palettes costs one bake each, then an upload.
  *
+ * @param {object} [colors] the sketch's colour group
+ * @param {{ own?: string[] }} [config] ids the sketch draws itself
  * @returns {{
  *   textures: { uPaletteRamp: { data: Uint8Array, width: number, height: number } },
  *   uniforms: { uPaletteOn: number }
  * }}
  */
-export function shaderPalette( colors ) {
+export function shaderPalette(
+  colors, {
+    own = []
+  } = {}
+) {
   const id = colors?.palette;
-  const preset = presetFor( id );
+  const preset = presetFor(
+    id,
+    own
+  );
 
   if ( !preset ) {
     return {
@@ -1049,4 +1103,45 @@ export function shaderPalette( colors ) {
       uPaletteOn: 1
     }
   };
+}
+
+/**
+ * The palette's colour at ramp coordinate `x` (looping), read off the same
+ * baked ramp the shaders sample and interpolated the way `paletteRamp()` does
+ * in GLSL — for the parts of a shader sketch that colour on the CPU (flip-v2's
+ * stroke cards and per-cell tint). Null when the sketch draws its own colour.
+ *
+ * @param {object} [colors] the sketch's colour group
+ * @param {number} x ramp coordinate, 1 = one full turn of the ramp
+ * @param {{ own?: string[] }} [config]
+ * @returns {number[] | null} [r, g, b] in 0–255
+ */
+export function paletteColorAt(
+  colors, x, config = {}
+) {
+  const {
+    textures, uniforms
+  } = shaderPalette(
+    colors,
+    config
+  );
+
+  if ( !uniforms.uPaletteOn ) {
+    return null;
+  }
+
+  const {
+    data, width
+  } = textures.uPaletteRamp;
+  const s = ( x - Math.floor( x ) ) * width - 0.5;
+  const i0 = Math.floor( s );
+  const f = s - i0;
+  const a = ( ( i0 % width ) + width ) % width;
+  const b = ( a + 1 ) % width;
+
+  return [
+    0,
+    1,
+    2
+  ].map( ( ch ) => data[ a * 4 + ch ] + ( data[ b * 4 + ch ] - data[ a * 4 + ch ] ) * f );
 }

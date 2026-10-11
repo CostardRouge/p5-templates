@@ -4,6 +4,12 @@ import sketch, {
 } from "@/p5/utils/sketch.js";
 import animation from "@/p5/utils/animation.js";
 import createNoiseFieldRenderer from "@/p5/utils/noiseFieldGpu.js";
+import {
+  PALETTE_RAMP_GLSL
+} from "@/p5/utils/paletteGlsl.js";
+import {
+  shaderPalette, shaderPaletteBackground
+} from "@/p5/utils/palettes.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // shader-loops v1 — hypnotic.
@@ -46,6 +52,10 @@ const PALETTE_IDS = {
   iridescent: 3
 };
 
+// Drawn on this sketch's own path; any other id is a shared preset read
+// through the palette ramp.
+const OWN_PALETTE_IDS = Object.keys( PALETTE_IDS );
+
 const FRAGMENT = `
   uniform float uPhase;         // loop phase φ ∈ [0,1)
   uniform int   uPattern;       // 0 tunnel, 1 kaleido, 2 moire
@@ -83,8 +93,15 @@ const FRAGMENT = `
   // Map a 0..1 pattern value to a colour. The hue offset is bound to the loop
   // (φ · hueCycles) so the whole spectrum scrolls an integer number of times and
   // returns exactly to its starting hue — a seamless colour cycle.
+  ${ PALETTE_RAMP_GLSL }
+
   vec3 palette(float value) {
     float loopHue = uPhase * uHueCycles + uHuePhase;
+
+    // A shared preset: the ramp walked the way the oil slick is.
+    if (uPaletteOn > 0.5) {
+      return paletteRamp(uHueSpread * value + loopHue);
+    }
 
     if (uPaletteId == 3) {
       return iridescent(uHueSpread * value + loopHue);
@@ -197,7 +214,13 @@ sketch.draw( () => {
   const geometry = o.geometry ?? {};
   const colors = o.colors ?? {};
   const scene = o.scene ?? {};
-  const background = scene.backgroundColor ?? [
+  const background = shaderPaletteBackground(
+    colors,
+    scene.backgroundColor,
+    {
+      own: OWN_PALETTE_IDS
+    }
+  ) ?? [
     0,
     0,
     0
@@ -209,7 +232,15 @@ sketch.draw( () => {
   const patternId = PATTERN_IDS[ o.pattern ] ?? PATTERN_IDS.tunnel;
   const paletteId = PALETTE_IDS[ colors.palette ] ?? PALETTE_IDS.iridescent;
 
+  const palette = shaderPalette(
+    colors,
+    {
+      own: OWN_PALETTE_IDS
+    }
+  );
+
   loops.render( {
+    textures: palette.textures,
     columns: 1,
     rows: 1,
     resolutionScale: scene.resolutionScale ?? 1,
@@ -227,6 +258,7 @@ sketch.draw( () => {
       uPaletteId: {
         int: paletteId
       },
+      uPaletteOn: palette.uniforms.uPaletteOn,
       uHueCycles: colors.hueCycles ?? 1,
       uHueSpread: colors.hueSpread ?? 1,
       uHuePhase: colors.huePhase ?? 0,
