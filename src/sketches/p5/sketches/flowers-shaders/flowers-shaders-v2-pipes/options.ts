@@ -1,3 +1,6 @@
+import {
+  shaderPaletteFormFields, shaderPaletteFormValues
+} from "@/p5/utils/palettes.js";
 
 export const formValues = {
   timeScale: 1,
@@ -20,6 +23,7 @@ export const formValues = {
     fogDensity: 0.21
   },
   colors: {
+    ...shaderPaletteFormValues,
     hueSpeed: 1.15,
     hueSpread: 2.03,
     huePhase: 2.63,
@@ -172,6 +176,7 @@ export const formConfiguration: Record<string, any> = {
     component: "nested-object",
     label: "Iridescent",
     fields: {
+      ...shaderPaletteFormFields,
       hueSpeed: {
         label: "Hue speed (snaps to whole cycles/loop)",
         component: "slider",

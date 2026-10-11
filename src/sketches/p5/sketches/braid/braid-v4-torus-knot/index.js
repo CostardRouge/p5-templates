@@ -6,13 +6,16 @@ import animation from "@/p5/utils/animation.js";
 import createNoiseFieldRenderer from "@/p5/utils/noiseFieldGpu.js";
 import {
   BRAID_UNIFORMS_GLSL,
-  IRIDESCENT_GLSL,
+  PALETTE_IRIDESCENT_GLSL,
   BRAID_CAMERA_MAIN_GLSL,
   braidShadingGlsl,
   lightDirFrom,
   focalFromFov,
   lipschitzDivisor
 } from "@/p5/utils/braidShader.js";
+import {
+  shaderPalette, shaderPaletteBackground
+} from "@/p5/utils/palettes.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // braid v4 — torus knot (laid-rope grommet).
@@ -70,7 +73,7 @@ const FRAGMENT = `
   uniform float uSpin;      // poloidal roll over time (whole turns/loop)
   uniform float uLipschitz; // CPU safety divisor for the bent-space march
 
-  ${ IRIDESCENT_GLSL }
+  ${ PALETTE_IRIDESCENT_GLSL }
 
   // Poloidal angle of the whole bundle at ring-angle u (+ the rolling spin).
   float layPhase(float u) {
@@ -141,7 +144,10 @@ sketch.draw( () => {
   const rendering = o.rendering ?? {};
 
   p.clear();
-  p.background( ...( o.backgroundColor ?? [
+  p.background( ...( shaderPaletteBackground(
+    o.colors,
+    o.backgroundColor
+  ) ?? [
     0,
     0,
     0
@@ -209,7 +215,10 @@ sketch.draw( () => {
     light.elevation ?? 0.5
   );
 
+  const palette = shaderPalette( colors );
+
   knotRenderer.render( {
+    textures: palette.textures,
     columns: 1,
     rows: 1,
     resolutionScale: rendering.resolutionScale ?? 0.75,
@@ -228,6 +237,7 @@ sketch.draw( () => {
       uYaw: ( camera.yaw ?? 0 ) + t * orbitTurns,
       uRoll: roll,
       uHueSpeed: hueSpread ? hueCycles / ( p.TAU * hueSpread ) : 0,
+      uPaletteOn: palette.uniforms.uPaletteOn,
       uHueSpread: hueSpread,
       uHuePhase: colors.huePhase ?? 2.6,
       uLengthHueShift: colors.lengthHueShift ?? 0.4,

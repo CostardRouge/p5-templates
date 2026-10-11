@@ -1,6 +1,6 @@
 import {
   BRAID_UNIFORMS_GLSL,
-  IRIDESCENT_GLSL,
+  PALETTE_IRIDESCENT_GLSL,
   braidShadingGlsl
 } from "@/p5/utils/braidShader.js";
 import {
@@ -308,7 +308,7 @@ export function gridFragment( {
     ${ BRAID_UNIFORMS_GLSL }
     ${ CAMERA_RIG_UNIFORMS_GLSL }
     ${ GRID_TRACE_UNIFORMS_GLSL }
-    ${ IRIDESCENT_GLSL }
+    ${ PALETTE_IRIDESCENT_GLSL }
     ${ GRID_TRACE_LIB_GLSL }
     ${ cell }
     ${ GRID_MAP_SCENE_GLSL }

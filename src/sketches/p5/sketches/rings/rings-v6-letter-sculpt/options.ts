@@ -5,6 +5,9 @@ import {
   interactionFormValues,
   interactionFormConfiguration
 } from "@/p5/utils/interaction/defaults.js";
+import {
+  shaderPaletteFormFields, shaderPaletteFormValues
+} from "@/p5/utils/palettes.js";
 
 // One glyph of the v4 liquid-tube material, sculpted by hand: every outline
 // sample is a draggable 3D handle. Thumb + index pinch (or mouse / finger)
@@ -358,6 +361,7 @@ export const formValues = {
   },
 
   colors: {
+    ...shaderPaletteFormValues,
     hueSpeed: 0.5,
     hueSpread: 2,
     huePhase: 2.6,
@@ -684,6 +688,7 @@ export const formConfiguration: Record<string, any> = {
     component: "nested-object",
     label: "Iridescent",
     fields: {
+      ...shaderPaletteFormFields,
       hueSpeed: {
         label: "Hue speed (snaps to whole cycles/loop)",
         component: "slider",

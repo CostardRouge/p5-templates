@@ -6,7 +6,7 @@ import animation from "@/p5/utils/animation.js";
 import createNoiseFieldRenderer from "@/p5/utils/noiseFieldGpu.js";
 import {
   BRAID_UNIFORMS_GLSL,
-  IRIDESCENT_GLSL,
+  PALETTE_IRIDESCENT_GLSL,
   braidShadingGlsl,
   lightDirFrom,
   focalFromFov
@@ -22,6 +22,9 @@ import {
   MAX_TOTAL_SEG,
   getLetterField
 } from "../_letterField.js";
+import {
+  shaderPalette, shaderPaletteBackground
+} from "@/p5/utils/palettes.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // flip v1 — letter cycle.
@@ -90,7 +93,7 @@ const FRAGMENT = `
   uniform float uTubeR;                       // tube radius (world)
   uniform float uSmoothK;                     // smooth-union fillet (world)
 
-  ${ IRIDESCENT_GLSL }
+  ${ PALETTE_IRIDESCENT_GLSL }
 
   // Polynomial smooth-minimum (iq): melts nearby capsules into a rounded fillet.
   float smin(float a, float b, float k) {
@@ -318,11 +321,15 @@ sketch.draw( () => {
   const material = o.material ?? {};
   const camera = o.camera ?? {};
   const colors = o.colors ?? {};
+  const palette = shaderPalette( colors );
   const light = o.light ?? {};
   const rendering = o.rendering ?? {};
 
   p.clear();
-  p.background( ...( o.backgroundColor ?? [
+  p.background( ...( shaderPaletteBackground(
+    o.colors,
+    o.backgroundColor
+  ) ?? [
     0,
     0,
     0
@@ -707,6 +714,7 @@ sketch.draw( () => {
       uCamUp: up,
       uFocal: focal,
       uHueSpeed: hueSpread ? hueCycles / ( p.TAU * hueSpread ) : 0,
+      uPaletteOn: palette.uniforms.uPaletteOn,
       uHueSpread: hueSpread,
       uHuePhase: colors.huePhase ?? 2.6,
       uLengthHueShift: colors.lengthHueShift ?? -0.25,
@@ -732,6 +740,7 @@ sketch.draw( () => {
   );
 
   lettersRenderer.render( {
+    textures: palette.textures,
     columns: 1,
     rows: 1,
     resolutionScale: rendering.resolutionScale ?? 0.7,

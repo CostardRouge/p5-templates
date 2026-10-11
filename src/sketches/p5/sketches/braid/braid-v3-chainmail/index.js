@@ -6,12 +6,15 @@ import animation from "@/p5/utils/animation.js";
 import createNoiseFieldRenderer from "@/p5/utils/noiseFieldGpu.js";
 import {
   BRAID_UNIFORMS_GLSL,
-  IRIDESCENT_GLSL,
+  PALETTE_IRIDESCENT_GLSL,
   BRAID_CAMERA_MAIN_GLSL,
   braidShadingGlsl,
   lightDirFrom,
   focalFromFov
 } from "@/p5/utils/braidShader.js";
+import {
+  shaderPalette, shaderPaletteBackground
+} from "@/p5/utils/palettes.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // braid v3 — chainmail.
@@ -69,7 +72,7 @@ const FRAGMENT = `
   uniform float uFrontY;    // assembly-front height (world y)
   uniform float uGrowSpan;  // rows over which a new ring reaches full gauge
 
-  ${ IRIDESCENT_GLSL }
+  ${ PALETTE_IRIDESCENT_GLSL }
 
   // Distance to one ring: a torus tilted ±uTilt around the x axis.
   float ringDist(vec3 q, float tiltSign, float rr) {
@@ -293,7 +296,10 @@ sketch.draw( () => {
   const rendering = o.rendering ?? {};
 
   p.clear();
-  p.background( ...( o.backgroundColor ?? [
+  p.background( ...( shaderPaletteBackground(
+    o.colors,
+    o.backgroundColor
+  ) ?? [
     0,
     0,
     0
@@ -358,7 +364,10 @@ sketch.draw( () => {
     light.elevation ?? 0.5
   );
 
+  const palette = shaderPalette( colors );
+
   mailleRenderer.render( {
+    textures: palette.textures,
     columns: 1,
     rows: 1,
     resolutionScale: rendering.resolutionScale ?? 0.75,
@@ -378,6 +387,7 @@ sketch.draw( () => {
       uYaw: camera.yaw ?? 0.3,
       uRoll: roll,
       uHueSpeed: hueSpread ? hueCycles / ( p.TAU * hueSpread ) : 0,
+      uPaletteOn: palette.uniforms.uPaletteOn,
       uHueSpread: hueSpread,
       uHuePhase: colors.huePhase ?? 2.6,
       uLengthHueShift: colors.lengthHueShift ?? -0.15,

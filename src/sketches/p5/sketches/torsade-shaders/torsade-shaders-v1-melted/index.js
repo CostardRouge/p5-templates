@@ -3,6 +3,12 @@ import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
 import createNoiseFieldRenderer from "@/p5/utils/noiseFieldGpu.js";
+import {
+  PALETTE_IRIDESCENT_GLSL
+} from "@/p5/utils/braidShader.js";
+import {
+  shaderPalette, shaderPaletteBackground
+} from "@/p5/utils/palettes.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // torsade-shaders v1 — melted.
@@ -54,15 +60,7 @@ const FRAGMENT = `
 
   // Oil-slick / thin-film iridescence: a cosine spectrum (IQ palette) with the
   // RGB channels phase-shifted so the hue sweeps cleanly through the rainbow.
-  vec3 iridescent(float t) {
-    vec3 spectrum = 0.5 + 0.5 * cos(
-      TAU * (uHueSpread * t + vec3(0.0, 0.33, 0.67)) + uHuePhase
-    );
-
-    float luma = dot(spectrum, vec3(0.299, 0.587, 0.114));
-
-    return clamp(mix(vec3(luma), spectrum, uSaturation) * uBrightness, 0.0, 1.0);
-  }
+  ${ PALETTE_IRIDESCENT_GLSL }
 
   void spiralAxis(out vec2 s, out vec2 e) {
     if (uAxis == 1) {
@@ -180,7 +178,10 @@ sketch.draw( ( time ) => {
   const colors = o.colors ?? {};
 
   p.clear();
-  p.background( ...( o.backgroundColor ?? [
+  p.background( ...( shaderPaletteBackground(
+    o.colors,
+    o.backgroundColor
+  ) ?? [
     0
   ] ) );
 
@@ -197,7 +198,10 @@ sketch.draw( ( time ) => {
     MAX_SAMPLES
   );
 
+  const palette = shaderPalette( colors );
+
   torsade.render( {
+    textures: palette.textures,
     columns: 1,
     rows: 1,
     uniforms: {
@@ -216,6 +220,7 @@ sketch.draw( ( time ) => {
         int: ( layout.axis ?? "vertical" ) === "horizontal" ? 1 : 0
       },
       uHueSpeed: colors.hueSpeed ?? 1,
+      uPaletteOn: palette.uniforms.uPaletteOn,
       uHueSpread: colors.hueSpread ?? 1,
       uHuePhase: colors.huePhase ?? 0,
       uIndexHueShift: colors.indexHueShift ?? 1,

@@ -6,7 +6,7 @@ import animation from "@/p5/utils/animation.js";
 import createNoiseFieldRenderer from "@/p5/utils/noiseFieldGpu.js";
 import {
   BRAID_UNIFORMS_GLSL,
-  IRIDESCENT_GLSL,
+  PALETTE_IRIDESCENT_GLSL,
   BRAID_CAMERA_MAIN_GLSL,
   braidShadingGlsl,
   lightDirFrom,
@@ -17,6 +17,9 @@ import easing from "@/p5/utils/easing.js";
 import {
   easingId
 } from "@/p5/utils/easingGlsl.js";
+import {
+  shaderPalette, shaderPaletteBackground
+} from "@/p5/utils/palettes.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // braid v1 — progressive.
@@ -115,7 +118,7 @@ const FRAGMENT = `
   uniform float uDistTravel;      // profile scroll (whole cycles/loop, / TAU)
   uniform int   uDistEasing;      // applyEasing id shaping the bump
 
-  ${ IRIDESCENT_GLSL }
+  ${ PALETTE_IRIDESCENT_GLSL }
 
   // Thickness/amplitude multiplier at height y: a triangle wave (seamless when
   // tiled along the infinite axis AND when scrolled whole cycles per loop)
@@ -271,7 +274,10 @@ sketch.draw( () => {
   const rendering = o.rendering ?? {};
 
   p.clear();
-  p.background( ...( o.backgroundColor ?? [
+  p.background( ...( shaderPaletteBackground(
+    o.colors,
+    o.backgroundColor
+  ) ?? [
     0,
     0,
     0
@@ -407,7 +413,10 @@ sketch.draw( () => {
     light.elevation ?? -0.6
   );
 
+  const palette = shaderPalette( colors );
+
   braidRenderer.render( {
+    textures: palette.textures,
     columns: 1,
     rows: 1,
     resolutionScale: rendering.resolutionScale ?? 0.75,
@@ -445,6 +454,7 @@ sketch.draw( () => {
       uYaw: camera.yaw ?? 0,
       uRoll: roll,
       uHueSpeed: hueSpread ? hueCycles / ( p.TAU * hueSpread ) : 0,
+      uPaletteOn: palette.uniforms.uPaletteOn,
       uHueSpread: hueSpread,
       uHuePhase: colors.huePhase ?? 2.6,
       uLengthHueShift: colors.lengthHueShift ?? -0.35,

@@ -6,6 +6,12 @@ import animation from "@/p5/utils/animation.js";
 import easing from "@/p5/utils/easing.js";
 import mappers from "@/p5/utils/mappers.js";
 import createNoiseFieldRenderer from "@/p5/utils/noiseFieldGpu.js";
+import {
+  PALETTE_IRIDESCENT_GLSL
+} from "@/p5/utils/braidShader.js";
+import {
+  shaderPalette, shaderPaletteBackground
+} from "@/p5/utils/palettes.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // flowers-shaders v1 — melted.
@@ -88,15 +94,7 @@ const FRAGMENT = `
   // melted: a cosine (IQ) spectrum with the RGB channels phase-shifted so the
   // hue sweeps cleanly through the rainbow, desaturated toward luma and scaled
   // by brightness.
-  vec3 iridescent(float t) {
-    vec3 spectrum = 0.5 + 0.5 * cos(
-      TAU * (uHueSpread * t + vec3(0.0, 0.33, 0.67)) + uHuePhase
-    );
-
-    float luma = dot(spectrum, vec3(0.299, 0.587, 0.114));
-
-    return clamp(mix(vec3(luma), spectrum, uSaturation) * uBrightness, 0.0, 1.0);
-  }
+  ${ PALETTE_IRIDESCENT_GLSL }
 
   // Re-stamp every circle the CPU sketch would have drawn and keep the one drawn
   // last (highest painter order) that covers frag — the loops iterate in the
@@ -263,7 +261,10 @@ sketch.draw( () => {
   const aberration = o.aberration ?? {};
 
   p.clear();
-  p.background( ...( o.backgroundColor ?? [
+  p.background( ...( shaderPaletteBackground(
+    o.colors,
+    o.backgroundColor
+  ) ?? [
     0
   ] ) );
 
@@ -360,7 +361,10 @@ sketch.draw( () => {
     MAX_PETALS
   );
 
+  const palette = shaderPalette( colors );
+
   flowers.render( {
+    textures: palette.textures,
     columns: 1,
     rows: 1,
     uniforms: {
@@ -385,6 +389,7 @@ sketch.draw( () => {
       uBorderWidth: flower.borderWidth ?? 0,
       uBorderDarken: flower.borderDarken ?? 0,
       uHueSpeed: hueSpread ? hueCycles / hueSpread : 0,
+      uPaletteOn: palette.uniforms.uPaletteOn,
       uHueSpread: hueSpread,
       uHuePhase: colors.huePhase ?? 0,
       uPathHueShift: colors.pathHueShift ?? 1,

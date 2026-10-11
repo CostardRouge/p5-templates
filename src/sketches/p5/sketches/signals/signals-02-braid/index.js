@@ -5,6 +5,12 @@ import sketch, {
 import animation from "@/p5/utils/animation.js";
 import createNoiseFieldRenderer from "@/p5/utils/noiseFieldGpu.js";
 import drawInstrument from "../_instrument.js";
+import {
+  PALETTE_IRIDESCENT_GLSL
+} from "@/p5/utils/braidShader.js";
+import {
+  shaderPalette, shaderPaletteBackground
+} from "@/p5/utils/palettes.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SIGNALS — 02 / BRAID
@@ -76,15 +82,7 @@ const FRAGMENT = `
   uniform float uAberration;
   uniform int   uAberrationMode;
 
-  vec3 iridescent(float t) {
-    vec3 spectrum = 0.5 + 0.5 * cos(
-      TAU * (uHueSpread * t + vec3(0.0, 0.33, 0.67)) + uHuePhase
-    );
-
-    float luma = dot(spectrum, vec3(0.299, 0.587, 0.114));
-
-    return clamp(mix(vec3(luma), spectrum, uSaturation) * uBrightness, 0.0, 1.0);
-  }
+  ${ PALETTE_IRIDESCENT_GLSL }
 
   float braidRadiusAt(float y) {
     return uBraidRadius * (1.0 + uRadiusPulse * sin(y * uPulseFreq + uT * uPulseSpeed));
@@ -265,7 +263,10 @@ sketch.draw( () => {
   const aberration = o.aberration ?? {};
 
   p.clear();
-  p.background( ...( o.backgroundColor ?? [
+  p.background( ...( shaderPaletteBackground(
+    o.colors,
+    o.backgroundColor
+  ) ?? [
     0,
     0,
     0,
@@ -304,7 +305,10 @@ sketch.draw( () => {
     -Math.cos( el ) * Math.cos( az )
   ];
 
+  const palette = shaderPalette( colors );
+
   braidRenderer.render( {
+    textures: palette.textures,
     columns: 1,
     rows: 1,
     uniforms: {
@@ -323,6 +327,7 @@ sketch.draw( () => {
       uPitch: pitch,
       uYaw: ( camera.yaw ?? 0.5 ) + t * ( camera.orbitSpeed ?? 0 ),
       uHueSpeed: colors.hueSpeed ?? 0,
+      uPaletteOn: palette.uniforms.uPaletteOn,
       uHueSpread: colors.hueSpread ?? 1.4,
       uHuePhase: colors.huePhase ?? 0,
       uLengthHueShift: colors.lengthHueShift ?? 0.25,

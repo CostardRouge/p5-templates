@@ -6,13 +6,16 @@ import animation from "@/p5/utils/animation.js";
 import createNoiseFieldRenderer from "@/p5/utils/noiseFieldGpu.js";
 import {
   BRAID_UNIFORMS_GLSL,
-  IRIDESCENT_GLSL,
+  PALETTE_IRIDESCENT_GLSL,
   BRAID_CAMERA_MAIN_GLSL,
   braidShadingGlsl,
   lightDirFrom,
   focalFromFov,
   lipschitzDivisor
 } from "@/p5/utils/braidShader.js";
+import {
+  shaderPalette, shaderPaletteBackground
+} from "@/p5/utils/palettes.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // braid v2 — wire mesh.
@@ -76,7 +79,7 @@ const FRAGMENT = `
   uniform float uWeftHueMod;  // weft hue-band period (divides scrollRows: 4 or 2)
   uniform float uCentreLipschitz; // CPU safety divisor for the march
 
-  ${ IRIDESCENT_GLSL }
+  ${ PALETTE_IRIDESCENT_GLSL }
 
   // Warp crimp envelope: dead straight under tension below the front, fully
   // crimped just before the first weft row lands — so no crossing ever meets
@@ -172,7 +175,10 @@ sketch.draw( () => {
   const rendering = o.rendering ?? {};
 
   p.clear();
-  p.background( ...( o.backgroundColor ?? [
+  p.background( ...( shaderPaletteBackground(
+    o.colors,
+    o.backgroundColor
+  ) ?? [
     0,
     0,
     0
@@ -250,7 +256,10 @@ sketch.draw( () => {
     light.elevation ?? 0.5
   );
 
+  const palette = shaderPalette( colors );
+
   meshRenderer.render( {
+    textures: palette.textures,
     columns: 1,
     rows: 1,
     resolutionScale: rendering.resolutionScale ?? 0.75,
@@ -271,6 +280,7 @@ sketch.draw( () => {
       uYaw: camera.yaw ?? 0.35,
       uRoll: roll,
       uHueSpeed: hueSpread ? hueCycles / ( p.TAU * hueSpread ) : 0,
+      uPaletteOn: palette.uniforms.uPaletteOn,
       uHueSpread: hueSpread,
       uHuePhase: colors.huePhase ?? 2.6,
       uLengthHueShift: colors.lengthHueShift ?? -0.2,

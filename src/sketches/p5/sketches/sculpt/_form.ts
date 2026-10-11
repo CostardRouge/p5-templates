@@ -9,6 +9,9 @@ import {
   cameraFormValues,
   cameraFormConfiguration
 } from "@/p5/utils/cameraRig.js";
+import {
+  shaderPaletteFormFields, shaderPaletteFormValues
+} from "@/p5/utils/palettes.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // The form blocks the typographic grid sculpts (v5 … v9) share: the text, the
@@ -489,6 +492,7 @@ export const sheetCameraFormConfiguration = {
 };
 
 export const colorsFormValues = {
+  ...shaderPaletteFormValues,
   hueSpeed: 0.5,
   hueSpread: 2,
   huePhase: 2.6,
@@ -504,6 +508,7 @@ export const colorsFormConfiguration = {
   component: "nested-object",
   label: "Iridescent",
   fields: {
+    ...shaderPaletteFormFields,
     hueSpeed: {
       label: "Hue speed (snaps to whole cycles/loop)",
       component: "slider",

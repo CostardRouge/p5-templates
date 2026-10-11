@@ -1,6 +1,9 @@
 import {
   fontNames
 } from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/constants/field-config";
+import {
+  shaderPaletteFormFields, shaderPaletteFormValues
+} from "@/p5/utils/palettes.js";
 
 // A cycle of letters or words changed by the turn itself: the plane holding
 // the text rotates about a horizontal or a vertical axis, and every time it
@@ -76,6 +79,7 @@ export const formValues = {
   },
 
   colors: {
+    ...shaderPaletteFormValues,
     hueSpeed: 1,
     hueSpread: 1.73,
     huePhase: 2.6,
@@ -392,6 +396,7 @@ export const formConfiguration: Record<string, any> = {
     component: "nested-object",
     label: "Iridescent",
     fields: {
+      ...shaderPaletteFormFields,
       hueSpeed: {
         label: "Hue speed (snaps to whole cycles/loop)",
         component: "slider",

@@ -5,6 +5,12 @@ import sketch, {
 import animation from "@/p5/utils/animation.js";
 import audio from "@/p5/utils/audio.js";
 import createNoiseFieldRenderer from "@/p5/utils/noiseFieldGpu.js";
+import {
+  PALETTE_IRIDESCENT_GLSL
+} from "@/p5/utils/braidShader.js";
+import {
+  shaderPalette, shaderPaletteBackground
+} from "@/p5/utils/palettes.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // dragon-corridor v2 — "threading the needle". Same legless, wingless dragon
@@ -150,15 +156,7 @@ const FRAGMENT = `
   uniform vec3  uBgColor;
 
   // Oil-slick / thin-film iridescence — identical palette to flowers-shaders v2.
-  vec3 iridescent(float t) {
-    vec3 spectrum = 0.5 + 0.5 * cos(
-      TAU * (uHueSpread * t + vec3(0.0, 0.33, 0.67)) + uHuePhase
-    );
-
-    float luma = dot(spectrum, vec3(0.299, 0.587, 0.114));
-
-    return clamp(mix(vec3(luma), spectrum, uSaturation) * uBrightness, 0.0, 1.0);
-  }
+  ${ PALETTE_IRIDESCENT_GLSL }
 
   // Corridor centreline offset at scroll-coord s — the undulation. Whole waves
   // per loop on each axis keep it loop-periodic.
@@ -668,7 +666,10 @@ sketch.draw( () => {
   const sound = o.sound ?? {};
 
   p.clear();
-  p.background( ...( o.backgroundColor ?? [
+  p.background( ...( shaderPaletteBackground(
+    o.colors,
+    o.backgroundColor
+  ) ?? [
     4,
     4,
     10
@@ -1063,7 +1064,10 @@ sketch.draw( () => {
   );
   const ribFreq = ( p.TAU * ribsInt ) / SEG;
 
+  const palette = shaderPalette( colors );
+
   scene.render( {
+    textures: palette.textures,
     columns: 1,
     rows: 1,
     resolutionScale: camera.quality ?? 0.85,
@@ -1120,6 +1124,7 @@ sketch.draw( () => {
       uYaw: yaw,
       uRoll: roll,
       uHueSpeed: hueSpeedPhase,
+      uPaletteOn: palette.uniforms.uPaletteOn,
       uHueSpread: hueSpread,
       uHuePhase: colors.huePhase ?? 0.4,
       uLengthHueShift: lengthHueShift,
@@ -1159,7 +1164,10 @@ sketch.draw( () => {
       uGlassTint: obstacles.glassTint ?? 0.3,
       uEdgeGlow: obstacles.edgeGlow ?? 0.8,
       uFogDensity: corridor.fogDensity ?? 0.13,
-      uBgColor: ( o.backgroundColor ?? [
+      uBgColor: ( shaderPaletteBackground(
+        o.colors,
+        o.backgroundColor
+      ) ?? [
         4,
         4,
         10

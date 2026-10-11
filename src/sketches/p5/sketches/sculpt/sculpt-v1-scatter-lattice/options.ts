@@ -2,6 +2,9 @@ import {
   interactionFormValues,
   interactionFormConfiguration
 } from "@/p5/utils/interaction/defaults.js";
+import {
+  shaderPaletteFormFields, shaderPaletteFormValues
+} from "@/p5/utils/palettes.js";
 
 // A seeded cloud of points linked to their nearest neighbours, every link a
 // tube of the rings material, and a wave that poses, swells and withdraws the
@@ -148,6 +151,7 @@ export const formValues = {
   },
 
   colors: {
+    ...shaderPaletteFormValues,
     hueBy: "rank" as "rank" | "link" | "node",
     hueSpeed: 0.5,
     hueSpread: 2,
@@ -749,6 +753,7 @@ export const formConfiguration: Record<string, any> = {
     component: "nested-object",
     label: "Iridescent",
     fields: {
+      ...shaderPaletteFormFields,
       hueBy: {
         label: "Hue carried by",
         component: "select",

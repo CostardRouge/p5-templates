@@ -5,6 +5,12 @@ import sketch, {
 import animation from "@/p5/utils/animation.js";
 import audio from "@/p5/utils/audio.js";
 import createNoiseFieldRenderer from "@/p5/utils/noiseFieldGpu.js";
+import {
+  PALETTE_IRIDESCENT_GLSL
+} from "@/p5/utils/braidShader.js";
+import {
+  shaderPalette, shaderPaletteBackground
+} from "@/p5/utils/palettes.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // dragon-corridor v3 — "whack-a-dragon". The corridor is gone: the same
@@ -158,15 +164,7 @@ const FRAGMENT = `
   uniform vec3  uBoundMax;
 
   // Oil-slick / thin-film iridescence — identical palette to v1/v2.
-  vec3 iridescent(float t) {
-    vec3 spectrum = 0.5 + 0.5 * cos(
-      TAU * (uHueSpread * t + vec3(0.0, 0.33, 0.67)) + uHuePhase
-    );
-
-    float luma = dot(spectrum, vec3(0.299, 0.587, 0.114));
-
-    return clamp(mix(vec3(luma), spectrum, uSaturation) * uBrightness, 0.0, 1.0);
-  }
+  ${ PALETTE_IRIDESCENT_GLSL }
 
   // Arc clock warp: monotone cubic that is FAST at both crossings and SLOW at
   // the apex — the head pops out, hangs there, then dives. k = 0 is linear.
@@ -740,7 +738,10 @@ sketch.draw( () => {
   const sound = o.sound ?? {};
 
   p.clear();
-  p.background( ...( o.backgroundColor ?? [
+  p.background( ...( shaderPaletteBackground(
+    o.colors,
+    o.backgroundColor
+  ) ?? [
     6,
     8,
     16
@@ -1295,7 +1296,10 @@ sketch.draw( () => {
     );
   };
 
+  const palette = shaderPalette( colors );
+
   scene.render( {
+    textures: palette.textures,
     columns: 1,
     rows: 1,
     resolutionScale: camera.quality ?? 0.8,
@@ -1395,6 +1399,7 @@ sketch.draw( () => {
       uCamUp: up,
       uFocal: focal,
       uHueSpeed: hueSpeedPhase,
+      uPaletteOn: palette.uniforms.uPaletteOn,
       uHueSpread: hueSpread,
       uHuePhase: colors.huePhase ?? 1.17,
       uLengthHueShift: lengthHueShift,
@@ -1409,7 +1414,10 @@ sketch.draw( () => {
       uFresnelPower: light.fresnelPower ?? 2.5,
       uRimStrength: light.rimStrength ?? 0.5,
       uFogDensity: o.fogDensity ?? 0.05,
-      uBgColor: ( o.backgroundColor ?? [
+      uBgColor: ( shaderPaletteBackground(
+        o.colors,
+        o.backgroundColor
+      ) ?? [
         6,
         8,
         16

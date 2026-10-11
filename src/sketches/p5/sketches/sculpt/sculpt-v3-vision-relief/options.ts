@@ -1,6 +1,9 @@
 import {
   interactionFormConfiguration, interactionFormValues
 } from "@/p5/utils/interaction/defaults.js";
+import {
+  shaderPaletteFormFields, shaderPaletteFormValues
+} from "@/p5/utils/palettes.js";
 
 // A sheet of nodes seen from above. What the camera sees — hands, a face, a
 // body — is traced as a surface on the sheet; the nodes under it lift, and
@@ -143,6 +146,7 @@ export const formValues = {
   },
 
   colors: {
+    ...shaderPaletteFormValues,
     hueSpeed: 0.5,
     hueSpread: 2,
     huePhase: 2.6,
@@ -809,6 +813,7 @@ export const formConfiguration: Record<string, any> = {
     component: "nested-object",
     label: "Iridescent",
     fields: {
+      ...shaderPaletteFormFields,
       hueSpeed: {
         label: "Hue speed (snaps to whole cycles/loop)",
         component: "slider",

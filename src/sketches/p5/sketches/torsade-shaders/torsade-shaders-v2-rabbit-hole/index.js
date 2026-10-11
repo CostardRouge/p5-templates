@@ -5,6 +5,12 @@ import sketch, {
 import {
   createInstancedFieldRenderer
 } from "@/p5/utils/noiseFieldGpu.js";
+import {
+  PALETTE_IRIDESCENT_GLSL
+} from "@/p5/utils/braidShader.js";
+import {
+  shaderPalette, shaderPaletteBackground
+} from "@/p5/utils/palettes.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // torsade-shaders v2 — rabbit hole.
@@ -61,15 +67,7 @@ const VERTEX = `
 
   // Oil-slick / thin-film iridescence: a cosine spectrum (IQ palette) with the
   // RGB channels phase-shifted so the hue sweeps cleanly through the rainbow.
-  vec3 iridescent(float t) {
-    vec3 spectrum = 0.5 + 0.5 * cos(
-      TAU * (uHueSpread * t + vec3(0.0, 0.33, 0.67)) + uHuePhase
-    );
-
-    float luma = dot(spectrum, vec3(0.299, 0.587, 0.114));
-
-    return clamp(mix(vec3(luma), spectrum, uSaturation) * uBrightness, 0.0, 1.0);
-  }
+  ${ PALETTE_IRIDESCENT_GLSL }
 
   void computeInstance(
     float col, float row,
@@ -158,7 +156,10 @@ sketch.draw( ( time ) => {
 
   p.clear();
 
-  const bg = o.backgroundColor ?? [
+  const bg = shaderPaletteBackground(
+    o.colors,
+    o.backgroundColor
+  ) ?? [
     0,
     0,
     0
@@ -189,7 +190,10 @@ sketch.draw( ( time ) => {
     shadowSteps = Math.floor( shadowsCount / shadowIndexStep + 1e-9 ) + 1;
   }
 
+  const palette = shaderPalette( colors );
+
   field.render( {
+    textures: palette.textures,
     columns: angleSubdivisions,
     rows: shadowSteps * spiralCount,
     background: bg,
@@ -209,6 +213,7 @@ sketch.draw( ( time ) => {
       uSpinSpeed: motion.spinSpeed ?? 1,
       uJitter: motion.jitterAmount ?? 0.33,
       uHueSpeed: colors.hueSpeed ?? 1,
+      uPaletteOn: palette.uniforms.uPaletteOn,
       uHueSpread: colors.hueSpread ?? 1,
       uHuePhase: colors.huePhase ?? 0,
       uDepthHue: colors.depthHue ?? 1,

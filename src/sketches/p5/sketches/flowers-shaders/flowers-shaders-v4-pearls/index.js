@@ -4,6 +4,12 @@ import sketch, {
 } from "@/p5/utils/sketch.js";
 import animation from "@/p5/utils/animation.js";
 import createNoiseFieldRenderer from "@/p5/utils/noiseFieldGpu.js";
+import {
+  PALETTE_IRIDESCENT_GLSL
+} from "@/p5/utils/braidShader.js";
+import {
+  shaderPalette, shaderPaletteBackground
+} from "@/p5/utils/palettes.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // flowers-shaders v4 — pearls.
@@ -111,15 +117,7 @@ const FRAGMENT = `
   // v1/v2: a cosine (IQ) spectrum with the RGB channels phase-shifted so the
   // hue sweeps cleanly through the rainbow, desaturated toward luma and scaled
   // by brightness.
-  vec3 iridescent(float t) {
-    vec3 spectrum = 0.5 + 0.5 * cos(
-      TAU * (uHueSpread * t + vec3(0.0, 0.33, 0.67)) + uHuePhase
-    );
-
-    float luma = dot(spectrum, vec3(0.299, 0.587, 0.114));
-
-    return clamp(mix(vec3(luma), spectrum, uSaturation) * uBrightness, 0.0, 1.0);
-  }
+  ${ PALETTE_IRIDESCENT_GLSL }
 
   // Summed Gaussian influence of every pearl at height y — the deformation the
   // pearls print onto the funnel as they pass.
@@ -379,7 +377,10 @@ sketch.draw( () => {
   const light = o.light ?? {};
 
   p.clear();
-  p.background( ...( o.backgroundColor ?? [
+  p.background( ...( shaderPaletteBackground(
+    o.colors,
+    o.backgroundColor
+  ) ?? [
     0
   ] ) );
 
@@ -471,7 +472,10 @@ sketch.draw( () => {
     -Math.cos( el ) * Math.cos( az )
   ];
 
+  const palette = shaderPalette( colors );
+
   pearls.render( {
+    textures: palette.textures,
     columns: 1,
     rows: 1,
     resolutionScale: quality.renderScale ?? 0.85,
@@ -501,6 +505,7 @@ sketch.draw( () => {
       uPitch: camera.pitch ?? 0.18,
       uYaw: ( camera.yaw ?? 0.5 ) + t * orbitTurns,
       uHueSpeed: hueSpread ? hueCycles / ( p.TAU * hueSpread ) : 0,
+      uPaletteOn: palette.uniforms.uPaletteOn,
       uHueSpread: hueSpread,
       uHuePhase: colors.huePhase ?? 0,
       uLengthHueShift: colors.lengthHueShift ?? 0.2,

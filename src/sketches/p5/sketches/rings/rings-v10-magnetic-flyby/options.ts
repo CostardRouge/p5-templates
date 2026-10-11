@@ -7,6 +7,9 @@ import {
 import {
   hoverSoundFormConfiguration, hoverSoundFormValues
 } from "./hoverSoundOptions.js";
+import {
+  shaderPaletteFormFields, shaderPaletteFormValues
+} from "@/p5/utils/palettes.js";
 
 // One shader text watched over by a FORMATION of virtual cursors that never
 // touch it: by default a circle of hands, aligned on an outer ring, that
@@ -174,6 +177,7 @@ export const formValues = {
   },
 
   colors: {
+    ...shaderPaletteFormValues,
     hueSpeed: -0.12,
     hueSpread: 4.03,
     huePhase: 2.6,
@@ -718,6 +722,7 @@ export const formConfiguration: Record<string, any> = {
     component: "nested-object",
     label: "Iridescent",
     fields: {
+      ...shaderPaletteFormFields,
       hueSpeed: {
         label: "Hue speed (snaps to whole cycles/loop)",
         component: "slider",

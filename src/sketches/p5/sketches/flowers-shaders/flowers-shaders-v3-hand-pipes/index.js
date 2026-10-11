@@ -11,6 +11,12 @@ import {
 import {
   drawInteractionOverlay
 } from "@/p5/utils/interaction/overlay.js";
+import {
+  PALETTE_IRIDESCENT_GLSL
+} from "@/p5/utils/braidShader.js";
+import {
+  shaderPalette, shaderPaletteBackground
+} from "@/p5/utils/palettes.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // flowers-shaders v3 — hand pipes.
@@ -95,15 +101,7 @@ const FRAGMENT = `
   uniform int   uAberrationMode;  // 0 = radial, 1 = horizontal
 
   // Oil-slick / thin-film iridescence — identical to flowers-shaders v1/v2.
-  vec3 iridescent(float t) {
-    vec3 spectrum = 0.5 + 0.5 * cos(
-      TAU * (uHueSpread * t + vec3(0.0, 0.33, 0.67)) + uHuePhase
-    );
-
-    float luma = dot(spectrum, vec3(0.299, 0.587, 0.114));
-
-    return clamp(mix(vec3(luma), spectrum, uSaturation) * uBrightness, 0.0, 1.0);
-  }
+  ${ PALETTE_IRIDESCENT_GLSL }
 
   // Distance to the 3D segment a→b (a capsule axis: round caps + round joins),
   // which makes the union below a smooth tube with rounded ends.
@@ -512,7 +510,10 @@ sketch.draw( () => {
   const interaction = o.interaction ?? {};
 
   p.clear();
-  p.background( ...( o.backgroundColor ?? [
+  p.background( ...( shaderPaletteBackground(
+    o.colors,
+    o.backgroundColor
+  ) ?? [
     0
   ] ) );
 
@@ -604,7 +605,10 @@ sketch.draw( () => {
     -Math.cos( el ) * Math.cos( az )
   ];
 
+  const palette = shaderPalette( colors );
+
   pipes.render( {
+    textures: palette.textures,
     columns: 1,
     rows: 1,
     resolutionScale: quality.renderScale ?? 0.7,
@@ -628,6 +632,7 @@ sketch.draw( () => {
       uMaxDepth: maxRadiusPx + 4,
       uTwist: tube.twist ?? 1,
       uHueSpeed: hueSpread ? hueCycles / ( p.TAU * hueSpread ) : 0,
+      uPaletteOn: palette.uniforms.uPaletteOn,
       uHueSpread: hueSpread,
       uHuePhase: colors.huePhase ?? 0,
       uLengthHueShift: colors.lengthHueShift ?? 1.1,

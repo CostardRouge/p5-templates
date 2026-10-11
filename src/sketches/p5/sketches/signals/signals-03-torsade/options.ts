@@ -1,3 +1,6 @@
+import {
+  shaderPaletteFormFields, shaderPaletteFormValues
+} from "@/p5/utils/palettes.js";
 
 const AXIS_OPTIONS = [
   {
@@ -30,6 +33,7 @@ export const formValues = {
     cadenceIndexScale: 1.1500000000000001
   },
   colors: {
+    ...shaderPaletteFormValues,
     hueSpeed: 1,
     hueSpread: 2,
     huePhase: 0.05,
@@ -161,6 +165,7 @@ export const formConfiguration: Record<string, any> = {
     component: "nested-object",
     label: "Iridescent (low-sat)",
     fields: {
+      ...shaderPaletteFormFields,
       hueSpeed: {
         label: "Hue speed (loops, integer)",
         component: "slider",

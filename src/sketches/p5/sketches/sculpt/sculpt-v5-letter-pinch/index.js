@@ -53,6 +53,9 @@ import {
   cellSize,
   LINKS_CELL_GLSL
 } from "../_trace.js";
+import {
+  shaderPalette, shaderPaletteBackground
+} from "@/p5/utils/palettes.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // sculpt v5 — letter pinch.
@@ -337,11 +340,15 @@ sketch.draw( () => {
   const interaction = o.interaction ?? {};
   const camera = o.camera ?? {};
   const colors = o.colors ?? {};
+  const palette = shaderPalette( colors );
   const light = o.light ?? {};
   const rendering = o.rendering ?? {};
 
   p.clear();
-  p.background( ...( o.backgroundColor ?? [
+  p.background( ...( shaderPaletteBackground(
+    o.colors,
+    o.backgroundColor
+  ) ?? [
     0,
     0,
     0
@@ -716,6 +723,7 @@ sketch.draw( () => {
     rows: 1,
     resolutionScale: rendering.resolutionScale ?? 0.7,
     textures: {
+      ...palette.textures,
       uField: {
         data: state.field,
         width: grid.cols,
@@ -750,6 +758,7 @@ sketch.draw( () => {
       uSqueeze: squeezeNow,
       ...cameraUniforms( basis ),
       uHueSpeed: hueSpread ? hueCycles / ( p.TAU * hueSpread ) : 0,
+      uPaletteOn: palette.uniforms.uPaletteOn,
       uHueSpread: hueSpread,
       uHuePhase: colors.huePhase ?? 2.6,
       uLengthHueShift: colors.lengthHueShift ?? -0.6,

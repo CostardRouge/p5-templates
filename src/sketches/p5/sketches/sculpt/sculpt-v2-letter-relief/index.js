@@ -8,7 +8,7 @@ import string from "@/p5/utils/string.js";
 import createNoiseFieldRenderer from "@/p5/utils/noiseFieldGpu.js";
 import {
   BRAID_UNIFORMS_GLSL,
-  IRIDESCENT_GLSL,
+  PALETTE_IRIDESCENT_GLSL,
   braidShadingGlsl,
   lightDirFrom
 } from "@/p5/utils/braidShader.js";
@@ -43,6 +43,9 @@ import {
   HEIGHT_MAX,
   WEIGHT_MAX
 } from "../_mesh.js";
+import {
+  shaderPalette, shaderPaletteBackground
+} from "@/p5/utils/palettes.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // sculpt v2 — letter relief.
@@ -148,7 +151,7 @@ const FRAGMENT = `
   uniform sampler2D uBounds;     // per cell: R = highest, G = lowest height within two cells
   uniform float uAirMargin;      // widest radius + fillet + slack, world
 
-  ${ IRIDESCENT_GLSL }
+  ${ PALETTE_IRIDESCENT_GLSL }
 
   const float HEIGHT_MIN = ${ HEIGHT_MIN.toFixed( 4 ) };
   const float HEIGHT_RANGE = ${ ( HEIGHT_MAX - HEIGHT_MIN ).toFixed( 4 ) };
@@ -816,7 +819,10 @@ sketch.draw( () => {
   const rendering = o.rendering ?? {};
 
   p.clear();
-  p.background( ...( o.backgroundColor ?? [
+  p.background( ...( shaderPaletteBackground(
+    o.colors,
+    o.backgroundColor
+  ) ?? [
     0,
     0,
     0
@@ -1149,6 +1155,8 @@ sketch.draw( () => {
     light.elevation ?? 0.7
   );
 
+  const palette = shaderPalette( colors );
+
   reliefRenderer.render( {
     columns: 1,
     rows: 1,
@@ -1156,6 +1164,7 @@ sketch.draw( () => {
     // One texel per cell, re-uploaded every frame: the offsets and the 16-bit
     // height in one, the four link weights the cell owns in the other.
     textures: {
+      ...palette.textures,
       uField: {
         data: state.field,
         width: grid.cols,
@@ -1199,6 +1208,7 @@ sketch.draw( () => {
       uSlabBottom: extremes.min * height - maxRadius - smoothK,
       ...cameraUniforms( basis ),
       uHueSpeed: hueSpread ? hueCycles / ( p.TAU * hueSpread ) : 0,
+      uPaletteOn: palette.uniforms.uPaletteOn,
       uHueSpread: hueSpread,
       uHuePhase: colors.huePhase ?? 2.6,
       uLengthHueShift: colors.lengthHueShift ?? -0.9,
