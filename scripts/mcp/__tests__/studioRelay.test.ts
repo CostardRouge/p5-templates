@@ -2,8 +2,11 @@ import fs from "fs";
 import path from "path";
 
 import {
-  buildRelay, RELAY_OUTPUT, RELAY_SOURCE
+  BUNDLE_OUTPUT, buildBundle, bundleManifest, buildRelay, RELAY_OUTPUT, RELAY_SOURCE
 } from "../relayBuild.ts";
+import {
+  crc32
+} from "../zipStore.ts";
 import {
   DEFAULT_PORT, handleMcpMessage, numberedName, originAllowed, parsePeerRequest, parseTabMessage, peerAuthorized, peerTokenFile, safeOutputPath, toolContent, type RelayDeps
 } from "../studioRelay.ts";
@@ -37,6 +40,41 @@ describe(
           ),
           "utf8"
         ) ).toBe( built );
+      }
+    );
+
+    it(
+      "ships as a Claude Desktop extension built from the same relay (run npm run mcp:relay:write)",
+      () => {
+        const relay = fs.readFileSync(
+          path.join(
+            ROOT,
+            RELAY_OUTPUT
+          ),
+          "utf8"
+        );
+        const committed = new Uint8Array( fs.readFileSync( path.join(
+          ROOT,
+          BUNDLE_OUTPUT
+        ) ) );
+
+        expect( Buffer.from( committed ).equals( Buffer.from( buildBundle( relay ) ) ) ).toBe( true );
+        // A stored ZIP: the relay sits in it byte for byte, behind its manifest.
+        expect( Buffer.from( committed ).includes( Buffer.from( relay ) ) ).toBe( true );
+        expect( bundleManifest() ).toMatchObject( {
+          name: "sketchbook-studio",
+          server: {
+            type: "node",
+            entry_point: "server/sketchbook-studio-mcp.mjs",
+            mcp_config: {
+              args: [
+                "${__dirname}/server/sketchbook-studio-mcp.mjs"
+              ]
+            }
+          }
+        } );
+        // The reference CRC-32 check value.
+        expect( crc32( new TextEncoder().encode( "123456789" ) ) ).toBe( 0xcbf43926 );
       }
     );
 

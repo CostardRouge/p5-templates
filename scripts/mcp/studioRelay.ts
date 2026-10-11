@@ -34,7 +34,7 @@ import os from "node:os";
 import path from "node:path";
 import readline from "node:readline";
 
-export const RELAY_VERSION = "1.0.0";
+export const RELAY_VERSION = "1.1.0";
 export const DEFAULT_PORT = 7982;
 /** An exported video can be long; a runaway stream cannot fill the disk. */
 export const MAX_FILE_BYTES = 2 * 1024 * 1024 * 1024;
@@ -306,7 +306,7 @@ export interface RelayDeps {
   relay: ( request: RelayRequest ) => Promise<unknown>;
 }
 
-const TOOLS = [
+export const RELAY_TOOLS = [
   {
     name: "sketchbook_studio_status",
     description: "Whether a Sketchbook tab is connected to this relay (and which sketch it shows), the port, and where exported files are written. Call first.",
@@ -456,7 +456,7 @@ export async function handleMcpMessage(
       return reply( {} );
     case "tools/list":
       return reply( {
-        tools: TOOLS
+        tools: RELAY_TOOLS
       } );
     case "tools/call":
       return reply( await callTool(

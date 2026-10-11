@@ -9,7 +9,7 @@ import {
 } from "node:url";
 
 import {
-  buildRelay, RELAY_OUTPUT, RELAY_SOURCE
+  BUNDLE_OUTPUT, buildBundle, buildRelay, RELAY_OUTPUT, RELAY_SOURCE
 } from "./relayBuild.ts";
 
 const root = path.resolve(
@@ -39,3 +39,14 @@ fs.writeFileSync(
   }
 );
 process.stdout.write( `wrote ${ RELAY_OUTPUT } (${ output.length } bytes)\n` );
+
+const bundle = buildBundle( output );
+
+fs.writeFileSync(
+  path.join(
+    root,
+    BUNDLE_OUTPUT
+  ),
+  bundle
+);
+process.stdout.write( `wrote ${ BUNDLE_OUTPUT } (${ bundle.length } bytes)\n` );
