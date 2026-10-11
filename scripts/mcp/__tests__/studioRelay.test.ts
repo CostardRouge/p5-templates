@@ -5,7 +5,7 @@ import {
   buildRelay, RELAY_OUTPUT, RELAY_SOURCE
 } from "../relayBuild.ts";
 import {
-  DEFAULT_PORT, handleMcpMessage, numberedName, originAllowed, parseTabMessage, safeOutputPath, toolContent, type RelayDeps
+  DEFAULT_PORT, handleMcpMessage, numberedName, originAllowed, parsePeerRequest, parseTabMessage, peerAuthorized, peerTokenFile, safeOutputPath, toolContent, type RelayDeps
 } from "../studioRelay.ts";
 
 const ROOT = path.resolve(
@@ -418,6 +418,68 @@ describe(
           ],
           isError: true
         } );
+      }
+    );
+  }
+);
+
+describe(
+  "two MCP apps sharing one relay",
+  () => {
+    const token = "a".repeat( 64 );
+
+    it(
+      "lets a peer in only without an Origin and with the hub's token",
+      () => {
+        expect( peerAuthorized(
+          {
+            authorization: `Bearer ${ token }`
+          },
+          token
+        ) ).toBe( true );
+        // Every browser request carries an Origin: a web page is never a peer.
+        expect( peerAuthorized(
+          {
+            origin: "https://p5.steeve.website",
+            authorization: `Bearer ${ token }`
+          },
+          token
+        ) ).toBe( false );
+        expect( peerAuthorized(
+          {
+            authorization: `Bearer ${ "b".repeat( 64 ) }`
+          },
+          token
+        ) ).toBe( false );
+        expect( peerAuthorized(
+          {},
+          token
+        ) ).toBe( false );
+        // A hub that could not write its token shares nothing.
+        expect( peerAuthorized(
+          {
+            authorization: "Bearer "
+          },
+          ""
+        ) ).toBe( false );
+      }
+    );
+
+    it(
+      "reads a follower's request, and nothing else",
+      () => {
+        expect( parsePeerRequest( "{\"kind\":\"list\"}" ) ).toEqual( {
+          kind: "list"
+        } );
+        expect( parsePeerRequest( "{\"kind\":\"run\",\"command\":\"sketch.set\"}" ) ).toEqual( {
+          kind: "run",
+          command: "sketch.set",
+          params: {}
+        } );
+        expect( parsePeerRequest( "{\"kind\":\"run\",\"command\":\"x\",\"params\":[1]}" ) ).toBeNull();
+        expect( parsePeerRequest( "{\"kind\":\"run\"}" ) ).toBeNull();
+        expect( parsePeerRequest( "not json" ) ).toBeNull();
+        expect( peerTokenFile( 7982 ) ).toBe( "relay-7982.token" );
       }
     );
   }

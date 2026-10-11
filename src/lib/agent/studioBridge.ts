@@ -194,6 +194,10 @@ export function connectBridge( port: number = RELAY_DEFAULT_PORT ): void {
   } );
 
   let welcomed = false;
+  // Once this connection has been welcomed, a relay that goes away is waited
+  // for, not given up on: a second relay (another MCP app) takes the port over
+  // within seconds, and the browser's own retries find it.
+  let everWelcomed = false;
   const events = new EventSource( `${ base( port ) }/events` );
 
   source = events;
@@ -201,6 +205,7 @@ export function connectBridge( port: number = RELAY_DEFAULT_PORT ): void {
     "welcome",
     ( event ) => {
       welcomed = true;
+      everWelcomed = true;
 
       let exportsGoTo: string | undefined;
 
@@ -253,7 +258,7 @@ export function connectBridge( port: number = RELAY_DEFAULT_PORT ): void {
     if ( source !== events ) {
       return;
     }
-    if ( !welcomed ) {
+    if ( !welcomed && !everWelcomed ) {
       // Never reached: the relay is not running (or the port is wrong). Stop
       // the browser's endless retries and say so.
       events.close();

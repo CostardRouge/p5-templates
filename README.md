@@ -109,7 +109,7 @@ curl -fsSLo ~/.sketchbook-studio-mcp.mjs https://p5.steeve.website/mcp/sketchboo
 claude mcp add sketchbook-studio -- node ~/.sketchbook-studio-mcp.mjs
 ```
 
-Then open any sketch, and in the studio menu choose **Connect an agent** (the menu button gets a green dot). The agent now drives that tab — what it does shows up live, lands in the undo history, and is saved with the piece like a click. The relay listens on `127.0.0.1:7982` only and answers loopback pages and the official site; for a self-hosted copy add its origin with `SKETCHBOOK_ORIGINS=https://your.host`. `--port` changes the port, `--out DIR` where exports land (default `~/Movies/Sketchbook`).
+Then open any sketch, and in the studio menu choose **Connect an agent** (the menu button gets a green dot). The agent now drives that tab — what it does shows up live, lands in the undo history, and is saved with the piece like a click. The relay listens on `127.0.0.1:7982` only and answers loopback pages and the official site; for a self-hosted copy add its origin with `SKETCHBOOK_ORIGINS=https://your.host`. `--port` changes the port, `--out DIR` where exports land (default `~/Movies/Sketchbook`). Two MCP apps at once (Claude Desktop and Claude Code) share it: the second relay finds the port taken and follows the first — same tab, same output folder — and takes the port over when the first one quits.
 
 Tools: `sketchbook_studio_status`, `sketchbook_studio_commands` (every command with its JSON Schema and whether it can run now) and `sketchbook_studio_run` (`{ command, params }`). The commands:
 
