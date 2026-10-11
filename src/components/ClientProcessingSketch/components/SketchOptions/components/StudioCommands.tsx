@@ -34,7 +34,7 @@ import type {
   StudioHandles
 } from "@/lib/agent/handles";
 import {
-  blobToImageResult
+  blobToImageResult, framesToContactSheet
 } from "@/lib/agent/imageResult";
 import {
   getBridgeSketch, getBridgeStatus, resumeBridge, sendFileToRelay, setBridgeSketch, studioCommands
@@ -182,6 +182,12 @@ export default function StudioCommands( {
     slides,
     exportSupported
   } );
+  // What the commands last asked of the transport, until the context's flag
+  // has caught up: `SET_LOOPING` lands a render later, and a command run right
+  // after `playback.seek` read the stale flag and resumed a sketch it had
+  // just paused. Cleared as soon as the flag moves (a click moves it too).
+  const playbackIntent = useRef<boolean | null>( null );
+  const lastLooping = useRef( state.looping );
 
   // The latest of everything, for handles that run long after this render.
   useLayoutEffect( () => {
@@ -196,6 +202,10 @@ export default function StudioCommands( {
       slides,
       exportSupported
     };
+    if ( state.looping !== lastLooping.current || state.looping === playbackIntent.current ) {
+      playbackIntent.current = null;
+    }
+    lastLooping.current = state.looping;
   } );
 
   const sketchId = [
@@ -266,9 +276,10 @@ export default function StudioCommands( {
           }
         },
         playback: {
-          isPlaying: () => now().state.looping,
+          isPlaying: () => playbackIntent.current ?? now().state.looping,
           // The transport's own toggle: the engine, and the context's flag.
           play: () => {
+            playbackIntent.current = true;
             now().state.engine?.play();
             now().dispatch( {
               type: "SET_LOOPING",
@@ -276,6 +287,7 @@ export default function StudioCommands( {
             } );
           },
           pause: () => {
+            playbackIntent.current = false;
             now().state.engine?.pause();
             now().dispatch( {
               type: "SET_LOOPING",
@@ -490,7 +502,8 @@ export default function StudioCommands( {
           currentSketch: getBridgeSketch
         },
         saveFile: sendFileToRelay,
-        relayConnected: () => getBridgeStatus().state === "connected"
+        relayConnected: () => getBridgeStatus().state === "connected",
+        contactSheet: framesToContactSheet
       };
       const off = studioCommands.register( [
         ...sketchCommands( handles ),

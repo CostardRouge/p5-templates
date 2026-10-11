@@ -504,6 +504,117 @@ export function sketchCommands( h: StudioHandles ): CommandSpec[] {
           `${ h.sketchId }${ h.activeSlide() !== undefined ? `, slide ${ h.activeSlide() }` : "" }${ progress !== null ? `, at ${ ( progress * 100 ).toFixed( 1 ) } % of the loop` : "" }.${ saved }`
         );
       }
+    },
+    {
+      id: "studio.contactSheet",
+      title: "Contact sheet of the loop",
+      description: "The whole animation in ONE picture: `count` frames evenly spaced through the loop (from `from` to `to`, loop positions 0–1, the end excluded so a closed loop does not repeat its first frame), each labelled with its position, tiled left to right then down — judge the motion in one call instead of many seek + snapshot. The tab is paused, scrubbed, then put back where it was (position and play/pause), even if a frame fails.",
+      params: {
+        count: {
+          type: "number",
+          description: "How many frames (default 6)",
+          min: 1,
+          max: 12,
+          integer: true,
+          optional: true
+        },
+        from: {
+          type: "number",
+          description: "First position in the loop (default 0)",
+          min: 0,
+          max: 1,
+          optional: true
+        },
+        to: {
+          type: "number",
+          description: "Last position, excluded (default 1)",
+          min: 0,
+          max: 1,
+          optional: true
+        },
+        maxEdge: {
+          type: "number",
+          description: "Longest edge of the whole sheet handed back, px (default 1024)",
+          min: 64,
+          max: 4096,
+          integer: true,
+          optional: true
+        },
+        format: {
+          type: "string",
+          description: "Picture handed back (default jpeg)",
+          enum: [
+            "jpeg",
+            "png"
+          ],
+          optional: true
+        }
+      },
+      async run( params ): Promise<ImageResult> {
+        const count = ( params.count as number | undefined ) ?? 6;
+        const from = ( params.from as number | undefined ) ?? 0;
+        const to = ( params.to as number | undefined ) ?? 1;
+
+        if ( to <= from ) {
+          throw new CommandError(
+            "invalid",
+            `"to" (${ to }) must be after "from" (${ from })`
+          );
+        }
+
+        const positions = Array.from(
+          {
+            length: count
+          },
+          (
+            _, i
+          ) => from + ( to - from ) * i / count
+        );
+        const wasPlaying = h.playback.isPlaying();
+        const wasAt = h.playback.progress();
+        const frames: { blob: Blob;
+          label: string }[] = [];
+
+        try {
+          h.playback.pause();
+          for ( const progress of positions ) {
+            h.playback.seek( progress );
+            // The seek draws synchronously on a canvas engine; a DOM engine
+            // re-rasterises on the next task.
+            await settle();
+
+            const blob = await h.snapshot();
+
+            if ( !blob ) {
+              throw new CommandError(
+                "unavailable",
+                `the sketch had no frame to read at ${ ( progress * 100 ).toFixed( 1 ) } % of the loop`
+              );
+            }
+            frames.push( {
+              blob,
+              label: `${ Math.round( progress * 100 ) } %`
+            } );
+          }
+        } finally {
+          // Back where the person left it, whatever happened above.
+          if ( wasAt !== null ) {
+            h.playback.seek( wasAt );
+          }
+          if ( wasPlaying ) {
+            h.playback.play();
+          }
+        }
+
+        const timing = h.timing();
+
+        return h.contactSheet(
+          frames,
+          ( params.maxEdge as number | undefined ) ?? 1024,
+          ( params.format as "png" | "jpeg" | undefined ) ?? "jpeg",
+          `${ h.sketchId }${ h.activeSlide() !== undefined ? `, slide ${ h.activeSlide() }` : "" } — ${ count } frames at ${ positions.map( ( progress ) => `${ Math.round( progress * 100 ) } %` ).join( ", " ) } of the loop${ timing ? ` (${ timing.duration } s at ${ timing.frameRate } fps)` : "" }; the tab is back at ${ wasAt === null ? "where it was" : `${ ( wasAt * 100 ).toFixed( 1 ) } %` }, ${ wasPlaying ? "playing" : "paused" }.`
+        );
+      }
     }
   ];
 }

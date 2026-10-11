@@ -21,6 +21,9 @@ import type {
 import type {
   CatalogueEntry
 } from "./commands/navigationCommands";
+import type {
+  SheetFrame
+} from "./imageResult";
 
 export interface StudioHandles {
   /** `<engine>/<category>/<name>`. */
@@ -138,6 +141,8 @@ export interface StudioHandles {
   saveFile: ( blob: Blob, name: string, folder?: string ) => Promise<{ path: string;
     bytes: number }>;
   relayConnected: () => boolean;
+  /** Several frames tiled on one picture, each labelled (`framesToContactSheet`). */
+  contactSheet: ( frames: SheetFrame[], maxEdge: number, format: "png" | "jpeg", note: string ) => Promise<ImageResult>;
 }
 
 /** The sketch-parameter scope a slide edits: its own block, or the root's. */

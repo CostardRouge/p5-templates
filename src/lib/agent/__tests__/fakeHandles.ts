@@ -390,6 +390,20 @@ export function fakeHandles(
         kinds
       };
     },
+    contactSheet: async(
+      frames, maxEdge, format, note
+    ) => {
+      calls.push( `sheet ${ frames.map( ( frame ) => frame.label ).join( "|" ) }` );
+
+      return {
+        kind: "image",
+        mimeType: format === "png" ? "image/png" : "image/jpeg",
+        data: "QQ==",
+        width: maxEdge,
+        height: maxEdge,
+        note
+      };
+    },
     ...overrides
   };
 
