@@ -12,6 +12,9 @@ import {
 import {
   leafWrites, sketchBase, type StudioHandles
 } from "../handles";
+import {
+  sketchPathOf
+} from "./navigationCommands";
 
 const SLIDE_PARAM = {
   slide: {
@@ -107,16 +110,19 @@ export function sketchCommands( h: StudioHandles ): CommandSpec[] {
     {
       id: "sketch.describe",
       title: "Describe the sketch",
-      description: "The sketch's parameters as JSON Schema (ranges, choices, labels, defaults) and their CURRENT values on a slide (or the root). sketch.set takes any nested subset of these.",
+      description: "What the sketch is (its description and tags, when someone has written them) and its parameters as JSON Schema (ranges, choices, labels, defaults) with their CURRENT values on a slide (or the root). sketch.set takes any nested subset of these.",
       params: SLIDE_PARAM,
       run( params ) {
         const slide = targetSlide(
           h,
           params.slide
         );
+        const entry = h.navigation.catalogue().find( ( candidate ) => sketchPathOf( candidate ) === h.sketchId );
 
         return {
           sketch: h.sketchId,
+          description: entry?.description ?? null,
+          tags: entry?.tags ?? [],
           scope: scopeLabel( slide ),
           values: sketchValues(
             h,

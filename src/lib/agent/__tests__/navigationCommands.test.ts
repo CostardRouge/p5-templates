@@ -41,7 +41,9 @@ describe(
         ) ).toMatchObject( {
           count: 1,
           sketches: [
-            "p5/voronoi/voronoi-v1-cells"
+            {
+              id: "p5/voronoi/voronoi-v1-cells"
+            }
           ]
         } );
         expect( ( await registry.execute(
@@ -50,6 +52,57 @@ describe(
             includeHidden: true
           }
         ) as { count: number } ).count ).toBe( 3 );
+      }
+    );
+
+    it(
+      "find a sketch by its description or a tag, and count what is described",
+      async() => {
+        const {
+          registry
+        } = setup( false );
+
+        expect( await registry.execute(
+          "sketches.list",
+          {
+            query: "coloured cells"
+          }
+        ) ).toEqual( {
+          count: 1,
+          described: 1,
+          current: "p5/voronoi/voronoi-v1-cells",
+          tags: {
+            geometry: 1,
+            "flat-colour": 1
+          },
+          sketches: [
+            {
+              id: "p5/voronoi/voronoi-v1-cells",
+              description: "Coloured cells drifting.",
+              tags: [
+                "geometry",
+                "flat-colour"
+              ]
+            }
+          ]
+        } );
+        expect( await registry.execute(
+          "sketches.list",
+          {
+            tag: "geometry"
+          }
+        ) ).toMatchObject( {
+          count: 1
+        } );
+        await expect( registry.execute(
+          "sketches.list",
+          {
+            tag: "letters"
+          }
+        ) ).rejects.toMatchObject( {
+          code: "invalid",
+          message: "no sketch carries the tag \"letters\" — tags in use: flat-colour, geometry"
+        } );
       }
     );
 

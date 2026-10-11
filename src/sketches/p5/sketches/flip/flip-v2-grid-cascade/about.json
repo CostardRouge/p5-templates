@@ -1,0 +1,4 @@
+{
+  "description": "A board of turning tiles on black, each tile carrying a glyph drawn as thin iridescent strokes: the turn is also what multiplies them — a tile goes edge-on and comes back as two, then four, then eight — in a cascade across the grid, before the board collapses back to one. Sparse, rhythmic, like a split-flap display.",
+  "tags": [ "typography", "grid", "3d", "iridescent", "flip", "cascade", "needs-text" ]
+}

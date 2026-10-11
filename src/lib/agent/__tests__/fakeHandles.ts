@@ -235,7 +235,12 @@ export function fakeHandles(
         {
           engine: "p5",
           category: "voronoi",
-          name: "voronoi-v1-cells"
+          name: "voronoi-v1-cells",
+          description: "Coloured cells drifting.",
+          tags: [
+            "geometry",
+            "flat-colour"
+          ]
         },
         {
           engine: "p5",

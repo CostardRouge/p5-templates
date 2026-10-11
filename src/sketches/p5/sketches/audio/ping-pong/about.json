@@ -1,0 +1,4 @@
+{
+  "description": "A white ball bouncing around a black frame; every wall hit plays a synthesised bip (pitch mapped to where it hit) and flashes the edge. The trajectory is a pure function of time, so the beat is identical in preview and export. Pointers (mouse, touch, fingers on camera, gyroscope tilt) can each drive an extra ball.",
+  "tags": [ "geometry", "flat", "monochrome", "bounce", "sound", "interactive" ]
+}

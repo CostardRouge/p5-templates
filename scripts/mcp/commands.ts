@@ -16,7 +16,7 @@
  * This file holds the catalogue commands and puts the set together.
  */
 import {
-  filterCatalog, sketchId
+  catalogTags, filterCatalog, sketchId
 } from "./catalog.ts";
 import {
   createContext, ENGINES, type CommandDeps, type Context
@@ -81,7 +81,7 @@ function catalogCommands( ctx: Context ): CommandSpec[] {
     {
       id: "sketches.list",
       title: "List sketches",
-      description: "Search the catalogue. Answers each sketch's id (`<engine>/<category>/<name>`, what every other command takes) and the categories the result spans. Hidden studies are left out unless includeHidden.",
+      description: "Search the catalogue. Answers each sketch's id (`<engine>/<category>/<name>`, what every other command takes) with its description and tags when someone has written them (the answer counts how many are described, and lists the tags in use), and the categories the result spans. Hidden studies are left out unless includeHidden.",
       params: {
         engine: {
           type: "string",
@@ -96,7 +96,12 @@ function catalogCommands( ctx: Context ): CommandSpec[] {
         },
         query: {
           type: "string",
-          description: "Case-insensitive substring of the id",
+          description: "Case-insensitive text found in the id, the description or a tag",
+          optional: true
+        },
+        tag: {
+          type: "string",
+          description: "Only sketches carrying this tag (the answer's `tags` lists every tag in use)",
           optional: true
         },
         includeHidden: {
@@ -128,13 +133,21 @@ function catalogCommands( ctx: Context ): CommandSpec[] {
 
         return {
           total: found.length,
+          described: found.filter( ( entry ) => entry.description ).length,
           categories,
+          tags: catalogTags( found ),
           sketches: found.slice(
             0,
             ( params.limit as number | undefined ) ?? 100
           ).map( ( entry ) => ( {
             id: sketchId( entry ),
             hasForm: entry.hasSketchForm ?? false,
+            ...( entry.description ? {
+              description: entry.description
+            } : {} ),
+            ...( entry.tags?.length ? {
+              tags: entry.tags
+            } : {} ),
             ...( entry.hiddenFromGallery ? {
               hidden: true
             } : {} )
@@ -145,7 +158,7 @@ function catalogCommands( ctx: Context ): CommandSpec[] {
     {
       id: "sketches.describe",
       title: "Describe a sketch",
-      description: "A sketch's parameters as JSON Schema (ranges, choices, defaults, labels) and their default values, its own size, clock and slide count, plus the studio and embed URLs. What render.* and drafts.* accept as `options` is any nested subset of these parameters.",
+      description: "What a sketch is (its description and tags, when written) and its parameters as JSON Schema (ranges, choices, defaults, labels) with their default values, its own size, clock and slide count, plus the studio and embed URLs. What render.* and drafts.* accept as `options` is any nested subset of these parameters.",
       params: {
         sketch: {
           type: "string",
@@ -160,6 +173,8 @@ function catalogCommands( ctx: Context ): CommandSpec[] {
 
         return {
           id: sketchId( entry ),
+          description: entry.description ?? null,
+          tags: entry.tags ?? [],
           studio: `${ deps.baseUrl }/sketches/${ sketchId( entry ) }`,
           embed: `${ deps.baseUrl }/embed/${ sketchId( entry ) }`,
           size: own?.size ?? {
