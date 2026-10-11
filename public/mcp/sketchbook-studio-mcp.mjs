@@ -26,12 +26,13 @@
  * for pages other than loopback and the official site. Node >= 18.
  * stdout carries the protocol and nothing else — every log goes to stderr.
  */
-import { createWriteStream, existsSync, mkdirSync, renameSync, rmSync } from "node:fs";
+import { randomBytes } from "node:crypto";
+import { createWriteStream, existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import http from "node:http";
 import os from "node:os";
 import path from "node:path";
 import readline from "node:readline";
-export const RELAY_VERSION = "1.0.0";
+export const RELAY_VERSION = "1.1.0";
 export const DEFAULT_PORT = 7982;
 /** An exported video can be long; a runaway stream cannot fill the disk. */
 export const MAX_FILE_BYTES = 2 * 1024 * 1024 * 1024;
@@ -156,7 +157,70 @@ export function toolContent(value) {
         }
     ];
 }
-const TOOLS = [
+/* ---- two MCP apps, one tab: the second relay FOLLOWS the first ---- */
+/**
+ * Claude Desktop and Claude Code each start their own relay, and only one can
+ * hold the port. The one that does is the HUB (the tab connects to it); a relay
+ * that finds the port taken by another Sketchbook relay FOLLOWS it, passing its
+ * tool calls through the hub's `/peer/*` routes — the hub's tab, the hub's
+ * output folder. Those routes are for programs on this computer only: they
+ * refuse any request carrying an `Origin` (every browser request does) and ask
+ * for the hub's TOKEN, written to a file only this user can read. A follower
+ * whose hub goes away takes the port itself, and the tab reconnects to it.
+ * Same scheme as Atelier's bridge (`scripts/atelier-mcp.mjs`).
+ */
+export const PEER_STATUS_PATH = "/peer/status";
+export const PEER_RELAY_PATH = "/peer/relay";
+/** The token file's name for a port, inside `~/.sketchbook/`. */
+export function peerTokenFile(port) {
+    return `relay-${port}.token`;
+}
+/**
+ * Whether a request to a `/peer/*` route may pass: no `Origin` (so not a web
+ * page) and the hub's token as a bearer, compared in constant time.
+ */
+export function peerAuthorized(headers, token) {
+    if (headers.origin !== undefined || !token || token.length < 32) {
+        return false;
+    }
+    const given = /^Bearer (.+)$/.exec(headers.authorization ?? "")?.[1] ?? "";
+    if (given.length !== token.length) {
+        return false;
+    }
+    let diff = 0;
+    for (let i = 0; i < token.length; i++) {
+        diff |= given.charCodeAt(i) ^ token.charCodeAt(i);
+    }
+    return diff === 0;
+}
+/** A follower's relay request, or null when the body is not one. */
+export function parsePeerRequest(text) {
+    let value;
+    try {
+        value = JSON.parse(text);
+    }
+    catch {
+        return null;
+    }
+    if (!isRecord(value)) {
+        return null;
+    }
+    if (value.kind === "list") {
+        return {
+            kind: "list"
+        };
+    }
+    if (value.kind === "run" && typeof value.command === "string" && value.command) {
+        const params = value.params === undefined ? {} : value.params;
+        return isRecord(params) ? {
+            kind: "run",
+            command: value.command,
+            params
+        } : null;
+    }
+    return null;
+}
+export const RELAY_TOOLS = [
     {
         name: "sketchbook_studio_status",
         description: "Whether a Sketchbook tab is connected to this relay (and which sketch it shows), the port, and where exported files are written. Call first.",
@@ -218,7 +282,7 @@ async function callTool(deps, name, args) {
     const given = isRecord(args) ? args : {};
     try {
         if (name === "sketchbook_studio_status") {
-            const tab = deps.tab();
+            const tab = deps.problem() ? null : await deps.tab();
             return {
                 content: toolContent({
                     connected: Boolean(tab),
@@ -294,7 +358,7 @@ export async function handleMcpMessage(message, deps) {
             return reply({});
         case "tools/list":
             return reply({
-                tools: TOOLS
+                tools: RELAY_TOOLS
             });
         case "tools/call":
             return reply(await callTool(deps, params.name, params.arguments));
@@ -360,8 +424,233 @@ export function startRelay() {
             })}\n\n`);
         });
     }
+    /* -- hub or follower (see PEER_STATUS_PATH) -- */
+    /** `hub` holds the port and the tab; `follower` relays through the hub. */
+    let mode = "starting";
+    const currentMode = () => mode;
+    /** The hub's secret, written where only this user can read it. */
+    let hubToken = null;
+    /** What the hub last said, while following it. */
+    let followed = null;
+    const tokenDir = path.join(os.homedir(), ".sketchbook");
+    const tokenPath = path.join(tokenDir, peerTokenFile(port));
+    const hub = `http://127.0.0.1:${port}`;
+    const tabInfo = () => tab ? {
+        title: tab.title,
+        route: tab.route,
+        sketch: tab.sketch,
+        origin: tab.origin,
+        since: tab.since
+    } : null;
+    function writeToken() {
+        hubToken = randomBytes(32).toString("hex");
+        try {
+            mkdirSync(tokenDir, {
+                recursive: true,
+                mode: 0o700
+            });
+            writeFileSync(tokenPath, hubToken, {
+                mode: 0o600
+            });
+        }
+        catch (error) {
+            log(`could not write ${tokenPath} (${error.message}) — a second MCP app will not be able to share this relay`);
+        }
+    }
+    function dropToken() {
+        try {
+            if (hubToken && readFileSync(tokenPath, "utf8") === hubToken) {
+                rmSync(tokenPath, {
+                    force: true
+                });
+            }
+        }
+        catch {
+            // Already gone, or another hub's by now.
+        }
+    }
+    async function askHub(pathname, body) {
+        let token;
+        try {
+            token = readFileSync(tokenPath, "utf8").trim();
+        }
+        catch {
+            throw new Error("no hub token");
+        }
+        const answer = await fetch(`${hub}${pathname}`, {
+            method: body === undefined ? "GET" : "POST",
+            headers: {
+                authorization: `Bearer ${token}`,
+                ...(body === undefined ? {} : {
+                    "content-type": "application/json"
+                })
+            },
+            body: body === undefined ? undefined : JSON.stringify(body)
+        });
+        if (!answer.ok) {
+            throw new Error(`the relay on port ${port} answered ${answer.status}`);
+        }
+        return await answer.json();
+    }
+    /** The port is taken: follow it if a Sketchbook relay holds it, else say so. */
+    async function follow() {
+        try {
+            followed = await askHub(PEER_STATUS_PATH);
+            if (mode !== "follower") {
+                log(`port ${port} is held by another Sketchbook relay — following it (its tab, its output folder)`);
+            }
+            mode = "follower";
+            problem = null;
+        }
+        catch {
+            mode = "starting";
+            followed = null;
+            problem = `unavailable: the relay could not listen on 127.0.0.1:${port}, and what holds that port is not a Sketchbook relay it can share — stop that program, or start this one with --port N and connect the tab on that port`;
+            log(problem);
+        }
+    }
+    /** The last follow attempt, so whoever waits on the port can wait on it too. */
+    let following = null;
+    /** Settled once this relay knows whether it is the hub or a follower. */
+    let settle = () => undefined;
+    const settled = new Promise((resolve) => {
+        settle = resolve;
+    });
+    /** The hub went away: take the port (the tab reconnects by itself), else follow whoever did. */
+    let takingOver = null;
+    function takeOver() {
+        takingOver ??= new Promise((resolve) => {
+            mode = "starting";
+            followed = null;
+            const onListening = () => {
+                server.off("error", onError);
+                resolve();
+            };
+            // The standing error handler starts `following`; wait for it to land.
+            const onError = () => {
+                server.off("listening", onListening);
+                setImmediate(() => void (following ?? Promise.resolve()).then(resolve));
+            };
+            server.once("listening", onListening);
+            server.once("error", onError);
+            server.listen(port, "127.0.0.1");
+        }).finally(() => {
+            takingOver = null;
+        });
+        return takingOver;
+    }
+    async function currentTab() {
+        await settled;
+        if (takingOver) {
+            await takingOver;
+        }
+        if (mode === "hub") {
+            return tabInfo();
+        }
+        if (mode !== "follower") {
+            return null;
+        }
+        try {
+            followed = await askHub(PEER_STATUS_PATH);
+            return followed.tab ?? null;
+        }
+        catch {
+            await takeOver();
+            // `takeOver` changed the mode behind the await.
+            return currentMode() === "hub" ? null : followed?.tab ?? null;
+        }
+    }
+    async function relayAny(request) {
+        await settled;
+        if (takingOver) {
+            await takingOver;
+        }
+        if (mode === "hub") {
+            return relay(request);
+        }
+        if (mode !== "follower") {
+            throw new Error(problem ?? "unavailable: the relay is not ready");
+        }
+        let answer;
+        try {
+            answer = await askHub(PEER_RELAY_PATH, request);
+        }
+        catch {
+            await takeOver();
+            throw new Error("unavailable: the relay holding the tab went away and this one took its place — the tab reconnects by itself (or choose Connect an agent again); retry");
+        }
+        if (answer.ok) {
+            return answer.result;
+        }
+        throw new Error(String(answer.error?.message ?? "failed: the hub relay refused the call"));
+    }
+    function peerRoute(req, res, route) {
+        const json = (code, body) => {
+            res.writeHead(code, {
+                "content-type": "application/json"
+            });
+            res.end(JSON.stringify(body));
+        };
+        if (!peerAuthorized({
+            origin: req.headers.origin,
+            authorization: req.headers.authorization
+        }, hubToken ?? "")) {
+            json(403, {
+                error: "not a relay on this computer"
+            });
+            return;
+        }
+        if (req.method === "GET" && route === PEER_STATUS_PATH) {
+            json(200, {
+                relay: RELAY_VERSION,
+                outDir,
+                tab: tabInfo()
+            });
+            return;
+        }
+        if (req.method === "POST" && route === PEER_RELAY_PATH) {
+            const chunks = [];
+            let size = 0;
+            req.on("data", (chunk) => {
+                size += chunk.length;
+                if (size > MAX_BODY_BYTES) {
+                    req.destroy();
+                }
+                else {
+                    chunks.push(chunk);
+                }
+            });
+            req.on("end", () => {
+                const request = parsePeerRequest(Buffer.concat(chunks).toString("utf8"));
+                if (!request) {
+                    json(400, {
+                        error: "not a relay request"
+                    });
+                    return;
+                }
+                relay(request).then((result) => json(200, {
+                    ok: true,
+                    result
+                }), (error) => json(200, {
+                    ok: false,
+                    error: {
+                        message: error.message
+                    }
+                }));
+            });
+            return;
+        }
+        json(404, {
+            error: "no such route"
+        });
+    }
     const server = http.createServer((req, res) => {
         const origin = req.headers.origin;
+        const peerPath = (req.url ?? "/").split("?")[0];
+        if (peerPath.startsWith("/peer/")) {
+            peerRoute(req, res, peerPath);
+            return;
+        }
         if (!originAllowed(origin, extraOrigins)) {
             res.writeHead(403, {
                 "content-type": "text/plain"
@@ -551,25 +840,40 @@ export function startRelay() {
         res.writeHead(404, cors);
         res.end();
     });
-    server.on("error", (error) => {
-        problem = error.code === "EADDRINUSE"
-            ? `unavailable: the relay could not listen on 127.0.0.1:${port} — another program (a second relay?) holds it; stop it or start this one with --port N and connect the tab on that port`
-            : `unavailable: the relay could not listen: ${error.message}`;
-        log(problem);
+    server.on("listening", () => {
+        mode = "hub";
+        problem = null;
+        writeToken();
+        settle();
+        log(`listening on http://127.0.0.1:${port} — in the studio menu, choose Connect an agent`);
     });
-    server.listen(port, "127.0.0.1", () => log(`listening on http://127.0.0.1:${port} — in the studio menu, choose Connect an agent`));
+    server.on("error", (error) => {
+        if (error.code === "EADDRINUSE") {
+            following = follow().finally(settle);
+            return;
+        }
+        problem = `unavailable: the relay could not listen: ${error.message}`;
+        log(problem);
+        settle();
+    });
+    server.listen(port, "127.0.0.1");
+    // A follower takes the port as soon as its hub quits, not at its next tool
+    // call: the tab is retrying meanwhile and should find a relay quickly.
+    setInterval(() => {
+        if (mode === "follower" && !takingOver) {
+            askHub(PEER_STATUS_PATH).then((answer) => {
+                followed = answer;
+            }, () => void takeOver());
+        }
+    }, 5_000).unref();
     const deps = {
         port,
-        outDir,
+        get outDir() {
+            return mode === "follower" ? String(followed?.outDir ?? outDir) : outDir;
+        },
         problem: () => problem,
-        tab: () => tab ? {
-            title: tab.title,
-            route: tab.route,
-            sketch: tab.sketch,
-            origin: tab.origin,
-            since: tab.since
-        } : null,
-        relay
+        tab: currentTab,
+        relay: relayAny
     };
     const send = (message) => process.stdout.write(`${JSON.stringify(message)}\n`);
     const lines = readline.createInterface({
@@ -609,9 +913,19 @@ export function startRelay() {
     });
     // The client closing stdin is how an MCP session ends.
     lines.on("close", () => {
+        dropToken();
         server.close();
         process.exit(0);
     });
+    for (const signal of [
+        "SIGINT",
+        "SIGTERM"
+    ]) {
+        process.on(signal, () => {
+            dropToken();
+            process.exit(0);
+        });
+    }
 }
 // Run when executed (from source or as the served .mjs), not when a test imports it.
 if (/sketchbook-studio-mcp\.mjs$|studioRelay\.ts$/.test(process.argv[1] ?? "") && process.env.SKETCHBOOK_RELAY_NO_START !== "1") {

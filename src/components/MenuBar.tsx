@@ -6,6 +6,7 @@ import {
 import clsx from "clsx";
 import {
   Bell,
+  BookOpen,
   Bot,
   BellOff,
   Check,
@@ -25,6 +26,7 @@ import {
   Sun,
   Video
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import {
   usePathname, useSearchParams
@@ -60,6 +62,9 @@ import {
   connectBridge, disconnectBridge, getBridgeStatus, subscribeBridge, type BridgeStatus
 } from "@/lib/agent/studioBridge";
 import sleep from "@/utils/sleep";
+
+// The agent setup guide only compiles when it is first opened.
+const AgentGuideDialog = dynamic( () => import( "@/components/AgentGuideDialog" ) );
 
 type MenuBarProps = {
   showRecordings?: boolean;
@@ -180,6 +185,11 @@ function MenuBar( {
   const [
     mounted,
     setMounted
+  ] = useState( false );
+
+  const [
+    agentGuideOpen,
+    setAgentGuideOpen
   ] = useState( false );
 
   const [
@@ -688,6 +698,25 @@ function MenuBar( {
             {bridge.message}
           </p>
         )}
+        {/* How to install the relay in Claude Desktop / Claude Code and what to
+            ask — the step the connect item above cannot explain. */}
+        <MenuItem>
+          {( {
+            focus
+          } ) => (
+            <button
+              type="button"
+              onClick={ () => setAgentGuideOpen( true ) }
+              className={ clsx(
+                itemClass,
+                focus && "bg-hover"
+              ) }
+            >
+              <BookOpen className="h-4 w-4 text-foreground/70" />
+              <span className="flex-1 text-left">Agent setup guide</span>
+            </button>
+          )}
+        </MenuItem>
 
         {/* The studio's dev affordances — the pending badge, the Debug section,
             the inspector's save-defaults / thumbnail / preview trio and the
@@ -777,17 +806,32 @@ function MenuBar( {
     </Menu>
   );
 
+  const agentGuide = agentGuideOpen && (
+    <AgentGuideDialog
+      open
+      onClose={ () => setAgentGuideOpen( false ) }
+    />
+  );
+
   if ( renderInline && slot?.slotEl ) {
-    return createPortal(
-      menuNode,
-      slot.slotEl
+    return (
+      <>
+        {createPortal(
+          menuNode,
+          slot.slotEl
+        )}
+        {agentGuide}
+      </>
     );
   }
 
   return (
-    <div className="fixed top-2 left-2 md:top-4 md:left-4 z-[70] md:z-50">
-      {menuNode}
-    </div>
+    <>
+      <div className="fixed top-2 left-2 md:top-4 md:left-4 z-[70] md:z-50">
+        {menuNode}
+      </div>
+      {agentGuide}
+    </>
   );
 }
 

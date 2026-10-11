@@ -2,10 +2,13 @@ import fs from "fs";
 import path from "path";
 
 import {
-  buildRelay, RELAY_OUTPUT, RELAY_SOURCE
+  BUNDLE_OUTPUT, buildBundle, bundleManifest, buildRelay, RELAY_OUTPUT, RELAY_SOURCE
 } from "../relayBuild.ts";
 import {
-  DEFAULT_PORT, handleMcpMessage, numberedName, originAllowed, parseTabMessage, safeOutputPath, toolContent, type RelayDeps
+  crc32
+} from "../zipStore.ts";
+import {
+  DEFAULT_PORT, handleMcpMessage, numberedName, originAllowed, parsePeerRequest, parseTabMessage, peerAuthorized, peerTokenFile, safeOutputPath, toolContent, type RelayDeps
 } from "../studioRelay.ts";
 
 const ROOT = path.resolve(
@@ -37,6 +40,41 @@ describe(
           ),
           "utf8"
         ) ).toBe( built );
+      }
+    );
+
+    it(
+      "ships as a Claude Desktop extension built from the same relay (run npm run mcp:relay:write)",
+      () => {
+        const relay = fs.readFileSync(
+          path.join(
+            ROOT,
+            RELAY_OUTPUT
+          ),
+          "utf8"
+        );
+        const committed = new Uint8Array( fs.readFileSync( path.join(
+          ROOT,
+          BUNDLE_OUTPUT
+        ) ) );
+
+        expect( Buffer.from( committed ).equals( Buffer.from( buildBundle( relay ) ) ) ).toBe( true );
+        // A stored ZIP: the relay sits in it byte for byte, behind its manifest.
+        expect( Buffer.from( committed ).includes( Buffer.from( relay ) ) ).toBe( true );
+        expect( bundleManifest() ).toMatchObject( {
+          name: "sketchbook-studio",
+          server: {
+            type: "node",
+            entry_point: "server/sketchbook-studio-mcp.mjs",
+            mcp_config: {
+              args: [
+                "${__dirname}/server/sketchbook-studio-mcp.mjs"
+              ]
+            }
+          }
+        } );
+        // The reference CRC-32 check value.
+        expect( crc32( new TextEncoder().encode( "123456789" ) ) ).toBe( 0xcbf43926 );
       }
     );
 
@@ -418,6 +456,68 @@ describe(
           ],
           isError: true
         } );
+      }
+    );
+  }
+);
+
+describe(
+  "two MCP apps sharing one relay",
+  () => {
+    const token = "a".repeat( 64 );
+
+    it(
+      "lets a peer in only without an Origin and with the hub's token",
+      () => {
+        expect( peerAuthorized(
+          {
+            authorization: `Bearer ${ token }`
+          },
+          token
+        ) ).toBe( true );
+        // Every browser request carries an Origin: a web page is never a peer.
+        expect( peerAuthorized(
+          {
+            origin: "https://p5.steeve.website",
+            authorization: `Bearer ${ token }`
+          },
+          token
+        ) ).toBe( false );
+        expect( peerAuthorized(
+          {
+            authorization: `Bearer ${ "b".repeat( 64 ) }`
+          },
+          token
+        ) ).toBe( false );
+        expect( peerAuthorized(
+          {},
+          token
+        ) ).toBe( false );
+        // A hub that could not write its token shares nothing.
+        expect( peerAuthorized(
+          {
+            authorization: "Bearer "
+          },
+          ""
+        ) ).toBe( false );
+      }
+    );
+
+    it(
+      "reads a follower's request, and nothing else",
+      () => {
+        expect( parsePeerRequest( "{\"kind\":\"list\"}" ) ).toEqual( {
+          kind: "list"
+        } );
+        expect( parsePeerRequest( "{\"kind\":\"run\",\"command\":\"sketch.set\"}" ) ).toEqual( {
+          kind: "run",
+          command: "sketch.set",
+          params: {}
+        } );
+        expect( parsePeerRequest( "{\"kind\":\"run\",\"command\":\"x\",\"params\":[1]}" ) ).toBeNull();
+        expect( parsePeerRequest( "{\"kind\":\"run\"}" ) ).toBeNull();
+        expect( parsePeerRequest( "not json" ) ).toBeNull();
+        expect( peerTokenFile( 7982 ) ).toBe( "relay-7982.token" );
       }
     );
   }
