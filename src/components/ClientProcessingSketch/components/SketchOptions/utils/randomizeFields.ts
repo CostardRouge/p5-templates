@@ -81,6 +81,7 @@ export function randomizeField(
       // the whole-panel button is usually pressed to explore geometry.
       break;
     case "select":
+    case "palette-picker":
       if ( field.options && field.options.length > 0 ) {
         const randomOption =
           field.options[ Math.floor( Math.random() * field.options.length ) ];

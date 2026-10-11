@@ -4262,5 +4262,57 @@
     "asyncDraw": false,
     "mtime": "2026-09-23T22:51:18.994Z",
     "ctime": "2026-09-23T22:50:51.186Z"
+  },
+  {
+    "name": "iridescent-v1-peaks-sphere",
+    "engine": "p5",
+    "category": "iridescent",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "asyncDraw": false,
+    "mtime": "2026-10-09T04:00:16.430Z",
+    "ctime": "2026-10-09T03:59:43.783Z"
+  },
+  {
+    "name": "iridescent-v2-peaks-cylinder",
+    "engine": "p5",
+    "category": "iridescent",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "asyncDraw": false,
+    "mtime": "2026-10-09T04:00:57.983Z",
+    "ctime": "2026-10-09T04:00:42.131Z"
+  },
+  {
+    "name": "iridescent-v3-peaks-tunnel",
+    "engine": "p5",
+    "category": "iridescent",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "asyncDraw": false,
+    "mtime": "2026-10-09T04:01:44.687Z",
+    "ctime": "2026-10-09T04:01:24.803Z"
+  },
+  {
+    "name": "iridescent-v4-orbit-pearls",
+    "engine": "p5",
+    "category": "iridescent",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "asyncDraw": false,
+    "mtime": "2026-10-09T04:14:01.043Z",
+    "ctime": "2026-10-09T04:13:33.743Z"
   }
 ]

@@ -1,9 +1,11 @@
 import {
+  bindingKindFor,
   channelSourceGroups,
   channelSourceOptions,
   describeChannel,
   interactionEnablePaths,
   LEARN_THRESHOLD,
+  makeDefaultBinding,
   observeForLearn,
   sourceOptionShortLabel,
   withSelectedSource
@@ -578,6 +580,57 @@ describe(
           references
         ) ).toBeNull();
         expect( references.has( "midi.cc29" ) ).toBe( false );
+      }
+    );
+  }
+);
+
+describe(
+  "palette picker",
+  () => {
+    it(
+      "binds as an enum that walks the palette ids in the picker's order",
+      () => {
+        const config = {
+          component: "palette-picker" as const,
+          options: [
+            {
+              value: "custom",
+              label: "Custom"
+            },
+            {
+              value: "riso-pink-blue",
+              label: "Riso pink × blue",
+              stops: [
+                [
+                  255,
+                  72,
+                  176
+                ]
+              ]
+            },
+            {
+              value: "thermal",
+              label: "Thermal"
+            }
+          ]
+        };
+
+        expect( bindingKindFor( "palette-picker" ) ).toBe( "enum" );
+
+        const binding = makeDefaultBinding(
+          "material.ramp.palette",
+          "enum",
+          config,
+          "custom"
+        );
+
+        expect( binding.kind ).toBe( "enum" );
+        expect( binding.mapping.values ).toEqual( [
+          "custom",
+          "riso-pink-blue",
+          "thermal"
+        ] );
       }
     );
   }

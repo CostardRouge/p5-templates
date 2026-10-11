@@ -18,7 +18,11 @@ const eslintConfig = [
       "out/**",
       "src/generated/**",
       "node_modules/**",
-      "public/assets/libraries/**"
+      "public/assets/libraries/**",
+      // Compiled from scripts/mcp/studioRelay.ts by `npm run mcp:relay:write`
+      // and drift-tested byte for byte: the pre-commit `eslint --fix` must not
+      // reformat it (it did, on a merge that staged it).
+      "public/mcp/**"
     ]
   },
   ...nextCoreWebVitals,

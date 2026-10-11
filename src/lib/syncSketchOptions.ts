@@ -102,6 +102,43 @@ export function setSketchOptions(
   ) );
 }
 
+/**
+ * Replace the store's whole content with `options` — the seed for a sketch
+ * that just mounted. `setSketchOptions` merges and never deletes, and the store
+ * is one global object that outlives client-side navigation, so seeding a new
+ * sketch by merging kept every key the previous sketch had and this one lacks:
+ * its `interactive` bindings (which then drove the neighbour's parameters of
+ * the same name), slides, content items, sketch-only parameters. The object is
+ * emptied in place, not swapped, so references the engine holds stay live.
+ */
+export function replaceSketchOptions(
+  options: Record<string, any>,
+  origin = "react"
+): void {
+  bufferedReactUpdate = null;
+
+  for ( const key of Object.keys( current ) ) {
+    delete current[ key ];
+  }
+
+  mergeChangedInPlace(
+    current,
+    options
+  );
+
+  globalStore.sketchOptions = current;
+
+  window.dispatchEvent( new CustomEvent(
+    EVENT,
+    {
+      detail: {
+        opts: current,
+        origin
+      }
+    }
+  ) );
+}
+
 export function subscribeSketchOptions( cb: ( opts: Record<string, any>, origin?: string ) => void ): () => void {
   const handler = ( e: Event ) => {
     const detail = ( e as CustomEvent ).detail;
