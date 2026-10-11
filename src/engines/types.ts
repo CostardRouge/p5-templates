@@ -248,6 +248,14 @@ export interface SketchMetadata {
    * will never render (src/sketches/p5/utils/nestedSketch.js explains why).
    */
   asyncDraw?: boolean;
+  /**
+   * What the sketch is, from its `about.json` (`scripts/watch-sketches.mjs`,
+   * `readAbout`): one or two sentences on what it draws and how it moves, and
+   * a few lowercase tags — for an agent (or the gallery search) choosing a
+   * sketch without opening it. Absent until someone writes the file.
+   */
+  description?: string;
+  tags?: string[];
   mtime: string;
   ctime: string;
 }

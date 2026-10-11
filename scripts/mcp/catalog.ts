@@ -20,6 +20,9 @@ export interface CatalogEntry {
   hasPreview?: boolean;
   hiddenFromHome?: boolean;
   hiddenFromGallery?: boolean;
+  /** From the sketch's `about.json`; absent until someone writes it. */
+  description?: string;
+  tags?: string[];
 }
 
 export function sketchId( entry: CatalogEntry ): string {
@@ -29,8 +32,10 @@ export function sketchId( entry: CatalogEntry ): string {
 export interface CatalogFilter {
   engine?: string;
   category?: string;
-  /** Case-insensitive substring of the id. */
+  /** Case-insensitive substring of the id, the description or a tag. */
   query?: string;
+  /** Only sketches carrying this tag. */
+  tag?: string;
   /** Include the sketches the gallery hides (studies, tests). */
   includeHidden?: boolean;
 }
@@ -39,16 +44,32 @@ export function filterCatalog(
   entries: readonly CatalogEntry[], filter: CatalogFilter
 ): CatalogEntry[] {
   const query = filter.query?.toLowerCase();
+  const tag = filter.tag?.toLowerCase();
 
   return entries
     .filter( ( e ) => filter.includeHidden || !e.hiddenFromGallery )
     .filter( ( e ) => !filter.engine || e.engine === filter.engine )
     .filter( ( e ) => !filter.category || e.category === filter.category )
+    .filter( ( e ) => !tag || ( e.tags ?? [] ).includes( tag ) )
     .filter( ( e ) => !query || sketchId( e ).toLowerCase()
-      .includes( query ) )
+      .includes( query ) || ( e.description ?? "" ).toLowerCase()
+      .includes( query ) || ( e.tags ?? [] ).some( ( t ) => t.includes( query ) ) )
     .sort( (
       a, b
     ) => sketchId( a ).localeCompare( sketchId( b ) ) );
+}
+
+/** Every tag in use among `entries`, with how many carry it. */
+export function catalogTags( entries: readonly CatalogEntry[] ): Record<string, number> {
+  const tags: Record<string, number> = {};
+
+  for ( const entry of entries ) {
+    for ( const tag of entry.tags ?? [] ) {
+      tags[ tag ] = ( tags[ tag ] ?? 0 ) + 1;
+    }
+  }
+
+  return tags;
 }
 
 /** The one entry `ref` names, or `CommandError( "invalid" )` saying why not. */

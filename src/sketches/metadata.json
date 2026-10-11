@@ -555,6 +555,13 @@
     "hiddenFromHome": false,
     "hiddenFromGallery": false,
     "asyncDraw": false,
+    "description": "A kinetic headline: a big white two-line title and a small subtitle over a soft violet glow on near-black, the words popping in word by word and holding — the engine demo for GSAP/HTML (a DOM template scrubbed by a timeline), a starting point for text reels.",
+    "tags": [
+      "typography",
+      "flat",
+      "needs-text",
+      "demo"
+    ],
     "mtime": "2026-05-25T16:21:29.865Z",
     "ctime": "2026-05-20T12:32:21.506Z"
   },
@@ -867,6 +874,13 @@
     "hiddenFromHome": false,
     "hiddenFromGallery": false,
     "asyncDraw": false,
+    "description": "A rows-by-columns grid of the photos you give it, with rounded corners on black: the cells reveal in a cascade from a chosen origin, hold with a gentle breathing zoom, then clear in reverse so the loop is seamless. A clean, editorial photo-grid reel.",
+    "tags": [
+      "photo",
+      "grid",
+      "cascade",
+      "needs-photo"
+    ],
     "mtime": "2026-06-17T19:40:45.225Z",
     "ctime": "2026-06-17T19:40:45.225Z"
   },
@@ -1179,6 +1193,15 @@
     "hiddenFromHome": false,
     "hiddenFromGallery": false,
     "asyncDraw": false,
+    "description": "A white ball bouncing around a black frame; every wall hit plays a synthesised bip (pitch mapped to where it hit) and flashes the edge. The trajectory is a pure function of time, so the beat is identical in preview and export. Pointers (mouse, touch, fingers on camera, gyroscope tilt) can each drive an extra ball.",
+    "tags": [
+      "geometry",
+      "flat",
+      "monochrome",
+      "bounce",
+      "sound",
+      "interactive"
+    ],
     "mtime": "2026-06-17T19:40:45.234Z",
     "ctime": "2026-06-17T19:40:45.234Z"
   },
@@ -1803,6 +1826,13 @@
     "hiddenFromHome": false,
     "hiddenFromGallery": false,
     "asyncDraw": false,
+    "description": "Thick vertical ribbons packed across the frame, bending and twisting together under a flowing noise field like strands of hair or seaweed in a current; each ribbon shades through a palette along its length (orange-red to cyan on black by default). Fluid, hypnotic, full-frame.",
+    "tags": [
+      "noise",
+      "flat",
+      "colourful",
+      "drift"
+    ],
     "mtime": "2026-06-17T19:40:45.247Z",
     "ctime": "2026-06-17T19:40:45.247Z"
   },
@@ -3194,6 +3224,14 @@
     "hiddenFromHome": false,
     "hiddenFromGallery": false,
     "asyncDraw": false,
+    "description": "A Voronoi diagram of a few dozen drifting sites: flat, saturated cells (rainbow hues by default, other palettes available) with thin dark borders, the cells reshaping as the sites wander. A pointer can add sites. Reads as a stained-glass mosaic.",
+    "tags": [
+      "geometry",
+      "flat",
+      "colourful",
+      "drift",
+      "interactive"
+    ],
     "mtime": "2026-06-21T17:25:38.519Z",
     "ctime": "2026-06-21T17:25:30.067Z"
   },
@@ -3207,6 +3245,14 @@
     "hiddenFromHome": false,
     "hiddenFromGallery": false,
     "asyncDraw": false,
+    "description": "Worley (cellular) noise over drifting sites: each cell is a smooth distance gradient instead of a flat fill — blue bodies with dark edges and pale ridges along the boundaries by default — so the picture reads as a soft, organic cellular texture that keeps flowing.",
+    "tags": [
+      "geometry",
+      "noise",
+      "gradient",
+      "drift",
+      "interactive"
+    ],
     "mtime": "2026-06-21T17:26:19.359Z",
     "ctime": "2026-06-21T17:26:08.351Z"
   },
@@ -3597,6 +3643,13 @@
     "hiddenFromHome": false,
     "hiddenFromGallery": false,
     "asyncDraw": false,
+    "description": "A rotating torus knot with a soft violet material on a dark blue-grey ground — the engine demo for Three.js (scene, draw loop driven by the loop phase), useful as a starting point rather than a finished piece.",
+    "tags": [
+      "3d",
+      "mesh",
+      "orbit",
+      "demo"
+    ],
     "mtime": "2026-07-03T23:45:18.170Z",
     "ctime": "2026-07-03T23:45:00.894Z"
   },
@@ -3688,6 +3741,14 @@
     "hiddenFromHome": false,
     "hiddenFromGallery": false,
     "asyncDraw": false,
+    "description": "A legless, wingless dragon — an iridescent flying snake — racing down an endless square corridor lit by neon frame lights (green and magenta), weaving between smoked-glass obstacles; the whole scene is one raymarch. Dark, fast, arcade-tunnel mood.",
+    "tags": [
+      "3d",
+      "raymarched",
+      "iridescent",
+      "neon",
+      "orbit"
+    ],
     "mtime": "2026-07-07T01:11:37.387Z",
     "ctime": "2026-07-07T01:11:30.927Z"
   },
@@ -4104,6 +4165,15 @@
     "hiddenFromHome": false,
     "hiddenFromGallery": false,
     "asyncDraw": false,
+    "description": "A single glyph — a letter or a word from your list, drawn as a chain of iridescent tubes on black — turning on a horizontal or vertical axis; every time the plane passes edge-on the next entry takes over, so the cycle reads as a letter flipping into the next (a, b, c…). Chunky 3D lettering with a chrome ramp.",
+    "tags": [
+      "typography",
+      "3d",
+      "raymarched",
+      "iridescent",
+      "flip",
+      "needs-text"
+    ],
     "mtime": "2026-09-16T15:24:19.464Z",
     "ctime": "2026-09-16T14:15:56.998Z"
   },
@@ -4117,6 +4187,16 @@
     "hiddenFromHome": false,
     "hiddenFromGallery": false,
     "asyncDraw": false,
+    "description": "A board of turning tiles on black, each tile carrying a glyph drawn as thin iridescent strokes: the turn is also what multiplies them — a tile goes edge-on and comes back as two, then four, then eight — in a cascade across the grid, before the board collapses back to one. Sparse, rhythmic, like a split-flap display.",
+    "tags": [
+      "typography",
+      "grid",
+      "3d",
+      "iridescent",
+      "flip",
+      "cascade",
+      "needs-text"
+    ],
     "mtime": "2026-09-16T15:28:24.468Z",
     "ctime": "2026-09-16T15:27:18.260Z"
   },
@@ -4156,6 +4236,15 @@
     "hiddenFromHome": false,
     "hiddenFromGallery": false,
     "asyncDraw": false,
+    "description": "A seeded cloud of chrome beads on black, joined by raymarched iridescent tubes that grow out along the links and withdraw again in a wave over the loop: the sculpture assembles, holds, then scatters back into loose beads. A pointer (or a virtual cursor) pulls the beads.",
+    "tags": [
+      "3d",
+      "raymarched",
+      "iridescent",
+      "chrome",
+      "pulse",
+      "interactive"
+    ],
     "mtime": "2026-09-21T18:00:11.271Z",
     "ctime": "2026-09-21T17:59:05.667Z"
   },
@@ -4182,6 +4271,15 @@
     "hiddenFromHome": false,
     "hiddenFromGallery": false,
     "asyncDraw": false,
+    "description": "A tilted lattice sheet of small beads, seen in perspective, from which letters of a word rise one after another as a relief of fat iridescent beads and tubes, then sink back. Big, chunky, chrome-coloured typography on black.",
+    "tags": [
+      "typography",
+      "3d",
+      "raymarched",
+      "iridescent",
+      "chrome",
+      "needs-text"
+    ],
     "mtime": "2026-09-21T20:04:43.348Z",
     "ctime": "2026-09-21T18:41:54.535Z"
   },
@@ -4221,6 +4319,15 @@
     "hiddenFromHome": false,
     "hiddenFromGallery": false,
     "asyncDraw": false,
+    "description": "A halftone of letters on a dark grid of tiny beads: under each glyph of the word the dots swell into fat iridescent spheres that touch and read as the letter, the rest of the grid staying a faint dotted field; the word is spelt one letter per beat, each letter melting back before the next.",
+    "tags": [
+      "typography",
+      "grid",
+      "3d",
+      "raymarched",
+      "iridescent",
+      "needs-text"
+    ],
     "mtime": "2026-09-23T22:44:19.286Z",
     "ctime": "2026-09-23T22:43:53.142Z"
   },
@@ -4273,6 +4380,14 @@
     "hiddenFromHome": false,
     "hiddenFromGallery": false,
     "asyncDraw": false,
+    "description": "A spiked ellipsoid — rings of solid petal-like spikes around a small body, like a sea urchin or a dahlia — turning slowly on a pale blue-grey ground, its surfaces coloured by an iridescent ramp (pink, cream, green, blue by default; a dozen named palettes) that shifts with the viewing angle as it rotates.",
+    "tags": [
+      "3d",
+      "mesh",
+      "iridescent",
+      "orbit",
+      "colourful"
+    ],
     "mtime": "2026-10-09T04:00:16.430Z",
     "ctime": "2026-10-09T03:59:43.783Z"
   },
@@ -4312,6 +4427,13 @@
     "hiddenFromHome": false,
     "hiddenFromGallery": false,
     "asyncDraw": false,
+    "description": "A tall twisted braid of four ribbon-like tubes filling the frame top to bottom, with small white pearls corkscrewing around it along the loop, raymarched on a pale blue-grey ground and coloured by the iridescent ramp (pink, cream, green, navy by default). Slow, glossy, jewel-like — and heavy to render.",
+    "tags": [
+      "3d",
+      "raymarched",
+      "iridescent",
+      "orbit"
+    ],
     "mtime": "2026-10-09T04:14:01.043Z",
     "ctime": "2026-10-09T04:13:33.743Z"
   }

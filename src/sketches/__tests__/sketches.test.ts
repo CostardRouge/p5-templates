@@ -320,6 +320,56 @@ describe(
     );
 
     it(
+      "metadata carries each sketch's about.json (description, tags) as written",
+      () => {
+        const byKey = new Map( entries.map( ( e ) => [
+          `${ e.engine }/${ e.name }`,
+          e
+        ] ) );
+        const drifted: string[] = [];
+
+        for ( const sketch of onDisk ) {
+          const file = path.join(
+            sketch.dir,
+            "about.json"
+          );
+          const entry = byKey.get( `${ sketch.engine }/${ sketch.name }` );
+
+          if ( !entry ) {
+            continue;
+          }
+          if ( !fs.existsSync( file ) ) {
+            if ( entry.description !== undefined || entry.tags !== undefined ) {
+              drifted.push( `${ sketch.engine }/${ sketch.name }: metadata has a description or tags but no about.json exists` );
+            }
+            continue;
+          }
+
+          // The generator's own normalisation (readAbout): trimmed, single
+          // spaces, tags deduplicated in order.
+          const about = JSON.parse( fs.readFileSync(
+            file,
+            "utf8"
+          ) ) as { description?: string;
+            tags?: string[] };
+          const description = about.description?.trim().replace(
+            /\s+/g,
+            " "
+          );
+          const tags = about.tags ? [
+            ...new Set( about.tags )
+          ] : undefined;
+
+          if ( entry.description !== description || JSON.stringify( entry.tags ) !== JSON.stringify( tags ) ) {
+            drifted.push( `${ sketch.engine }/${ sketch.name }: about.json differs from metadata.json` );
+          }
+        }
+
+        expectInSync( drifted );
+      }
+    );
+
+    it(
       "metadata category matches the directory layout",
       () => {
         const diskByKey = new Map( onDisk.map( ( s ) => [

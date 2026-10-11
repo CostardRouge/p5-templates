@@ -1,0 +1,4 @@
+{
+  "description": "Worley (cellular) noise over drifting sites: each cell is a smooth distance gradient instead of a flat fill — blue bodies with dark edges and pale ridges along the boundaries by default — so the picture reads as a soft, organic cellular texture that keeps flowing.",
+  "tags": [ "geometry", "noise", "gradient", "drift", "interactive" ]
+}
