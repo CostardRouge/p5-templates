@@ -16,6 +16,7 @@ import type {
 export const GALLERY_DB_NAME = "sketchbook-gallery";
 const DB_VERSION = 1;
 const STORE = "entries";
+const BLOCKED_TIMEOUT_MS = 5000;
 
 function request<T>( req: IDBRequest<T> ): Promise<T> {
   return new Promise( (
@@ -38,56 +39,83 @@ function done( tx: IDBTransaction ): Promise<void> {
 
 let opening: Promise<IDBDatabase> | null = null;
 
-function openDatabase(): Promise<IDBDatabase> {
-  if ( !opening ) {
-    opening = new Promise( (
-      resolve, reject
-    ) => {
-      const req = indexedDB.open(
-        GALLERY_DB_NAME,
-        DB_VERSION
+function openAt( version: number | undefined ): Promise<IDBDatabase> {
+  return new Promise( (
+    resolve, reject
+  ) => {
+    const req = version === undefined ? indexedDB.open( GALLERY_DB_NAME ) : indexedDB.open(
+      GALLERY_DB_NAME,
+      version
+    );
+
+    req.onupgradeneeded = () => {
+      const db = req.result;
+
+      if ( !db.objectStoreNames.contains( STORE ) ) {
+        const store = db.createObjectStore(
+          STORE,
+          {
+            keyPath: "id"
+          }
+        );
+
+        store.createIndex(
+          "at",
+          "at"
+        );
+        store.createIndex(
+          "sketch",
+          "sketch"
+        );
+      }
+    };
+    req.onsuccess = () => {
+      const db = req.result;
+
+      // Another tab upgrading, or the user clearing site data: let go, and
+      // reopen on the next call.
+      db.onversionchange = () => {
+        db.close();
+        opening = null;
+      };
+      resolve( db );
+    };
+    req.onerror = () => reject( req.error ?? new Error( "IndexedDB could not be opened" ) );
+    // `blocked` is not a failure: the upgrade waits for the other connections
+    // (another tab's, which close on `versionchange`) and `success` follows.
+    // A connection that never lets go would hang every keep, so give it a while.
+    req.onblocked = () => {
+      setTimeout(
+        () => reject( new Error( "IndexedDB is blocked by another tab — close the other Sketchbook tabs" ) ),
+        BLOCKED_TIMEOUT_MS
       );
+    };
+  } );
+}
 
-      req.onupgradeneeded = () => {
-        const db = req.result;
+/**
+ * Open the database, creating the store on the way. `upgradeneeded` only
+ * fires when the version RISES, so a database of this name that exists at
+ * our version without the store (opened once by something else — a DevTools
+ * probe, a script, an older build) would stay unusable forever; such a
+ * database is reopened one version up, which runs the upgrade again.
+ */
+async function openDatabase(): Promise<IDBDatabase> {
+  if ( !opening ) {
+    opening = ( async() => {
+      let db = await openAt( DB_VERSION );
 
-        if ( !db.objectStoreNames.contains( STORE ) ) {
-          const store = db.createObjectStore(
-            STORE,
-            {
-              keyPath: "id"
-            }
-          );
+      if ( !db.objectStoreNames.contains( STORE ) ) {
+        const next = db.version + 1;
 
-          store.createIndex(
-            "at",
-            "at"
-          );
-          store.createIndex(
-            "sketch",
-            "sketch"
-          );
-        }
-      };
-      req.onsuccess = () => {
-        const db = req.result;
+        db.close();
+        db = await openAt( next );
+      }
 
-        // Another tab upgrading, or the user clearing site data: let go, and
-        // reopen on the next call.
-        db.onversionchange = () => {
-          db.close();
-          opening = null;
-        };
-        resolve( db );
-      };
-      req.onerror = () => {
-        opening = null;
-        reject( req.error ?? new Error( "IndexedDB could not be opened" ) );
-      };
-      req.onblocked = () => {
-        opening = null;
-        reject( new Error( "IndexedDB is blocked by another tab" ) );
-      };
+      return db;
+    } )().catch( ( error ) => {
+      opening = null;
+      throw error;
     } );
   }
 
