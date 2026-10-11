@@ -21,6 +21,15 @@ export function writePendingImport( options: unknown ): boolean {
   }
 }
 
+/** True while a handed-over document waits for a sketch page to consume it. */
+export function hasPendingImport(): boolean {
+  try {
+    return sessionStorage.getItem( STORAGE_KEY ) !== null;
+  } catch {
+    return false;
+  }
+}
+
 export function readAndClearPendingImport(): unknown | null {
   try {
     let raw = sessionStorage.getItem( STORAGE_KEY );

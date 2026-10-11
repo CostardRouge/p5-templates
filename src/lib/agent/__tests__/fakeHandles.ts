@@ -1,6 +1,12 @@
 import type {
   ExportVariant
 } from "../../export/variants";
+import {
+  memoryBackend
+} from "../../gallery/memoryBackend";
+import {
+  GalleryStore
+} from "../../gallery/store";
 import type {
   StudioHandles
 } from "../handles";
@@ -15,6 +21,8 @@ export function fakeHandles(
   let variants: ExportVariant[] = [];
   let opened = "p5/noise/noise-v1";
   let made = 0;
+  // A document handed to the next page, consumed when that page "mounts" (open).
+  let staged: unknown = null;
 
   function makeVariant( key: string ): ExportVariant {
     made += 1;
@@ -255,6 +263,7 @@ export function fakeHandles(
           "/sketches/",
           ""
         );
+        staged = null;
       },
       currentSketch: () => opened
     },
@@ -389,6 +398,35 @@ export function fakeHandles(
         path: "content.0",
         kinds
       };
+    },
+    gallery: {
+      store: new GalleryStore( memoryBackend() ),
+      thumbnail: async() => new Blob(
+        [
+          "jpg"
+        ],
+        {
+          type: "image/jpeg"
+        }
+      ),
+      importDocument: ( options ) => {
+        calls.push( "import" );
+        Object.assign(
+          document,
+          options as Record<string, unknown>
+        );
+
+        return {
+          ok: true
+        };
+      },
+      stageImport: ( options ) => {
+        calls.push( "stage" );
+        staged = options;
+
+        return true;
+      },
+      importPending: () => staged !== null
     },
     ...overrides
   };

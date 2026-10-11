@@ -21,6 +21,9 @@ import type {
 import type {
   CatalogueEntry
 } from "./commands/navigationCommands";
+import type {
+  GalleryStore
+} from "../gallery/store";
 
 export interface StudioHandles {
   /** `<engine>/<category>/<name>`. */
@@ -138,6 +141,19 @@ export interface StudioHandles {
   saveFile: ( blob: Blob, name: string, folder?: string ) => Promise<{ path: string;
     bytes: number }>;
   relayConnected: () => boolean;
+  /** The browser's gallery of kept pieces (`src/lib/gallery/`, the /gallery page). */
+  gallery: {
+    store: GalleryStore;
+    /** The frame on screen as the gallery's ~240 px JPEG (the Keep button's capture). */
+    thumbnail: () => Promise<Blob | null>;
+    /** Apply a whole document to THIS sketch's form, the import button's way; a refusal names the first bad path. */
+    importDocument: ( options: unknown ) => { ok: true } | { ok: false;
+      reason: string };
+    /** Hand a document to the sketch page that mounts next (the listing's sessionStorage handoff). */
+    stageImport: ( options: unknown ) => boolean;
+    /** True while a handed-over document has not been consumed yet. */
+    importPending: () => boolean;
+  };
 }
 
 /** The sketch-parameter scope a slide edits: its own block, or the root's. */
