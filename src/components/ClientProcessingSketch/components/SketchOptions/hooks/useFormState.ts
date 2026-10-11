@@ -79,6 +79,18 @@ export function useFormState( {
 
       let lastFlushAt = 0;
 
+      const deliver = () => {
+        if ( latestValueRef.current !== null ) {
+          const changedPaths = changedPathsRef.current;
+
+          changedPathsRef.current = new Set();
+          onOptionsChange(
+            latestValueRef.current,
+            changedPaths ? Array.from( changedPaths ) : undefined
+          );
+        }
+      };
+
       const flush = () => {
         rafRef.current = null;
 
@@ -91,16 +103,7 @@ export function useFormState( {
         }
 
         lastFlushAt = now;
-
-        if ( latestValueRef.current !== null ) {
-          const changedPaths = changedPathsRef.current;
-
-          changedPathsRef.current = new Set();
-          onOptionsChange(
-            latestValueRef.current,
-            changedPaths ? Array.from( changedPaths ) : undefined
-          );
-        }
+        deliver();
       };
 
       const subscription = watch( (
@@ -130,6 +133,14 @@ export function useFormState( {
         if ( rafRef.current !== null ) {
           cancelAnimationFrame( rafRef.current );
           rafRef.current = null;
+          // A value watched but not yet flushed is delivered, not dropped.
+          // Dev's StrictMode runs this cleanup right after the first mount
+          // and mounts again: a reset made during that first mount — the
+          // document the gallery or the listing hands over through
+          // sessionStorage, consumed once — was cancelled here with its
+          // frame, so the form held the piece while the sketch kept playing
+          // its defaults until the next edit.
+          deliver();
         }
       };
     },
