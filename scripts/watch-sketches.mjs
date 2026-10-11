@@ -86,6 +86,81 @@ function hasAsyncDraw(
   }
 }
 
+/** A tag is a short lowercase word or kebab-case phrase: `typography`, `needs-photo`. */
+const TAG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const DESCRIPTION_MAX = 400;
+
+/**
+ * What a sketch IS, for someone — an agent, mostly — choosing one without
+ * opening it: `about.json` beside the entry file, `{ "description", "tags" }`.
+ * The description is one or two sentences on what it draws and how it moves;
+ * the tags are a few lowercase words (`typography`, `raymarched`,
+ * `needs-photo`…) an agent filters by. Both are copied into metadata.json
+ * (read by `sketches.list` / `sketch.describe` in the tab and the MCP server).
+ * Absent file: no fields. A malformed one fails the generation loudly rather
+ * than silently dropping the text — the drift test runs this generator.
+ */
+function readAbout( sketchDir ) {
+  const file = path.join(
+    sketchDir,
+    "about.json"
+  );
+
+  if ( !fs.existsSync( file ) ) {
+    return {};
+  }
+
+  let parsed;
+
+  try {
+    parsed = JSON.parse( fs.readFileSync(
+      file,
+      "utf8"
+    ) );
+  } catch( error ) {
+    throw new Error( `${ file }: not valid JSON (${ error.message })` );
+  }
+
+  if ( typeof parsed !== "object" || parsed === null || Array.isArray( parsed ) ) {
+    throw new Error( `${ file }: must be an object { "description", "tags" }` );
+  }
+  for ( const key of Object.keys( parsed ) ) {
+    if ( key !== "description" && key !== "tags" ) {
+      throw new Error( `${ file }: unknown key "${ key }" — only "description" and "tags"` );
+    }
+  }
+
+  const about = {};
+
+  if ( parsed.description !== undefined ) {
+    if ( typeof parsed.description !== "string" || !parsed.description.trim() ) {
+      throw new Error( `${ file }: "description" must be a non-empty string` );
+    }
+    if ( parsed.description.trim().length > DESCRIPTION_MAX ) {
+      throw new Error( `${ file }: "description" is over ${ DESCRIPTION_MAX } characters — it is a blurb, not a manual` );
+    }
+    about.description = parsed.description.trim().replace(
+      /\s+/g,
+      " "
+    );
+  }
+  if ( parsed.tags !== undefined ) {
+    if ( !Array.isArray( parsed.tags ) || parsed.tags.some( ( tag ) => typeof tag !== "string" ) ) {
+      throw new Error( `${ file }: "tags" must be a list of strings` );
+    }
+    for ( const tag of parsed.tags ) {
+      if ( !TAG_PATTERN.test( tag ) ) {
+        throw new Error( `${ file }: tag "${ tag }" must be lowercase letters, digits and hyphens (e.g. "needs-photo")` );
+      }
+    }
+    about.tags = [
+      ...new Set( parsed.tags )
+    ];
+  }
+
+  return about;
+}
+
 /**
  * Build the metadata + registry record for a single sketch directory.
  *
@@ -95,6 +170,7 @@ function hasAsyncDraw(
  *
  * Markers are committed to git like any other source file; they survive
  * metadata regenerations because watch-sketches.mjs reads them on every scan.
+ * `about.json` (description + tags, see readAbout) is read the same way.
  */
 function buildRecord(
   sketchDir, name, engineId, category
@@ -135,6 +211,7 @@ function buildRecord(
       sketchDir,
       entryFile
     ),
+    ...readAbout( sketchDir ),
     mtime: stats.mtime.toISOString(),
     ctime: stats.birthtime?.toISOString() || stats.ctime.toISOString()
   };
@@ -539,7 +616,8 @@ if ( !ONCE ) {
   const REGISTRY_FILES = new Set( [
     ...ENTRY_FILES,
     "options.ts",
-    "options.json"
+    "options.json",
+    "about.json"
   ] );
 
   function shouldRegenerate( filePath ) {
@@ -581,6 +659,17 @@ if ( !ONCE ) {
       ( filePath ) => {
         if ( shouldRegenerate( filePath ) ) {
           console.log( `➖ Sketch file removed: ${ filePath }` );
+          generate();
+        }
+      }
+    )
+    .on(
+      "change",
+      ( filePath ) => {
+        // Only about.json carries CONTENT into the catalogue; the other
+        // registry files matter by their presence alone.
+        if ( path.basename( filePath ) === "about.json" ) {
+          console.log( `✏️  Sketch description changed: ${ filePath }` );
           generate();
         }
       }

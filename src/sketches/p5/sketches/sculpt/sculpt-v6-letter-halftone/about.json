@@ -1,0 +1,4 @@
+{
+  "description": "A halftone of letters on a dark grid of tiny beads: under each glyph of the word the dots swell into fat iridescent spheres that touch and read as the letter, the rest of the grid staying a faint dotted field; the word is spelt one letter per beat, each letter melting back before the next.",
+  "tags": [ "typography", "grid", "3d", "raymarched", "iridescent", "needs-text" ]
+}

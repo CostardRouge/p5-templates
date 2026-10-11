@@ -20,7 +20,39 @@ export type CatalogueEntry = {
   name: string;
   hiddenFromGallery?: boolean;
   hasSketchForm?: boolean;
+  /** From the sketch's `about.json` (`sketches.md`); absent until written. */
+  description?: string;
+  tags?: string[];
 };
+
+/** What `sketches.list` says of one sketch: its id, and what it is when known. */
+export function catalogueSummary( entry: CatalogueEntry ): { id: string;
+  description?: string;
+  tags?: string[] } {
+  return {
+    id: sketchPathOf( entry ),
+    ...( entry.description ? {
+      description: entry.description
+    } : {} ),
+    ...( entry.tags?.length ? {
+      tags: entry.tags
+    } : {} )
+  };
+}
+
+/** Case-insensitive: the id, the description or a tag contains `query`. */
+export function catalogueMatches(
+  entry: CatalogueEntry, query: string
+): boolean {
+  if ( !query ) {
+    return true;
+  }
+
+  return sketchPathOf( entry ).toLowerCase()
+    .includes( query ) ||
+    ( entry.description ?? "" ).toLowerCase().includes( query ) ||
+    ( entry.tags ?? [] ).some( ( tag ) => tag.includes( query ) );
+}
 
 /** `engine/category/name` (or `engine/name` for a sketch with no category). */
 export function sketchPathOf( entry: CatalogueEntry ): string {
@@ -39,7 +71,7 @@ export function navigationCommands( h: StudioHandles ): CommandSpec[] {
     {
       id: "sketches.list",
       title: "List sketches",
-      description: "The gallery: every sketch as \"engine/category/name\", optionally narrowed to an engine or a text match. studio.open takes one of these.",
+      description: "The gallery: every sketch as { id: \"engine/category/name\", description, tags } — the description and tags exist for the sketches someone has described (the answer counts them), the others are named only. Narrow by engine, by a tag, or by text found in the id, the description or a tag. studio.open takes an id.",
       params: {
         engine: {
           type: "string",
@@ -54,7 +86,12 @@ export function navigationCommands( h: StudioHandles ): CommandSpec[] {
         },
         query: {
           type: "string",
-          description: "Case-insensitive text the path must contain, e.g. \"voronoi\"",
+          description: "Case-insensitive text found in the id, the description or a tag, e.g. \"voronoi\" or \"letters\"",
+          optional: true
+        },
+        tag: {
+          type: "string",
+          description: "Only sketches carrying this tag (the answer's `tags` lists every tag in use with its count)",
           optional: true
         },
         includeHidden: {
@@ -65,16 +102,40 @@ export function navigationCommands( h: StudioHandles ): CommandSpec[] {
       },
       run( params ) {
         const query = String( params.query ?? "" ).toLowerCase();
-        const sketches = h.navigation.catalogue()
+        const tag = params.tag === undefined ? undefined : String( params.tag ).toLowerCase();
+        const visible = h.navigation.catalogue()
           .filter( ( entry ) => ( params.includeHidden || !entry.hiddenFromGallery ) &&
-            ( params.engine === undefined || entry.engine === params.engine ) )
-          .map( sketchPathOf )
-          .filter( ( path ) => path.toLowerCase().includes( query ) )
-          .sort();
+            ( params.engine === undefined || entry.engine === params.engine ) );
+        const tags: Record<string, number> = {};
+
+        for ( const entry of visible ) {
+          for ( const name of entry.tags ?? [] ) {
+            tags[ name ] = ( tags[ name ] ?? 0 ) + 1;
+          }
+        }
+        if ( tag !== undefined && !( tag in tags ) ) {
+          throw new CommandError(
+            "invalid",
+            `no sketch carries the tag "${ tag }"${ Object.keys( tags ).length ? ` — tags in use: ${ Object.keys( tags ).sort()
+              .join( ", " ) }` : " — no sketch has tags yet" }`
+          );
+        }
+
+        const sketches = visible
+          .filter( ( entry ) => ( tag === undefined || ( entry.tags ?? [] ).includes( tag ) ) && catalogueMatches(
+            entry,
+            query
+          ) )
+          .map( catalogueSummary )
+          .sort( (
+            a, b
+          ) => a.id.localeCompare( b.id ) );
 
         return {
           count: sketches.length,
+          described: sketches.filter( ( sketch ) => sketch.description ).length,
           current: h.sketchId,
+          tags,
           sketches
         };
       }

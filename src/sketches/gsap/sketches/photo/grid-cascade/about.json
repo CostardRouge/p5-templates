@@ -1,0 +1,4 @@
+{
+  "description": "A rows-by-columns grid of the photos you give it, with rounded corners on black: the cells reveal in a cascade from a chosen origin, hold with a gentle breathing zoom, then clear in reverse so the loop is seamless. A clean, editorial photo-grid reel.",
+  "tags": [ "photo", "grid", "cascade", "needs-photo" ]
+}

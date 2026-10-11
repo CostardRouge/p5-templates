@@ -41,6 +41,10 @@ export type ParamSpec =
     optional?: boolean }
   | { type: "object";
     description: string;
+    optional?: boolean }
+  /** A list of free objects (a batch of commands) — not in Atelier's subset yet. */
+  | { type: "objects";
+    description: string;
     optional?: boolean };
 
 export type ParamSpecs = Readonly<Record<string, ParamSpec>>;
@@ -226,6 +230,14 @@ export function checkParams(
           );
         }
         break;
+      case "objects":
+        if ( !Array.isArray( value ) || value.some( ( item ) => !isRecord( item ) ) ) {
+          throw new CommandError(
+            "invalid",
+            `"${ key }" must be a list of objects`
+          );
+        }
+        break;
     }
 
     out[ key ] = value;
@@ -283,6 +295,14 @@ export function paramsJsonSchema( specs: ParamSpecs | undefined ): Record<string
       case "object":
         prop = {
           type: "object"
+        };
+        break;
+      case "objects":
+        prop = {
+          type: "array",
+          items: {
+            type: "object"
+          }
         };
         break;
     }

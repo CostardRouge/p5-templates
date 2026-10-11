@@ -1,5 +1,5 @@
 import {
-  filterCatalog, resolveSketch, sketchId, type CatalogEntry
+  catalogTags, filterCatalog, resolveSketch, sketchId, type CatalogEntry
 } from "../catalog.ts";
 import {
   embedUrl, frameIndexFor
@@ -15,7 +15,12 @@ const ENTRIES: CatalogEntry[] = [
   {
     name: "voronoi-v2-flow",
     engine: "p5",
-    category: "voronoi"
+    category: "voronoi",
+    description: "Cells flowing like a river.",
+    tags: [
+      "geometry",
+      "motion"
+    ]
   },
   {
     name: "twin",
@@ -86,6 +91,27 @@ describe(
         ).map( sketchId ) ).toEqual( [
           "p5/voronoi/voronoi-v2-flow"
         ] );
+        // The description and the tags are searched too, and a tag filters.
+        expect( filterCatalog(
+          ENTRIES,
+          {
+            query: "river"
+          }
+        ).map( sketchId ) ).toEqual( [
+          "p5/voronoi/voronoi-v2-flow"
+        ] );
+        expect( filterCatalog(
+          ENTRIES,
+          {
+            tag: "geometry"
+          }
+        ).map( sketchId ) ).toEqual( [
+          "p5/voronoi/voronoi-v2-flow"
+        ] );
+        expect( catalogTags( ENTRIES ) ).toEqual( {
+          geometry: 1,
+          motion: 1
+        } );
       }
     );
 

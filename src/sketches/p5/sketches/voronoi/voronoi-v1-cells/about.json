@@ -1,0 +1,4 @@
+{
+  "description": "A Voronoi diagram of a few dozen drifting sites: flat, saturated cells (rainbow hues by default, other palettes available) with thin dark borders, the cells reshaping as the sites wander. A pointer can add sites. Reads as a stained-glass mosaic.",
+  "tags": [ "geometry", "flat", "colourful", "drift", "interactive" ]
+}
