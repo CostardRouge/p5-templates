@@ -157,6 +157,7 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 | `docs/memory/interaction-sources.md` | How a sensor, camera or controller becomes a pointer: the collectors in `interaction/index.js`, the gyroscope's modes/calibration/permission, verifying a source without hardware |
 | `docs/memory/agent-commands.md` | The agent command registry, the MCP servers in `scripts/mcp/` (headless and the studio relay), the tab's commands in `src/lib/agent/`, or a route/page contract they call (`/embed`, `/api/sketches/form`, `/api/recordings/*`, `__sketchCapture`) |
 | `docs/memory/agent-roadmap.md` | Planning the next agent/MCP work or the browser-side snapshot gallery: what the studio MCP can do, its gaps in agreed order, the gallery proposal and its open points |
+| `docs/memory/gallery.md` | The snapshot gallery: `src/lib/gallery/` (IndexedDB store, fingerprint, keep, archive), the `/gallery` page, the Keep button, keep-after-export, the `gallery.*` agent commands |
 | `docs/memory/security.md` | An API route, a server action, request data becoming a path / S3 key / outbound URL, `.env.example` — there is no auth, so every route is public |
 | `docs/memory/home-and-seo.md` | The home page and its studio tour, the capture assets, site metadata, JSON-LD, the sitemap |
 | `docs/analytics.md` | Umami config, why auto-track is off, the pageview queue, how to verify tracking (maintained, unlike the rest of `docs/`) |
