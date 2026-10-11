@@ -31,15 +31,13 @@ import {
 import {
   interactionBindingsEnabled
 } from "@/lib/interactionBindings";
-// bindings.js is already a small, pure module statically imported by the
-// engine runtime for every sketch (see options.js) — importing it here too is
-// no added weight. defaults.js (the ~1000-line panel/values data) is dynamic
-// -imported lazily inside enableSourceInputs below, so an editor session that
-// never binds a live input source never pulls it into the client bundle.
-import {
-  needsInteractionBlock
-} from "@/p5/utils/interaction/bindings.js";
 import BindingGlyph from "./BindingGlyph";
+import {
+  type BindingFormIO,
+  enableSourceInputs as enableSourceInputs_,
+  pruneInteractionIfUnused as pruneInteractionIfUnused_,
+  writeBindingList
+} from "./bindingWrites";
 import {
   describeFieldBinding, useResolvedDeclared
 } from "./useFieldBinding";
@@ -73,7 +71,6 @@ import {
   encodeSource,
   getSketchScope,
   interactiveScopeFor,
-  interactionEnablePaths,
   makeDefaultBinding,
   SEQUENCE_MODE_OPTIONS,
   SOURCE_CATEGORIES,
@@ -409,40 +406,36 @@ export default function BindingAffordance( {
   // control.
   const bindingPath = `${ bindingsPath }.${ index }`;
 
-  // Strip the plugin-managed `interaction` block once no binding needs it any
-  // more — the inverse of enableSourceInputs' on-demand seed below. Checked
-  // after every bindings-array write (add / remove / reset) and every source-
-  // category switch, so a sketch never carries the block, or shows its
+  // The write path is shared with the agent's bindings.* commands
+  // (bindingWrites.ts): store the list, flip a live source's enable flags on,
+  // prune the plugin-managed `interaction` block once nothing needs it —
+  // checked after every bindings-array write (add / remove / reset) and every
+  // source-category switch, so a sketch never carries the block, or shows its
   // settings panel (gated the same way in GenericObjectForm), once its last
-  // interactive binding is gone. Only the `interactive` namespace is pruned —
-  // a sketch-DECLARED block at `${scope}.interaction` is a real sketch
-  // parameter (hand-tracking, audio, …) and is never touched.
-  const pruneInteractionIfUnused = ( nextList: Binding[] ) => {
-    if ( needsInteractionBlock( nextList ) ) {
-      return;
-    }
-
-    if ( getValues( `${ interactiveScope }.interaction` ) !== undefined ) {
-      setValue(
-        `${ interactiveScope }.interaction`,
-        undefined,
-        {
-          shouldDirty: true
-        }
-      );
-    }
-  };
-
-  const writeBindings = ( next: Binding[] ) => {
-    setValue(
-      bindingsPath,
-      next,
+  // interactive binding is gone.
+  const io: BindingFormIO = {
+    getValues,
+    setValue: (
+      path, value
+    ) => setValue(
+      path,
+      value,
       {
         shouldDirty: true
       }
-    );
-    pruneInteractionIfUnused( next );
+    )
   };
+  const pruneInteractionIfUnused = ( nextList: Binding[] ) => pruneInteractionIfUnused_(
+    io,
+    interactiveScope,
+    nextList
+  );
+
+  const writeBindings = ( next: Binding[] ) => writeBindingList(
+    io,
+    interactiveScope,
+    next
+  );
 
   const setField = (
     subPath: string, value: unknown
@@ -456,55 +449,12 @@ export default function BindingAffordance( {
     );
   };
 
-  // Picking an interaction input source should make it actually produce a
-  // channel — flip the matching `interaction.*` enable flags on so the camera /
-  // mic / sensor for that source boots immediately. The flags land wherever
-  // the interaction block actually lives: a sketch-DECLARED block at the
-  // sketch scope (hand-tracking, audio, … — their own panel and sketch code
-  // read it, and the engine gives it precedence) is written in place;
-  // otherwise the plugin-managed block in the `interactive` namespace is
-  // seeded from an inert clone of the shared defaults on first use, then
-  // flipped. The seed never touches sketch parameters, and is pruned again by
-  // pruneInteractionIfUnused once no binding needs it.
-  const enableSourceInputs = async( source: string ) => {
-    const paths = interactionEnablePaths( source );
-
-    // Generators (and unknown ids) have no source to enable — and must not
-    // seed an interaction block they'd never read.
-    if ( paths.length === 0 ) {
-      return;
-    }
-
-    let interactionScope = scope;
-
-    if ( getValues( `${ scope }.interaction` ) === undefined ) {
-      interactionScope = interactiveScope;
-
-      if ( getValues( `${ interactiveScope }.interaction` ) === undefined ) {
-        const {
-          inertInteractionFormValues
-        } = await import( "@/p5/utils/interaction/defaults.js" );
-
-        setValue(
-          `${ interactiveScope }.interaction`,
-          inertInteractionFormValues(),
-          {
-            shouldDirty: true
-          }
-        );
-      }
-    }
-
-    for ( const path of paths ) {
-      setValue(
-        `${ interactionScope }.interaction.${ path }`,
-        true,
-        {
-          shouldDirty: true
-        }
-      );
-    }
-  };
+  const enableSourceInputs = ( source: string ) => enableSourceInputs_(
+    io,
+    scope,
+    interactiveScope,
+    source
+  );
 
   // Append a new layer (binding) for this parameter and select it. A continuous
   // target starts on the oscillator (see makeDefaultBinding) — a generator, so

@@ -151,6 +151,33 @@ export interface StudioHandles {
    * transaction captures.
    */
   transaction: <T>( label: string, fn: () => Promise<T> ) => Promise<T>;
+  /**
+   * The binding affordance's model (`BindingAffordance/`): which controls a
+   * binding can drive, the editor's defaults for one, the sources its picker
+   * offers, and its one write path (`bindingWrites.ts`).
+   */
+  bindings: {
+    /** True, or why bindings cannot be edited in this build (the feature flag). */
+    enabled: () => true | string;
+    /** The binding kind a control component takes (`bindingKindFor`), null when not bindable. */
+    kindFor: ( component: string ) => string | null;
+    /** The `interactive` scope paired with a slide's (or the root's) sketch scope. */
+    scope: ( slide: number | undefined ) => string;
+    /** The picker's sources for a kind: channels (with their projections) and generators. */
+    sources: ( kind: string ) => { source: string;
+      project?: string;
+      label: string }[];
+    /**
+     * A binding on `target` with the editor's defaults (`makeDefaultBinding`),
+     * switched to `source` / `project` as the picker would (a generator gets
+     * its block seeded).
+     */
+    makeDefault: ( target: string, slide: number | undefined, source?: string, project?: string ) => Record<string, unknown>;
+    /** The block a generator source needs on `binding` when it has none yet (`switchCategory`'s seed). */
+    generatorSeed: ( source: string, binding: Record<string, unknown> ) => Record<string, unknown>;
+    /** Store the scope's list as the affordance does; `enableSource` switches that input on. */
+    write: ( slide: number | undefined, list: Record<string, unknown>[], enableSource?: string ) => Promise<void>;
+  };
 }
 
 /** The sketch-parameter scope a slide edits: its own block, or the root's. */

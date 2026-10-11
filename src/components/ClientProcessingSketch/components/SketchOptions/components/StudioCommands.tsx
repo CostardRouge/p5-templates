@@ -19,6 +19,9 @@ import {
   batchCommands
 } from "@/lib/agent/commands/batchCommands";
 import {
+  bindingCommands
+} from "@/lib/agent/commands/bindingCommands";
+import {
   contentCommands
 } from "@/lib/agent/commands/contentCommands";
 import {
@@ -33,8 +36,8 @@ import {
 import {
   slideCommands
 } from "@/lib/agent/commands/slideCommands";
-import type {
-  StudioHandles
+import {
+  sketchBase, type StudioHandles
 } from "@/lib/agent/handles";
 import {
   blobToImageResult, framesToContactSheet
@@ -73,11 +76,20 @@ import {
   findEmbeddableSketch, loadSketchForm
 } from "@/lib/sketchLayerCatalogue";
 import {
+  interactionBindingsEnabled
+} from "@/lib/interactionBindings";
+import {
   getP5
 } from "@/p5/utils/sketch";
 import {
   getItemBounds
 } from "@/p5/utils/slides/common/itemBoundsRegistry";
+import {
+  bindingKindFor, channelSourceOptions, DEFAULT_NOISE, DEFAULT_OSCILLATOR, DEFAULT_RAMP, DEFAULT_RANDOM, defaultSequence, interactiveScopeFor, makeDefaultBinding, type Binding, type BindingKind
+} from "./ContentItems/components/BindingAffordance/bindingUtils";
+import {
+  enableSourceInputs, writeBindingList, type BindingFormIO
+} from "./ContentItems/components/BindingAffordance/bindingWrites";
 import type {
   FieldConfig
 } from "./ContentItems/constants/field-config";
@@ -145,6 +157,79 @@ function configAt(
 }
 
 export type SlideHandlers = StudioHandles[ "slides" ];
+
+/** The popover's generator categories, as sources an agent may name. */
+const GENERATOR_SOURCES = [
+  {
+    source: "oscillator",
+    label: "Oscillator (sine / triangle / square / sawtooth over the loop)"
+  },
+  {
+    source: "ramp",
+    label: "Ramp (an easing, `count` times per loop)"
+  },
+  {
+    source: "sequence",
+    label: "Sequence (stops in the parameter's units, stepped or smoothed)"
+  },
+  {
+    source: "noise",
+    label: "Noise (seeded, loop-safe)"
+  },
+  {
+    source: "random",
+    label: "Random (seeded steps)"
+  }
+];
+
+/**
+ * The block a generator source needs on a binding that has none yet — the
+ * popover's `switchCategory` seed: a sequence starts on the mapping's two ends
+ * so it does something at once.
+ */
+function generatorSeed(
+  source: string, binding: Binding
+): Record<string, unknown> {
+  switch ( source ) {
+    case "oscillator":
+      return binding.oscillator ? {} : {
+        oscillator: {
+          ...DEFAULT_OSCILLATOR
+        }
+      };
+    case "ramp":
+      return binding.ramp ? {} : {
+        ramp: {
+          ...DEFAULT_RAMP
+        }
+      };
+    case "sequence": {
+      const mapping = ( binding.mapping ?? {} ) as { min?: number;
+        max?: number };
+
+      return binding.sequence ? {} : {
+        sequence: defaultSequence( [
+          typeof mapping.min === "number" ? mapping.min : 0,
+          typeof mapping.max === "number" ? mapping.max : 1
+        ] )
+      };
+    }
+    case "noise":
+      return binding.noise ? {} : {
+        noise: {
+          ...DEFAULT_NOISE
+        }
+      };
+    case "random":
+      return binding.random ? {} : {
+        random: {
+          ...DEFAULT_RANDOM
+        }
+      };
+    default:
+      return {};
+  }
+}
 
 /**
  * Registers the studio's agent commands (`src/lib/agent/`) while the sketch
@@ -535,6 +620,99 @@ export default function StudioCommands( {
               now().history.capture( `agent: ${ label }` );
             }
           }
+        },
+        bindings: {
+          enabled: () => interactionBindingsEnabled() || "interactive bindings are off in this build — it is built with INTERACTION_BINDINGS=true to have them",
+          kindFor: ( component ) => bindingKindFor( component as FieldConfig[ "component" ] ),
+          scope: ( slide ) => interactiveScopeFor( sketchBase( slide ) ),
+          sources: ( kind ) => [
+            ...channelSourceOptions( kind as BindingKind ).map( ( option ) => ( {
+              source: option.source,
+              ...( option.project ? {
+                project: option.project
+              } : {} ),
+              label: option.label
+            } ) ),
+            // A pad takes a vector channel only; every other kind also runs
+            // off a generator (the popover's categories).
+            ...( kind === "vector2d" ? [] : GENERATOR_SOURCES )
+          ],
+          generatorSeed: (
+            source, binding
+          ) => generatorSeed(
+            source,
+            binding as Binding
+          ),
+          makeDefault: (
+            target, slide, source, project
+          ) => {
+            const config = configAt(
+              ( now().state.sketchFormConfiguration ?? {} ) as Record<string, FieldConfig>,
+              target
+            );
+            const kind = config ? bindingKindFor( config.component ) : null;
+
+            if ( !config || !kind ) {
+              throw new Error( `"${ target }" is not a bindable parameter` );
+            }
+
+            const binding: Binding = makeDefaultBinding(
+              target,
+              kind,
+              config,
+              // A colour ramp starts from the colour the field is showing right now.
+              kind === "color" ? now().form.getValues( `${ sketchBase( slide ) }.${ target }` ) : undefined
+            );
+
+            if ( source !== undefined ) {
+              binding.source = source;
+              if ( project ) {
+                binding.project = project;
+              } else {
+                delete binding.project;
+              }
+              Object.assign(
+                binding,
+                generatorSeed(
+                  source,
+                  binding
+                )
+              );
+            }
+
+            return binding as unknown as Record<string, unknown>;
+          },
+          write: async(
+            slide, list, enableSource
+          ) => {
+            const io: BindingFormIO = {
+              getValues: ( path ) => now().form.getValues( path ),
+              setValue: (
+                path, value
+              ) => now().form.setValue(
+                path,
+                value,
+                {
+                  shouldDirty: true
+                }
+              )
+            };
+            const interactiveScope = interactiveScopeFor( sketchBase( slide ) );
+
+            writeBindingList(
+              io,
+              interactiveScope,
+              list as Binding[]
+            );
+            if ( enableSource ) {
+              await enableSourceInputs(
+                io,
+                sketchBase( slide ),
+                interactiveScope,
+                enableSource
+              );
+            }
+          }
         }
       };
       const off = studioCommands.register( withTransactions(
@@ -545,6 +723,7 @@ export default function StudioCommands( {
           ...exportCommands( handles ),
           ...assetCommands( handles ),
           ...navigationCommands( handles ),
+          ...bindingCommands( handles ),
           ...batchCommands( studioCommands )
         ],
         handles

@@ -419,6 +419,83 @@ export function fakeHandles(
         calls.push( `end ${ label }` );
       }
     },
+    // The affordance's model, reduced: sliders bind as continuous, selects as
+    // enum; an oscillator over the control's range by default.
+    bindings: {
+      enabled: () => true,
+      kindFor: ( component ) => component === "slider" ? "continuous" : component === "select" ? "enum" : null,
+      scope: ( slide ) => slide === undefined ? "interactive" : `slides.${ slide }.interactive`,
+      // As the picker: every scalar kind takes the input channels (a vector
+      // one projected) and the generators; a pad takes vector channels only.
+      sources: ( kind ) => kind === "vector2d" ? [
+        {
+          source: "mouse",
+          label: "Mouse"
+        }
+      ] : [
+        {
+          source: "mouse",
+          project: "x",
+          label: "Mouse · X"
+        },
+        {
+          source: "audio.bass",
+          label: "Audio · Bass"
+        },
+        {
+          source: "oscillator",
+          label: "Oscillator"
+        },
+        {
+          source: "ramp",
+          label: "Ramp"
+        }
+      ],
+      generatorSeed: (
+        source, binding
+      ) => source === "ramp" && !binding.ramp ? {
+        ramp: {
+          easing: "linear",
+          count: 1
+        }
+      } : {},
+      makeDefault: (
+        target, _slide, source, project
+      ) => ( {
+        id: `b-${ target }`,
+        source: source ?? "oscillator",
+        ...( project ? {
+          project
+        } : {} ),
+        target,
+        kind: target.endsWith( "palette" ) ? "enum" : "continuous",
+        oscillator: {
+          wave: "sine",
+          cycles: 1,
+          phase: 0
+        },
+        mapping: {
+          min: 0,
+          max: 3,
+          curve: "linear"
+        },
+        smoothing: 0.2,
+        enabled: true,
+        weight: 1,
+        blend: "replace"
+      } ),
+      write: async(
+        slide, list, enableSource
+      ) => {
+        const base = slide === undefined ? "interactive" : `slides.${ slide }.interactive`;
+
+        put(
+          `${ base }.bindings`,
+          list
+        );
+        calls.push( `bindings ${ base } ${ list.length }${ enableSource ? ` enable ${ enableSource }` : "" }` );
+      }
+    },
     ...overrides
   };
 
