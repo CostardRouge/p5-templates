@@ -296,6 +296,104 @@ describe(
         ] );
       }
     );
+
+    it(
+      "tiles frames spread over the loop on one sheet, then restores the position and the play state",
+      async() => {
+        const {
+          registry, calls
+        } = setup( {
+          sketch: {}
+        } );
+
+        const result = await registry.execute(
+          "studio.contactSheet",
+          {
+            count: 4,
+            maxEdge: 512
+          }
+        );
+
+        expect( result ).toMatchObject( {
+          kind: "image",
+          mimeType: "image/jpeg",
+          width: 512
+        } );
+        expect( ( result as { note: string } ).note ).toContain( "4 frames at 0 %, 25 %, 50 %, 75 % of the loop" );
+        expect( ( result as { note: string } ).note ).toContain( "back at 25.0 %, playing" );
+        // Paused first, every position scrubbed, the sheet drawn, then back to
+        // 0.25 and playing again — the fake was playing at 0.25.
+        expect( calls ).toEqual( [
+          "pause",
+          "seek 0",
+          "seek 0.25",
+          "seek 0.5",
+          "seek 0.75",
+          "seek 0.25",
+          "play",
+          "sheet 0 %|25 %|50 %|75 %"
+        ] );
+      }
+    );
+
+    it(
+      "restores the tab even when a frame cannot be read, and refuses an empty range",
+      async() => {
+        const {
+          registry, calls
+        } = setup( {
+          sketch: {}
+        } );
+
+        await expect( registry.execute(
+          "studio.contactSheet",
+          {
+            from: 0.5,
+            to: 0.5
+          }
+        ) ).rejects.toMatchObject( {
+          code: "invalid"
+        } );
+
+        let reads = 0;
+        const failing = fakeHandles(
+          {
+            sketch: {}
+          },
+          {
+            snapshot: async() => ( reads++ === 1 ? null : new Blob( [
+              "png"
+            ] ) ),
+            playback: {
+              isPlaying: () => false,
+              play: () => calls.push( "play" ),
+              pause: () => calls.push( "pause" ),
+              seek: ( progress ) => calls.push( `seek ${ progress }` ),
+              progress: () => 0.9
+            }
+          }
+        );
+        const failingRegistry = createCommandRegistry();
+
+        failingRegistry.register( sketchCommands( failing.handles ) );
+        await expect( failingRegistry.execute(
+          "studio.contactSheet",
+          {
+            count: 3
+          }
+        ) ).rejects.toMatchObject( {
+          code: "unavailable",
+          message: "the sketch had no frame to read at 33.3 % of the loop"
+        } );
+        // Back at 0.9 and left paused, as it was; no sheet drawn.
+        expect( calls ).toEqual( [
+          "pause",
+          "seek 0",
+          "seek 0.3333333333333333",
+          "seek 0.9"
+        ] );
+      }
+    );
   }
 );
 

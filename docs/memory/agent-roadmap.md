@@ -15,12 +15,14 @@ Read a sketch's options (`sketch.describe`: JSON Schema with ranges, choices, la
 ## Gaps, in the order agreed to tackle them (track A)
 
 1. **Save and share** — no command saves a draft or preset or yields a share link: a good variant lives only as long as the tab, or as an exported file. Track B's gallery is the natural home (an agent command to snapshot the current piece into it, and to list/reopen entries).
-2. **Contact sheet of the loop** — the agent sees one frame per call; judging motion takes many seek+snapshot round trips. Wanted: one command answering N frames spread over the loop as ONE image (the headless server's `render.stills` already does this server-side — reuse its layout idea, not its code).
-3. **Grouped undo** — every agent write is its own history entry, so "apply the theme" takes many ⌘Z. Wanted: a command-level batch (`FormUndoRedo` has `startBatch`/`endBatch`) so one agent request = one undo step.
-4. **Describe a sketch** — options and labels, but no intent ("what is this sketch, how does it usually look"): a short description + tags per sketch (in `metadata.json` via the generator, or beside `options.ts`) so an agent picks the right sketch for a theme without opening each.
-5. **Interactive bindings** — the `interactive` namespace (MIDI, audio, gyroscope, pointer → parameter) is readable via `document.get` but no command creates or edits a binding.
+2. ~~**Contact sheet of the loop**~~ — DONE 2026-10-11: `studio.contactSheet` (`agent-commands.md`).
+3. ~~**Grouped undo**~~ — DONE 2026-10-11: every command's `run` is one undo step, and `studio.batch` runs a list as one (`agent-commands.md`).
+4. ~~**Describe a sketch**~~ — DONE 2026-10-11 for the mechanism (`about.json` → `metadata.json` → `sketches.list` with `tag` / `query`, `sketch.describe`; `sketches.md`); 14 sketches described, the other ~320 still list with their id only.
+5. ~~**Interactive bindings**~~ — DONE 2026-10-11: `bindings.targets` / `list` / `add` / `update` / `remove`, through the affordance's own write path; unavailable on a build without `INTERACTION_BINDINGS=true` (`agent-commands.md`). Not covered: MIDI learn, a sketch-declared `binding: { control }`.
 6. **Local files** — an image on disk must be base64'd by the agent; deliberately no file-read primitive in the relay. If it grates: an allow-listed folder only.
 7. Out of scope for the MCP: unattended rendering without a tab (level 2), writing a NEW sketch (that is code in the repo + a deploy).
+
+Still open after the 2026-10-11 session (track A): the remaining sketch descriptions (write them category by category after a `studio.contactSheet` of each); `studio.open` across engines (p5 → GSAP) once timed out at 60 s in a headless run that had just driven two raymarched sketches, with a React "synchronously unmount a root" warning — not reproduced in isolation, worth a look if an agent reports it; the `objects` param type added to the registry for `studio.batch` is to be ported to Atelier.
 
 ## Track B — the snapshot gallery (proposal, 2026-10-11)
 
@@ -40,3 +42,5 @@ Settled with the maintainer (2026-10-11):
 - Both tracks run NOW, in two separate cloud sessions, each opening its own PR; the maintainer reviews and merges.
 
 Open design points left to the gallery session: what triggers an entry (every export + an explicit "keep"), one entry per piece, pruning/quota, and the gallery page on a static deployment versus with the backend (`/recordings` stays as is).
+
+**Track B delivered (2026-10-11)** — `gallery.md` has the decisions: IndexedDB store capped at 500, keep after a finished export and from the transport bar's bookmark, `/gallery` page (sketch filter, title search, rename, delete, reopen through the listing's sessionStorage handoff), one-JSON-file backup that merges without duplicates, and `gallery.keep / list / thumbnail / open / remove` for the agent — which closes gap 1 above for pieces (a share LINK is still `/embed`'s sketch delta). What remains: a keep is not broadcast to another open tab; nothing measured on a phone (the page was only checked at 390 px headless); a uniform frame is kept as is (no retry like the filmstrip's); and two product calls the maintainer may want — a contact sheet of the gallery for the agent (gap 2's idea applied to entries), and "reopen as a new slide of the open piece" rather than replacing the document.

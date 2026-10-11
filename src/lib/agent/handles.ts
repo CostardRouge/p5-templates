@@ -21,6 +21,12 @@ import type {
 import type {
   CatalogueEntry
 } from "./commands/navigationCommands";
+import type {
+  GalleryStore
+} from "../gallery/store";
+import type {
+  SheetFrame
+} from "./imageResult";
 
 export interface StudioHandles {
   /** `<engine>/<category>/<name>`. */
@@ -138,6 +144,56 @@ export interface StudioHandles {
   saveFile: ( blob: Blob, name: string, folder?: string ) => Promise<{ path: string;
     bytes: number }>;
   relayConnected: () => boolean;
+  /** The browser's gallery of kept pieces (`src/lib/gallery/`, the /gallery page). */
+  gallery: {
+    store: GalleryStore;
+    /** The frame on screen as the gallery's ~240 px JPEG (the Keep button's capture). */
+    thumbnail: () => Promise<Blob | null>;
+    /** Apply a whole document to THIS sketch's form, the import button's way; a refusal names the first bad path. */
+    importDocument: ( options: unknown ) => { ok: true } | { ok: false;
+      reason: string };
+    /** Hand a document to the sketch page that mounts next (the listing's sessionStorage handoff). */
+    stageImport: ( options: unknown ) => boolean;
+    /** True while a handed-over document has not been consumed yet. */
+    importPending: () => boolean;
+  };
+  /** Several frames tiled on one picture, each labelled (`framesToContactSheet`). */
+  contactSheet: ( frames: SheetFrame[], maxEdge: number, format: "png" | "jpeg", note: string ) => Promise<ImageResult>;
+  /**
+   * Run `fn` as ONE undo step named `label`: what the history holds pending
+   * is committed first (the person's own edit stays its own step), nothing is
+   * captured while `fn` runs, and everything it wrote is captured as one
+   * entry when it ends — even when it throws. Nests: only the outermost
+   * transaction captures.
+   */
+  transaction: <T>( label: string, fn: () => Promise<T> ) => Promise<T>;
+  /**
+   * The binding affordance's model (`BindingAffordance/`): which controls a
+   * binding can drive, the editor's defaults for one, the sources its picker
+   * offers, and its one write path (`bindingWrites.ts`).
+   */
+  bindings: {
+    /** True, or why bindings cannot be edited in this build (the feature flag). */
+    enabled: () => true | string;
+    /** The binding kind a control component takes (`bindingKindFor`), null when not bindable. */
+    kindFor: ( component: string ) => string | null;
+    /** The `interactive` scope paired with a slide's (or the root's) sketch scope. */
+    scope: ( slide: number | undefined ) => string;
+    /** The picker's sources for a kind: channels (with their projections) and generators. */
+    sources: ( kind: string ) => { source: string;
+      project?: string;
+      label: string }[];
+    /**
+     * A binding on `target` with the editor's defaults (`makeDefaultBinding`),
+     * switched to `source` / `project` as the picker would (a generator gets
+     * its block seeded).
+     */
+    makeDefault: ( target: string, slide: number | undefined, source?: string, project?: string ) => Record<string, unknown>;
+    /** The block a generator source needs on `binding` when it has none yet (`switchCategory`'s seed). */
+    generatorSeed: ( source: string, binding: Record<string, unknown> ) => Record<string, unknown>;
+    /** Store the scope's list as the affordance does; `enableSource` switches that input on. */
+    write: ( slide: number | undefined, list: Record<string, unknown>[], enableSource?: string ) => Promise<void>;
+  };
 }
 
 /** The sketch-parameter scope a slide edits: its own block, or the root's. */

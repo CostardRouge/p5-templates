@@ -33,6 +33,11 @@ const SPECS: ParamSpecs = {
     type: "object",
     description: "delta",
     optional: true
+  },
+  steps: {
+    type: "objects",
+    description: "commands",
+    optional: true
   }
 };
 
@@ -97,7 +102,7 @@ describe(
             size: 100,
             sise: 1
           }
-        ) ) ).toBe( "invalid: unknown parameter \"sise\" — this command takes size, format, loop, tags, options" );
+        ) ) ).toBe( "invalid: unknown parameter \"sise\" — this command takes size, format, loop, tags, options, steps" );
         expect( codeOf( () => checkParams(
           undefined,
           {
@@ -146,6 +151,31 @@ describe(
         ) ) ).toBe( "invalid: \"options\" must be an object" );
         expect( codeOf( () => checkParams(
           SPECS,
+          {
+            size: 100,
+            steps: [
+              {},
+              "sketch.set"
+            ]
+          }
+        ) ) ).toBe( "invalid: \"steps\" must be a list of objects" );
+        expect( checkParams(
+          SPECS,
+          {
+            size: 100,
+            steps: [
+              {
+                command: "a"
+              }
+            ]
+          }
+        ).steps ).toEqual( [
+          {
+            command: "a"
+          }
+        ] );
+        expect( codeOf( () => checkParams(
+          SPECS,
           []
         ) ) ).toBe( "invalid: params must be an object" );
       }
@@ -190,6 +220,13 @@ describe(
             options: {
               type: "object",
               description: "delta"
+            },
+            steps: {
+              type: "array",
+              items: {
+                type: "object"
+              },
+              description: "commands"
             }
           },
           required: [

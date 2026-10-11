@@ -37,6 +37,15 @@ import {
   VARIANT_PRESETS,
   type ExportVariant
 } from "@/lib/export/variants";
+import {
+  keepPiece
+} from "@/lib/gallery/keep";
+import {
+  getGalleryStore
+} from "@/lib/gallery/store";
+import {
+  captureGalleryThumbnail
+} from "@/lib/gallery/thumbnail";
 import useSketch from "../../../SketchProvider/hooks/useSketch";
 import ExportPreview from "./components/ExportPreview";
 import VariantTableRow, {
@@ -113,7 +122,7 @@ export default function ExportPanel( {
 }: ExportPanelProps ) {
   const [
     {
-      engine, engineId
+      engine, engineId, category
     }
   ] = useSketch();
 
@@ -373,7 +382,7 @@ export default function ExportPanel( {
     deferredRef.current = null;
 
     try {
-      await runExportBatch( {
+      const results = await runExportBatch( {
         engine,
         options,
         sketchName: name,
@@ -383,6 +392,33 @@ export default function ExportPanel( {
         onProgress: setItems,
         onArtifacts: handleArtifacts
       } );
+
+      // A piece that was exported whole is worth finding again: keep its
+      // document and a thumbnail in the browser's gallery (/gallery). Not on
+      // a cancelled or partly failed run, and never twice for the same
+      // document — keepPiece answers the existing entry then. A gallery
+      // failure (quota, a locked-down browser) must not read as an export
+      // failure: the files are already delivered, so it only logs.
+      if ( !controller.signal.aborted && results.every( ( item ) => item.status === "done" ) ) {
+        try {
+          await keepPiece(
+            getGalleryStore(),
+            {
+              engine: engineId,
+              category,
+              name,
+              options,
+              origin: "export",
+              thumbnail: await captureGalleryThumbnail( engine )
+            }
+          );
+        } catch( galleryError ) {
+          console.warn(
+            "[gallery] the export was not kept:",
+            galleryError
+          );
+        }
+      }
     } catch( caught ) {
       // A cancel is a normal outcome, not a failure worth shouting about —
       // the per-row states already say what happened.

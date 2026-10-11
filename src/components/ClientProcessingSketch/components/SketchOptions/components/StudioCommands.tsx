@@ -16,6 +16,12 @@ import {
   assetCommands
 } from "@/lib/agent/commands/assetCommands";
 import {
+  batchCommands
+} from "@/lib/agent/commands/batchCommands";
+import {
+  bindingCommands
+} from "@/lib/agent/commands/bindingCommands";
+import {
   contentCommands
 } from "@/lib/agent/commands/contentCommands";
 import {
@@ -30,15 +36,18 @@ import {
 import {
   slideCommands
 } from "@/lib/agent/commands/slideCommands";
-import type {
-  StudioHandles
+import {
+  sketchBase, type StudioHandles
 } from "@/lib/agent/handles";
 import {
-  blobToImageResult
+  blobToImageResult, framesToContactSheet
 } from "@/lib/agent/imageResult";
 import {
   getBridgeSketch, getBridgeStatus, resumeBridge, sendFileToRelay, setBridgeSketch, studioCommands
 } from "@/lib/agent/studioBridge";
+import {
+  withTransactions
+} from "@/lib/agent/transaction";
 import {
   getMetadata
 } from "@/engines/metadata";
@@ -67,11 +76,20 @@ import {
   findEmbeddableSketch, loadSketchForm
 } from "@/lib/sketchLayerCatalogue";
 import {
+  interactionBindingsEnabled
+} from "@/lib/interactionBindings";
+import {
   getP5
 } from "@/p5/utils/sketch";
 import {
   getItemBounds
 } from "@/p5/utils/slides/common/itemBoundsRegistry";
+import {
+  bindingKindFor, channelSourceOptions, DEFAULT_NOISE, DEFAULT_OSCILLATOR, DEFAULT_RAMP, DEFAULT_RANDOM, defaultSequence, interactiveScopeFor, makeDefaultBinding, type Binding, type BindingKind
+} from "./ContentItems/components/BindingAffordance/bindingUtils";
+import {
+  enableSourceInputs, writeBindingList, type BindingFormIO
+} from "./ContentItems/components/BindingAffordance/bindingWrites";
 import type {
   FieldConfig
 } from "./ContentItems/constants/field-config";
@@ -91,6 +109,19 @@ import {
 import {
   randomizeFields
 } from "../utils/randomizeFields";
+import {
+  galleryCommands
+} from "@/lib/agent/commands/galleryCommands";
+import {
+  getGalleryStore
+} from "@/lib/gallery/store";
+import {
+  captureGalleryThumbnail
+} from "@/lib/gallery/thumbnail";
+import {
+  hasPendingImport, writePendingImport
+} from "@/lib/pendingImportOptions";
+import parseImportedOptions from "@/utils/parseImportedOptions";
 
 /**
  * `content.N` / `slides.S.content.N` → the drawn rectangle the p5 renderers
@@ -140,6 +171,79 @@ function configAt(
 
 export type SlideHandlers = StudioHandles[ "slides" ];
 
+/** The popover's generator categories, as sources an agent may name. */
+const GENERATOR_SOURCES = [
+  {
+    source: "oscillator",
+    label: "Oscillator (sine / triangle / square / sawtooth over the loop)"
+  },
+  {
+    source: "ramp",
+    label: "Ramp (an easing, `count` times per loop)"
+  },
+  {
+    source: "sequence",
+    label: "Sequence (stops in the parameter's units, stepped or smoothed)"
+  },
+  {
+    source: "noise",
+    label: "Noise (seeded, loop-safe)"
+  },
+  {
+    source: "random",
+    label: "Random (seeded steps)"
+  }
+];
+
+/**
+ * The block a generator source needs on a binding that has none yet — the
+ * popover's `switchCategory` seed: a sequence starts on the mapping's two ends
+ * so it does something at once.
+ */
+function generatorSeed(
+  source: string, binding: Binding
+): Record<string, unknown> {
+  switch ( source ) {
+    case "oscillator":
+      return binding.oscillator ? {} : {
+        oscillator: {
+          ...DEFAULT_OSCILLATOR
+        }
+      };
+    case "ramp":
+      return binding.ramp ? {} : {
+        ramp: {
+          ...DEFAULT_RAMP
+        }
+      };
+    case "sequence": {
+      const mapping = ( binding.mapping ?? {} ) as { min?: number;
+        max?: number };
+
+      return binding.sequence ? {} : {
+        sequence: defaultSequence( [
+          typeof mapping.min === "number" ? mapping.min : 0,
+          typeof mapping.max === "number" ? mapping.max : 1
+        ] )
+      };
+    }
+    case "noise":
+      return binding.noise ? {} : {
+        noise: {
+          ...DEFAULT_NOISE
+        }
+      };
+    case "random":
+      return binding.random ? {} : {
+        random: {
+          ...DEFAULT_RANDOM
+        }
+      };
+    default:
+      return {};
+  }
+}
+
 /**
  * Registers the studio's agent commands (`src/lib/agent/`) while the sketch
  * page's form is mounted, wired to the funnels the controls use. Mounted inside
@@ -182,6 +286,14 @@ export default function StudioCommands( {
     slides,
     exportSupported
   } );
+  // What the commands last asked of the transport, until the context's flag
+  // has caught up: `SET_LOOPING` lands a render later, and a command run right
+  // after `playback.seek` read the stale flag and resumed a sketch it had
+  // just paused. Cleared as soon as the flag moves (a click moves it too).
+  const playbackIntent = useRef<boolean | null>( null );
+  const lastLooping = useRef( state.looping );
+  // Open transactions (`handles.transaction`): only the outermost captures.
+  const transactionDepth = useRef( 0 );
 
   // The latest of everything, for handles that run long after this render.
   useLayoutEffect( () => {
@@ -196,6 +308,10 @@ export default function StudioCommands( {
       slides,
       exportSupported
     };
+    if ( state.looping !== lastLooping.current || state.looping === playbackIntent.current ) {
+      playbackIntent.current = null;
+    }
+    lastLooping.current = state.looping;
   } );
 
   const sketchId = [
@@ -266,9 +382,10 @@ export default function StudioCommands( {
           }
         },
         playback: {
-          isPlaying: () => now().state.looping,
+          isPlaying: () => playbackIntent.current ?? now().state.looping,
           // The transport's own toggle: the engine, and the context's flag.
           play: () => {
+            playbackIntent.current = true;
             now().state.engine?.play();
             now().dispatch( {
               type: "SET_LOOPING",
@@ -276,6 +393,7 @@ export default function StudioCommands( {
             } );
           },
           pause: () => {
+            playbackIntent.current = false;
             now().state.engine?.pause();
             now().dispatch( {
               type: "SET_LOOPING",
@@ -490,16 +608,163 @@ export default function StudioCommands( {
           currentSketch: getBridgeSketch
         },
         saveFile: sendFileToRelay,
-        relayConnected: () => getBridgeStatus().state === "connected"
+        relayConnected: () => getBridgeStatus().state === "connected",
+        gallery: {
+          store: getGalleryStore(),
+          thumbnail: () => captureGalleryThumbnail( now().state.engine ),
+          // The import button's own path (SketchOptions.handleImportOptions),
+          // minus its banner: the strict parse, then the form reset.
+          importDocument: ( options ) => {
+            const parsed = parseImportedOptions( options );
+
+            if ( !parsed.ok ) {
+              return {
+                ok: false,
+                reason: parsed.reason
+              };
+            }
+            now().form.reset( parsed.options );
+
+            return {
+              ok: true
+            };
+          },
+          stageImport: writePendingImport,
+          importPending: hasPendingImport
+        },
+        contactSheet: framesToContactSheet,
+        // One undo step per request (`transaction.ts`): the history's pending
+        // debounced capture is committed first (the person's own edit stays
+        // its own step), auto-capture is paused while the command writes, and
+        // one entry named after the command is captured at the end — capture
+        // diffs against the last committed state, so a command that wrote
+        // nothing leaves no entry.
+        transaction: async(
+          label, fn
+        ) => {
+          if ( transactionDepth.current === 0 ) {
+            now().history.capture();
+            now().history.pause();
+          }
+          transactionDepth.current += 1;
+          try {
+            return await fn();
+          } finally {
+            transactionDepth.current -= 1;
+            if ( transactionDepth.current === 0 ) {
+              now().history.resume();
+              now().history.capture( `agent: ${ label }` );
+            }
+          }
+        },
+        bindings: {
+          enabled: () => interactionBindingsEnabled() || "interactive bindings are off in this build — it is built with INTERACTION_BINDINGS=true to have them",
+          kindFor: ( component ) => bindingKindFor( component as FieldConfig[ "component" ] ),
+          scope: ( slide ) => interactiveScopeFor( sketchBase( slide ) ),
+          sources: ( kind ) => [
+            ...channelSourceOptions( kind as BindingKind ).map( ( option ) => ( {
+              source: option.source,
+              ...( option.project ? {
+                project: option.project
+              } : {} ),
+              label: option.label
+            } ) ),
+            // A pad takes a vector channel only; every other kind also runs
+            // off a generator (the popover's categories).
+            ...( kind === "vector2d" ? [] : GENERATOR_SOURCES )
+          ],
+          generatorSeed: (
+            source, binding
+          ) => generatorSeed(
+            source,
+            binding as Binding
+          ),
+          makeDefault: (
+            target, slide, source, project
+          ) => {
+            const config = configAt(
+              ( now().state.sketchFormConfiguration ?? {} ) as Record<string, FieldConfig>,
+              target
+            );
+            const kind = config ? bindingKindFor( config.component ) : null;
+
+            if ( !config || !kind ) {
+              throw new Error( `"${ target }" is not a bindable parameter` );
+            }
+
+            const binding: Binding = makeDefaultBinding(
+              target,
+              kind,
+              config,
+              // A colour ramp starts from the colour the field is showing right now.
+              kind === "color" ? now().form.getValues( `${ sketchBase( slide ) }.${ target }` ) : undefined
+            );
+
+            if ( source !== undefined ) {
+              binding.source = source;
+              if ( project ) {
+                binding.project = project;
+              } else {
+                delete binding.project;
+              }
+              Object.assign(
+                binding,
+                generatorSeed(
+                  source,
+                  binding
+                )
+              );
+            }
+
+            return binding as unknown as Record<string, unknown>;
+          },
+          write: async(
+            slide, list, enableSource
+          ) => {
+            const io: BindingFormIO = {
+              getValues: ( path ) => now().form.getValues( path ),
+              setValue: (
+                path, value
+              ) => now().form.setValue(
+                path,
+                value,
+                {
+                  shouldDirty: true
+                }
+              )
+            };
+            const interactiveScope = interactiveScopeFor( sketchBase( slide ) );
+
+            writeBindingList(
+              io,
+              interactiveScope,
+              list as Binding[]
+            );
+            if ( enableSource ) {
+              await enableSourceInputs(
+                io,
+                sketchBase( slide ),
+                interactiveScope,
+                enableSource
+              );
+            }
+          }
+        }
       };
-      const off = studioCommands.register( [
-        ...sketchCommands( handles ),
-        ...contentCommands( handles ),
-        ...slideCommands( handles ),
-        ...exportCommands( handles ),
-        ...assetCommands( handles ),
-        ...navigationCommands( handles )
-      ] );
+      const off = studioCommands.register( withTransactions(
+        [
+          ...sketchCommands( handles ),
+          ...contentCommands( handles ),
+          ...slideCommands( handles ),
+          ...exportCommands( handles ),
+          ...assetCommands( handles ),
+          ...navigationCommands( handles ),
+          ...galleryCommands( handles ),
+          ...bindingCommands( handles ),
+          ...batchCommands( studioCommands )
+        ],
+        handles
+      ) );
 
       setBridgeSketch( sketchId );
       resumeBridge();

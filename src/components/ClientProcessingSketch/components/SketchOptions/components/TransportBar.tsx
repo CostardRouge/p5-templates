@@ -9,6 +9,7 @@ import {
 import AnimationProgressionBar from "@/components/AnimationProgressionBar";
 import useSketch from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
 import useGlobalHotkey from "@/hooks/useGlobalHotkey";
+import KeepButton from "./KeepButton";
 import SnapshotButton from "./SnapshotButton";
 
 type TransportBarProps = {
@@ -122,6 +123,11 @@ export default function TransportBar( {
           carries the dev double-click that writes the sketch's catalogue
           thumbnail, which used to sit in the engine-controls island. */}
       <SnapshotButton />
+
+      {/* Keep: the piece itself — document + thumbnail — into the browser's
+          gallery, the way out that leaves nothing on disk. An export does it
+          by itself; this is for a piece worth finding again without one. */}
+      <KeepButton />
 
       {/* The one recording affordance on desktop, wearing the only red in the
           interface — the same meaning it already carries on mobile. */}
