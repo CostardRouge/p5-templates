@@ -109,6 +109,19 @@ import {
 import {
   randomizeFields
 } from "../utils/randomizeFields";
+import {
+  galleryCommands
+} from "@/lib/agent/commands/galleryCommands";
+import {
+  getGalleryStore
+} from "@/lib/gallery/store";
+import {
+  captureGalleryThumbnail
+} from "@/lib/gallery/thumbnail";
+import {
+  hasPendingImport, writePendingImport
+} from "@/lib/pendingImportOptions";
+import parseImportedOptions from "@/utils/parseImportedOptions";
 
 /**
  * `content.N` / `slides.S.content.N` → the drawn rectangle the p5 renderers
@@ -596,6 +609,29 @@ export default function StudioCommands( {
         },
         saveFile: sendFileToRelay,
         relayConnected: () => getBridgeStatus().state === "connected",
+        gallery: {
+          store: getGalleryStore(),
+          thumbnail: () => captureGalleryThumbnail( now().state.engine ),
+          // The import button's own path (SketchOptions.handleImportOptions),
+          // minus its banner: the strict parse, then the form reset.
+          importDocument: ( options ) => {
+            const parsed = parseImportedOptions( options );
+
+            if ( !parsed.ok ) {
+              return {
+                ok: false,
+                reason: parsed.reason
+              };
+            }
+            now().form.reset( parsed.options );
+
+            return {
+              ok: true
+            };
+          },
+          stageImport: writePendingImport,
+          importPending: hasPendingImport
+        },
         contactSheet: framesToContactSheet,
         // One undo step per request (`transaction.ts`): the history's pending
         // debounced capture is committed first (the person's own edit stays
@@ -723,6 +759,7 @@ export default function StudioCommands( {
           ...exportCommands( handles ),
           ...assetCommands( handles ),
           ...navigationCommands( handles ),
+          ...galleryCommands( handles ),
           ...bindingCommands( handles ),
           ...batchCommands( studioCommands )
         ],

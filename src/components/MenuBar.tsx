@@ -16,6 +16,7 @@ import {
   Home,
   ImageIcon,
   ImagePlus,
+  Images,
   Menu as MenuIcon,
   Monitor,
   Moon,
@@ -393,6 +394,13 @@ function MenuBar( {
       href: "/sketches",
       label: "Sketches",
       Icon: Paintbrush
+    },
+    // The browser-side archive of kept pieces: no server behind it, so it is
+    // there on every deployment, unlike /recordings below.
+    {
+      href: "/gallery",
+      label: "Gallery",
+      Icon: Images
     }
   ];
 

@@ -33,7 +33,7 @@ Sixteen commands in four files (`scripts/mcp/commands.ts` assembles them; `conte
 
 ## Not done yet (2026-10-09)
 
-- No command writes a preset (the `Preset` model), only drafts and jobs.
+- No command writes a preset (the `Preset` model), only drafts and jobs. The studio MCP saves and reopens a piece through the browser gallery instead (`gallery.*`, 2026-10-11 — `gallery.md`).
 - A front-end export (several variants — Reel, square — from one run, GIF, image sequence) has no server equivalent; an agent gets MP4 per slide, and stills through `render.stills`.
 
 ## A stored job's options reach the page UNPARSED — store the normalised document (2026-10-09)
