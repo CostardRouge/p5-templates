@@ -38,6 +38,7 @@ export const ITEM_KINDS = [
   "hud-swatch",
   "hud-readout",
   "hud-vector",
+  "hud-vector3d",
   "hud-bounding-box"
 ] as const;
 
@@ -49,7 +50,8 @@ const OFFSET_PLACED = new Set( [
   "hud-counter",
   "hud-swatch",
   "hud-readout",
-  "hud-vector"
+  "hud-vector",
+  "hud-vector3d"
 ] );
 /** Placed by `position` (`contentDrag.js` DRAGGABLE_TYPES). */
 const POSITION_PLACED = new Set( [

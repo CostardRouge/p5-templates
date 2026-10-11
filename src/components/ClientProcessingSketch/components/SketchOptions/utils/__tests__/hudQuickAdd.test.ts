@@ -340,6 +340,92 @@ describe(
     );
 
     it(
+      "offers the Vector 3D element on vector3d fields",
+      () => {
+        expect( hudQuickAddKinds(
+          "sketch.light.direction",
+          {
+            label: "Direction",
+            component: "vector3d"
+          } as FieldConfig
+        ) ).toEqual( [
+          "hud-vector3d"
+        ] );
+      }
+    );
+
+    it(
+      "seeds a Vector 3D with the control's three axes, and picks the view from what the triple means",
+      () => {
+        const form = makeForm( {
+          content: []
+        } );
+
+        addHudElementForControl(
+          form.getValues,
+          form.setValue,
+          "sketch.object.position",
+          {
+            label: "Position",
+            component: "vector3d",
+            kind: "position",
+            min: -1,
+            max: 1,
+            yAxis: {
+              min: -0.5,
+              max: 0.5
+            },
+            yDown: true
+          } as FieldConfig,
+          "hud-vector3d"
+        );
+
+        const position = ( form.writes[ 0 ].value as Array<Record<string, unknown>> )[ 0 ];
+
+        expect( position ).toMatchObject( {
+          type: "hud-vector3d",
+          source: "object.position",
+          kind: "position",
+          view: "box",
+          yDown: true,
+          // Per axis, as the control resolves them: y keeps its narrower range.
+          domain: {
+            xMin: -1,
+            xMax: 1,
+            yMin: -0.5,
+            yMax: 0.5,
+            zMin: -1,
+            zMax: 1
+          }
+        } );
+
+        const directionForm = makeForm( {
+          content: []
+        } );
+
+        addHudElementForControl(
+          directionForm.getValues,
+          directionForm.setValue,
+          "sketch.light.direction",
+          {
+            label: "Direction",
+            component: "vector3d",
+            kind: "direction"
+          } as FieldConfig,
+          "hud-vector3d"
+        );
+
+        expect( ( directionForm.writes[ 0 ].value as Array<Record<string, unknown>> )[ 0 ] ).toMatchObject( {
+          kind: "direction",
+          // A direction opens as an arrow in a sphere.
+          view: "gizmo",
+          // The control's own default orientation when it declares none.
+          yDown: false
+        } );
+      }
+    );
+
+    it(
       "bails on a non-sketch path",
       () => {
         const form = makeForm( {

@@ -29,6 +29,7 @@ import useBrowserRecordingSupported from "./components/CaptureActions/hooks/useB
 import useDeclaredBindings from "./hooks/useDeclaredBindings";
 import OptionsPanel from "./components/OptionsPanel";
 import StudioCommands from "./components/StudioCommands";
+import CanvasItemMenu from "./components/CanvasItemMenu";
 import {
   FormUndoRedo
 } from "./components/FormUndoRedo";
@@ -724,6 +725,9 @@ export default function SketchOptions( {
               name={ name }
               exportSupported={ browserRecordingSupported }
             />
+            {/* Right-click on a canvas item that has a menu (the Vector 3D
+                element's views): answered here, written through the form. */}
+            <CanvasItemMenu />
             {/* Everything from here to the mixer is studio chrome: the rails,
                 the filmstrip, the mobile drawer, the transport bar. A
                 presentation hides the lot — but the form itself, and

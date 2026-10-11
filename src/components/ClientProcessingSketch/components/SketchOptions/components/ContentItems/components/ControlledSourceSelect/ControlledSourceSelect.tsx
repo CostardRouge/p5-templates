@@ -14,7 +14,7 @@ import {
   BarLabelSegment
 } from "../ControlChrome";
 import {
-  BUILTIN_SOURCES, POINT_BUILTIN_SOURCES, flattenKeys, flattenPointKeys, groupKeyPaths
+  BUILTIN_SOURCES, POINT_BUILTIN_SOURCES, flattenKeys, flattenPointKeys, flattenTripleKeys, groupKeyPaths
 } from "@/p5/utils/hud/keyPaths";
 
 type Props = {
@@ -23,9 +23,10 @@ type Props = {
   /**
    * The value shape the consuming widget can act on. "point" narrows the list
    * to the `{ x, y }` key-paths and the point built-ins; anything else lists
-   * the scalars, as before.
+   * the scalars, as before. "triple" lists the `{ x, y, z }` key-paths and no
+   * built-in (no live source is three-dimensional).
    */
-  kind?: "scalar" | "point";
+  kind?: "scalar" | "point" | "triple";
   isModified?: boolean;
   onReset?: ( event: React.MouseEvent ) => void;
 };
@@ -62,10 +63,13 @@ export default function ControlledSourceSelect( {
   } );
 
   const isPointPicker = kind === "point";
-  const builtins = isPointPicker ? POINT_BUILTIN_SOURCES : BUILTIN_SOURCES;
-  const keys = isPointPicker
-    ? flattenPointKeys( sketch ?? {} )
-    : flattenKeys( sketch ?? {} );
+  const isTriplePicker = kind === "triple";
+  const builtins = isTriplePicker ? [] : isPointPicker ? POINT_BUILTIN_SOURCES : BUILTIN_SOURCES;
+  const keys = isTriplePicker
+    ? flattenTripleKeys( sketch ?? {} )
+    : isPointPicker
+      ? flattenPointKeys( sketch ?? {} )
+      : flattenKeys( sketch ?? {} );
   const {
     rootOptions, groups
   } = groupKeyPaths( keys );
@@ -94,13 +98,22 @@ export default function ControlledSourceSelect( {
         onChange={ ( e ) => field.onChange( e.target.value ) }
         onBlur={ field.onBlur }
       >
-        <optgroup label="Live / built-in">
-          {builtins.map( ( source ) => (
-            <option key={ source.value } value={ source.value }>
-              {source.label}
-            </option>
-          ) )}
-        </optgroup>
+        {builtins.length > 0 && (
+          <optgroup label="Live / built-in">
+            {builtins.map( ( source ) => (
+              <option key={ source.value } value={ source.value }>
+                {source.label}
+              </option>
+            ) )}
+          </optgroup>
+        )}
+
+        {/* An unset source still needs a selected option to show. */}
+        {!currentValue && (
+          <option value="" disabled>
+            —
+          </option>
+        )}
 
         {/* Keep a saved key selectable even if it isn't in the current list. */}
         {currentValue && !builtin && !keys.includes( currentValue ) && (
@@ -110,7 +123,7 @@ export default function ControlledSourceSelect( {
         )}
 
         {rootOptions.length > 0 && (
-          <optgroup label={ isPointPicker ? "Sketch vectors" : "Sketch parameters" }>
+          <optgroup label={ isPointPicker || isTriplePicker ? "Sketch vectors" : "Sketch parameters" }>
             {rootOptions.map( ( option ) => (
               <option key={ option.value } value={ option.value }>
                 {option.label}

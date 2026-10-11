@@ -310,3 +310,42 @@ export function flattenPointKeys(
 
   return out;
 }
+
+/** A `{ x, y, z }` value — what a vector3d control stores. */
+export function isTripleValue( value ) {
+  return isPointValue( value ) && Number.isFinite( value.z );
+}
+
+/**
+ * Flatten a sketch-settings object into the key-paths whose value is a triple —
+ * the sources the Vector 3D element can read. Same walk as flattenPointKeys,
+ * one dimension up: a triple is a leaf.
+ */
+export function flattenTripleKeys(
+  obj, prefix = "", out = []
+) {
+  if ( !obj || typeof obj !== "object" ) {
+    return out;
+  }
+
+  for ( const key of Object.keys( obj ) ) {
+    if ( !prefix && SKIP_TOP_LEVEL.has( key ) ) {
+      continue;
+    }
+
+    const value = obj[ key ];
+    const path = prefix ? `${ prefix }.${ key }` : key;
+
+    if ( isTripleValue( value ) ) {
+      out.push( path );
+    } else if ( value && typeof value === "object" && !Array.isArray( value ) ) {
+      flattenTripleKeys(
+        value,
+        path,
+        out
+      );
+    }
+  }
+
+  return out;
+}

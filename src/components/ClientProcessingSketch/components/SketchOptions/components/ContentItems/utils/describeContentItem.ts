@@ -1,6 +1,9 @@
 import {
   ITEM_META
 } from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/AddItemControls/components/ItemPalette/constants/item-kinds";
+import {
+  vector3dViewLabel
+} from "@/p5/utils/hud/vector3dViews";
 import type {
   ItemKind
 } from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/AddItemControls/components/ItemPalette/types/item-kinds";
@@ -152,6 +155,18 @@ export default function describeContentItem( item: unknown ): ContentItemDescrip
           record.label,
           record.source
         );
+
+      // Five views of one type: the row says which one is showing, so two
+      // Vector 3D layers over the same parameter stay distinguishable.
+      case "hud-vector3d": {
+        const watched = firstNonEmpty(
+          record.label,
+          record.source
+        );
+        const view = vector3dViewLabel( record.view );
+
+        return watched ? `${ watched } · ${ view }` : view;
+      }
 
       default:
         return undefined;

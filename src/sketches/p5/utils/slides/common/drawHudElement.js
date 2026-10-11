@@ -7,6 +7,7 @@ import readout from "../../hud/widgets/readout.js";
 import sparkline from "../../hud/widgets/sparkline.js";
 import swatch from "../../hud/widgets/swatch.js";
 import vector from "../../hud/widgets/vector.js";
+import vector3d from "../../hud/widgets/vector3d.js";
 import {
   withinWindow
 } from "../../hud/widgets/common.js";
@@ -33,6 +34,7 @@ const RENDERERS = {
   "hud-swatch": swatch,
   "hud-readout": readout,
   "hud-vector": vector,
+  "hud-vector3d": vector3d,
   "hud-bounding-box": boundingBox
 };
 

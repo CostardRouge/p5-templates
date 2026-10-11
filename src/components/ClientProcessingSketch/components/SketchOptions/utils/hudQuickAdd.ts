@@ -18,6 +18,12 @@ import {
 import {
   resolveAxes
 } from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/ControlledVector2DInput/utils/vector2dMath";
+import {
+  resolveAxes3D
+} from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/ControlledVector3DInput/utils/vector3dMath";
+import {
+  defaultVector3dView
+} from "@/p5/utils/hud/vector3dViews";
 
 /**
  * HUD quick-add: right-click a sketch control → add a HUD element already
@@ -31,6 +37,7 @@ import {
  *  - slider / number             → counter, gauge, sparkline
  *  - color                       → swatch
  *  - vector2d                    → the vector map
+ *  - vector3d                    → the Vector 3D element
  *  - text / select / checkbox …  → the readout (prints whatever it carries)
  *
  * Adding a kind to the menu is one entry in QUICK_ADD_KINDS, plus a seed
@@ -56,6 +63,11 @@ const QUICK_ADD_KINDS: Record<string, ItemKind[]> = {
   // canvas-pixel reticle) could not do, and why vector2d used to offer nothing.
   vector2d: [
     "hud-vector"
+  ],
+  // A triple gets its own element; the view it opens in follows what the
+  // numbers mean (see the seed below).
+  vector3d: [
+    "hud-vector3d"
   ],
   // Non-numeric parameters: the readout prints strings, enums and booleans, so
   // "which font is this sketch using?" becomes a layer instead of a guess.
@@ -159,6 +171,29 @@ export function addHudElementForControl(
       yAxis.max
     );
     seed.yDown = config.yDown ?? false;
+  }
+
+  // The Vector 3D element inherits the control's three resolved axes (never
+  // the raw min/max), its vertical orientation and what the triple means —
+  // and that last one picks the view: a direction opens as the gizmo's arrow
+  // in a sphere, a position as the control's own box.
+  if ( kind === "hud-vector3d" && config.component === "vector3d" ) {
+    const {
+      xAxis, yAxis, zAxis
+    } = resolveAxes3D( config );
+    const valueKind = config.kind ?? "position";
+
+    seed.kind = valueKind;
+    seed.view = defaultVector3dView( valueKind );
+    seed.yDown = config.yDown ?? false;
+    seed.domain = {
+      xMin: xAxis.min,
+      xMax: xAxis.max,
+      yMin: yAxis.min,
+      yMax: yAxis.max,
+      zMin: zAxis.min,
+      zMax: zAxis.max
+    };
   }
 
   const current = getValues( base );

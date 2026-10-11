@@ -17,6 +17,7 @@ import {
   Palette as SwatchIcon,
   Text as ReadoutIcon,
   SquareDot as VectorIcon,
+  Box as Vector3DIcon,
   Scan as BoundingBoxIcon
 } from "lucide-react";
 import {
@@ -44,6 +45,7 @@ export const ITEM_ORDER: ItemKind[] = [
   "hud-swatch",
   "hud-readout",
   "hud-vector",
+  "hud-vector3d",
   "hud-bounding-box"
 ];
 
@@ -76,6 +78,7 @@ export const ITEM_GROUPS: ItemKindGroup[] = [
       "hud-swatch",
       "hud-readout",
       "hud-vector",
+      "hud-vector3d",
       "hud-bounding-box"
     ]
   }
@@ -146,6 +149,11 @@ export const ITEM_META: Record<ItemKind, ItemKindMeta> = {
     label: "Vector",
     Icon: VectorIcon,
     description: "Mini x/y map of a point, in relative or absolute coordinates"
+  },
+  "hud-vector3d": {
+    label: "Vector 3D",
+    Icon: Vector3DIcon,
+    description: "An x/y/z parameter as a box, three maps, bars or a gizmo"
   },
   "hud-bounding-box": {
     label: "Bounding box",

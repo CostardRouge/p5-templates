@@ -13,6 +13,7 @@ export type ItemKind =
   | "hud-swatch"
   | "hud-readout"
   | "hud-vector"
+  | "hud-vector3d"
   | "hud-bounding-box"
   | "image"
   | "images-stack"

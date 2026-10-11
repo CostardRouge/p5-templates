@@ -92,7 +92,8 @@ const OFFSET_DRAGGABLE_TYPES = new Set( [
   "hud-counter",
   "hud-swatch",
   "hud-readout",
-  "hud-vector"
+  "hud-vector",
+  "hud-vector3d"
 ] );
 
 // Per-type offset defaults (mirroring the Hud*ItemSchema defaults) so an
@@ -123,6 +124,10 @@ const OFFSET_DEFAULTS = {
     y: 0.12
   },
   "hud-vector": {
+    x: 0.95,
+    y: 0.75
+  },
+  "hud-vector3d": {
     x: 0.95,
     y: 0.75
   }
@@ -386,6 +391,7 @@ function collectTargets( p ) {
           ),
           scope,
           index,
+          type: item.type,
           marginX: 0,
           marginY: 0
         } );
@@ -721,6 +727,30 @@ function setCursor( value ) {
 // and pulse it). Fires on grab — covering both a click and the start of a drag.
 // The event name is duplicated in the React constant CONTENT_ITEM_SELECT_EVENT
 // (constants/drawer-events.ts) — keep the two literals in sync.
+// Content types whose right-click opens a menu on the canvas, answered in
+// React by CanvasItemMenu. Event name duplicated in CONTENT_ITEM_MENU_EVENT
+// (constants/drawer-events.ts) — keep the two literals in sync.
+const ITEM_MENU_TYPES = new Set( [
+  "hud-vector3d"
+] );
+
+function emitContentItemMenu(
+  target, event
+) {
+  window.dispatchEvent( new CustomEvent(
+    "studio:content-item-menu",
+    {
+      detail: {
+        scope: target.scope,
+        index: target.index,
+        type: target.type,
+        clientX: event.clientX,
+        clientY: event.clientY
+      }
+    }
+  ) );
+}
+
 function emitContentItemSelect( target ) {
   if ( typeof window === "undefined" || !target ) {
     return;
@@ -812,6 +842,45 @@ function onPointerDown( event ) {
   );
   setCursor( "grabbing" );
   requestRedraw( p );
+}
+
+// A right-click on an item with a canvas menu opens it (and selects the item,
+// as a press would); anywhere else the browser's own menu is left alone.
+function onContextMenu( event ) {
+  const p = getP5();
+  const element = sketch.getCanvasElement?.();
+
+  if ( !p || !element || event.target !== element ) {
+    return;
+  }
+
+  const point = clientToCanvas(
+    event.clientX,
+    event.clientY
+  );
+
+  if ( !point ) {
+    return;
+  }
+
+  const targets = collectTargets( p );
+  const hit = hitTest(
+    point,
+    targets
+  );
+  const target = targets[ hit ];
+
+  if ( !target || !ITEM_MENU_TYPES.has( target.type ) ) {
+    return;
+  }
+
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  emitContentItemSelect( target );
+  emitContentItemMenu(
+    target,
+    event
+  );
 }
 
 function onPointerMove( event ) {
@@ -1121,6 +1190,13 @@ function detachDom() {
         capture: true
       }
     );
+    window.removeEventListener(
+      "contextmenu",
+      domListeners.menu,
+      {
+        capture: true
+      }
+    );
   }
 
   domListeners = null;
@@ -1146,7 +1222,8 @@ export function registerContentDrag() {
     domListeners = {
       down: onPointerDown,
       move: onPointerMove,
-      up: onPointerUp
+      up: onPointerUp,
+      menu: onContextMenu
     };
     window.addEventListener(
       "pointerdown",
@@ -1172,6 +1249,13 @@ export function registerContentDrag() {
     window.addEventListener(
       "pointercancel",
       domListeners.up,
+      {
+        capture: true
+      }
+    );
+    window.addEventListener(
+      "contextmenu",
+      domListeners.menu,
       {
         capture: true
       }

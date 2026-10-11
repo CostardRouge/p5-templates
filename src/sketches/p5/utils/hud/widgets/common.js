@@ -260,6 +260,35 @@ export function withHudTransform( cb ) {
   p.push();
 
   if ( sketch.sketchOptions?.type === "webgl" ) {
+    // A sketch that moves its camera (vector3d-demo orbits it with the loop
+    // clock) would otherwise carry the HUD along: the element drifts across
+    // the canvas and its text turns over. The HUD is screen-space, so it is
+    // drawn through a screen-mapped camera and projection, unlit; push() saved
+    // the sketch's camera, matrices and lights, and pop() puts them back.
+    // The arguments are explicit: the camera copy push() works on carries no
+    // defaults in p5 1.11, so a bare camera() / perspective() yields NaN.
+    const fov = Math.PI / 3;
+    const eyeZ = ( p.height / 2 ) / Math.tan( fov / 2 );
+
+    p.camera(
+      0,
+      0,
+      eyeZ,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0
+    );
+    p.perspective(
+      fov,
+      p.width / p.height,
+      eyeZ * 0.1,
+      eyeZ * 10
+    );
+    p.resetMatrix();
+    p.noLights();
     p.translate(
       -p.width / 2,
       -p.height / 2
