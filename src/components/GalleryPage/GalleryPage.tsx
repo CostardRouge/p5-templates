@@ -1,19 +1,28 @@
 "use client";
 
 import React, {
-  useMemo, useState
+  useMemo, useRef, useState
 } from "react";
 import {
-  Images, Search
+  Download, Images, Search, Upload
 } from "lucide-react";
 import {
   useRouter
 } from "next/navigation";
 
 import {
+  HIDDEN_FILE_INPUT_CLASS
+} from "@/components/hiddenFileInput";
+import {
   MenuBarSlot
 } from "@/components/MenuBarPortal";
 import Toast from "@/components/Toast";
+import {
+  triggerDownload
+} from "@/lib/export/download";
+import {
+  exportGallery, galleryArchiveFileName, importGallery
+} from "@/lib/gallery/archive";
 import {
   galleryEntryHref, stageGalleryEntry
 } from "@/lib/gallery/open";
@@ -112,8 +121,61 @@ export default function GalleryPage() {
     await getGalleryStore().remove( entry.id );
   };
 
+  const importInputRef = useRef<HTMLInputElement>( null );
+  const [
+    archiving,
+    setArchiving
+  ] = useState( false );
+
+  /** The whole gallery as one JSON file, through the browser's download. */
+  const handleExportArchive = async() => {
+    setArchiving( true );
+    try {
+      triggerDownload(
+        await exportGallery( getGalleryStore() ),
+        galleryArchiveFileName()
+      );
+    } catch( caught ) {
+      setToast( {
+        message: `The archive could not be written: ${ caught instanceof Error ? caught.message : String( caught ) }`,
+        type: "error"
+      } );
+    } finally {
+      setArchiving( false );
+    }
+  };
+
+  const handleImportArchive = async( event: React.ChangeEvent<HTMLInputElement> ) => {
+    const file = event.target.files?.[ 0 ];
+
+    event.target.value = "";
+    if ( !file ) {
+      return;
+    }
+    setArchiving( true );
+    try {
+      const outcome = await importGallery(
+        getGalleryStore(),
+        await file.text()
+      );
+
+      setToast( {
+        message: `${ outcome.added } ${ outcome.added === 1 ? "piece" : "pieces" } added${ outcome.skipped ? `, ${ outcome.skipped } already here` : "" }${ outcome.pruned ? `, ${ outcome.pruned } oldest pruned` : "" }.`,
+        type: "success"
+      } );
+    } catch( caught ) {
+      setToast( {
+        message: `Nothing imported — ${ caught instanceof Error ? caught.message : String( caught ) }`,
+        type: "error"
+      } );
+    } finally {
+      setArchiving( false );
+    }
+  };
+
   const total = entries?.length ?? 0;
   const hasFilters = sketchFilter !== "" || search.trim() !== "";
+  const ARCHIVE_BUTTON = "inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-xs font-medium text-foreground transition-colors hover:bg-hover disabled:opacity-40";
 
   return (
     <div className="space-y-3 p-3 sm:space-y-6 sm:p-6">
@@ -153,6 +215,39 @@ export default function GalleryPage() {
               <option key={ sketch } value={ sketch }>{sketch}</option>
             ) )}
           </select>
+
+          {/* The backup: the whole gallery as one JSON file, thumbnails
+              inline, and back — merged, never duplicated. The gallery lives
+              in this browser's storage only, and a cleared site data takes
+              it with it. */}
+          <button
+            type="button"
+            onClick={ () => void handleExportArchive() }
+            disabled={ archiving || total === 0 }
+            title="Download every piece — options and thumbnails — as one JSON file"
+            className={ ARCHIVE_BUTTON }
+          >
+            <Download className="h-3.5 w-3.5" />
+            Export archive
+          </button>
+          <input
+            ref={ importInputRef }
+            type="file"
+            accept=".json,application/json"
+            aria-label="Gallery archive file"
+            onChange={ ( event ) => void handleImportArchive( event ) }
+            className={ HIDDEN_FILE_INPUT_CLASS }
+          />
+          <button
+            type="button"
+            onClick={ () => importInputRef.current?.click() }
+            disabled={ archiving }
+            title="Merge an exported gallery archive into this one"
+            className={ ARCHIVE_BUTTON }
+          >
+            <Upload className="h-3.5 w-3.5" />
+            Import archive
+          </button>
         </div>
       </div>
 

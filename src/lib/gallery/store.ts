@@ -92,8 +92,17 @@ export class GalleryStore {
   }
 
   /** Store an entry, then prune the oldest past the cap. Answers what was pruned. */
-  async add( entry: GalleryEntry ): Promise<string[]> {
-    await this.backend.put( entry );
+  add( entry: GalleryEntry ): Promise<string[]> {
+    return this.addMany( [
+      entry
+    ] );
+  }
+
+  /** Store several entries (an archive import), pruning once at the end. */
+  async addMany( entries: GalleryEntry[] ): Promise<string[]> {
+    for ( const entry of entries ) {
+      await this.backend.put( entry );
+    }
 
     const pruned = ( await this.backend.all() )
       .sort( newest )
