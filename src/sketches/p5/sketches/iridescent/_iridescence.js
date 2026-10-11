@@ -1,4 +1,7 @@
 import animation from "@/p5/utils/animation.js";
+import {
+  bakePaletteRamp
+} from "@/p5/utils/palettes.js";
 import mappers from "@/p5/utils/mappers.js";
 import easing from "@/p5/utils/easing.js";
 import {
@@ -297,66 +300,15 @@ function clamp01( v ) {
  * @returns {{ key: string, width: number, bytes: Uint8Array }}
  */
 export function bakeRamp(
-  stops, hardness
+  stops, hardness, formula
 ) {
-  const list = Array.isArray( stops ) && stops.length > 0
-    ? stops
-    : materialFormValues.ramp.stops;
-  const n = list.length;
-  const h = clamp01( hardness );
-  const gain = 1 / ( 1 - 0.96 * h );
-  const bytes = new Uint8Array( RAMP_WIDTH * 4 );
-
-  for ( let i = 0; i < RAMP_WIDTH; i++ ) {
-    const s = ( ( i + 0.5 ) / RAMP_WIDTH ) * n;
-    const k = Math.floor( s );
-    const f = s - k;
-    const c0 = list[ k % n ];
-    const c1 = list[ ( k + 1 ) % n ];
-
-    let g = clamp01( ( f - 0.5 ) * gain + 0.5 );
-
-    g = g * g * ( 3 - 2 * g );
-
-    for ( let ch = 0; ch < 3; ch++ ) {
-      const a = channel(
-        c0,
-        ch,
-        0
-      );
-      const b = channel(
-        c1,
-        ch,
-        0
-      );
-
-      bytes[ i * 4 + ch ] = Math.round( a + ( b - a ) * g );
-    }
-
-    bytes[ i * 4 + 3 ] = 255;
-  }
-
-  return {
-    key: `${ h.toFixed( 3 ) }|${ list.map( ( c ) => [
-      channel(
-        c,
-        0,
-        0
-      ),
-      channel(
-        c,
-        1,
-        0
-      ),
-      channel(
-        c,
-        2,
-        0
-      )
-    ].join( "," ) ).join( ";" ) }`,
-    width: RAMP_WIDTH,
-    bytes
-  };
+  return bakePaletteRamp( {
+    stops: Array.isArray( stops ) && stops.length > 0
+      ? stops
+      : materialFormValues.ramp.stops,
+    hardness,
+    formula
+  } );
 }
 
 const rampCache = {
@@ -367,13 +319,17 @@ const rampCache = {
 function rampFor( material ) {
   const stops = material?.ramp?.stops;
   const hardness = material?.ramp?.hardness ?? materialFormValues.ramp.hardness;
-  const key = `${ hardness }|${ JSON.stringify( stops ?? null ) }`;
+  const formula = material?.ramp?.formula;
+  const key = formula
+    ? `formula:${ formula }`
+    : `${ hardness }|${ JSON.stringify( stops ?? null ) }`;
 
   if ( rampCache.key !== key ) {
     rampCache.key = key;
     rampCache.ramp = bakeRamp(
       stops,
-      hardness
+      hardness,
+      formula
     );
   }
 
@@ -428,7 +384,9 @@ export function resolveLook(
       ramp: {
         ...( m.ramp ?? materialFormValues.ramp ),
         stops: preset.stops,
-        hardness: preset.hardness
+        hardness: preset.hardness,
+        // A formula palette is baked from its function, not its swatch stops.
+        formula: preset.formula
       }
     },
     background: {
