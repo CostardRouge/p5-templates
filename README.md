@@ -109,7 +109,7 @@ curl -fsSLo ~/.sketchbook-studio-mcp.mjs https://p5.steeve.website/mcp/sketchboo
 claude mcp add sketchbook-studio -- node ~/.sketchbook-studio-mcp.mjs
 ```
 
-With Claude Desktop there is nothing to type: download `https://p5.steeve.website/mcp/sketchbook-studio.mcpb` and open it — Claude Desktop installs it from a dialog.
+The studio menu's **Agent setup guide** walks through all of this — per AI app, with the connection's live state and example prompts. With Claude Desktop there is nothing to type: download `https://p5.steeve.website/mcp/sketchbook-studio.mcpb` and open it — Claude Desktop installs it from a dialog.
 
 Then open any sketch, and in the studio menu choose **Connect an agent** (the menu button gets a green dot). The agent now drives that tab — what it does shows up live, lands in the undo history, and is saved with the piece like a click. The relay listens on `127.0.0.1:7982` only and answers loopback pages and the official site; for a self-hosted copy add its origin with `SKETCHBOOK_ORIGINS=https://your.host`. `--port` changes the port, `--out DIR` where exports land (default `~/Movies/Sketchbook`). Two MCP apps at once (Claude Desktop and Claude Code) share it: the second relay finds the port taken and follows the first — same tab, same output folder — and takes the port over when the first one quits.
 
