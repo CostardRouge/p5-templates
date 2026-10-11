@@ -149,15 +149,80 @@ export function completeVector(
   };
 }
 
+/** Draws the sphere sampler makes before giving up on a box it can't fit. */
+const DIRECTION_ATTEMPTS = 64;
+
 /**
- * A uniformly random point inside the box, snapped per axis — what the
- * randomize action assigns to a vector3d field. Three independent draws, in
- * x, y, z order, so the result covers the whole volume.
+ * A uniformly random unit vector that fits inside the box, or null when none
+ * did within DIRECTION_ATTEMPTS draws (a box that holds no part of the unit
+ * sphere, such as [-0.5, 0.5]³). Two draws per attempt: z uniform in [-1, 1]
+ * and an angle around it — Archimedes' hat-box, uniform on the sphere — and a
+ * draw outside the box's bounds (an unsigned axis, say) is rejected, so what
+ * remains is uniform over the part of the sphere the box allows.
+ */
+export function randomDirection(
+  axes: Axes3D, random: () => number = Math.random
+): Vector3DValue | null {
+  for ( let attempt = 0; attempt < DIRECTION_ATTEMPTS; attempt++ ) {
+    const z = random() * 2 - 1;
+    const angle = random() * Math.PI * 2;
+    const ring = Math.sqrt( Math.max(
+      0,
+      1 - z * z
+    ) );
+    const candidate = {
+      x: ring * Math.cos( angle ),
+      y: ring * Math.sin( angle ),
+      z
+    };
+
+    const fits = AXIS_NAMES.every( ( axis ) => {
+      const {
+        min, max
+      } = axisRange(
+        axes,
+        axis
+      );
+
+      return candidate[ axis ] >= min && candidate[ axis ] <= max;
+    } );
+
+    if ( fits ) {
+      return candidate;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * What the randomize action assigns to a vector3d field, snapped per axis.
+ *
+ * A position is a uniformly random point inside the box: three independent
+ * draws, in x, y, z order, so the result covers the whole volume. A direction
+ * (`kind: "direction"`) is a uniformly random point ON the unit sphere
+ * instead: a draw in the box would bias it toward the corners and give it any
+ * length from ~0 (an undefined direction) to √3. When the box holds no unit
+ * vector, a direction falls back to the box draw.
  */
 export function randomVector3D(
   config: Vector3DInputConfig, random: () => number = Math.random
 ): Vector3DValue {
   const axes = resolveAxes3D( config );
+
+  if ( config.kind === "direction" ) {
+    const direction = randomDirection(
+      axes,
+      random
+    );
+
+    if ( direction ) {
+      return snapVector(
+        direction,
+        axes
+      );
+    }
+  }
 
   return {
     x: fractionToValue(
