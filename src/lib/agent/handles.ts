@@ -143,6 +143,14 @@ export interface StudioHandles {
   relayConnected: () => boolean;
   /** Several frames tiled on one picture, each labelled (`framesToContactSheet`). */
   contactSheet: ( frames: SheetFrame[], maxEdge: number, format: "png" | "jpeg", note: string ) => Promise<ImageResult>;
+  /**
+   * Run `fn` as ONE undo step named `label`: what the history holds pending
+   * is committed first (the person's own edit stays its own step), nothing is
+   * captured while `fn` runs, and everything it wrote is captured as one
+   * entry when it ends — even when it throws. Nests: only the outermost
+   * transaction captures.
+   */
+  transaction: <T>( label: string, fn: () => Promise<T> ) => Promise<T>;
 }
 
 /** The sketch-parameter scope a slide edits: its own block, or the root's. */

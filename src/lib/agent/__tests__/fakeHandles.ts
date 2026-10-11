@@ -404,6 +404,16 @@ export function fakeHandles(
         note
       };
     },
+    transaction: async(
+      label, fn
+    ) => {
+      calls.push( `begin ${ label }` );
+      try {
+        return await fn();
+      } finally {
+        calls.push( `end ${ label }` );
+      }
+    },
     ...overrides
   };
 

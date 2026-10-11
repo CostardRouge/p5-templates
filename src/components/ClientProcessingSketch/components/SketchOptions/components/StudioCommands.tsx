@@ -16,6 +16,9 @@ import {
   assetCommands
 } from "@/lib/agent/commands/assetCommands";
 import {
+  batchCommands
+} from "@/lib/agent/commands/batchCommands";
+import {
   contentCommands
 } from "@/lib/agent/commands/contentCommands";
 import {
@@ -39,6 +42,9 @@ import {
 import {
   getBridgeSketch, getBridgeStatus, resumeBridge, sendFileToRelay, setBridgeSketch, studioCommands
 } from "@/lib/agent/studioBridge";
+import {
+  withTransactions
+} from "@/lib/agent/transaction";
 import {
   getMetadata
 } from "@/engines/metadata";
@@ -188,6 +194,8 @@ export default function StudioCommands( {
   // just paused. Cleared as soon as the flag moves (a click moves it too).
   const playbackIntent = useRef<boolean | null>( null );
   const lastLooping = useRef( state.looping );
+  // Open transactions (`handles.transaction`): only the outermost captures.
+  const transactionDepth = useRef( 0 );
 
   // The latest of everything, for handles that run long after this render.
   useLayoutEffect( () => {
@@ -503,16 +511,44 @@ export default function StudioCommands( {
         },
         saveFile: sendFileToRelay,
         relayConnected: () => getBridgeStatus().state === "connected",
-        contactSheet: framesToContactSheet
+        contactSheet: framesToContactSheet,
+        // One undo step per request (`transaction.ts`): the history's pending
+        // debounced capture is committed first (the person's own edit stays
+        // its own step), auto-capture is paused while the command writes, and
+        // one entry named after the command is captured at the end — capture
+        // diffs against the last committed state, so a command that wrote
+        // nothing leaves no entry.
+        transaction: async(
+          label, fn
+        ) => {
+          if ( transactionDepth.current === 0 ) {
+            now().history.capture();
+            now().history.pause();
+          }
+          transactionDepth.current += 1;
+          try {
+            return await fn();
+          } finally {
+            transactionDepth.current -= 1;
+            if ( transactionDepth.current === 0 ) {
+              now().history.resume();
+              now().history.capture( `agent: ${ label }` );
+            }
+          }
+        }
       };
-      const off = studioCommands.register( [
-        ...sketchCommands( handles ),
-        ...contentCommands( handles ),
-        ...slideCommands( handles ),
-        ...exportCommands( handles ),
-        ...assetCommands( handles ),
-        ...navigationCommands( handles )
-      ] );
+      const off = studioCommands.register( withTransactions(
+        [
+          ...sketchCommands( handles ),
+          ...contentCommands( handles ),
+          ...slideCommands( handles ),
+          ...exportCommands( handles ),
+          ...assetCommands( handles ),
+          ...navigationCommands( handles ),
+          ...batchCommands( studioCommands )
+        ],
+        handles
+      ) );
 
       setBridgeSketch( sketchId );
       resumeBridge();
