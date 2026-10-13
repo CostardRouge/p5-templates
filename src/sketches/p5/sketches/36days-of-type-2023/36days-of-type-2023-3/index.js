@@ -10,6 +10,9 @@ import gridMask from "@/p5/utils/gridMask.js";
 import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import string from "@/p5/utils/string.js";
+import {
+  housePaletteBackground
+} from "@/p5/utils/palettes.js";
 
 sketch.setup(
   undefined,
@@ -19,7 +22,10 @@ sketch.setup(
 );
 
 const getBackgroundColor = () =>
-  options.sketch?.backgroundColor ?? [
+  housePaletteBackground(
+    options.sketch.colors,
+    options.sketch?.backgroundColor
+  ) ?? [
     0,
     0,
     0
@@ -195,7 +201,7 @@ sketch.draw( () => {
       position.x / columns
     );
 
-    const tint = colors.rainbow( {
+    const tint = colors.palette( options.sketch.colors?.palette )( {
       hueIndex: p.map(
         hue,
         0,

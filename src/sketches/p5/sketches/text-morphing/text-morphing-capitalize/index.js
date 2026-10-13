@@ -322,7 +322,7 @@ sketch.draw( (
       const {
         x, y
       } = points[ i ];
-      const colorFunction = colors.rainbow;
+      const colorFunction = colors.palette( options.sketch.colors?.palette );
       const opacityFactor =
         mappers.fn(
           p.sin(

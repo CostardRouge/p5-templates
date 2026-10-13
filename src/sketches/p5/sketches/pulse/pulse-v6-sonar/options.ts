@@ -1,6 +1,10 @@
 import {
   layoutFormConfiguration
 } from "../_form";
+import {
+  housePaletteField,
+  paletteBackgroundField
+} from "@/p5/utils/palettes.js";
 
 export const formValues = {
   layout: {
@@ -20,6 +24,8 @@ export const formValues = {
     ringRippleMax: 5
   },
   colors: {
+    palette: "rainbow",
+    paletteBackground: false,
     hueSpeed: 1,
     opacityPulseSpeed: 5,
     opacityPulseMaxFactor: 10
@@ -109,6 +115,10 @@ export const formConfiguration: Record<string, any> = {
     component: "nested-object",
     label: "Colors",
     fields: {
+      palette: housePaletteField( [
+        "rainbow"
+      ] ),
+      paletteBackground: paletteBackgroundField,
       hueSpeed: {
         label: "Hue speed",
         component: "slider",

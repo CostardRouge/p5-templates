@@ -76,7 +76,7 @@ function drawBlob(
     const x = r * p.cos( a );
     const y = r * p.sin( a );
 
-    p.stroke( colors.rainbow( {
+    p.stroke( colors.palette( options.sketch.colors.colorFunction )( {
       opacityFactor: getVariableOptionValue(
         options.sketch.colors.opacityFactor,
         {

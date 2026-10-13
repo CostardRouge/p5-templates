@@ -9,6 +9,9 @@ import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import string from "@/p5/utils/string.js";
 import gridMask from "@/p5/utils/gridMask.js";
+import {
+  housePaletteBackground
+} from "@/p5/utils/palettes.js";
 
 sketch.setup(
   undefined,
@@ -21,7 +24,10 @@ sketch.draw( () => {
   const p = getP5();
 
   p.clear();
-  p.background( ...( options.sketch?.backgroundColor ?? [
+  p.background( ...( housePaletteBackground(
+    options.sketch?.color,
+    options.sketch?.backgroundColor
+  ) ?? [
     0,
     0,
     0
@@ -96,7 +102,10 @@ sketch.draw( () => {
   const wobbleRowMultiplier = wobble.rowMultiplier ?? 10;
 
   const palette = color.palette ?? "rainbowCrazy";
-  const colorFunction = colors?.[ palette ] ?? colors.rainbowCrazy;
+  const colorFunction = colors.palette(
+    palette,
+    "rainbowCrazy"
+  );
   const hueOffsetSpeed = color.hueOffsetSpeed ?? 1;
 
   // Each cell can mask a different letter, so precompute one alpha field per

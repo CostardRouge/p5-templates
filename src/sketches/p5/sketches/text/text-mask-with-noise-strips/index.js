@@ -10,10 +10,16 @@ import animation from "@/p5/utils/animation.js";
 import {
   getP5
 } from "@/p5/utils/sketch.js";
+import {
+  housePaletteBackground
+} from "@/p5/utils/palettes.js";
 
 const canvases = sketch.state( () => ( {} ) );
 
-const getBg = () => options.sketch?.background ?? [
+const getBg = () => housePaletteBackground(
+  options.sketch,
+  options.sketch?.background
+) ?? [
   0
 ];
 
@@ -61,10 +67,7 @@ sketch.draw( ( time ) => {
   const weightMax = options.sketch?.weightMax ?? 200;
 
   const paletteName = options.sketch?.palette ?? "rainbow";
-  const paletteFn =
-    typeof colors?.[ paletteName ] === "function"
-      ? colors[ paletteName ]
-      : colors.rainbow;
+  const paletteFn = colors.palette( paletteName );
   const hueOffset = options.sketch?.hueOffset ?? 0;
 
   const opacityFrom = options.sketch?.opacityFactorFrom ?? 2;

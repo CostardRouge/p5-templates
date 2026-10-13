@@ -69,7 +69,7 @@ function easeFn(
 }
 
 function palette( name ) {
-  return colors[ name ] ?? colors.rainbow;
+  return colors.palette( name );
 }
 
 // ---------------------------------------------------------------------------

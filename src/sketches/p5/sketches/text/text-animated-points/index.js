@@ -7,6 +7,9 @@ import string from "@/p5/utils/string.js";
 import {
   getP5
 } from "@/p5/utils/sketch.js";
+import {
+  housePaletteBackground
+} from "@/p5/utils/palettes.js";
 
 const sketchState = sketch.state( () => ( {
   shape: {
@@ -29,7 +32,10 @@ sketch.setup( ( {
 } );
 
 const getBackgroundColor = () =>
-  options.sketch?.backgroundColor ?? [
+  housePaletteBackground(
+    options.sketch?.color,
+    options.sketch?.backgroundColor
+  ) ?? [
     246,
     235,
     225
@@ -40,8 +46,7 @@ const getEasing = (
 ) =>
   easing[ name ] ?? easing[ fallback ] ?? easing.linear;
 
-const getPalette = ( name ) =>
-  colors[ name ] ?? colors.rainbow;
+const getPalette = ( name ) => colors.palette( name );
 
 // Split a flat point list into subcontours based on distance jumps.
 // Threshold is relative to the canvas's larger dimension.

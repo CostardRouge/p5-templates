@@ -1,4 +1,7 @@
 import {
+  housePaletteOptions
+} from "@/p5/utils/palettes.js";
+import {
   fontNames
 } from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/constants/field-config";
 
@@ -69,18 +72,12 @@ export const formConfiguration: Record<string, any> = {
         component: "text"
       },
       colorScheme: {
-        component: "select",
+        component: "palette-picker",
         label: "Color scheme",
-        options: [
-          {
-            value: "rainbow",
-            label: "Rainbow"
-          },
-          {
-            value: "purple",
-            label: "Purple"
-          }
-        ]
+        options: housePaletteOptions( [
+          "rainbow",
+          "purple"
+        ] )
       },
       font: {
         component: "select",

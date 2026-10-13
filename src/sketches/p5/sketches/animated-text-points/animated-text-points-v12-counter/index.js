@@ -10,6 +10,9 @@ import animation from "@/p5/utils/animation.js";
 import string from "@/p5/utils/string.js";
 import gridMask from "@/p5/utils/gridMask.js";
 import drawBackgroundPattern from "@/p5/utils/backgroundPattern.js";
+import {
+  housePaletteBackground
+} from "@/p5/utils/palettes.js";
 
 sketch.setup(
   undefined,
@@ -22,7 +25,10 @@ sketch.draw( () => {
   const p = getP5();
 
   p.clear();
-  p.background( ...( options.sketch?.backgroundColor ?? [
+  p.background( ...( housePaletteBackground(
+    options.sketch?.color,
+    options.sketch?.backgroundColor
+  ) ?? [
     0,
     0,
     0
@@ -124,7 +130,7 @@ sketch.draw( () => {
   const boxDepth = cellCfg.boxDepth ?? 150;
 
   const palette = color.palette ?? "rainbow";
-  const colorFunction = colors?.[ palette ] ?? colors.rainbow;
+  const colorFunction = colors.palette( palette );
   const hueIndexMultiplier = color.hueIndexMultiplier ?? 4;
   const opacityMax = color.opacityMax ?? 2.1;
   const opacityMin = color.opacityMin ?? 1;

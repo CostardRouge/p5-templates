@@ -11,6 +11,9 @@ import traceLetters from "@/p5/utils/traceLetters.js";
 import {
   drawGrid, drawShape, getFont, loopedTime
 } from "../_shared.js";
+import {
+  housePaletteBackground
+} from "@/p5/utils/palettes.js";
 
 sketch.setup(
   undefined,
@@ -25,7 +28,10 @@ sketch.draw( (
   const p = getP5();
 
   p.clear();
-  p.background( ...( options.sketch.backgroundColor ?? [
+  p.background( ...( housePaletteBackground(
+    options.sketch.colors,
+    options.sketch.backgroundColor
+  ) ?? [
     0
   ] ) );
   p.noFill();
@@ -188,7 +194,7 @@ sketch.draw( (
     (
       vectorIndexProgression, chunkIndex = 1
     ) => {
-      const colorFunction = qualityLine > chunkIndex ? colors.rainbow : colors.purple;
+      const colorFunction = qualityLine > chunkIndex ? colors.palette( options.sketch.colors?.palette ) : colors.purple;
 
       p.stroke( colorFunction( {
         hueOffset: options.sketch.colors?.hueOffset ?? 0,

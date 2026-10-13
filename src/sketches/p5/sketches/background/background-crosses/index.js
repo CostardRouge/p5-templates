@@ -5,6 +5,9 @@ import sketch, {
 import shapes from "@/p5/utils/shapes.js";
 import colors from "@/p5/utils/colors.js";
 import animation from "@/p5/utils/animation.js";
+import {
+  housePaletteBackground
+} from "@/p5/utils/palettes.js";
 
 sketch.setup( () => {} );
 
@@ -23,7 +26,10 @@ sketch.draw( () => {
   const cfg = options.sketch ?? {};
 
   p.clear();
-  p.background( ...( cfg.backgroundColor ?? [
+  p.background( ...( housePaletteBackground(
+    cfg,
+    cfg.backgroundColor
+  ) ?? [
     0,
     0,
     0
@@ -38,7 +44,7 @@ sketch.draw( () => {
     )
     : cfg.rows ?? 9;
 
-  const colorFunction = PALETTES[ cfg.palette ] ?? colors.rainbow;
+  const colorFunction = PALETTES[ cfg.palette ] ?? colors.palette( cfg.palette );
   const size = cfg.size ?? 18;
   const amount = cfg.amount ?? 2;
   const strokeWeight = cfg.strokeWeight ?? 3;

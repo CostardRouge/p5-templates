@@ -7,6 +7,9 @@ import colors from "@/p5/utils/colors.js";
 import easing from "@/p5/utils/easing.js";
 import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
+import {
+  housePaletteBackground
+} from "@/p5/utils/palettes.js";
 
 const sketchState = sketch.state( () => ( {
   min: Math.PI,
@@ -26,7 +29,10 @@ sketch.draw( () => {
   const p = getP5();
 
   p.clear();
-  p.background( ...( options.sketch.backgroundColor ?? [
+  p.background( ...( housePaletteBackground(
+    options.sketch.colors,
+    options.sketch.backgroundColor
+  ) ?? [
     0
   ] ) );
 
@@ -144,7 +150,7 @@ sketch.draw( () => {
         angle
       );
 
-      p.stroke( colors.rainbow( {
+      p.stroke( colors.palette( options.sketch.colors?.palette )( {
         hueOffset,
         hueIndex: p.map(
           angle,

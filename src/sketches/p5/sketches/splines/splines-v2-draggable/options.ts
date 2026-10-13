@@ -2,6 +2,10 @@ import {
   interactionFormValues,
   interactionFormConfiguration
 } from "@/p5/utils/interaction/defaults.js";
+import {
+  housePaletteField,
+  paletteBackgroundField
+} from "@/p5/utils/palettes.js";
 
 // Same control-point-free spline look as v0, but the points are an editable,
 // PERSISTED list (normalized 0..1 so they survive canvas resizes and are
@@ -113,6 +117,8 @@ export const formValues = {
   },
 
   stroke: {
+    palette: "rainbow",
+    paletteBackground: false,
     weight: 16,
     glow: 2,
     weightStart: 1,
@@ -291,6 +297,10 @@ export const formConfiguration: Record<string, any> = {
     label: "Stroke",
     component: "nested-object",
     fields: {
+      palette: housePaletteField( [
+        "rainbow"
+      ] ),
+      paletteBackground: paletteBackgroundField,
       weight: {
         label: "Weight (middle of the curve)",
         component: "slider",

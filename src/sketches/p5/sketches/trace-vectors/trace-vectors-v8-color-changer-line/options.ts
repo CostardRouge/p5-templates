@@ -38,6 +38,8 @@ export const formValues = {
     weight: 8.6
   },
   colors: {
+    palette: "rainbow",
+    paletteBackground: false,
     hueIndexMultiplier: 7.1,
     hueOffset: 0,
     opacityMin: 1.2,

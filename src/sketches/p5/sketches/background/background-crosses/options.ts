@@ -1,4 +1,8 @@
-const paletteOptions = [
+import {
+  housePaletteOptions,
+  paletteBackgroundField
+} from "@/p5/utils/palettes.js";
+const paletteOptions = housePaletteOptions( [
   "rainbow",
   "rainbowCrazy",
   "darkBlueYellow",
@@ -6,10 +10,7 @@ const paletteOptions = [
   "purpleSimple",
   "green",
   "black"
-].map( ( value ) => ( {
-  value,
-  label: value
-} ) );
+] );
 
 export const formValues = {
   backgroundColor: [
@@ -18,6 +19,7 @@ export const formValues = {
     0
   ],
   palette: "rainbow",
+  paletteBackground: false,
   columns: 9,
   proportional: true,
   rows: 9,
@@ -35,10 +37,11 @@ export const formConfiguration: Record<string, any> = {
     label: "Background color"
   },
   palette: {
-    component: "select",
+    component: "palette-picker",
     label: "Palette",
     options: paletteOptions
   },
+  paletteBackground: paletteBackgroundField,
   columns: {
     label: "Columns",
     component: "slider",

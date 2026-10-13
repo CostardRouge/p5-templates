@@ -68,6 +68,26 @@ export const PALETTE_FORMULAS = {
       rg,
       clampByte( ( 1 - Math.sin( x * TAU ) ) * 0.5 * 360 )
     ];
+  },
+  // utils/colors.js `rainbowCrazy()` and `test()` with their defaults — swatches
+  // for the 2D sketches' own pickers, never baked into a ramp.
+  "rainbow-crazy": ( x ) => {
+    const a = x * TAU;
+
+    return [
+      clampByte( ( Math.cos( a ) * 0.5 + 0.5 ) * 360 ),
+      clampByte( ( 1 - Math.sin( a ) ) * 0.5 * 360 ),
+      clampByte( ( 1 - Math.cos( a ) ) * 0.5 * 360 )
+    ];
+  },
+  test: ( x ) => {
+    const a = x * TAU;
+
+    return [
+      clampByte( ( Math.sin( a ) * 0.5 + 0.5 ) * 360 ),
+      clampByte( ( Math.cos( a + Math.PI / 3 ) * 0.5 + 0.5 ) * 360 ),
+      clampByte( ( Math.cos( a + 2 * Math.PI / 3 ) * 0.5 + 0.5 ) * 360 )
+    ];
   }
 };
 
@@ -1144,4 +1164,184 @@ export function paletteColorAt(
     1,
     2
   ].map( ( ch ) => data[ a * 4 + ch ] + ( data[ b * 4 + ch ] - data[ a * 4 + ch ] ) * f );
+}
+
+// ── 2D sketches (the colors.js house functions) ──────────────────────────────
+// A 2D sketch colours through one of utils/colors.js's functions, picked by id
+// (`rainbow`, `purple`, …) — many already offer a select of them. The picker
+// keeps those ids, so a stored document and every /embed still resolve to the
+// same function and the same pixels; the shared presets follow them and are
+// drawn by `colors.palette( id )` (colors.js) off the same baked ramp the
+// shaders read. The shared `rainbow` preset is left out: it IS the house
+// function, computed exactly.
+
+const HOUSE_PALETTES = {
+  rainbow: {
+    label: "Rainbow",
+    formula: "rainbow"
+  },
+  rainbowCrazy: {
+    label: "Rainbow crazy",
+    formula: "rainbow-crazy"
+  },
+  test: {
+    label: "Test",
+    formula: "test"
+  },
+  darkBlueYellow: {
+    label: "Dark blue & yellow",
+    formula: "dark-blue-yellow"
+  },
+  purple: {
+    label: "Purple",
+    formula: "purple"
+  },
+  purpleSimple: {
+    label: "Purple (flat)",
+    solid: [
+      128,
+      128,
+      255
+    ]
+  },
+  green: {
+    label: "Green",
+    solid: [
+      92,
+      255,
+      128
+    ]
+  },
+  black: {
+    label: "Black",
+    solid: [
+      4,
+      2,
+      8
+    ]
+  }
+};
+
+/** The colors.js function names a 2D picker can offer as the sketch's own. */
+export const HOUSE_PALETTE_IDS = Object.keys( HOUSE_PALETTES );
+
+/**
+ * A 2D sketch's palette options: its own colors.js functions first (`ids`, in
+ * the order given — the sketch's previous select), then the shared presets.
+ *
+ * @param {string[]} [ids]
+ */
+export function housePaletteOptions( ids = [
+  "rainbow"
+] ) {
+  return [
+    ...ids.map( ( id ) => {
+      const house = HOUSE_PALETTES[ id ];
+
+      return {
+        value: id,
+        label: house.label,
+        group: "Your own",
+        description: `The sketch's own colors.${ id }`,
+        stops: house.formula
+          ? formulaStops( house.formula )
+          : [
+            house.solid,
+            house.solid
+          ],
+        hardness: 0
+      };
+    } ),
+    ...PALETTE_PRESET_OPTIONS.filter( ( option ) => !HOUSE_PALETTE_IDS.includes( option.value ) )
+  ];
+}
+
+/** A palette-picker field over `housePaletteOptions( ids )`. */
+export function housePaletteField(
+  ids, label = "Palette"
+) {
+  return {
+    label,
+    component: "palette-picker",
+    options: housePaletteOptions( ids )
+  };
+}
+
+export const paletteBackgroundField = {
+  label: "Use the palette's background",
+  component: "checkbox"
+};
+
+const rampSamplers = new Map();
+
+/**
+ * `( x ) => [r, g, b]` over a shared preset's baked ramp (x looping, 1 = one
+ * turn), interpolated as the GLSL `paletteRamp()` does — or null for a house
+ * id, "original" or an unknown id. Cached per id.
+ *
+ * @param {string} [id]
+ * @returns {((x: number) => number[]) | null}
+ */
+export function paletteSampler( id ) {
+  if ( !id || HOUSE_PALETTE_IDS.includes( id ) ) {
+    return null;
+  }
+
+  if ( rampSamplers.has( id ) ) {
+    return rampSamplers.get( id );
+  }
+
+  const {
+    textures, uniforms
+  } = shaderPalette( {
+    palette: id
+  } );
+  let sampler = null;
+
+  if ( uniforms.uPaletteOn ) {
+    const {
+      data, width
+    } = textures.uPaletteRamp;
+
+    sampler = ( x ) => {
+      const s = ( x - Math.floor( x ) ) * width - 0.5;
+      const i0 = Math.floor( s );
+      const f = s - i0;
+      const a = ( ( ( i0 % width ) + width ) % width ) * 4;
+      const b = ( ( a / 4 + 1 ) % width ) * 4;
+
+      return [
+        data[ a ] + ( data[ b ] - data[ a ] ) * f,
+        data[ a + 1 ] + ( data[ b + 1 ] - data[ a + 1 ] ) * f,
+        data[ a + 2 ] + ( data[ b + 2 ] - data[ a + 2 ] ) * f
+      ];
+    };
+  }
+
+  rampSamplers.set(
+    id,
+    sampler
+  );
+
+  return sampler;
+}
+
+/**
+ * The background a 2D sketch should clear to: its own, unless its palette
+ * group asks for the palette's and holds a shared preset (a house function has
+ * no paper, so it never touches the background).
+ *
+ * @param {object} [group] the group holding `palette` and `paletteBackground`
+ * @param {*} background the sketch's own background colour
+ */
+export function housePaletteBackground(
+  group, background
+) {
+  return shaderPaletteBackground(
+    group,
+    background,
+    {
+      own: HOUSE_PALETTE_IDS
+    }
+  );
 }

@@ -7,6 +7,9 @@ import colors from "@/p5/utils/colors.js";
 import easing from "@/p5/utils/easing.js";
 import animation from "@/p5/utils/animation.js";
 import string from "@/p5/utils/string.js";
+import {
+  housePaletteBackground
+} from "@/p5/utils/palettes.js";
 
 sketch.setup(
   undefined,
@@ -16,7 +19,10 @@ sketch.setup(
 );
 
 const getBackgroundColor = () =>
-  options.sketch?.backgroundColor ?? [
+  housePaletteBackground(
+    options.sketch.colors,
+    options.sketch?.backgroundColor
+  ) ?? [
     0,
     0,
     0
@@ -120,7 +126,7 @@ sketch.draw( () => {
       );
 
       if ( opacityFactor < opacityThreshold ) {
-        const tint = colors.rainbow( {
+        const tint = colors.palette( options.sketch.colors?.palette )( {
           hueOffset: animation.angle,
           hueIndex: p.map(
             progression,

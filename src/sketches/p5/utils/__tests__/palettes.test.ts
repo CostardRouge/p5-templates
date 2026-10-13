@@ -3,8 +3,12 @@ import {
   PALETTE_FORMULAS,
   PALETTE_RAMP_WIDTH,
   SHADER_PALETTE_OPTIONS,
+  HOUSE_PALETTE_IDS,
   bakePaletteRamp,
+  housePaletteBackground,
+  housePaletteOptions,
   paletteColorAt,
+  paletteSampler,
   shaderPalette,
   shaderPaletteBackground
 } from "../palettes.js";
@@ -189,6 +193,83 @@ describe(
         ) => {
           expect( channel ).toBeCloseTo( ( texel( 255 )[ i ] + texel( 0 )[ i ] ) / 2 );
         } );
+      }
+    );
+  }
+);
+
+describe(
+  "2D house palettes",
+  () => {
+    it(
+      "lists the sketch's own functions first, then the shared presets minus the house rainbow",
+      () => {
+        const options = housePaletteOptions( [
+          "purple",
+          "rainbow"
+        ] );
+
+        expect( options.slice(
+          0,
+          2
+        ).map( ( option ) => option.value ) ).toEqual( [
+          "purple",
+          "rainbow"
+        ] );
+        expect( options.filter( ( option ) => option.value === "rainbow" ) ).toHaveLength( 1 );
+        expect( options.some( ( option ) => option.value === "riso-pink-blue" ) ).toBe( true );
+        options.forEach( ( option ) => expect( option.stops.length ).toBeGreaterThan( 1 ) );
+      }
+    );
+
+    it(
+      "samples a shared preset exactly as the CPU ramp read, and never a house id",
+      () => {
+        HOUSE_PALETTE_IDS.forEach( ( id ) => expect( paletteSampler( id ) ).toBeNull() );
+        expect( paletteSampler( "original" ) ).toBeNull();
+        expect( paletteSampler( "nope" ) ).toBeNull();
+
+        const sample = paletteSampler( "riso-pink-blue" ) as ( x: number ) => number[];
+
+        [
+          0,
+          0.1234,
+          0.5,
+          0.999
+        ].forEach( ( x ) => {
+          expect( sample( x ) ).toEqual( paletteColorAt(
+            {
+              palette: "riso-pink-blue"
+            },
+            x
+          ) );
+        } );
+      }
+    );
+
+    it(
+      "leaves the background alone for a house function, even when asked",
+      () => {
+        const own = [
+          1,
+          2,
+          3
+        ];
+
+        expect( housePaletteBackground(
+          {
+            palette: "rainbow",
+            paletteBackground: true
+          },
+          own
+        ) ).toBe( own );
+        expect( housePaletteBackground(
+          {
+            palette: "riso-pink-blue",
+            paletteBackground: true
+          },
+          own
+        ) ).not.toBe( own );
       }
     );
   }

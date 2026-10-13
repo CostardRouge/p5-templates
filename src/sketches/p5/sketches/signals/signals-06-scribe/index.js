@@ -7,6 +7,9 @@ import {
   renderScribe
 } from "@/p5/sketches/letter-trace/_shared.js";
 import drawInstrument from "../_instrument.js";
+import {
+  housePaletteBackground
+} from "@/p5/utils/palettes.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SIGNALS — 06 / SCRIBE
@@ -79,7 +82,10 @@ sketch.draw( () => {
   const o = options.sketch ?? {};
 
   p.clear();
-  p.background( ...( o.backgroundColor ?? [
+  p.background( ...( housePaletteBackground(
+    o.stroke,
+    o.backgroundColor
+  ) ?? [
     0,
     0,
     0,

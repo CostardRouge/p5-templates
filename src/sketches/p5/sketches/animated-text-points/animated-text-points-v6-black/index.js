@@ -9,6 +9,9 @@ import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import string from "@/p5/utils/string.js";
 import gridMask from "@/p5/utils/gridMask.js";
+import {
+  housePaletteBackground
+} from "@/p5/utils/palettes.js";
 
 sketch.setup(
   undefined,
@@ -21,7 +24,10 @@ sketch.draw( () => {
   const p = getP5();
 
   p.clear();
-  p.background( ...( options.sketch?.backgroundColor ?? [
+  p.background( ...( housePaletteBackground(
+    options.sketch?.color,
+    options.sketch?.backgroundColor
+  ) ?? [
     0,
     0,
     0
@@ -115,7 +121,7 @@ sketch.draw( () => {
   const frontCircleSize = cellCfg.frontCircleSize ?? cellSize / 2;
 
   const palette = color.palette ?? "rainbow";
-  const colorFunction = colors?.[ palette ] ?? colors.rainbow;
+  const colorFunction = colors.palette( palette );
   const hueOffsetSpeed = color.hueOffsetSpeed ?? 2;
   const hueIndexMultiplier = color.hueIndexMultiplier ?? 16;
 

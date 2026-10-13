@@ -1,4 +1,8 @@
 import {
+  housePaletteOptions,
+  paletteBackgroundField
+} from "@/p5/utils/palettes.js";
+import {
   fontNames
 } from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/constants/field-config";
 
@@ -41,6 +45,7 @@ export const formValues = {
   },
   color: {
     palette: "rainbow",
+    paletteBackground: false,
     hueOffsetSpeed: 2,
     hueIndexMultiplier: 16
   },
@@ -52,7 +57,7 @@ export const formValues = {
   ]
 };
 
-const paletteOptions = [
+const paletteOptions = housePaletteOptions( [
   "rainbow",
   "rainbowCrazy",
   "test",
@@ -61,10 +66,7 @@ const paletteOptions = [
   "purpleSimple",
   "green",
   "black"
-].map( ( value ) => ( {
-  value,
-  label: value
-} ) );
+] );
 
 const fontOptionList = fontNames.map( ( name ) => ( {
   value: name,
@@ -265,10 +267,11 @@ export const formConfiguration: Record<string, any> = {
     label: "Color",
     fields: {
       palette: {
-        component: "select",
+        component: "palette-picker",
         label: "Palette",
         options: paletteOptions
       },
+      paletteBackground: paletteBackgroundField,
       hueOffsetSpeed: {
         label: "Hue offset speed",
         component: "slider",

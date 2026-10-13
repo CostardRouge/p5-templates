@@ -87,7 +87,7 @@ function drawShape( {
       const {
         x, y
       } = points[ i ];
-      const colorFunction = colors?.[ options.sketch.shape.colorScheme ];
+      const colorFunction = colors.palette( options.sketch.shape.colorScheme );
 
       const opacityFactor =
         mappers.fn(

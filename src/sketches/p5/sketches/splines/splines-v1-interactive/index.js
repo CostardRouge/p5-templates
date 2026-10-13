@@ -12,6 +12,9 @@ import {
 import {
   renderSplines
 } from "../_shared.js";
+import {
+  housePaletteBackground
+} from "@/p5/utils/palettes.js";
 
 // ── What this sketch demonstrates ──────────────────────────────────────────
 // The same control-point-free splines as v0, but the points come from the live
@@ -231,7 +234,10 @@ sketch.draw( () => {
   const modeType = mode.type ?? "live";
 
   p.clear();
-  p.background( ...( o.backgroundColor ?? [
+  p.background( ...( housePaletteBackground(
+    o.stroke,
+    o.backgroundColor
+  ) ?? [
     0,
     0,
     0,

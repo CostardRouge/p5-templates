@@ -5,6 +5,9 @@ import sketch, {
 import {
   renderCurrent
 } from "../_shared.js";
+import {
+  housePaletteBackground
+} from "@/p5/utils/palettes.js";
 
 // One pen follows the outline like the scribe, but the camera also ROTATES the
 // world so the trace always flows toward a fixed screen direction (a 2D vector):
@@ -16,7 +19,10 @@ sketch.draw( () => {
   const o = options.sketch ?? {};
 
   p.clear();
-  p.background( ...( o.backgroundColor ?? [
+  p.background( ...( housePaletteBackground(
+    o.stroke,
+    o.backgroundColor
+  ) ?? [
     0,
     0,
     0,

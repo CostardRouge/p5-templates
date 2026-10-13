@@ -8,6 +8,9 @@ import easing from "@/p5/utils/easing.js";
 import string from "@/p5/utils/string.js";
 import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
+import {
+  housePaletteBackground
+} from "@/p5/utils/palettes.js";
 
 // ── text-morphing-reveal ───────────────────────────────────────────────────
 // The reveal format: a list of words morphs through itself — question into
@@ -28,7 +31,10 @@ sketch.draw( () => {
   const text = options.sketch?.text ?? {};
   const morphing = options.sketch?.morphing ?? {};
   const points = options.sketch?.points ?? {};
-  const background = options.sketch?.backgroundColor ?? [
+  const background = housePaletteBackground(
+    options.sketch?.colors,
+    options.sketch?.backgroundColor
+  ) ?? [
     0,
     0,
     0
@@ -160,7 +166,7 @@ function drawPoints(
     const y = point.y + Math.sin( scatterAngle ) * scatterAmplitude;
 
     if ( rainbow ) {
-      const color = colors.rainbow( {
+      const color = colors.palette( options.sketch.colors?.palette )( {
         hueOffset: animation.angle,
         hueIndex: mappers.fn(
           p.noise(

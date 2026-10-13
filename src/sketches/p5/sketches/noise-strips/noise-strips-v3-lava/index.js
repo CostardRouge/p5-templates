@@ -18,7 +18,7 @@ const PALETTES = {
   green: colors.green
 };
 
-const resolvePalette = ( name ) => PALETTES[ name ] ?? colors.rainbow;
+const resolvePalette = ( name ) => PALETTES[ name ] ?? colors.palette( name );
 
 const MOTION_X_VALUES = [
   -0.4,

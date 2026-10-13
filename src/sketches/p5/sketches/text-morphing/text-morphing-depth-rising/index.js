@@ -163,7 +163,7 @@ sketch.draw( ( time ) => {
         z
       );
 
-      const colorFunction = colors?.[ options.sketch.strokeColor.colorFunction ] ?? colors.rainbow;
+      const colorFunction = colors.palette( options.sketch.strokeColor.colorFunction );
       const opacityFactor = mappers.fn(
         Math.sin( getLoopPhase( [
           [

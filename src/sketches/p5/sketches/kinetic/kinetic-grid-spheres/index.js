@@ -15,6 +15,9 @@ import {
 import {
   drawInteractionOverlay
 } from "@/p5/utils/interaction/overlay.js";
+import {
+  housePaletteBackground
+} from "@/p5/utils/palettes.js";
 
 const sketchState = sketch.state( () => ( {
   shape: {
@@ -23,7 +26,10 @@ const sketchState = sketch.state( () => ( {
 } ) );
 
 const getBackgroundColor = () =>
-  options.sketch?.backgroundColor ?? [
+  housePaletteBackground(
+    options.sketch.colors,
+    options.sketch?.backgroundColor
+  ) ?? [
     246,
     235,
     225
@@ -180,7 +186,7 @@ sketch.draw( () => {
       const hueMultiplier = options.sketch?.color?.hueMultiplier ?? 2;
       const opacityFactor = options.sketch?.color?.opacityFactor ?? 1.5;
 
-      const tint = colors.rainbow( {
+      const tint = colors.palette( options.sketch.colors?.palette )( {
         hueOffset: switchIndex,
         hueIndex:
         g.map(

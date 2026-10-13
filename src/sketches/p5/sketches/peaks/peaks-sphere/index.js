@@ -9,6 +9,9 @@ import easing from "@/p5/utils/easing.js";
 import mappers from "@/p5/utils/mappers.js";
 import graphics from "@/p5/utils/graphics.js";
 import animation from "@/p5/utils/animation.js";
+import {
+  housePaletteBackground
+} from "@/p5/utils/palettes.js";
 
 const sketchState = sketch.state( () => ( {
   threeDimensionGraphics: null
@@ -33,7 +36,10 @@ sketch.draw( (
   const p = getP5();
 
   p.clear();
-  p.background( ...( options.sketch.backgroundColor ?? [
+  p.background( ...( housePaletteBackground(
+    options.sketch.colors,
+    options.sketch.backgroundColor
+  ) ?? [
     0
   ] ) );
 
@@ -118,7 +124,7 @@ sketch.draw( (
   const noiseAnimMult = options.sketch.noise?.animMultiplier ?? 0.3;
 
   // ── Colors ────────────────────────────────────────────────────────────────
-  const colorFunction = colors.rainbow;
+  const colorFunction = colors.palette( options.sketch.colors?.palette );
   const opacityMax = options.sketch.colors?.opacityMax ?? 4;
   const opacityMin = options.sketch.colors?.opacityMin ?? 1;
   const progressionMultiplier = options.sketch.colors?.progressionMultiplier ?? 1;

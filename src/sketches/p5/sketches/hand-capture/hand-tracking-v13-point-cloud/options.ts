@@ -5,6 +5,10 @@ import {
 import {
   getTestVideoPath
 } from "@/utils/getTestVideoPaths";
+import {
+  housePaletteField,
+  paletteBackgroundField
+} from "@/p5/utils/palettes.js";
 
 // Default values only
 export const formValues = {
@@ -108,7 +112,11 @@ export const formValues = {
     8,
     8,
     10
-  ]
+  ],
+  colors: {
+    palette: "rainbow",
+    paletteBackground: false
+  }
 };
 
 // UI configuration only
@@ -528,5 +536,15 @@ export const formConfiguration: Record<string, any> = {
   backgroundColor: {
     component: "color",
     label: "Background color"
+  },
+  colors: {
+    component: "nested-object",
+    label: "Colors",
+    fields: {
+      palette: housePaletteField( [
+        "rainbow"
+      ] ),
+      paletteBackground: paletteBackgroundField
+    }
   }
 };

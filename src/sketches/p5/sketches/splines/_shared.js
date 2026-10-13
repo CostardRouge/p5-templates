@@ -5,6 +5,10 @@ import colors from "@/p5/utils/colors.js";
 import animation from "@/p5/utils/animation.js";
 import easing from "@/p5/utils/easing.js";
 import createGlowBatchRenderer from "@/p5/utils/glowBatchGpu.js";
+import {
+  HOUSE_PALETTE_IDS,
+  shaderPalette
+} from "@/p5/utils/palettes.js";
 
 // The glowing curve used to be stroked segment-by-segment on the CPU, once per
 // glow layer, once per spline — fine for one procedural curve, but the cost
@@ -671,10 +675,12 @@ export function drawUniformCurve(
     tension,
     weight,
     glow,
-    hueSpeed
+    hueSpeed,
+    palette
   }
 ) {
   const p = getP5();
+  const colorFunction = colors.palette( palette );
 
   p.noFill();
 
@@ -692,7 +698,7 @@ export function drawUniformCurve(
     );
 
     p.strokeWeight( layerWeight );
-    p.stroke( colors.rainbow( {
+    p.stroke( colorFunction( {
       hueIndex: Math.sin( animation.angle * hueSpeed ) * p.PI * 2,
       opacityFactor
     } ) );
@@ -769,7 +775,8 @@ export function renderSplines(
     hueEaseFn: easing[ stroke.hueEasing ] ?? easing.linear,
     weightStart: stroke.weightStart ?? 1,
     weightEnd: stroke.weightEnd ?? 1,
-    weightEaseFn: easing[ stroke.weightEasing ] ?? easing.linear
+    weightEaseFn: easing[ stroke.weightEasing ] ?? easing.linear,
+    palette: stroke.palette
   };
 
   // Raw polygon overlay (behind the curve), straight onto the p2d canvas.
@@ -790,6 +797,12 @@ export function renderSplines(
   if ( method === "chaikin" ) {
     const gradient = stroke.gradient ?? true;
 
+    batch.setPalette( shaderPalette(
+      stroke,
+      {
+        own: HOUSE_PALETTE_IDS
+      }
+    ) );
     batch.beginStrokes();
     splines.forEach( ( points ) => emitStroke(
       points,

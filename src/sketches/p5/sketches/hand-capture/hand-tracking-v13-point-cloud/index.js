@@ -14,6 +14,9 @@ import mediapipe, {
 import {
   channelValue, computeDepth
 } from "./modes.js";
+import {
+  housePaletteBackground
+} from "@/p5/utils/palettes.js";
 
 // video-point-cloud — the webcam (or a video asset) is run through MediaPipe
 // segmentation, then instead of showing the footage we draw a 3D field of
@@ -245,7 +248,10 @@ sketch.draw( ( time ) => {
   );
 
   p.clear();
-  p.background( ...( cfg.backgroundColor ?? [
+  p.background( ...( housePaletteBackground(
+    cfg.colors,
+    cfg.backgroundColor
+  ) ?? [
     8,
     8,
     10
@@ -504,7 +510,7 @@ sketch.draw( ( time ) => {
       const x = flipSign * ( u - 0.5 ) * cloudW;
 
       if ( colorMode === "palette" ) {
-        g.stroke( colors.rainbow( {
+        g.stroke( colors.palette( options.sketch.colors?.palette )( {
           hueOffset,
           hueIndex: mappers.fn(
             raw,

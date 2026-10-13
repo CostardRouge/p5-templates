@@ -13,6 +13,9 @@ import animation from "@/p5/utils/animation.js";
 import string from "@/p5/utils/string.js";
 
 import addScreenPositionFunction from "@/utils/addScreenPositionFunction.js";
+import {
+  housePaletteBackground
+} from "@/p5/utils/palettes.js";
 
 const sketchState = sketch.state( () => ( {
   interactive: {
@@ -98,7 +101,10 @@ function createGridAlphaPoints(
 }
 
 const getBackgroundColor = () =>
-  options.sketch?.backgroundColor ?? [
+  housePaletteBackground(
+    options.sketch.colors,
+    options.sketch?.backgroundColor
+  ) ?? [
     246,
     235,
     225
@@ -273,7 +279,7 @@ sketch.draw( () => {
     const hueMultiplier = options.sketch?.color?.hueMultiplier ?? 2;
     const opacityFactor = options.sketch?.color?.opacityFactor ?? 1.5;
 
-    const tint = colors.rainbow( {
+    const tint = colors.palette( options.sketch.colors?.palette )( {
       hueOffset: animation.circularProgression,
       hueIndex:
         sketchState.shape.graphics.map(

@@ -7,6 +7,9 @@ import colors from "@/p5/utils/colors.js";
 import {
   SpiralBase, rebuildGrid
 } from "../_shared.js";
+import {
+  housePaletteBackground
+} from "@/p5/utils/palettes.js";
 
 const sketchState = sketch.state( () => ( {
   shapes: [],
@@ -92,7 +95,7 @@ class Spiral extends SpiralBase {
 
         p.beginShape();
         p.strokeWeight( weight );
-        p.stroke( colors.rainbow( {
+        p.stroke( colors.palette( options.sketch.colors?.palette )( {
           hueIndex: hueCadence + angle,
           opacityFactor
         } ) );
@@ -133,7 +136,10 @@ sketch.draw( ( time ) => {
   } );
 
   p.clear();
-  p.background( ...( options.sketch?.background?.color ?? [
+  p.background( ...( housePaletteBackground(
+    options.sketch?.colors,
+    options.sketch?.background?.color
+  ) ?? [
     0
   ] ) );
 

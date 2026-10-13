@@ -42,6 +42,8 @@ export const formValues = {
     amplitude: 0.5
   },
   colors: {
+    palette: "rainbow",
+    paletteBackground: false,
     hueIndexMultiplier: 6,
     hueOffset: 0,
     opacityMin: 1.5,

@@ -8,6 +8,9 @@ import easing from "@/p5/utils/easing.js";
 import mappers from "@/p5/utils/mappers.js";
 import converters from "@/p5/utils/converters.js";
 import iterators from "@/p5/utils/iterators.js";
+import {
+  housePaletteBackground
+} from "@/p5/utils/palettes.js";
 
 const PALETTES = {
   rainbow: colors.rainbow,
@@ -19,7 +22,7 @@ const PALETTES = {
   black: colors.black
 };
 
-const resolvePalette = ( name ) => PALETTES[ name ] ?? colors.rainbow;
+const resolvePalette = ( name ) => PALETTES[ name ] ?? colors.palette( name );
 
 sketch.setup( () => {} );
 
@@ -113,7 +116,10 @@ sketch.draw( (
   const p = getP5();
 
   p.clear();
-  p.background( ...( options.sketch.backgroundColor ?? [
+  p.background( ...( housePaletteBackground(
+    options.sketch.colors,
+    options.sketch.backgroundColor
+  ) ?? [
     0
   ] ) );
 

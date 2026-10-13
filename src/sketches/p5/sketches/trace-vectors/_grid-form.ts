@@ -191,6 +191,8 @@ export const gridTraceFormValuesBase = {
     weight: 4
   },
   colors: {
+    palette: "rainbow",
+    paletteBackground: false,
     hueIndexMultiplier: 8,
     hueOffset: 0,
     opacityMin: 1.5,

@@ -21,7 +21,7 @@ const PALETTES = {
   green: colors.green,
   black: colors.black
 };
-const resolvePalette = ( name ) => PALETTES[ name ] ?? colors.rainbow;
+const resolvePalette = ( name ) => PALETTES[ name ] ?? colors.palette( name );
 
 sketch.setup( () => {} );
 

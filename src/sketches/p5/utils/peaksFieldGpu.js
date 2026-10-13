@@ -510,6 +510,80 @@ function writePerlinTexture(
   );
 }
 
+// A shared palette's ramp (`shaderPalette()`, utils/palettes.js) on texture
+// unit 1, for a point body that reads it through PALETTE_RAMP_GLSL — sampled
+// in the vertex stage, like the Perlin table on unit 0. Uploaded when the
+// palette changes; with none, `uPaletteOn` is 0 and the house rainbow runs.
+function bindPalette(
+  gl, palette, state
+) {
+  const ramp = palette?.uniforms?.uPaletteOn ? palette.textures.uPaletteRamp : null;
+  const onLocation = gl.getUniformLocation(
+    state.program,
+    "uPaletteOn"
+  );
+
+  gl.uniform1f(
+    onLocation,
+    ramp ? 1 : 0
+  );
+
+  if ( !ramp ) {
+    return;
+  }
+
+  gl.activeTexture( gl.TEXTURE1 );
+
+  if ( !state.rampTexture ) {
+    state.rampTexture = gl.createTexture();
+  }
+
+  gl.bindTexture(
+    gl.TEXTURE_2D,
+    state.rampTexture
+  );
+
+  if ( state.rampData !== ramp.data ) {
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,
+      gl.RGBA,
+      ramp.width,
+      ramp.height,
+      0,
+      gl.RGBA,
+      gl.UNSIGNED_BYTE,
+      ramp.data
+    );
+    [
+      gl.TEXTURE_MIN_FILTER,
+      gl.TEXTURE_MAG_FILTER
+    ].forEach( ( key ) => gl.texParameteri(
+      gl.TEXTURE_2D,
+      key,
+      gl.NEAREST
+    ) );
+    [
+      gl.TEXTURE_WRAP_S,
+      gl.TEXTURE_WRAP_T
+    ].forEach( ( key ) => gl.texParameteri(
+      gl.TEXTURE_2D,
+      key,
+      gl.CLAMP_TO_EDGE
+    ) );
+    state.rampData = ramp.data;
+  }
+
+  gl.uniform1i(
+    gl.getUniformLocation(
+      state.program,
+      "uPaletteRamp"
+    ),
+    1
+  );
+  gl.activeTexture( gl.TEXTURE0 );
+}
+
 function isWebGL2( gl ) {
   return typeof WebGL2RenderingContext !== "undefined"
     && gl instanceof WebGL2RenderingContext;
@@ -847,6 +921,8 @@ export default function createPeaksFieldRenderer( {
       gridKey: null,
       perlinTexture: null,
       perlinSeed: null,
+      rampTexture: null,
+      rampData: null,
       locs: {},
       ctxRef: null,
       ext: null,
@@ -904,6 +980,8 @@ export default function createPeaksFieldRenderer( {
     state.gl = gl;
     state.perlinTexture = null;
     state.perlinSeed = null;
+    state.rampTexture = null;
+    state.rampData = null;
     state.cellVBO = null;
     state.gridKey = null;
     state.quadVBO = null;
@@ -1040,7 +1118,8 @@ export default function createPeaksFieldRenderer( {
     seed = 42,
     octaves = 4,
     falloff = 0.5,
-    uniforms = {}
+    uniforms = {},
+    palette = null
   } ) {
     state = store.current();
 
@@ -1166,6 +1245,11 @@ export default function createPeaksFieldRenderer( {
       {
         int: 0
       }
+    );
+    bindPalette(
+      gl,
+      palette,
+      state
     );
 
     for ( const [

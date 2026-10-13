@@ -9,6 +9,9 @@ import {
   scaleAboutCenter,
   renderSpline
 } from "../_shared.js";
+import {
+  housePaletteBackground
+} from "@/p5/utils/palettes.js";
 
 // Base (un-animated) point layout is only rebuilt when the relevant options or
 // the canvas size change — same trick the neon spirals use with their grid.
@@ -41,7 +44,10 @@ sketch.draw( () => {
   const o = options.sketch ?? {};
 
   p.clear();
-  p.background( ...( o.backgroundColor ?? [
+  p.background( ...( housePaletteBackground(
+    o.stroke,
+    o.backgroundColor
+  ) ?? [
     0,
     0,
     0,

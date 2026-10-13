@@ -9,6 +9,9 @@ import animation from "@/p5/utils/animation.js";
 import {
   getP5
 } from "@/p5/utils/sketch.js";
+import {
+  housePaletteBackground
+} from "@/p5/utils/palettes.js";
 
 const sketchState = sketch.state( () => ( {
   threeDimensionGraphics: null
@@ -33,7 +36,10 @@ sketch.draw( ( time ) => {
   const p = getP5();
 
   p.clear();
-  p.background( ...( options.sketch.backgroundColor ?? [
+  p.background( ...( housePaletteBackground(
+    options.sketch.colors,
+    options.sketch.backgroundColor
+  ) ?? [
     0
   ] ) );
 
@@ -206,7 +212,7 @@ sketch.draw( ( time ) => {
       const {
         x, y
       } = points[ i ];
-      const colorFunction = colors.rainbow;
+      const colorFunction = colors.palette( options.sketch.colors?.palette );
       const opacityFactor = mappers.fn(
         p.sin(
           depthProgression * 20 + animation.angle * 3,

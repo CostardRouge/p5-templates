@@ -9,6 +9,9 @@ import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import string from "@/p5/utils/string.js";
 import gridMask from "@/p5/utils/gridMask.js";
+import {
+  housePaletteBackground
+} from "@/p5/utils/palettes.js";
 
 const drawCross = (
   p, position, size
@@ -38,7 +41,10 @@ sketch.draw( () => {
   const p = getP5();
 
   p.clear();
-  p.background( ...( options.sketch?.backgroundColor ?? [
+  p.background( ...( housePaletteBackground(
+    options.sketch?.color,
+    options.sketch?.backgroundColor
+  ) ?? [
     0,
     0,
     0
@@ -124,7 +130,7 @@ sketch.draw( () => {
 
   const useNormalMaterial = color.useNormalMaterial ?? true;
   const palette = color.palette ?? "rainbow";
-  const colorFunction = colors?.[ palette ] ?? colors.rainbow;
+  const colorFunction = colors.palette( palette );
   const hueOffsetSpeed = color.hueOffsetSpeed ?? 5;
 
   // Each cell can mask a different letter, so precompute one alpha field per

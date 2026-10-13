@@ -5,6 +5,10 @@ import {
 import {
   createSingleOrMultipleTextOption
 } from "@/utils/sketchOptionUtils";
+import {
+  housePaletteField,
+  paletteBackgroundField
+} from "@/p5/utils/palettes.js";
 
 export const formValues = {
   text: {
@@ -37,7 +41,11 @@ export const formValues = {
   },
   backgroundColor: [
     0
-  ]
+  ],
+  colors: {
+    palette: "rainbow",
+    paletteBackground: false
+  }
 };
 
 // UI configuration only
@@ -165,5 +173,15 @@ export const formConfiguration: Record<string, any> = {
   backgroundColor: {
     component: "color",
     label: "Background color"
+  },
+  colors: {
+    component: "nested-object",
+    label: "Colors",
+    fields: {
+      palette: housePaletteField( [
+        "rainbow"
+      ] ),
+      paletteBackground: paletteBackgroundField
+    }
   }
 };
