@@ -10,6 +10,10 @@ import animation from "@/p5/utils/animation.js";
 import {
   getP5
 } from "@/p5/utils/sketch.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 const sketchState = sketch.state( () => ( {
   threeDimensionGraphics: null
@@ -122,7 +126,16 @@ sketch.draw( (
   const p = getP5();
 
   p.clear();
-  p.background( 0 );
+  // The form always offered this colour; the sketch painted black regardless.
+  paintBackground( resolveBackground(
+    options.sketch.backgroundColor,
+    {
+      fallback: [
+        0
+      ],
+      palette: options.sketch.colors?.palette
+    }
+  ) );
 
   const W = p.width / 2;
   const H = p.height / 2;

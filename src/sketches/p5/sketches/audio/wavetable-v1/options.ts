@@ -357,7 +357,7 @@ export const formConfiguration: Record<string, any> = {
     label: "Look",
     fields: {
       background: {
-        component: "color",
+        component: "background",
         label: "Background"
       },
       wave: {

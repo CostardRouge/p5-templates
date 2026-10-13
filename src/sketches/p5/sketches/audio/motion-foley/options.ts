@@ -341,7 +341,7 @@ export const formConfiguration: Record<string, any> = {
       },
       background: {
         label: "Background",
-        component: "color"
+        component: "background"
       }
     }
   },

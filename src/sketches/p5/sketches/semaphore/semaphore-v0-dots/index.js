@@ -6,6 +6,10 @@ import converters from "@/p5/utils/converters.js";
 import {
   SemaphoreBase, rebuildGrid
 } from "../_shared.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 const sketchState = sketch.state( () => ( {
   shapes: [],
@@ -155,12 +159,17 @@ sketch.draw( ( time ) => {
     SemaphoreClass: SemaphoreSpiral
   } );
 
-  const bg = options.sketch?.background?.color ?? [
-    0
-  ];
+  const bg = resolveBackground(
+    options.sketch?.background?.color,
+    {
+      fallback: [
+        0
+      ]
+    }
+  );
 
   p.clear();
-  p.background( ...bg );
+  paintBackground( bg );
 
   sketchState.shapes.forEach( (
     shape, index
