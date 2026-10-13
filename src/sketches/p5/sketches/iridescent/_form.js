@@ -164,6 +164,13 @@ export const materialFormValues = {
   }
 };
 
+// The background is the shared `background` control (utils/background.js):
+// the paper's two colours stay called `top` and `bottom` — a palette writes
+// them, "edit a copy" copies them, a saved document holds them — and the rest
+// is the control's own geometry, whose defaults are the vertical gradient this
+// category always drew. `source: "palette"` is what a preset always did: its
+// paper paints while one is picked, and the form's own colours paint on the
+// custom look (or whenever "Own" is chosen).
 export const backgroundFormValues = {
   top: [
     178,
@@ -174,7 +181,19 @@ export const backgroundFormValues = {
     202,
     210,
     226
-  ]
+  ],
+  source: "palette",
+  kind: "linear",
+  angle: 180,
+  center: {
+    x: 0.5,
+    y: 0.5
+  },
+  radius: 1,
+  strength: 1,
+  easing: "linear",
+  motion: "none",
+  cycles: 1
 };
 
 export const renderingFormValues = {
@@ -574,23 +593,15 @@ export function materialFormConfiguration( {
 }
 
 export const backgroundFormConfiguration = {
-  component: "nested-object",
+  component: "background",
   label: "Background",
-  // A preset brings its own paper, so these two only count on the custom look.
-  inactiveUnless: {
-    field: "material/ramp/palette",
-    equals: "custom",
-    note: "The palette brings its own paper. Pick Custom in the palette to use these colours."
-  },
-  fields: {
-    top: {
-      component: "color",
-      label: "Top"
-    },
-    bottom: {
-      component: "color",
-      label: "Bottom"
-    }
+  // The palette whose paper can paint it, and the two keys that hold the
+  // colours (a preset's paper is `{ top, bottom }`).
+  palette: "material/ramp/palette",
+  presetsOnly: true,
+  colors: {
+    from: "top",
+    to: "bottom"
   }
 };
 

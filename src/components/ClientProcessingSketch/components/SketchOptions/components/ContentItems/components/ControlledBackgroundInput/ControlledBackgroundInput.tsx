@@ -187,11 +187,13 @@ export default function ControlledBackgroundInput( {
   const spec = normalizeBackground( value );
   const kind = isObject ? spec.kind : "solid";
   const paletteId = palettePath && typeof palette === "string" ? palette : null;
-  const preset = paletteId && !HOUSE_PALETTE_IDS.includes( paletteId )
+  const preset = paletteId && ( config.presetsOnly || !HOUSE_PALETTE_IDS.includes( paletteId ) )
     ? ( PALETTES as Record<string, { label?: string;
       paper?: { top: Rgba;
         bottom?: Rgba } }> )[ paletteId ]
     : null;
+  const fromKey = config.colors?.from ?? "from";
+  const toKey = config.colors?.to ?? "to";
   const fromPalette = isObject && spec.source === "palette";
   const paper = fromPalette ? preset?.paper ?? null : null;
 
@@ -327,14 +329,14 @@ export default function ControlledBackgroundInput( {
             ) }
           >
             {renderField(
-              "from",
+              fromKey,
               {
                 component: "color",
                 label: kind === "solid" ? "Colour" : "From"
               }
             )}
             {kind !== "solid" && renderField(
-              "to",
+              toKey,
               {
                 component: "color",
                 label: "To"

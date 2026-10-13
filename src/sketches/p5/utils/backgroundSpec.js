@@ -8,7 +8,7 @@
 // before this control, and every sketch default — OR an object:
 //
 //   { kind: "solid" | "linear" | "radial",
-//     from: [r, g, b, a?], to: [r, g, b, a?],
+//     from: [r, g, b, a?], to: [r, g, b, a?],   // or `top` / `bottom`
 //     source: "own" | "palette",       // "palette": the paper's two colours
 //     angle,                           // linear, degrees, CSS (0 = up, cw)
 //     center: { x, y }, radius,        // radial, fractions of the canvas
@@ -127,6 +127,11 @@ export function normalizeBackground( value ) {
   return {
     ...BACKGROUND_DEFAULTS,
     ...value,
+    // A sketch whose two colours were already called `top` and `bottom`
+    // (the iridescent family's paper, which a palette writes) keeps those
+    // names: they are read when `from` / `to` are absent.
+    from: value.from ?? value.top,
+    to: value.to ?? value.bottom,
     center: {
       ...BACKGROUND_DEFAULTS.center,
       ...value.center
@@ -157,7 +162,9 @@ function mix(
  *   `phase` is the loop's progression (0–1); `from` / `to` override the
  *   value's colours (the palette's paper), already as 0–255 RGBA.
  * @returns {{ kind: string, stops: { offset: number, color: number[] }[],
- *   line?: number[], circle?: number[] }}
+ *   straight: boolean, line?: number[], circle?: number[] }}
+ *   `straight`: the ramp is a straight line from its first to its last stop
+ *   (a linear easing, nothing folded), so a painter may lay just those two.
  */
 export function backgroundGeometry(
   value, {
@@ -181,6 +188,9 @@ export function backgroundGeometry(
   }
 
   const stops = [];
+  // Two stops draw a straight ramp exactly; the 25 sampled ones round every
+  // colour on the way, which is a level off a plain two-colour gradient.
+  const straight = value.easing === "linear" && !( moving && value.motion === "drift" );
 
   for ( let i = 0; i <= STOP_COUNT; i++ ) {
     const u = i / STOP_COUNT;
@@ -234,6 +244,7 @@ export function backgroundGeometry(
     return {
       kind: "radial",
       stops,
+      straight,
       circle: [
         cx,
         cy,
@@ -255,6 +266,7 @@ export function backgroundGeometry(
   return {
     kind: "linear",
     stops,
+    straight,
     line: [
       width / 2 - dx * half,
       height / 2 - dy * half,

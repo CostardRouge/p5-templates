@@ -7,6 +7,10 @@ import easing from "@/p5/utils/easing.js";
 import {
   EASING_IDS
 } from "@/p5/utils/easingGlsl.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 import {
   materialFormValues,
@@ -357,24 +361,55 @@ function rgb01( color ) {
 }
 
 /**
+ * The background as the shared control stores it, resolved: a colour array
+ * (the first stop) carrying the gradient on `spec`. A value without a `source`
+ * — every document saved before the control — is "palette", which is what the
+ * category always did: a preset's paper paints while one is picked, and the
+ * form's own `top` / `bottom` paint on the custom look.
+ */
+function resolveLookBackground(
+  background, palette
+) {
+  return resolveBackground(
+    {
+      top: backgroundFormValues.top,
+      bottom: backgroundFormValues.bottom,
+      source: "palette",
+      ...background
+    },
+    {
+      palette,
+      presetsOnly: true
+    }
+  );
+}
+
+/**
  * Apply the selected palette, if any: a named palette replaces the ramp's
- * stops and hardness and the background with its paper; "custom" (or an
- * unknown name) leaves both as the form has them. Every sketch reads its
- * material and background through this, so a preset reaches the ramp, the
- * fog colour and the gradient behind the subject at once.
+ * stops and hardness, and — while the background's source is "palette" —
+ * the background with its paper; "custom" (or an unknown name) leaves the
+ * ramp as the form has it. Every sketch reads its material and background
+ * through this, so a preset reaches the ramp, the fog colour and the gradient
+ * behind the subject at once.
  *
- * @returns {{ material: object, background: object }}
+ * @returns {{ material: object, background: number[] & { spec: object } }}
+ *   `background` is `resolveBackground`'s result: paint it with
+ *   `drawBackground`, take the fog colour from it with `materialRender`.
  */
 export function resolveLook(
   material, background
 ) {
   const m = material ?? materialFormValues;
   const preset = PALETTES[ m.ramp?.palette ];
+  const resolved = resolveLookBackground(
+    background,
+    m.ramp?.palette
+  );
 
   if ( !preset ) {
     return {
       material: m,
-      background: background ?? backgroundFormValues
+      background: resolved
     };
   }
 
@@ -389,10 +424,7 @@ export function resolveLook(
         formula: preset.formula
       }
     },
-    background: {
-      top: preset.paper.top,
-      bottom: preset.paper.bottom
-    }
+    background: resolved
   };
 }
 
@@ -400,7 +432,8 @@ export function resolveLook(
  * The material's render() inputs for this frame.
  *
  * @param {object} material the sketch's `material` options
- * @param {object} background the sketch's `background` options (fog colour)
+ * @param {number[] & { spec?: object }} background `resolveLook`'s background:
+ *   the fog fades to the colour it ends on
  * @param {object} [scene] { scale, axis, pixelScale } — the structure's size
  *   in the sketch's units (normalises the position axes), its main axis ("y"
  *   or "z") for the angle / radial coordinates, and how many buffer pixels
@@ -493,7 +526,7 @@ export function materialRender(
       uShading: m.shading ?? d.shading,
       uGrain: m.finish?.grain ?? d.finish.grain,
       uGrainPx: ( m.finish?.grainSize ?? d.finish.grainSize ) * pixelScale,
-      uFogColor: rgb01( background?.bottom ?? backgroundFormValues.bottom ),
+      uFogColor: rgb01( fogColor( background ) ),
       uFogAmount: fog.amount ?? d.fog.amount,
       uFogStart: fog.start ?? d.fog.start,
       uFogEnd: fog.end ?? d.fog.end,
@@ -534,70 +567,33 @@ export function renderingSettings(
 }
 
 /**
- * Vertical gradient background on the 2D canvas, under the composited mesh.
+ * The background on the 2D canvas, under the composited mesh: a colour or the
+ * shared control's gradient (linear or radial, moving or not).
+ *
+ * @param {object} p the p5 instance
+ * @param {number[] & { spec?: object }} background `resolveLook`'s background
  */
 export function drawBackground(
   p, background
 ) {
-  const top = background?.top ?? backgroundFormValues.top;
-  const bottom = background?.bottom ?? backgroundFormValues.bottom;
-  const ctx = p.drawingContext;
+  paintBackground(
+    background,
+    p
+  );
+}
 
-  if ( ctx && typeof ctx.createLinearGradient === "function" ) {
-    const gradient = ctx.createLinearGradient(
-      0,
-      0,
-      0,
-      p.height
-    );
+/**
+ * The colour the fog fades to: where the gradient ends (its second colour),
+ * or the one colour of a solid background.
+ */
+function fogColor( background ) {
+  const spec = background?.spec;
 
-    gradient.addColorStop(
-      0,
-      `rgb(${ channel(
-        top,
-        0,
-        0
-      ) }, ${ channel(
-        top,
-        1,
-        0
-      ) }, ${ channel(
-        top,
-        2,
-        0
-      ) })`
-    );
-    gradient.addColorStop(
-      1,
-      `rgb(${ channel(
-        bottom,
-        0,
-        0
-      ) }, ${ channel(
-        bottom,
-        1,
-        0
-      ) }, ${ channel(
-        bottom,
-        2,
-        0
-      ) })`
-    );
-
-    ctx.save();
-    ctx.fillStyle = gradient;
-    ctx.fillRect(
-      0,
-      0,
-      p.width,
-      p.height
-    );
-    ctx.restore();
-
-    return;
+  if ( !spec ) {
+    return background ?? backgroundFormValues.bottom;
   }
 
-  p.background( ...bottom );
+  return spec.kind === "solid" ? spec.from : spec.to;
 }
 
 /**

@@ -73,6 +73,66 @@ describe(
 );
 
 describe(
+  "a background whose colours are called top and bottom",
+  () => {
+    it(
+      "reads them as from and to, so a paper written by a palette keeps working",
+      () => {
+        const value = normalizeBackground( {
+          top: [
+            1,
+            2,
+            3
+          ],
+          bottom: [
+            4,
+            5,
+            6
+          ]
+        } );
+
+        expect( value.kind ).toBe( "linear" );
+        expect( value.angle ).toBe( 180 );
+        expect( value.from ).toEqual( [
+          1,
+          2,
+          3
+        ] );
+        expect( value.to ).toEqual( [
+          4,
+          5,
+          6
+        ] );
+      }
+    );
+
+    it(
+      "lets from and to win when both spellings are present",
+      () => {
+        const value = normalizeBackground( {
+          top: [
+            1,
+            2,
+            3
+          ],
+          from: [
+            9,
+            9,
+            9
+          ]
+        } );
+
+        expect( value.from ).toEqual( [
+          9,
+          9,
+          9
+        ] );
+      }
+    );
+  }
+);
+
+describe(
   "background geometry",
   () => {
     const value = normalizeBackground( {
@@ -227,6 +287,89 @@ describe(
           400,
           500
         ) );
+      }
+    );
+  }
+);
+
+describe(
+  "a straight ramp",
+  () => {
+    const base = {
+      kind: "linear",
+      from: [
+        0,
+        0,
+        0
+      ],
+      to: [
+        200,
+        100,
+        0
+      ]
+    };
+    const geometry = (
+      value: object, ease?: ( x: number ) => number
+    ) => backgroundGeometry(
+      normalizeBackground( value ),
+      {
+        ...frame,
+        phase: 0.3,
+        ease
+      }
+    );
+
+    it(
+      "is flagged when the easing is linear, so a painter can lay its two end stops",
+      () => {
+        const {
+          straight, stops
+        } = geometry( base ) as unknown as { straight: boolean;
+          stops: { color: number[] }[] };
+
+        expect( straight ).toBe( true );
+        expect( stops[ 0 ].color.slice(
+          0,
+          3
+        ) ).toEqual( [
+          0,
+          0,
+          0
+        ] );
+        expect( stops[ stops.length - 1 ].color.slice(
+          0,
+          3
+        ) ).toEqual( [
+          200,
+          100,
+          0
+        ] );
+      }
+    );
+
+    it(
+      "is not flagged for an easing curve or a drifting fold",
+      () => {
+        expect( ( geometry( {
+          ...base,
+          easing: "easeInOutSine"
+        } ) as unknown as { straight: boolean } ).straight ).toBe( false );
+        expect( ( geometry( {
+          ...base,
+          motion: "drift",
+          cycles: 1
+        } ) as unknown as { straight: boolean } ).straight ).toBe( false );
+      }
+    );
+
+    it(
+      "stays flagged for a rotation, which only turns the line",
+      () => {
+        expect( ( geometry( {
+          ...base,
+          motion: "rotate",
+          cycles: 1
+        } ) as unknown as { straight: boolean } ).straight ).toBe( true );
       }
     );
   }

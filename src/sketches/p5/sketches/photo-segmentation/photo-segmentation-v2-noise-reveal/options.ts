@@ -241,7 +241,7 @@ export const formConfiguration: Record<string, any> = {
       },
       color: {
         label: "Color",
-        component: "color"
+        component: "background"
       },
       blur: {
         label: "Blur amount",

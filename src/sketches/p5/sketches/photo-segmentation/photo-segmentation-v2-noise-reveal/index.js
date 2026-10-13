@@ -610,13 +610,27 @@ function drawBackground(
   }
 
   if ( mode === "color" ) {
+    const color = resolveBackground(
+      bg.color,
+      {
+        fallback: [
+          0,
+          0,
+          0
+        ]
+      }
+    );
+
+    // A gradient is laid over the whole canvas, as the rectangle was.
+    if ( color.spec ) {
+      paintBackground( color );
+
+      return;
+    }
+
     p.push();
     p.noStroke();
-    p.fill( ...( bg.color ?? [
-      0,
-      0,
-      0
-    ] ) );
+    p.fill( ...color );
     p.rect(
       0,
       0,

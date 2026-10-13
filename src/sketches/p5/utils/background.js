@@ -34,11 +34,14 @@ import {
 // ─────────────────────────────────────────────────────────────────────────────
 
 // The palette's paper, for a shared preset only: a colors.js house function
-// has no paper, so its sketches keep their own colours.
+// has no paper, so its sketches keep their own colours. `presetsOnly` says
+// every id of the sketch's palette field IS a shared preset (the iridescent
+// family's picker), so `rainbow` there is the preset of that name — with its
+// paper — and not the colors.js function.
 function paperOf(
-  palette, own = []
+  palette, own = [], presetsOnly = false
 ) {
-  if ( !palette || HOUSE_PALETTE_IDS.includes( palette ) || own.includes( palette ) ) {
+  if ( !palette || own.includes( palette ) || ( !presetsOnly && HOUSE_PALETTE_IDS.includes( palette ) ) ) {
     return null;
   }
 
@@ -58,9 +61,11 @@ function withAlpha(
 
 /**
  * @param {*} value the stored background: a colour array or a gradient object
- * @param {{ fallback?: number[], palette?: string, own?: string[] }} [options]
+ * @param {{ fallback?: number[], palette?: string, own?: string[],
+ *   presetsOnly?: boolean }} [options]
  *   `own`: palette ids the sketch draws itself (shader-loops' house formulas,
  *   one of them named like a shared preset), which therefore have no paper.
+ *   `presetsOnly`: every palette id is a shared preset (see paperOf).
  * @returns {number[] & { spec?: object }}
  */
 export function resolveBackground(
@@ -71,7 +76,8 @@ export function resolveBackground(
       0
     ],
     palette,
-    own = []
+    own = [],
+    presetsOnly = false
   } = {}
 ) {
   if ( !isBackgroundObject( value ) ) {
@@ -81,7 +87,8 @@ export function resolveBackground(
   const spec = normalizeBackground( value );
   const paper = spec.source === "palette" ? paperOf(
     palette,
-    own
+    own,
+    presetsOnly
   ) : null;
   const from = paper ? withAlpha(
     paper.top,
@@ -155,7 +162,14 @@ function fillGradient(
     )
     : ctx.createLinearGradient( ...geometry.line );
 
-  for ( const stop of geometry.stops ) {
+  const stops = geometry.straight
+    ? [
+      geometry.stops[ 0 ],
+      geometry.stops[ geometry.stops.length - 1 ]
+    ]
+    : geometry.stops;
+
+  for ( const stop of stops ) {
     const [
       r,
       g,

@@ -7,6 +7,10 @@ import animation from "@/p5/utils/animation.js";
 import {
   createInstancedFieldRenderer
 } from "@/p5/utils/noiseFieldGpu.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GPU port of "noise grid v1 — basic" (instanced).
@@ -89,9 +93,16 @@ sketch.draw( () => {
   const p = getP5();
 
   p.clear();
-  p.background( ...( options.sketch.backgroundColor ?? [
-    0
-  ] ) );
+  const background = resolveBackground(
+    options.sketch.backgroundColor,
+    {
+      fallback: [
+        0
+      ]
+    }
+  );
+
+  paintBackground( background );
 
   const t = animation.angle;
 
@@ -141,11 +152,9 @@ sketch.draw( () => {
     falloff,
     columns,
     rows,
-    background: options.sketch.backgroundColor ?? [
-      0,
-      0,
-      0
-    ],
+    background,
+    // A gradient lies on the 2D canvas below: composite the dots over it.
+    alphaOver: !!background.spec,
     uniforms: {
       uXMult: noiseXMult,
       uYMult: noiseYMult,

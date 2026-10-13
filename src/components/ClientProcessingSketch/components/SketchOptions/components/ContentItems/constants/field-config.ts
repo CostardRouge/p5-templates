@@ -118,6 +118,20 @@ export interface BackgroundConfig extends BaseConfig {
    * that palette's paper instead of the field's own.
    */
   palette?: string;
+  /**
+   * The keys that hold the two colours, when the stored value does not call
+   * them `from` and `to` (the iridescent family's paper is `top` / `bottom`,
+   * which the palette picker also writes).
+   */
+  colors?: {
+    from?: string;
+    to?: string;
+  };
+  /**
+   * Every id of the `palette` field is a shared preset, so a colors.js
+   * function of the same name (`rainbow`) still brings its paper.
+   */
+  presetsOnly?: boolean;
 }
 
 export interface FormatConfig extends BaseConfig {
