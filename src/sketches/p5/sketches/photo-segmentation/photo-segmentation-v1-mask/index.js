@@ -21,6 +21,10 @@ import {
   setSketchOptions,
   subscribeSketchOptions
 } from "@/p5/shared/syncSketchOptions.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 /* ------------------------------------------------------------------ */
 /*  Sketch state                                                       */
@@ -658,7 +662,7 @@ function drawSubject( p ) {
 sketch.setup( () => {
   const p = getP5();
 
-  p.background( ...options.sketch.backgroundColor );
+  paintBackground( resolveBackground( options.sketch.backgroundColor ) );
 
   state.imagePath = resolveImagePath( options.sketch?.photo?.image );
   state.points = [];
@@ -733,7 +737,7 @@ events.register(
 sketch.draw( () => {
   const p = getP5();
 
-  p.background( ...options.sketch.backgroundColor );
+  paintBackground( resolveBackground( options.sketch.backgroundColor ) );
 
   const photo = common.getAsset( state.imagePath );
 

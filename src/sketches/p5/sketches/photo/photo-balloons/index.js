@@ -9,15 +9,24 @@ import * as common from "@/p5/utils/common.js";
 import {
   getP5
 } from "@/p5/utils/sketch.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 const canvases = sketch.state( () => ( {
   mask: undefined,
   imageBuffer: undefined
 } ) );
 
-const getBg = () => options.sketch?.colors?.background ?? [
-  255
-];
+const getBg = () => resolveBackground(
+  options.sketch?.colors?.background,
+  {
+    fallback: [
+      255
+    ]
+  }
+);
 
 const getImages = () => {
   const imagesFromOptions =
@@ -130,7 +139,7 @@ sketch.setup( () => {
     p.height
   );
 
-  p.background( ...getBg() );
+  paintBackground( getBg() );
 
   ensureBalls( getImages() );
 } );
@@ -143,7 +152,7 @@ sketch.draw( (
   const p = getP5();
 
   p.clear();
-  p.background( ...getBg() );
+  paintBackground( getBg() );
 
   const images = getImages();
 

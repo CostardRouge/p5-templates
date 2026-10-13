@@ -11,14 +11,23 @@ import * as common from "@/p5/utils/common.js";
 import {
   getP5
 } from "@/p5/utils/sketch.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // helpers
 const getBg = () =>
-  options.sketch?.backgroundColor ?? options.colors?.background ?? [
-    0,
-    0,
-    0
-  ];
+  resolveBackground(
+    options.sketch?.backgroundColor ?? options.colors?.background,
+    {
+      fallback: [
+        0,
+        0,
+        0
+      ]
+    }
+  );
 
 const getTextColor = () =>
   options.sketch?.textColor ?? options.colors?.text ?? [
@@ -44,7 +53,7 @@ const getImages = () => {
 sketch.setup( () => {
   const p = getP5();
 
-  p.background( ...getBg() );
+  paintBackground( getBg() );
 } );
 
 function getImagePart(
@@ -84,10 +93,17 @@ sketch.draw( (
   const p = getP5();
 
   p.clear();
-  p.background(
-    ...getBg(),
-    20
-  );
+  const background = getBg();
+
+  // A plain colour keeps its faint alpha-20 wash; a gradient is painted whole.
+  if ( background.spec ) {
+    paintBackground( background );
+  } else {
+    p.background(
+      ...background,
+      20
+    );
+  }
 
   // const sizes = [8, 16, 2, 9, 3, 4];
   // const columns = mappers.circularIndex(time/2, sizes);

@@ -104,6 +104,37 @@ export function resolveBackground(
   return base;
 }
 
+/**
+ * A gradient with both ends lerped toward `toward` — what a sketch's "animated
+ * background colour" (a lerp toward its favourite colour) does to a gradient.
+ * Only for a gradient: a plain colour keeps the sketch's own `lerpColor` call.
+ *
+ * @param {number[] & { spec: object }} background resolveBackground's result
+ * @param {object} toward a p5.Color
+ * @param {number} amount 0–1
+ */
+export function mixBackground(
+  background, toward, amount, target = getP5()
+) {
+  const mix = ( color ) => target.lerpColor(
+    target.color( ...color ),
+    toward,
+    amount
+  ).levels;
+  const from = mix( background.spec.from );
+  const base = [
+    ...from
+  ];
+
+  base.spec = {
+    ...background.spec,
+    from,
+    to: mix( background.spec.to )
+  };
+
+  return base;
+}
+
 function levels(
   target, color
 ) {

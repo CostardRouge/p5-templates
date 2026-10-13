@@ -5,6 +5,9 @@ import {
   HandCaptureScene
 } from "../_shared.js";
 import renderLegacyTitle from "@/p5/utils/title/renderLegacyTitle.js";
+import {
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // v8 "growing" is v7's echo rebuilt on the shader-based spline pipeline (the
 // same GPU glow as `splines · interactive`) instead of the legacy CPU neonLine.
@@ -22,9 +25,14 @@ sketch.draw( () => {
   const spline = options.sketch?.spline ?? {};
   const echo = options.sketch?.echo ?? {};
   const effect = options.sketch?.effect ?? {};
-  const background = options.sketch?.backgroundColor ?? options.colors?.background ?? [
-    0
-  ];
+  const background = resolveBackground(
+    options.sketch?.backgroundColor ?? options.colors?.background,
+    {
+      fallback: [
+        0
+      ]
+    }
+  );
 
   scene.readInteraction( interaction );
 

@@ -9,6 +9,10 @@ import sketch, {
 import events from "@/p5/utils/events.js";
 import animation from "@/p5/utils/animation.js";
 import * as common from "@/p5/utils/common.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // seam-hugging default swap-zone position per collage direction
 const SEAM_DEFAULTS = {
@@ -311,7 +315,7 @@ function syncSeamDefaultOnDirectionChange( direction ) {
 sketch.setup( () => {
   const p = getP5();
 
-  p.background( ...options.sketch.backgroundColor );
+  paintBackground( resolveBackground( options.sketch.backgroundColor ) );
 
   events.register(
     "engine-canvas-mouse-clicked",
@@ -324,7 +328,7 @@ sketch.draw( () => {
   const o = options.sketch;
 
   p.clear();
-  p.background( ...o.backgroundColor );
+  paintBackground( resolveBackground( o.backgroundColor ) );
 
   const direction = getDirection();
 

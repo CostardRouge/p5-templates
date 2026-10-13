@@ -12,6 +12,10 @@ import * as common from "@/p5/utils/common.js";
 import {
   getP5
 } from "@/p5/utils/sketch.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 class Card {
   constructor( {
@@ -128,7 +132,7 @@ class Card {
           // stroke: p.color(...options.colors.background),
 
           stroke: p.color( ...( options.sketch?.textColor ?? options.colors.text ) ),
-          fill: p.color( ...( options.sketch?.backgroundColor ?? options.colors.background ) ),
+          fill: p.color( ...resolveBackground( options.sketch?.backgroundColor ?? options.colors.background ) ),
 
           font: string.fonts?.[ options.sketch?.font ] || string.fonts.martian,
           textWidth: p.height,
@@ -151,12 +155,17 @@ const cardsLength = options.sketch?.count ?? 200;
 
 // helpers
 const getBg = () =>
-  options.sketch?.backgroundColor ??
-  options.colors?.background ?? [
-    230,
-    230,
-    230
-  ];
+  resolveBackground(
+    options.sketch?.backgroundColor ??
+  options.colors?.background,
+    {
+      fallback: [
+        230,
+        230,
+        230
+      ]
+    }
+  );
 
 const getTextColor = () =>
   options.sketch?.textColor ?? options.colors?.text ?? [
@@ -185,7 +194,7 @@ sketch.setup( () => {
     "webgl"
   );
 
-  p.background( ...getBg() );
+  paintBackground( getBg() );
 
   const start = p.createVector(
     0,
@@ -237,7 +246,10 @@ sketch.draw( (
     p.height
   );
 
-  canvases._3d.background( ...getBg() );
+  paintBackground(
+    getBg(),
+    canvases._3d
+  );
   for ( const card of cards ) {
     card.update();
     card.draw( canvases._3d );

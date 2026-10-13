@@ -15,17 +15,26 @@ import Matter from "@/public/assets/libraries/matter.min.js";
 import {
   getP5
 } from "@/p5/utils/sketch.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 scripts.load( "/assets/libraries/decomp.min.js" );
 
 // helpers
 const getBg = () =>
-  options.sketch?.backgroundColor ??
-  options.colors?.background ?? [
-    246,
-    235,
-    225
-  ];
+  resolveBackground(
+    options.sketch?.backgroundColor ??
+  options.colors?.background,
+    {
+      fallback: [
+        246,
+        235,
+        225
+      ]
+    }
+  );
 
 const getTextColor = () =>
   options.sketch?.textColor ?? options.colors?.text ?? [
@@ -201,7 +210,7 @@ sketch.setup( () => {
   );
 
   // canvases.mask.pixelDensity(options.backgroundPixelDensity || 0.5);
-  p.background( ...getBg() );
+  paintBackground( getBg() );
 
   const margin = 50;
   const thickness = 50;
@@ -250,7 +259,7 @@ sketch.draw( (
   const p = getP5();
 
   p.clear();
-  p.background( ...getBg() );
+  paintBackground( getBg() );
 
   // if (p.frameCount === 1) {
   // 	for (let i = 0; i < 120; i++) {

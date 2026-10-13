@@ -6,6 +6,11 @@ import sketch, {
 } from "@/p5/utils/sketch.js";
 import animation from "@/p5/utils/animation.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
+import {
+  mixBackground,
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 /* ------------------------------------------------------------------ */
 /*  Photo sphere carousel                                             */
@@ -422,11 +427,16 @@ const getLayout = () => options.sketch?.layout ?? {};
 const getMotion = () => options.sketch?.motion ?? {};
 const getStyle = () => options.sketch?.style ?? {};
 
-const getBackground = () => getStyle().backgroundColor ?? [
-  8,
-  8,
-  12
-];
+const getBackground = () => resolveBackground(
+  getStyle().backgroundColor,
+  {
+    fallback: [
+      8,
+      8,
+      12
+    ]
+  }
+);
 
 function drawTitle() {
   const p = getP5();
@@ -460,14 +470,22 @@ sketch.draw( (
 
   p.clear();
 
-  if ( style.variableBackgroundColor ) {
+  const background = getBackground();
+
+  if ( style.variableBackgroundColor && background.spec ) {
+    paintBackground( mixBackground(
+      background,
+      favoriteColor,
+      animation.triangleProgression()
+    ) );
+  } else if ( style.variableBackgroundColor ) {
     p.background( p.lerpColor(
-      p.color( ...getBackground() ),
+      p.color( ...background ),
       favoriteColor,
       animation.triangleProgression()
     ) );
   } else {
-    p.background( ...getBackground() );
+    paintBackground( background );
   }
 
   const images = imageUtils.getImages();

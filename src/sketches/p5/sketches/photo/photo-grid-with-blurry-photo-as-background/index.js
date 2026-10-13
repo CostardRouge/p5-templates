@@ -9,6 +9,10 @@ import imageUtils from "@/p5/utils/imageUtils.js";
 import {
   getP5
 } from "@/p5/utils/sketch.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 const canvases = sketch.state( () => ( {} ) );
 
@@ -22,9 +26,12 @@ sketch.setup( () => {
 
   // canvases.background.pixelDensity(options.backgroundPixelDensity || 0.0175);
 
-  p.background( ...options.sketch.backgroundColor );
+  paintBackground( resolveBackground( options.sketch.backgroundColor ) );
 
-  canvases.blurredLayer.background( ...options.sketch.backgroundColor );
+  paintBackground(
+    resolveBackground( options.sketch.backgroundColor ),
+    canvases.blurredLayer
+  );
 } );
 
 sketch.draw( (
@@ -33,9 +40,12 @@ sketch.draw( (
   const p = getP5();
 
   p.clear();
-  p.background( ...options.sketch.backgroundColor );
+  paintBackground( resolveBackground( options.sketch.backgroundColor ) );
 
-  canvases.blurredLayer.background( ...options.sketch.backgroundColor );
+  paintBackground(
+    resolveBackground( options.sketch.backgroundColor ),
+    canvases.blurredLayer
+  );
 
   const images = imageUtils.getImages();
 
@@ -67,7 +77,10 @@ sketch.draw( (
     cells: gridCells
   } = grid.create( gridOptions );
 
-  canvases.blurredLayer.background( ...options.sketch.backgroundColor );
+  paintBackground(
+    resolveBackground( options.sketch.backgroundColor ),
+    canvases.blurredLayer
+  );
 
   // gridCells.forEach( ({ position, xIndex, yIndex, width: W, height: H }) => {
   //     const { x, y } = position;

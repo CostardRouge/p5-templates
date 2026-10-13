@@ -6,6 +6,10 @@ import string from "@/p5/utils/string.js";
 import {
   getP5
 } from "@/p5/utils/sketch.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 const FACE_COUNT = 6;
 const HALF_PI = Math.PI / 2;
@@ -604,11 +608,16 @@ function resetGraphicsState() {
 function readSettings( sketchOptions ) {
   return {
     faces: sketchOptions?.faces ?? [],
-    backgroundColor: sketchOptions?.backgroundColor ?? [
-      0,
-      0,
-      0
-    ],
+    backgroundColor: resolveBackground(
+      sketchOptions?.backgroundColor,
+      {
+        fallback: [
+          0,
+          0,
+          0
+        ]
+      }
+    ),
     diceSizeFactor: sketchOptions?.diceSizeFactor ?? 1.5,
     faceScale: sketchOptions?.faceScale ?? 1,
     baseTextSize: sketchOptions?.baseTextSize ?? 280,
@@ -626,7 +635,7 @@ sketch.setup( () => {
 
   resetGraphicsState();
   ensureDiceGraphics( p );
-  p.background( ...readSettings( options.sketch ).backgroundColor );
+  paintBackground( readSettings( options.sketch ).backgroundColor );
 } );
 
 sketch.draw( () => {
@@ -634,7 +643,7 @@ sketch.draw( () => {
   const settings = readSettings( options.sketch );
 
   p.clear();
-  p.background( ...settings.backgroundColor );
+  paintBackground( settings.backgroundColor );
 
   if ( settings.faces.length === 0 ) {
     return;
@@ -655,7 +664,10 @@ sketch.draw( () => {
   } = diceOrientation( settings );
 
   g.push();
-  g.background( ...settings.backgroundColor );
+  paintBackground(
+    settings.backgroundColor,
+    g
+  );
   g.rotate(
     angle,
     p.createVector(

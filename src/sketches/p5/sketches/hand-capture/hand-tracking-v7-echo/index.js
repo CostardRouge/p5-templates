@@ -5,6 +5,9 @@ import {
   HandCaptureScene
 } from "../_shared.js";
 import renderLegacyTitle from "@/p5/utils/title/renderLegacyTitle.js";
+import {
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 const scene = new HandCaptureScene( {
   layers: {
@@ -20,9 +23,14 @@ sketch.draw( () => {
   const interaction = options.sketch?.interaction ?? {};
   const handDrawing = options.sketch?.hands ?? {};
   const echo = options.sketch?.echo ?? {};
-  const background = options.sketch?.backgroundColor ?? options.colors?.background ?? [
-    0
-  ];
+  const background = resolveBackground(
+    options.sketch?.backgroundColor ?? options.colors?.background,
+    {
+      fallback: [
+        0
+      ]
+    }
+  );
 
   scene.beginFrame( background );
   scene.readInteraction( interaction );
