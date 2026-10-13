@@ -14,9 +14,12 @@ import {
 } from "@/p5/utils/paletteGlsl.js";
 import {
   HOUSE_PALETTE_IDS,
-  housePaletteBackground,
   shaderPalette
 } from "@/p5/utils/palettes.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // peaks-sphere — shaders.
@@ -192,12 +195,15 @@ sketch.draw( () => {
   const o = options.sketch ?? {};
 
   p.clear();
-  p.background( ...( housePaletteBackground(
-    o.colors,
-    o.backgroundColor
-  ) ?? [
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        0
+      ],
+      palette: o.colors?.palette
+    }
+  ) );
 
   // ── Sphere shape ──────────────────────────────────────────────────────────
   const radiusX = o.sphere?.radiusX ?? 200;

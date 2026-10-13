@@ -6,8 +6,9 @@ import {
   renderScribe
 } from "../_shared.js";
 import {
-  housePaletteBackground
-} from "@/p5/utils/palettes.js";
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // A single pen travels the outline of each letter while the camera tracks the
 // tip — the "writing" POV. The lines can be drawn as the pen passes or already
@@ -19,15 +20,18 @@ sketch.draw( () => {
   const o = options.sketch ?? {};
 
   p.clear();
-  p.background( ...( housePaletteBackground(
-    o.stroke,
-    o.backgroundColor
-  ) ?? [
-    0,
-    0,
-    0,
-    255
-  ] ) );
+  paintBackground( resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0,
+        255
+      ],
+      palette: o.stroke?.palette
+    }
+  ) );
 
   renderScribe( o );
 } );

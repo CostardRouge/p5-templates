@@ -11,6 +11,10 @@ import * as common from "@/p5/utils/common.js";
 import {
   getP5
 } from "@/p5/utils/sketch.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 const getFont = () => {
   const key = options.sketch?.font?.face ?? "martian";
@@ -24,11 +28,16 @@ sketch.draw( (
   const p = getP5();
 
   p.clear();
-  p.background( ...( options.sketch?.photo?.backgroundColor ?? [
-    246,
-    235,
-    225
-  ] ) );
+  paintBackground( resolveBackground(
+    options.sketch?.photo?.backgroundColor,
+    {
+      fallback: [
+        246,
+        235,
+        225
+      ]
+    }
+  ) );
 
   const photo = common.getAsset( options.sketch?.photo?.image );
 

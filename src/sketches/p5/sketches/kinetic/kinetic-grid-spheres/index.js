@@ -16,8 +16,9 @@ import {
   drawInteractionOverlay
 } from "@/p5/utils/interaction/overlay.js";
 import {
-  housePaletteBackground
-} from "@/p5/utils/palettes.js";
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 const sketchState = sketch.state( () => ( {
   shape: {
@@ -26,19 +27,22 @@ const sketchState = sketch.state( () => ( {
 } ) );
 
 const getBackgroundColor = () =>
-  housePaletteBackground(
-    options.sketch.colors,
-    options.sketch?.backgroundColor
-  ) ?? [
-    246,
-    235,
-    225
-  ];
+  resolveBackground(
+    options.sketch?.backgroundColor,
+    {
+      fallback: [
+        246,
+        235,
+        225
+      ],
+      palette: options.sketch.colors?.palette
+    }
+  );
 
 sketch.setup( async() => {
   const p = getP5();
 
-  p.background( ...getBackgroundColor() );
+  paintBackground( getBackgroundColor() );
 
   sketchState.shape.graphics = graphics.createAutoResizableGraphics(
     p.width,
@@ -72,7 +76,7 @@ sketch.draw( () => {
   const render = options.sketch?.animation ?? {};
 
   p.clear();
-  p.background( ...getBackgroundColor() );
+  paintBackground( getBackgroundColor() );
 
   const columns = options.sketch?.grid?.columns ?? 65;
   const rows = ( columns * p.height ) / p.width;

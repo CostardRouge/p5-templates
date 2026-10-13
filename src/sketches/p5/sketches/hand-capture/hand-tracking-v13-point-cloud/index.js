@@ -15,8 +15,9 @@ import {
   channelValue, computeDepth
 } from "./modes.js";
 import {
-  housePaletteBackground
-} from "@/p5/utils/palettes.js";
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // video-point-cloud — the webcam (or a video asset) is run through MediaPipe
 // segmentation, then instead of showing the footage we draw a 3D field of
@@ -248,14 +249,17 @@ sketch.draw( ( time ) => {
   );
 
   p.clear();
-  p.background( ...( housePaletteBackground(
-    cfg.colors,
-    cfg.backgroundColor
-  ) ?? [
-    8,
-    8,
-    10
-  ] ) );
+  paintBackground( resolveBackground(
+    cfg.backgroundColor,
+    {
+      fallback: [
+        8,
+        8,
+        10
+      ],
+      palette: cfg.colors?.palette
+    }
+  ) );
 
   const segmentation = mediapipe.tasks?.segmenter?.result;
 

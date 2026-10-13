@@ -11,8 +11,9 @@ import string from "@/p5/utils/string.js";
 import gridMask from "@/p5/utils/gridMask.js";
 import drawBackgroundPattern from "@/p5/utils/backgroundPattern.js";
 import {
-  housePaletteBackground
-} from "@/p5/utils/palettes.js";
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 sketch.setup(
   undefined,
@@ -25,14 +26,17 @@ sketch.draw( () => {
   const p = getP5();
 
   p.clear();
-  p.background( ...( housePaletteBackground(
-    options.sketch?.color,
-    options.sketch?.backgroundColor
-  ) ?? [
-    0,
-    0,
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    options.sketch?.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0
+      ],
+      palette: options.sketch?.color?.palette
+    }
+  ) );
   p.strokeWeight( options.sketch?.strokeWeight ?? 2 );
 
   const shape = options.sketch?.shape ?? {};

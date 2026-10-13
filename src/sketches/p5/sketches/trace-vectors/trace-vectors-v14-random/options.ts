@@ -20,8 +20,7 @@ export const formValues = {
   },
   colors: {
     ...gridTraceFormValuesBase.colors,
-    palette: "test",
-    paletteBackground: false
+    palette: "test"
   }
 };
 

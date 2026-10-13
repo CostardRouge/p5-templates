@@ -27,6 +27,8 @@ import ControlledKeySelect
   from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/ControlledKeySelect/ControlledKeySelect";
 import ControlledPalettePicker
   from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/ControlledPalettePicker/ControlledPalettePicker";
+import ControlledBackgroundInput
+  from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/ControlledBackgroundInput/ControlledBackgroundInput";
 import ControlledEasingInput
   from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/ControlledEasingInput/ControlledEasingInput";
 import ControlledVector2DInput
@@ -705,6 +707,28 @@ export default function FieldRenderer( {
               target: driven.target,
               ramp: driven.ramp
             } : null }
+          />
+        );
+
+      case "background":
+        return (
+          <ControlledBackgroundInput
+            name={ registeredName }
+            config={ config }
+            label={ inlineLabel }
+            isModified={ isModified }
+            onReset={ handleReset }
+            renderField={ (
+              subFieldName, subConfig
+            ) => (
+              <FieldRenderer
+                key={ subFieldName || "colour" }
+                fieldBasePath={ registeredName }
+                fieldName={ subFieldName }
+                config={ subConfig }
+                depth={ depth + 1 }
+              />
+            ) }
           />
         );
 

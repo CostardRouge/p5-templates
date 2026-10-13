@@ -1,6 +1,5 @@
 import {
-  housePaletteField,
-  paletteBackgroundField
+  housePaletteField
 } from "@/p5/utils/palettes.js";
 
 export const formValues = {
@@ -33,7 +32,6 @@ export const formValues = {
   },
   colors: {
     palette: "rainbow",
-    paletteBackground: false,
     opacityMax: 4,
     opacityMin: 1,
     opacityEasing: "easeOutCirc",
@@ -111,7 +109,6 @@ export const formConfiguration: Record<string, any> = {
       palette: housePaletteField( [
         "rainbow"
       ] ),
-      paletteBackground: paletteBackgroundField,
       opacityMax: {
         label: "Opacity max",
         component: "slider",
@@ -278,7 +275,8 @@ export const formConfiguration: Record<string, any> = {
   },
 
   backgroundColor: {
-    component: "color",
+    component: "background",
+    palette: "colors/palette",
     label: "Background color"
   }
 };

@@ -9,8 +9,9 @@ import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import string from "@/p5/utils/string.js";
 import {
-  housePaletteBackground
-} from "@/p5/utils/palettes.js";
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 sketch.setup(
   undefined,
@@ -84,14 +85,17 @@ sketch.draw( () => {
   const p = getP5();
 
   p.clear();
-  p.background( ...( housePaletteBackground(
-    options.sketch?.color,
-    options.sketch?.backgroundColor
-  ) ?? [
-    0,
-    0,
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    options.sketch?.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0
+      ],
+      palette: options.sketch?.color?.palette
+    }
+  ) );
 
   const shape = options.sketch?.shape ?? {};
   const morph = options.sketch?.morph ?? {};

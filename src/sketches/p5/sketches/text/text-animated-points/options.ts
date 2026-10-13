@@ -1,6 +1,5 @@
 import {
-  housePaletteOptions,
-  paletteBackgroundField
+  housePaletteOptions
 } from "@/p5/utils/palettes.js";
 import {
   blendSelectOptions,
@@ -45,7 +44,6 @@ export const formValues = {
   },
   color: {
     palette: "rainbow",
-    paletteBackground: false,
     opacityFactor: 1.6,
     fillAlphaStart: 255,
     fillAlphaEnd: 255,
@@ -284,7 +282,6 @@ export const formConfiguration: Record<string, any> = {
         component: "palette-picker",
         options: paletteOptions
       },
-      paletteBackground: paletteBackgroundField,
       opacityFactor: {
         label: "Opacity factor",
         component: "slider",
@@ -348,7 +345,8 @@ export const formConfiguration: Record<string, any> = {
     }
   },
   backgroundColor: {
-    component: "color",
+    component: "background",
+    palette: "color/palette",
     label: "Background color"
   }
 };

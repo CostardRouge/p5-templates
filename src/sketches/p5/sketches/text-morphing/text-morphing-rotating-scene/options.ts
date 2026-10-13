@@ -6,8 +6,7 @@ import {
   createSingleOrMultipleTextOption
 } from "@/utils/sketchOptionUtils";
 import {
-  housePaletteField,
-  paletteBackgroundField
+  housePaletteField
 } from "@/p5/utils/palettes.js";
 
 export const formValues = {
@@ -71,8 +70,7 @@ export const formValues = {
     0
   ],
   colors: {
-    palette: "rainbow",
-    paletteBackground: false
+    palette: "rainbow"
   }
 };
 
@@ -227,7 +225,8 @@ export const formConfiguration: Record<string, any> = {
     }
   },
   backgroundColor: {
-    component: "color",
+    component: "background",
+    palette: "colors/palette",
     label: "Background color"
   },
   colors: {
@@ -236,8 +235,7 @@ export const formConfiguration: Record<string, any> = {
     fields: {
       palette: housePaletteField( [
         "rainbow"
-      ] ),
-      paletteBackground: paletteBackgroundField
+      ] )
     }
   }
 };

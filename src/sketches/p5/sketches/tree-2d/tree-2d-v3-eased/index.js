@@ -9,8 +9,9 @@ import mappers from "@/p5/utils/mappers.js";
 import converters from "@/p5/utils/converters.js";
 import iterators from "@/p5/utils/iterators.js";
 import {
-  housePaletteBackground
-} from "@/p5/utils/palettes.js";
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 const PALETTES = {
   rainbow: colors.rainbow,
@@ -116,12 +117,15 @@ sketch.draw( (
   const p = getP5();
 
   p.clear();
-  p.background( ...( housePaletteBackground(
-    options.sketch.colors,
-    options.sketch.backgroundColor
-  ) ?? [
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    options.sketch.backgroundColor,
+    {
+      fallback: [
+        0
+      ],
+      palette: options.sketch.colors?.palette
+    }
+  ) );
 
   const gridColumns = options.sketch.grid?.columns ?? 4;
   const gridRows = options.sketch.grid?.rows ?? 2;

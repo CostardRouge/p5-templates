@@ -8,20 +8,29 @@ import {
   computeOpacityFactor,
   drawWobblyGrid
 } from "../_shared.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 sketch.draw( ( time ) => {
   const p = getP5();
   const o = options.sketch ?? {};
 
-  const bg = o.backgroundColor ?? [
-    0,
-    0,
-    0,
-    255
-  ];
+  const bg = resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0,
+        255
+      ]
+    }
+  );
 
   p.clear();
-  p.background( ...bg );
+  paintBackground( bg );
   p.translate(
     p.width / 2,
     p.height / 2

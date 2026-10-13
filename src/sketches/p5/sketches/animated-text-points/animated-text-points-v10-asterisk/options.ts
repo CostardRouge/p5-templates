@@ -1,6 +1,5 @@
 import {
-  housePaletteOptions,
-  paletteBackgroundField
+  housePaletteOptions
 } from "@/p5/utils/palettes.js";
 import {
   fontNames
@@ -26,7 +25,6 @@ export const formValues = {
   },
   color: {
     palette: "test",
-    paletteBackground: false,
     hueEasing: "easeInCubic",
     hueMultiplier: 1,
     opacitySinSpeed: 4,
@@ -162,7 +160,6 @@ export const formConfiguration: Record<string, any> = {
         label: "Palette",
         options: paletteOptions
       },
-      paletteBackground: paletteBackgroundField,
       hueEasing: {
         component: "easing",
         label: "Hue easing"
@@ -219,7 +216,8 @@ export const formConfiguration: Record<string, any> = {
     step: 0.5
   },
   backgroundColor: {
-    component: "color",
+    component: "background",
+    palette: "color/palette",
     label: "Background color"
   }
 };

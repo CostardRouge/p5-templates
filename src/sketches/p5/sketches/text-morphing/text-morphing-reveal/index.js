@@ -9,8 +9,9 @@ import string from "@/p5/utils/string.js";
 import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import {
-  housePaletteBackground
-} from "@/p5/utils/palettes.js";
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // ── text-morphing-reveal ───────────────────────────────────────────────────
 // The reveal format: a list of words morphs through itself — question into
@@ -31,17 +32,20 @@ sketch.draw( () => {
   const text = options.sketch?.text ?? {};
   const morphing = options.sketch?.morphing ?? {};
   const points = options.sketch?.points ?? {};
-  const background = housePaletteBackground(
-    options.sketch?.colors,
-    options.sketch?.backgroundColor
-  ) ?? [
-    0,
-    0,
-    0
-  ];
+  const background = resolveBackground(
+    options.sketch?.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0
+      ],
+      palette: options.sketch?.colors?.palette
+    }
+  );
 
   p.clear();
-  p.background( ...background );
+  paintBackground( background );
 
   const words = String( text.words ?? "HOW?\nLIKE\nTHIS" )
     .split( "\n" )

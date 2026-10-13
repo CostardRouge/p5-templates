@@ -8,6 +8,10 @@ import {
   getPointers,
   initInteraction
 } from "@/p5/utils/interaction/index.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 const BAND_ORDER = [
   "subBass",
@@ -37,11 +41,16 @@ sketch.draw( () => {
   const p = getP5();
   const interaction = options.sketch?.interaction ?? {};
   const showLabels = options.sketch?.showLabels !== false;
-  const bg = options.sketch?.backgroundColor ?? [
-    8,
-    8,
-    14
-  ];
+  const bg = resolveBackground(
+    options.sketch?.backgroundColor,
+    {
+      fallback: [
+        8,
+        8,
+        14
+      ]
+    }
+  );
 
   // Pump the interaction system so audio features are computed this frame.
   getPointers( interaction );
@@ -77,7 +86,7 @@ sketch.draw( () => {
     );
     p.pop();
   } else {
-    p.background( ...bg );
+    paintBackground( bg );
   }
 
   // ── Microphone-not-ready hint ─────────────────────────────────────────────

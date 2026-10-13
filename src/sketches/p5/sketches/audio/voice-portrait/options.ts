@@ -82,7 +82,7 @@ export const formConfiguration: Record<string, any> = {
   camera: webcamSourceFormConfiguration,
 
   backgroundColor: {
-    component: "color",
+    component: "background",
     label: "Background color"
   },
 

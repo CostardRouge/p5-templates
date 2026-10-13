@@ -8,8 +8,9 @@ import {
   SpiralBase, rebuildGrid
 } from "../_shared.js";
 import {
-  housePaletteBackground
-} from "@/p5/utils/palettes.js";
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 const sketchState = sketch.state( () => ( {
   shapes: [],
@@ -168,12 +169,15 @@ sketch.draw( ( time ) => {
   } );
 
   p.clear();
-  p.background( ...( housePaletteBackground(
-    options.sketch?.colors,
-    options.sketch?.background?.color
-  ) ?? [
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    options.sketch?.background?.color,
+    {
+      fallback: [
+        0
+      ],
+      palette: options.sketch?.colors?.palette
+    }
+  ) );
 
   sketchState.shapes.forEach( (
     shape, index

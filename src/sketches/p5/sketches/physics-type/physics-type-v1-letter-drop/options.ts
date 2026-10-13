@@ -2,8 +2,7 @@ import {
   fontNames
 } from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/constants/field-config";
 import {
-  housePaletteField,
-  paletteBackgroundField
+  housePaletteField
 } from "@/p5/utils/palettes.js";
 
 const COLOR_MODE_OPTIONS = [
@@ -62,8 +61,7 @@ export const formValues = {
     floorWeight: 7
   },
   colors: {
-    palette: "rainbow",
-    paletteBackground: false
+    palette: "rainbow"
   }
 };
 
@@ -174,7 +172,8 @@ export const formConfiguration: Record<string, any> = {
     label: "Scene",
     fields: {
       backgroundColor: {
-        component: "color",
+        component: "background",
+        palette: "../colors/palette",
         label: "Background color"
       },
       margin: {
@@ -214,8 +213,7 @@ export const formConfiguration: Record<string, any> = {
     fields: {
       palette: housePaletteField( [
         "rainbow"
-      ] ),
-      paletteBackground: paletteBackgroundField
+      ] )
     }
   }
 };

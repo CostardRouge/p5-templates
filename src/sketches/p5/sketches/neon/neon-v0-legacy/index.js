@@ -8,6 +8,10 @@ import animation from "@/p5/utils/animation.js";
 import {
   SpiralBase, rebuildGrid
 } from "../_shared.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 const sketchState = sketch.state( () => ( {
   shapes: [],
@@ -207,9 +211,14 @@ sketch.draw( ( time ) => {
   } );
 
   p.clear();
-  p.background( ...( options.sketch?.backgroundColor ?? [
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    options.sketch?.backgroundColor,
+    {
+      fallback: [
+        0
+      ]
+    }
+  ) );
 
   sketchState.shapes.forEach( (
     shape, index

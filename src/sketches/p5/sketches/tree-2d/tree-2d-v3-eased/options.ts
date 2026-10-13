@@ -1,6 +1,5 @@
 import {
-  housePaletteOptions,
-  paletteBackgroundField
+  housePaletteOptions
 } from "@/p5/utils/palettes.js";
 
 const PALETTE_OPTIONS = housePaletteOptions( [
@@ -55,7 +54,6 @@ export const formValues = {
   },
   colors: {
     palette: "rainbow",
-    paletteBackground: false,
     hueIndexMultiplier: 8,
     hueIndexEasing: "easeInOutCubic",
     hueOffsetTimeMix: 1,
@@ -293,7 +291,6 @@ export const formConfiguration: Record<string, any> = {
         component: "palette-picker",
         options: PALETTE_OPTIONS
       },
-      paletteBackground: paletteBackgroundField,
       hueIndexMultiplier: {
         label: "Hue index multiplier",
         component: "slider",
@@ -358,7 +355,8 @@ export const formConfiguration: Record<string, any> = {
     }
   },
   backgroundColor: {
-    component: "color",
+    component: "background",
+    palette: "colors/palette",
     label: "Background color"
   }
 };

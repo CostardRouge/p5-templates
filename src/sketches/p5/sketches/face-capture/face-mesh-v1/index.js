@@ -13,8 +13,9 @@ import {
   drawInteractionOverlay
 } from "@/p5/utils/interaction/overlay.js";
 import {
-  housePaletteBackground
-} from "@/p5/utils/palettes.js";
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // face-mesh — a showcase of the `faceMesh` interaction handler (MediaPipe
 // FaceLandmarker). The webcam is run through the 468-point face mesh; each
@@ -34,14 +35,17 @@ sketch.draw( () => {
   const interaction = o.interaction ?? {};
 
   p.clear();
-  p.background( ...( housePaletteBackground(
-    o.colors,
-    o.backgroundColor
-  ) ?? [
-    8,
-    10,
-    18
-  ] ) );
+  paintBackground( resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        8,
+        10,
+        18
+      ],
+      palette: o.colors?.palette
+    }
+  ) );
 
   // Expression scores (0..1) from the faceMesh blendshapes.
   const face = getInteractionMetrics( interaction ).face ?? {};

@@ -3,8 +3,7 @@ import {
   interactionFormConfiguration
 } from "@/p5/utils/interaction/defaults.js";
 import {
-  housePaletteField,
-  paletteBackgroundField
+  housePaletteField
 } from "@/p5/utils/palettes.js";
 
 // Shared interaction defaults tuned for this sketch: six orbiting virtual
@@ -60,8 +59,7 @@ export const formValues = {
     225
   ],
   colors: {
-    palette: "rainbow",
-    paletteBackground: false
+    palette: "rainbow"
   }
 };
 
@@ -162,7 +160,8 @@ export const formConfiguration: Record<string, any> = {
     }
   },
   backgroundColor: {
-    component: "color",
+    component: "background",
+    palette: "colors/palette",
     label: "Background color"
   },
   colors: {
@@ -171,8 +170,7 @@ export const formConfiguration: Record<string, any> = {
     fields: {
       palette: housePaletteField( [
         "rainbow"
-      ] ),
-      paletteBackground: paletteBackgroundField
+      ] )
     }
   }
 };

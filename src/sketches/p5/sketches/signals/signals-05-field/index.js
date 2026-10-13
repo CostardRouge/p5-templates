@@ -5,6 +5,10 @@ import sketch, {
 
 import animation from "@/p5/utils/animation.js";
 import drawInstrument from "../_instrument.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SIGNALS — 05 / FIELD
@@ -58,12 +62,17 @@ sketch.draw( () => {
   const lineWeight = ( o.palette?.weight ?? 0.0022 ) * p.width;
 
   p.clear();
-  p.background( ...( o.backgroundColor ?? [
-    0,
-    0,
-    0,
-    255
-  ] ) );
+  paintBackground( resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0,
+        255
+      ]
+    }
+  ) );
 
   p.noiseDetail(
     octaves,
@@ -78,12 +87,17 @@ sketch.draw( () => {
   const right = p.width - sideMargin;
   const bottom = p.height - topMargin * 0.4;
 
-  const bg = o.backgroundColor ?? [
-    0,
-    0,
-    0,
-    255
-  ];
+  const bg = resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0,
+        255
+      ]
+    }
+  );
 
   // Draw back (top) → front (bottom): each row's black fill occludes the ridges
   // behind it, leaving only the silhouette skyline.

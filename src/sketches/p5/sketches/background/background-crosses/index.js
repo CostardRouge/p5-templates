@@ -6,8 +6,9 @@ import shapes from "@/p5/utils/shapes.js";
 import colors from "@/p5/utils/colors.js";
 import animation from "@/p5/utils/animation.js";
 import {
-  housePaletteBackground
-} from "@/p5/utils/palettes.js";
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 sketch.setup( () => {} );
 
@@ -26,14 +27,17 @@ sketch.draw( () => {
   const cfg = options.sketch ?? {};
 
   p.clear();
-  p.background( ...( housePaletteBackground(
-    cfg,
-    cfg.backgroundColor
-  ) ?? [
-    0,
-    0,
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    cfg.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0
+      ],
+      palette: cfg?.palette
+    }
+  ) );
 
   const columns = cfg.columns ?? 9;
   const proportional = cfg.proportional ?? true;

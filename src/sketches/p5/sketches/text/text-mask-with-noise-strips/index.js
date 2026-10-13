@@ -11,17 +11,21 @@ import {
   getP5
 } from "@/p5/utils/sketch.js";
 import {
-  housePaletteBackground
-} from "@/p5/utils/palettes.js";
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 const canvases = sketch.state( () => ( {} ) );
 
-const getBg = () => housePaletteBackground(
-  options.sketch,
-  options.sketch?.background
-) ?? [
-  0
-];
+const getBg = () => resolveBackground(
+  options.sketch?.background,
+  {
+    fallback: [
+      0
+    ],
+    palette: options.sketch?.palette
+  }
+);
 
 const getFont = () => {
   const key = options.sketch?.font ?? options.font ?? "martian";
@@ -37,14 +41,14 @@ sketch.setup( () => {
     p.height
   );
 
-  p.background( ...getBg() );
+  paintBackground( getBg() );
 } );
 
 sketch.draw( ( time ) => {
   const p = getP5();
 
   p.clear();
-  p.background( ...getBg() );
+  paintBackground( getBg() );
 
   // Controls
   const rows = options.sketch?.rows ?? 25;
@@ -240,7 +244,7 @@ sketch.draw( ( time ) => {
 
   maskedImage.mask( canvases.mask );
 
-  p.background( ...getBg() );
+  paintBackground( getBg() );
   p.image(
     maskedImage,
     0,

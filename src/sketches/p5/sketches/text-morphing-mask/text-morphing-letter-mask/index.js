@@ -7,6 +7,10 @@ import animation from "@/p5/utils/animation.js";
 import {
   getP5
 } from "@/p5/utils/sketch.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 /**
  * Word → word typographic transition where the mask is the *next letter's
@@ -24,11 +28,16 @@ import {
  */
 
 const getBackgroundColor = () =>
-  options.sketch?.backgroundColor ?? [
-    0,
-    0,
-    0
-  ];
+  resolveBackground(
+    options.sketch?.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0
+      ]
+    }
+  );
 
 function clamp01( value ) {
   if ( value < 0 ) {
@@ -207,14 +216,14 @@ function drawMaskShape(
 sketch.setup( () => {
   const p = getP5();
 
-  p.background( ...getBackgroundColor() );
+  paintBackground( getBackgroundColor() );
 } );
 
 sketch.draw( () => {
   const p = getP5();
 
   p.clear();
-  p.background( ...getBackgroundColor() );
+  paintBackground( getBackgroundColor() );
 
   const words = resolveWords();
 

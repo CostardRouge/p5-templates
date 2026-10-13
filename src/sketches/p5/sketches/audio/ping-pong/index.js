@@ -11,6 +11,10 @@ import {
 import {
   drawInteractionOverlay
 } from "@/p5/utils/interaction/overlay.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 /**
  * Audio demo sketch: a ball bounces around the canvas and every wall hit
@@ -293,11 +297,16 @@ sketch.draw( ( time ) => {
 
   // ── Render ───────────────────────────────────────────────────────────────
   p.clear();
-  p.background( ...( o.background?.color ?? [
-    0,
-    0,
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    o.background?.color,
+    {
+      fallback: [
+        0,
+        0,
+        0
+      ]
+    }
+  ) );
 
   // Collision ripples: expanding, fading rings (walls + ball-to-ball).
   if ( flashOptions.show !== false ) {

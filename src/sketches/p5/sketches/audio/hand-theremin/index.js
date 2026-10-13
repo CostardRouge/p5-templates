@@ -12,6 +12,10 @@ import {
   getPointers,
   initInteraction
 } from "@/p5/utils/interaction/index.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // ── hand-theremin ──────────────────────────────────────────────────────────
 // Conduct music with a bare hand. The tracked palm is the playhead of a step
@@ -94,14 +98,19 @@ sketch.draw( () => {
   const instrument = options.sketch?.instrument ?? {};
   const visuals = options.sketch?.visuals ?? {};
   const overlay = options.sketch?.overlay ?? {};
-  const background = options.sketch?.backgroundColor ?? [
-    8,
-    8,
-    14
-  ];
+  const background = resolveBackground(
+    options.sketch?.backgroundColor,
+    {
+      fallback: [
+        8,
+        8,
+        14
+      ]
+    }
+  );
 
   p.clear();
-  p.background( ...background );
+  paintBackground( background );
 
   const pointers = getPointers( interaction );
   const performance_ = readPerformance(

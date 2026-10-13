@@ -14,8 +14,9 @@ import string from "@/p5/utils/string.js";
 
 import addScreenPositionFunction from "@/utils/addScreenPositionFunction.js";
 import {
-  housePaletteBackground
-} from "@/p5/utils/palettes.js";
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 const sketchState = sketch.state( () => ( {
   interactive: {
@@ -47,7 +48,7 @@ sketch.setup( async( {
     "webgl"
   );
 
-  p.background( ...getBackgroundColor() );
+  paintBackground( getBackgroundColor() );
 
   await addScreenPositionFunction( sketchState.shape.graphics );
 } );
@@ -101,14 +102,17 @@ function createGridAlphaPoints(
 }
 
 const getBackgroundColor = () =>
-  housePaletteBackground(
-    options.sketch.colors,
-    options.sketch?.backgroundColor
-  ) ?? [
-    246,
-    235,
-    225
-  ];
+  resolveBackground(
+    options.sketch?.backgroundColor,
+    {
+      fallback: [
+        246,
+        235,
+        225
+      ],
+      palette: options.sketch.colors?.palette
+    }
+  );
 
 // Where the interactive "cursor" is this frame, in canvas pixels: the mouse,
 // or a scripted lissajous sweep. Null in the non-interactive wave modes.
@@ -155,7 +159,7 @@ sketch.draw( () => {
   const p = getP5();
 
   p.clear();
-  p.background( ...getBackgroundColor() );
+  paintBackground( getBackgroundColor() );
 
   const size = options.sketch?.shape?.size * p.width ?? p.width;
   const sampleFactor = options.sketch?.shape?.sampleFactor ?? 0.1;

@@ -1,6 +1,5 @@
 import {
-  housePaletteOptions,
-  paletteBackgroundField
+  housePaletteOptions
 } from "@/p5/utils/palettes.js";
 import {
   fontSelectOptions
@@ -39,7 +38,6 @@ export const formValues = {
     ],
     rainbow: true,
     palette: "purple",
-    paletteBackground: false,
     hueSpread: 0,
     hueSpeed: 0,
     hueOffset: 3.14,
@@ -218,7 +216,6 @@ export const formConfiguration: Record<string, any> = {
           "purple"
         ] )
       },
-      paletteBackground: paletteBackgroundField,
       hueSpread: {
         label: "Hue spread (per letter)",
         component: "slider",
@@ -309,7 +306,8 @@ export const formConfiguration: Record<string, any> = {
     }
   },
   backgroundColor: {
-    component: "color",
+    component: "background",
+    palette: "stroke/palette",
     label: "Background color"
   }
 };

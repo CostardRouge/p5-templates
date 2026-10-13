@@ -103,7 +103,7 @@ export const formConfiguration: Record<string, any> = {
   interactionMix: interactionMixConfig,
   interaction: interactionFormConfiguration,
   backgroundColor: {
-    component: "color",
+    component: "background",
     label: "Background color"
   }
 };

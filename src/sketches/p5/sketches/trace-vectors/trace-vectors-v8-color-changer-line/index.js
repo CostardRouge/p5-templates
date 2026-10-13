@@ -11,8 +11,9 @@ import {
   getAlphabet, drawGrid, getFont, loopedTime, drawShape
 } from "../_shared.js";
 import {
-  housePaletteBackground
-} from "@/p5/utils/palettes.js";
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 sketch.setup(
   undefined,
@@ -27,12 +28,15 @@ sketch.draw( (
   const p = getP5();
 
   p.clear();
-  p.background( ...( housePaletteBackground(
-    options.sketch.colors,
-    options.sketch.backgroundColor
-  ) ?? [
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    options.sketch.backgroundColor,
+    {
+      fallback: [
+        0
+      ],
+      palette: options.sketch.colors?.palette
+    }
+  ) );
   p.noFill();
 
   const time = loopedTime();

@@ -1,6 +1,5 @@
 import {
-  housePaletteOptions,
-  paletteBackgroundField
+  housePaletteOptions
 } from "@/p5/utils/palettes.js";
 const paletteOptions = housePaletteOptions( [
   "rainbow",
@@ -19,7 +18,6 @@ export const formValues = {
     0
   ],
   palette: "rainbow",
-  paletteBackground: false,
   columns: 9,
   proportional: true,
   rows: 9,
@@ -33,7 +31,8 @@ export const formValues = {
 
 export const formConfiguration: Record<string, any> = {
   backgroundColor: {
-    component: "color",
+    component: "background",
+    palette: "palette",
     label: "Background color"
   },
   palette: {
@@ -41,7 +40,6 @@ export const formConfiguration: Record<string, any> = {
     label: "Palette",
     options: paletteOptions
   },
-  paletteBackground: paletteBackgroundField,
   columns: {
     label: "Columns",
     component: "slider",

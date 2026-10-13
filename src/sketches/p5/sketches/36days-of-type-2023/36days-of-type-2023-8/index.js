@@ -14,8 +14,9 @@ import string from "@/p5/utils/string.js";
 
 import addScreenPositionFunction from "@/utils/addScreenPositionFunction.js";
 import {
-  housePaletteBackground
-} from "@/p5/utils/palettes.js";
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 const interactive = {
   currentTimeValue: 0,
@@ -50,7 +51,7 @@ sketch.setup( async() => {
     "webgl"
   );
 
-  p.background( ...getBackgroundColor() );
+  paintBackground( getBackgroundColor() );
 
   // screenPosition has to read the 3D buffer's matrices, not the 2D canvas'.
   await addScreenPositionFunction( shape.graphics );
@@ -105,14 +106,17 @@ function createGridAlphaPoints(
 }
 
 const getBackgroundColor = () =>
-  housePaletteBackground(
-    options.sketch.colors,
-    options.sketch?.backgroundColor
-  ) ?? [
-    246,
-    235,
-    225
-  ];
+  resolveBackground(
+    options.sketch?.backgroundColor,
+    {
+      fallback: [
+        246,
+        235,
+        225
+      ],
+      palette: options.sketch.colors?.palette
+    }
+  );
 
 sketch.draw( () => {
   const p = getP5();
@@ -131,7 +135,7 @@ sketch.draw( () => {
   }
 
   p.clear();
-  p.background( ...getBackgroundColor() );
+  paintBackground( getBackgroundColor() );
   g.clear();
 
   const size = options.sketch?.shape?.size * p.width ?? p.width;

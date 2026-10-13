@@ -10,8 +10,9 @@ import mappers from "@/p5/utils/mappers.js";
 import graphics from "@/p5/utils/graphics.js";
 import animation from "@/p5/utils/animation.js";
 import {
-  housePaletteBackground
-} from "@/p5/utils/palettes.js";
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GLSL vertex shader (GLSL ES 1.00, works in both WebGL1 and WebGL2)
@@ -407,12 +408,15 @@ sketch.draw( (
   const p = getP5();
 
   p.clear();
-  p.background( ...( housePaletteBackground(
-    options.sketch.colors,
-    options.sketch.backgroundColor
-  ) ?? [
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    options.sketch.backgroundColor,
+    {
+      fallback: [
+        0
+      ],
+      palette: options.sketch.colors?.palette
+    }
+  ) );
 
   const g = sketchState.threeDimensionGraphics;
   const gpu = sketchState.gpu;

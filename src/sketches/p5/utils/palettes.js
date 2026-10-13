@@ -1267,11 +1267,6 @@ export function housePaletteField(
   };
 }
 
-export const paletteBackgroundField = {
-  label: "Use the palette's background",
-  component: "checkbox"
-};
-
 const rampSamplers = new Map();
 
 /**
@@ -1324,24 +1319,4 @@ export function paletteSampler( id ) {
   );
 
   return sampler;
-}
-
-/**
- * The background a 2D sketch should clear to: its own, unless its palette
- * group asks for the palette's and holds a shared preset (a house function has
- * no paper, so it never touches the background).
- *
- * @param {object} [group] the group holding `palette` and `paletteBackground`
- * @param {*} background the sketch's own background colour
- */
-export function housePaletteBackground(
-  group, background
-) {
-  return shaderPaletteBackground(
-    group,
-    background,
-    {
-      own: HOUSE_PALETTE_IDS
-    }
-  );
 }

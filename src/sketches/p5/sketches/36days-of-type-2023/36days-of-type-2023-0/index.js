@@ -8,8 +8,9 @@ import easing from "@/p5/utils/easing.js";
 import animation from "@/p5/utils/animation.js";
 import string from "@/p5/utils/string.js";
 import {
-  housePaletteBackground
-} from "@/p5/utils/palettes.js";
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 sketch.setup(
   undefined,
@@ -19,20 +20,23 @@ sketch.setup(
 );
 
 const getBackgroundColor = () =>
-  housePaletteBackground(
-    options.sketch.colors,
-    options.sketch?.backgroundColor
-  ) ?? [
-    0,
-    0,
-    0
-  ];
+  resolveBackground(
+    options.sketch?.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0
+      ],
+      palette: options.sketch.colors?.palette
+    }
+  );
 
 sketch.draw( () => {
   const p = getP5();
 
   p.clear();
-  p.background( ...getBackgroundColor() );
+  paintBackground( getBackgroundColor() );
   p.noFill();
 
   const fontName = options.sketch?.shape?.font ?? "sans";

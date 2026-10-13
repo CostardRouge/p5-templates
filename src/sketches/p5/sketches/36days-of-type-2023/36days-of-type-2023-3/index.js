@@ -11,8 +11,9 @@ import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import string from "@/p5/utils/string.js";
 import {
-  housePaletteBackground
-} from "@/p5/utils/palettes.js";
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 sketch.setup(
   undefined,
@@ -22,14 +23,17 @@ sketch.setup(
 );
 
 const getBackgroundColor = () =>
-  housePaletteBackground(
-    options.sketch.colors,
-    options.sketch?.backgroundColor
-  ) ?? [
-    0,
-    0,
-    0
-  ];
+  resolveBackground(
+    options.sketch?.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0
+      ],
+      palette: options.sketch.colors?.palette
+    }
+  );
 
 // Single-layer falloff mask delegated to the shared gridMask utility, which
 // computes the per-cell alpha field once (spatial-hash accelerated) and caches
@@ -63,7 +67,7 @@ sketch.draw( () => {
   const p = getP5();
 
   p.clear();
-  p.background( ...getBackgroundColor() );
+  paintBackground( getBackgroundColor() );
 
   const fontName = options.sketch?.shape?.font ?? "martian";
   const font = string.fonts?.[ fontName ];

@@ -8,8 +8,9 @@ import {
   getP5
 } from "@/p5/utils/sketch.js";
 import {
-  housePaletteBackground
-} from "@/p5/utils/palettes.js";
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 const sketchState = sketch.state( () => ( {
   shape: {
@@ -28,18 +29,21 @@ sketch.setup( ( {
     "webgl"
   );
 
-  p.background( ...getBackgroundColor() );
+  paintBackground( getBackgroundColor() );
 } );
 
 const getBackgroundColor = () =>
-  housePaletteBackground(
-    options.sketch?.color,
-    options.sketch?.backgroundColor
-  ) ?? [
-    246,
-    235,
-    225
-  ];
+  resolveBackground(
+    options.sketch?.backgroundColor,
+    {
+      fallback: [
+        246,
+        235,
+        225
+      ],
+      palette: options.sketch?.color?.palette
+    }
+  );
 
 const getEasing = (
   name, fallback
@@ -89,7 +93,7 @@ sketch.draw( () => {
   const graphics = sketchState.shape.graphics;
 
   p.clear();
-  p.background( ...getBackgroundColor() );
+  paintBackground( getBackgroundColor() );
 
   const shape = options.sketch?.shape ?? {};
   const render = options.sketch?.render ?? {};

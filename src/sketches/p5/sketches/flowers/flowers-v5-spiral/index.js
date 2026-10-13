@@ -12,6 +12,10 @@ import {
   cross,
   flower
 } from "@/p5/sketches/flowers/_cross.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 const EASING_FUNCTIONS = {
   linear: easing.linear,
@@ -39,12 +43,17 @@ sketch.setup( () => {} );
 sketch.draw( () => {
   const p = getP5();
 
-  const bg = options.sketch.backgroundColor ?? [
-    255
-  ];
+  const bg = resolveBackground(
+    options.sketch.backgroundColor,
+    {
+      fallback: [
+        255
+      ]
+    }
+  );
 
   p.clear();
-  p.background( ...bg );
+  paintBackground( bg );
 
   const t = animation.angle * ( options.sketch.timeScale ?? 1 );
 

@@ -6,8 +6,9 @@ import grid from "@/p5/utils/grid.js";
 import colors from "@/p5/utils/colors.js";
 import animation from "@/p5/utils/animation.js";
 import {
-  housePaletteBackground
-} from "@/p5/utils/palettes.js";
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 const sketchState = sketch.state( () => ( {
   min: Math.PI,
@@ -23,12 +24,15 @@ sketch.draw( () => {
   const p = getP5();
 
   p.clear();
-  p.background( ...( housePaletteBackground(
-    options.sketch.colors,
-    options.sketch.backgroundColor
-  ) ?? [
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    options.sketch.backgroundColor,
+    {
+      fallback: [
+        0
+      ],
+      palette: options.sketch.colors?.palette
+    }
+  ) );
 
   const t = animation.angle;
 

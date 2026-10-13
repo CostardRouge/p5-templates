@@ -5,7 +5,6 @@ import {
   SHADER_PALETTE_OPTIONS,
   HOUSE_PALETTE_IDS,
   bakePaletteRamp,
-  housePaletteBackground,
   housePaletteOptions,
   paletteColorAt,
   paletteSampler,
@@ -244,32 +243,6 @@ describe(
             x
           ) );
         } );
-      }
-    );
-
-    it(
-      "leaves the background alone for a house function, even when asked",
-      () => {
-        const own = [
-          1,
-          2,
-          3
-        ];
-
-        expect( housePaletteBackground(
-          {
-            palette: "rainbow",
-            paletteBackground: true
-          },
-          own
-        ) ).toBe( own );
-        expect( housePaletteBackground(
-          {
-            palette: "riso-pink-blue",
-            paletteBackground: true
-          },
-          own
-        ) ).not.toBe( own );
       }
     );
   }

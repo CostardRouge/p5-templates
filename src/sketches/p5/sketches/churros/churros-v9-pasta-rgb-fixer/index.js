@@ -5,6 +5,10 @@ import sketch, {
 
 import converters from "@/p5/utils/converters.js";
 import mappers from "@/p5/utils/mappers.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 sketch.setup( () => {} );
 
@@ -13,9 +17,14 @@ sketch.draw( ( time ) => {
   const o = options.sketch;
 
   p.clear();
-  p.background( ...( o.backgroundColor ?? [
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        0
+      ]
+    }
+  ) );
 
   const quality = o.shape?.quality ?? 400;
   const lerpMin = -( o.shape?.angleHalfSpan ?? p.PI );

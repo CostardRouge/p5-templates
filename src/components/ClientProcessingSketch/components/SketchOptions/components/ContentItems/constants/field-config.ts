@@ -106,6 +106,20 @@ interface ColorInputConfig extends BaseConfig {
   component: "color";
 }
 
+// A sketch's background (utils/backgroundSpec.js): a colour, or a two-colour
+// gradient — linear or radial — with strength, easing and a motion over the
+// loop. The stored value stays a colour array until the kind is changed, so a
+// field switched from "color" to "background" changes nothing saved.
+export interface BackgroundConfig extends BaseConfig {
+  component: "background";
+  /**
+   * The sketch's palette id field, relative to this field's parent (as the
+   * palette picker's `custom` paths are). When set, the colours can come from
+   * that palette's paper instead of the field's own.
+   */
+  palette?: string;
+}
+
 export interface FormatConfig extends BaseConfig {
   component: "format";
   options: SelectOption[];
@@ -417,6 +431,7 @@ export type FieldConfig =
   | RangeInputConfig
   | NumberInputConfig
   | ColorInputConfig
+  | BackgroundConfig
   | SelectConfig
   | PalettePickerConfig
   | MultiSelectConfig

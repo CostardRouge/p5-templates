@@ -8,6 +8,10 @@ import easing from "@/p5/utils/easing.js";
 import audio from "@/p5/utils/audio.js";
 import string from "@/p5/utils/string.js";
 import drawInstrument from "../_instrument.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SIGNALS — 04 / DECODE
@@ -75,12 +79,17 @@ sketch.draw( () => {
   const scatterH = ( o.signal?.scatterHeight ?? 0.5 ) * p.height;
 
   p.clear();
-  p.background( ...( o.backgroundColor ?? [
-    0,
-    0,
-    0,
-    255
-  ] ) );
+  paintBackground( resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0,
+        255
+      ]
+    }
+  ) );
 
   const cx = p.width / 2;
   const cy = p.height / 2;

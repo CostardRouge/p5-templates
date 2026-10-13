@@ -1,6 +1,5 @@
 import {
-  housePaletteField,
-  paletteBackgroundField
+  housePaletteField
 } from "@/p5/utils/palettes.js";
 import {
   fontNames
@@ -101,7 +100,6 @@ export const colorsForm = {
       "rainbow",
       "test"
     ] ),
-    paletteBackground: paletteBackgroundField,
     hueIndexMultiplier: {
       label: "Hue index multiplier",
       component: "slider",

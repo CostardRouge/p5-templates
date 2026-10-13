@@ -19,8 +19,9 @@ import {
   renderSplines
 } from "../_shared.js";
 import {
-  housePaletteBackground
-} from "@/p5/utils/palettes.js";
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // ── What this sketch demonstrates ──────────────────────────────────────────
 // The same control-point-free splines as v0, but the points are an editable,
@@ -501,15 +502,18 @@ sketch.draw( () => {
   }
 
   p.clear();
-  p.background( ...( housePaletteBackground(
-    o.stroke,
-    o.backgroundColor
-  ) ?? [
-    0,
-    0,
-    0,
-    255
-  ] ) );
+  paintBackground( resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0,
+        255
+      ],
+      palette: o.stroke?.palette
+    }
+  ) );
   p.strokeCap( p.ROUND );
   p.strokeJoin( p.ROUND );
 

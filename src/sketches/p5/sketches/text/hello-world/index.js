@@ -4,14 +4,23 @@ import animation from "@/p5/utils/animation.js";
 import {
   getP5
 } from "@/p5/utils/sketch.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 sketch.draw( () => {
   const p = getP5();
 
   p.clear();
-  p.background( ...( options.sketch?.backgroundColor ?? [
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    options.sketch?.backgroundColor,
+    {
+      fallback: [
+        0
+      ]
+    }
+  ) );
 
   p.strokeWeight( 2 );
   p.stroke( p.color( ...( options.sketch?.font?.stroke ?? [
