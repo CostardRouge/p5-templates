@@ -232,7 +232,22 @@ async function bench( args ) {
           // Reading the canvas is what waits for the GPU.
           const png = canvas.toDataURL( "image/png" );
           const elapsed = performance.now() - started;
-          const ctx = canvas.getContext( "2d" );
+          // A WEBGL canvas has no 2D context: read it through a copy.
+          let ctx = canvas.getContext( "2d" );
+
+          if ( !ctx ) {
+            const copy = document.createElement( "canvas" );
+
+            copy.width = canvas.width;
+            copy.height = canvas.height;
+            ctx = copy.getContext( "2d" );
+            ctx.drawImage(
+              canvas,
+              0,
+              0
+            );
+          }
+
           const image = ctx.getImageData(
             0,
             0,
