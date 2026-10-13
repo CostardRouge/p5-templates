@@ -14,8 +14,12 @@ import {
   PALETTE_RAINBOW_GLSL
 } from "@/p5/utils/paletteGlsl.js";
 import {
-  shaderPalette, shaderPaletteBackground
+  shaderPalette
 } from "@/p5/utils/palettes.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GPU port of "noise grid v8 — pulse easing" (instanced).
@@ -97,12 +101,17 @@ sketch.draw( () => {
   const p = getP5();
 
   p.clear();
-  p.background( ...( shaderPaletteBackground(
-    options.sketch.colors,
-    options.sketch.backgroundColor
-  ) ?? [
-    0
-  ] ) );
+  const background = resolveBackground(
+    options.sketch.backgroundColor,
+    {
+      fallback: [
+        0
+      ],
+      palette: options.sketch.colors?.palette
+    }
+  );
+
+  paintBackground( background );
 
   const t = animation.angle;
 
@@ -176,14 +185,9 @@ sketch.draw( () => {
     falloff: bass,
     columns,
     rows,
-    background: shaderPaletteBackground(
-      options.sketch.colors,
-      options.sketch.backgroundColor
-    ) ?? [
-      0,
-      0,
-      0
-    ],
+    background,
+    // A gradient lies on the 2D canvas below: composite the dots over it.
+    alphaOver: !!background.spec,
     uniforms: {
       uAngleCycles: angleCycles,
       uYTimeMult: yTimeMult,

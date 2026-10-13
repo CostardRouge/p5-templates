@@ -54,8 +54,12 @@ import {
   LINKS_CELL_GLSL
 } from "../_trace.js";
 import {
-  shaderPalette, shaderPaletteBackground
+  shaderPalette
 } from "@/p5/utils/palettes.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // sculpt v9 — letter ripple.
@@ -333,14 +337,17 @@ sketch.draw( () => {
   const rendering = o.rendering ?? {};
 
   p.clear();
-  p.background( ...( shaderPaletteBackground(
-    o.colors,
-    o.backgroundColor
-  ) ?? [
-    0,
-    0,
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0
+      ],
+      palette: o.colors?.palette
+    }
+  ) );
 
   const aspect = p.width / p.height;
   const progression = animation.progression;

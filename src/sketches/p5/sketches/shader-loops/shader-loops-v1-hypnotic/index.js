@@ -8,8 +8,16 @@ import {
   PALETTE_RAMP_GLSL
 } from "@/p5/utils/paletteGlsl.js";
 import {
-  shaderPalette, shaderPaletteBackground
+  shaderPalette
 } from "@/p5/utils/palettes.js";
+import {
+  backgroundUniforms,
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
+import {
+  BACKGROUND_GLSL
+} from "@/p5/utils/backgroundGlsl.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // shader-loops v1 — hypnotic.
@@ -80,7 +88,7 @@ const FRAGMENT = `
   // Scene
   uniform float uVignette;
   uniform float uBreath;        // gentle brightness pulse, one breath per loop
-  uniform vec3  uBackground;    // 0..1 colour the vignette edges fade toward
+  ${ BACKGROUND_GLSL }
 
   // Oil-slick / thin-film iridescence: a cosine spectrum (IQ palette) with the
   // RGB channels phase-shifted so the hue sweeps cleanly through the rainbow.
@@ -192,10 +200,10 @@ const FRAGMENT = `
 
     // Radial vignette sinks the edges toward the background colour and pulls the
     // eye to the centre. At the centre vig = 1 (pure pattern); at the rim it
-    // reveals uBackground, so the Background-colour control is meaningful.
+    // reveals the background (its gradient too), so the control is meaningful.
     float vig = 1.0 - uVignette * smoothstep(0.3, 0.95, length(p));
 
-    col = mix(uBackground, col, vig);
+    col = mix(backgroundAt(vec2(vUv.x, 1.0 - vUv.y)), col, vig);
 
     gl_FragColor = vec4(clamp(col, 0.0, 1.0), 1.0);
   }
@@ -214,20 +222,21 @@ sketch.draw( () => {
   const geometry = o.geometry ?? {};
   const colors = o.colors ?? {};
   const scene = o.scene ?? {};
-  const background = shaderPaletteBackground(
-    colors,
+  const background = resolveBackground(
     scene.backgroundColor,
     {
+      fallback: [
+        0,
+        0,
+        0
+      ],
+      palette: colors.palette,
       own: OWN_PALETTE_IDS
     }
-  ) ?? [
-    0,
-    0,
-    0
-  ];
+  );
 
   p.clear();
-  p.background( ...background );
+  paintBackground( background );
 
   const patternId = PATTERN_IDS[ o.pattern ] ?? PATTERN_IDS.tunnel;
   const paletteId = PALETTE_IDS[ colors.palette ] ?? PALETTE_IDS.iridescent;
@@ -267,11 +276,13 @@ sketch.draw( () => {
       uContrast: colors.contrast ?? 1.3,
       uVignette: scene.vignette ?? 0.6,
       uBreath: scene.breath ?? 0.08,
-      uBackground: [
-        ( background[ 0 ] ?? 0 ) / 255,
-        ( background[ 1 ] ?? 0 ) / 255,
-        ( background[ 2 ] ?? 0 ) / 255
-      ]
+      ...backgroundUniforms(
+        background,
+        {
+          width: p.width,
+          height: p.height
+        }
+      )
     }
   } );
 } );

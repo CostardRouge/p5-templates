@@ -744,7 +744,8 @@ export const formConfiguration: Record<string, any> = {
     step: 0.005
   },
   backgroundColor: {
-    component: "color",
+    component: "background",
+    palette: "colors/palette",
     label: "Background color"
   }
 };

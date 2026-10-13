@@ -9,8 +9,12 @@ import {
   PALETTE_IRIDESCENT_GLSL
 } from "@/p5/utils/braidShader.js";
 import {
-  shaderPalette, shaderPaletteBackground
+  shaderPalette
 } from "@/p5/utils/palettes.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SIGNALS — 03 / TORSADE
@@ -172,15 +176,18 @@ sketch.draw( () => {
   const colors = o.colors ?? {};
 
   p.clear();
-  p.background( ...( shaderPaletteBackground(
-    o.colors,
-    o.backgroundColor
-  ) ?? [
-    0,
-    0,
-    0,
-    255
-  ] ) );
+  paintBackground( resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0,
+        255
+      ],
+      palette: o.colors?.palette
+    }
+  ) );
 
   // Seamless loop: drive uTime over exactly one TAU. timeScale stays an integer.
   const timeScale = o.timeScale ?? 1;

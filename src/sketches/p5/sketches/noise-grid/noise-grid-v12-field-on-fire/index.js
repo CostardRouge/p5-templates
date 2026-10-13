@@ -10,8 +10,12 @@ import {
   PALETTE_RAINBOW_GLSL
 } from "@/p5/utils/paletteGlsl.js";
 import {
-  shaderPalette, shaderPaletteBackground
+  shaderPalette
 } from "@/p5/utils/palettes.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GPU port of "noise grid v12 — field on fire".
@@ -133,12 +137,15 @@ sketch.draw( (
   const p = getP5();
 
   p.clear();
-  p.background( ...( shaderPaletteBackground(
-    options.sketch.colors,
-    options.sketch.backgroundColor
-  ) ?? [
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    options.sketch.backgroundColor,
+    {
+      fallback: [
+        0
+      ],
+      palette: options.sketch.colors?.palette
+    }
+  ) );
 
   const t = animation.angle;
 

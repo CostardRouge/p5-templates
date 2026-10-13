@@ -9,8 +9,16 @@ import {
   PALETTE_IRIDESCENT_GLSL
 } from "@/p5/utils/braidShader.js";
 import {
-  shaderPalette, shaderPaletteBackground
+  shaderPalette
 } from "@/p5/utils/palettes.js";
+import {
+  backgroundUniforms,
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
+import {
+  BACKGROUND_GLSL
+} from "@/p5/utils/backgroundGlsl.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // dragon-corridor v2 — "threading the needle". Same legless, wingless dragon
@@ -153,7 +161,11 @@ const FRAGMENT = `
   uniform float uGlassTint;       // how much each wall borrows the iridescent hue
   uniform float uEdgeGlow;        // bright seam ringing the hole
   uniform float uFogDensity;
-  uniform vec3  uBgColor;
+  ${ BACKGROUND_GLSL }
+
+  // The background behind this pixel, set at the top of main(): a ray that
+  // misses and the fog both fade into it, so a gradient reaches them too.
+  vec3 uBgColor;
 
   // Oil-slick / thin-film iridescence — identical palette to flowers-shaders v2.
   ${ PALETTE_IRIDESCENT_GLSL }
@@ -571,6 +583,8 @@ const FRAGMENT = `
   }
 
   void main() {
+    uBgColor = backgroundAt(vec2(vUv.x, 1.0 - vUv.y));
+
     vec2 frag = vec2(vUv.x * uResolution.x, vUv.y * uResolution.y);
     vec2 uv = (frag - 0.5 * uResolution) / uResolution.y;
 
@@ -666,14 +680,19 @@ sketch.draw( () => {
   const sound = o.sound ?? {};
 
   p.clear();
-  p.background( ...( shaderPaletteBackground(
-    o.colors,
-    o.backgroundColor
-  ) ?? [
-    4,
-    4,
-    10
-  ] ) );
+  const background = resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        4,
+        4,
+        10
+      ],
+      palette: o.colors?.palette
+    }
+  );
+
+  paintBackground( background );
 
   const timeScale = o.timeScale ?? 1;
   const t = animation.angle;
@@ -1164,14 +1183,13 @@ sketch.draw( () => {
       uGlassTint: obstacles.glassTint ?? 0.3,
       uEdgeGlow: obstacles.edgeGlow ?? 0.8,
       uFogDensity: corridor.fogDensity ?? 0.13,
-      uBgColor: ( shaderPaletteBackground(
-        o.colors,
-        o.backgroundColor
-      ) ?? [
-        4,
-        4,
-        10
-      ] ).map( ( v ) => v / 255 )
+      ...backgroundUniforms(
+        background,
+        {
+          width: p.width,
+          height: p.height
+        }
+      )
     }
   } );
 } );

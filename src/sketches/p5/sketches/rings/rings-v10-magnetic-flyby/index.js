@@ -41,8 +41,12 @@ import {
   createHoverSounds
 } from "./hoverSounds.js";
 import {
-  shaderPalette, shaderPaletteBackground
+  shaderPalette
 } from "@/p5/utils/palettes.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // rings v10 — magnetic fly-by.
@@ -803,14 +807,17 @@ sketch.draw( () => {
   const rendering = o.rendering ?? {};
 
   p.clear();
-  p.background( ...( shaderPaletteBackground(
-    o.colors,
-    o.backgroundColor
-  ) ?? [
-    0,
-    0,
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0
+      ],
+      palette: o.colors?.palette
+    }
+  ) );
 
   // ── The word (single text, multi-line supported — real newlines from the
   // textarea, or a literal "\n") ─────────────────────────────────────────────

@@ -9,8 +9,12 @@ import {
   PALETTE_IRIDESCENT_GLSL
 } from "@/p5/utils/braidShader.js";
 import {
-  shaderPalette, shaderPaletteBackground
+  shaderPalette
 } from "@/p5/utils/palettes.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SIGNALS — 02 / BRAID
@@ -263,15 +267,18 @@ sketch.draw( () => {
   const aberration = o.aberration ?? {};
 
   p.clear();
-  p.background( ...( shaderPaletteBackground(
-    o.colors,
-    o.backgroundColor
-  ) ?? [
-    0,
-    0,
-    0,
-    255
-  ] ) );
+  paintBackground( resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0,
+        255
+      ],
+      palette: o.colors?.palette
+    }
+  ) );
 
   // Seamless loop: drive uT over exactly one TAU per loop. timeScale must stay an
   // integer so the rotation/pulse phases close at the recording boundary.

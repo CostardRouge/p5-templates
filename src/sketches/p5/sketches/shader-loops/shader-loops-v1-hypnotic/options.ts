@@ -82,7 +82,6 @@ export const formValues = {
   // colour cycle is bound to the loop, so it always lands back on its first hue.
   colors: {
     palette: "iridescent",
-    paletteBackground: false,
     hueCycles: 1,
     hueSpread: 1,
     huePhase: 0,
@@ -171,10 +170,6 @@ export const formConfiguration: Record<string, any> = {
         component: "palette-picker",
         options: PALETTE_OPTIONS
       },
-      paletteBackground: {
-        label: "Use the palette's background",
-        component: "checkbox"
-      },
       hueCycles: {
         label: "Colour cycles per loop",
         component: "slider",
@@ -225,7 +220,8 @@ export const formConfiguration: Record<string, any> = {
     label: "Scene",
     fields: {
       backgroundColor: {
-        component: "color",
+        component: "background",
+        palette: "../colors/palette",
         label: "Background color"
       },
       vignette: {

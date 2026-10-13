@@ -9,8 +9,12 @@ import {
   PALETTE_IRIDESCENT_GLSL
 } from "@/p5/utils/braidShader.js";
 import {
-  shaderPalette, shaderPaletteBackground
+  shaderPalette
 } from "@/p5/utils/palettes.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // torsade-shaders v2 — rabbit hole.
@@ -156,16 +160,19 @@ sketch.draw( ( time ) => {
 
   p.clear();
 
-  const bg = shaderPaletteBackground(
-    o.colors,
-    o.backgroundColor
-  ) ?? [
-    0,
-    0,
-    0
-  ];
+  const bg = resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0
+      ],
+      palette: o.colors?.palette
+    }
+  );
 
-  p.background( ...bg );
+  paintBackground( bg );
 
   const xCount = layout.xCount ?? 1;
   const yCount = layout.yCount ?? 1;
@@ -197,6 +204,8 @@ sketch.draw( ( time ) => {
     columns: angleSubdivisions,
     rows: shadowSteps * spiralCount,
     background: bg,
+    // A gradient lies on the 2D canvas below: composite the dots over it.
+    alphaOver: !!bg.spec,
     uniforms: {
       uT: time,
       uXCount: xCount,

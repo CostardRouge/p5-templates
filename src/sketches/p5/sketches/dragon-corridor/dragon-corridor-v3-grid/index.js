@@ -9,8 +9,16 @@ import {
   PALETTE_IRIDESCENT_GLSL
 } from "@/p5/utils/braidShader.js";
 import {
-  shaderPalette, shaderPaletteBackground
+  shaderPalette
 } from "@/p5/utils/palettes.js";
+import {
+  backgroundUniforms,
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
+import {
+  BACKGROUND_GLSL
+} from "@/p5/utils/backgroundGlsl.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // dragon-corridor v3 — "whack-a-dragon". The corridor is gone: the same
@@ -159,7 +167,11 @@ const FRAGMENT = `
   uniform float uRimStrength;
 
   uniform float uFogDensity;
-  uniform vec3  uBgColor;
+  ${ BACKGROUND_GLSL }
+
+  // The background behind this pixel, set at the top of main(): a ray that
+  // misses and the fog both fade into it, so a gradient reaches them too.
+  vec3 uBgColor;
   uniform vec3  uBoundMin;    // dragon bounding box (march early-out)
   uniform vec3  uBoundMax;
 
@@ -586,6 +598,8 @@ const FRAGMENT = `
   }
 
   void main() {
+    uBgColor = backgroundAt(vec2(vUv.x, 1.0 - vUv.y));
+
     vec2 frag = vec2(vUv.x * uResolution.x, vUv.y * uResolution.y);
     vec2 uv = (frag - 0.5 * uResolution) / uResolution.y;
 
@@ -738,14 +752,19 @@ sketch.draw( () => {
   const sound = o.sound ?? {};
 
   p.clear();
-  p.background( ...( shaderPaletteBackground(
-    o.colors,
-    o.backgroundColor
-  ) ?? [
-    6,
-    8,
-    16
-  ] ) );
+  const background = resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        6,
+        8,
+        16
+      ],
+      palette: o.colors?.palette
+    }
+  );
+
+  paintBackground( background );
 
   const timeScale = o.timeScale ?? 1;
   const t = animation.angle;
@@ -1414,14 +1433,13 @@ sketch.draw( () => {
       uFresnelPower: light.fresnelPower ?? 2.5,
       uRimStrength: light.rimStrength ?? 0.5,
       uFogDensity: o.fogDensity ?? 0.05,
-      uBgColor: ( shaderPaletteBackground(
-        o.colors,
-        o.backgroundColor
-      ) ?? [
-        6,
-        8,
-        16
-      ] ).map( ( v ) => v / 255 ),
+      ...backgroundUniforms(
+        background,
+        {
+          width: p.width,
+          height: p.height
+        }
+      ),
       uBoundMin: [
         -( holeReachX + reachPad ),
         -( maxAmp + maxR + 0.1 ),

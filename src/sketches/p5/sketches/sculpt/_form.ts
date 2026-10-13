@@ -661,7 +661,8 @@ export const renderingFormConfiguration = {
 };
 
 export const backgroundColorFormConfiguration = {
-  component: "color",
+  component: "background",
+  palette: "colors/palette",
   label: "Background color"
 };
 

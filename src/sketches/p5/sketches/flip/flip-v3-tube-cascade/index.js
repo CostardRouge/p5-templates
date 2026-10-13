@@ -18,8 +18,12 @@ import {
   SEG_STRIDE
 } from "../_letterField.js";
 import {
-  shaderPalette, shaderPaletteBackground
+  shaderPalette
 } from "@/p5/utils/palettes.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // flip v3 — tube cascade.
@@ -512,14 +516,17 @@ sketch.draw( () => {
   const rendering = o.rendering ?? {};
 
   p.clear();
-  p.background( ...( shaderPaletteBackground(
-    o.colors,
-    o.backgroundColor
-  ) ?? [
-    0,
-    0,
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0
+      ],
+      palette: o.colors?.palette
+    }
+  ) );
 
   // ── The bank: one glyph per face ──────────────────────────────────────────
   const glyphs = ( textCfg.glyphs ?? "abcd" )

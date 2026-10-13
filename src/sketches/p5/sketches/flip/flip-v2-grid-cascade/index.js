@@ -14,8 +14,7 @@ import {
 } from "@/p5/utils/braidShader.js";
 import {
   paletteColorAt,
-  shaderPalette,
-  shaderPaletteBackground
+  shaderPalette
 } from "@/p5/utils/palettes.js";
 import {
   flipBeat,
@@ -29,6 +28,10 @@ import {
   MAX_TOTAL_SEG,
   getLetterField
 } from "../_letterField.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // flip v2 — grid cascade.
@@ -942,14 +945,17 @@ sketch.draw( () => {
   const camera = o.camera ?? {};
 
   p.clear();
-  p.background( ...( shaderPaletteBackground(
-    colors,
-    o.backgroundColor
-  ) ?? [
-    0,
-    0,
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0
+      ],
+      palette: colors?.palette
+    }
+  ) );
 
   // ── The faces on stage ────────────────────────────────────────────────────
   // One flat list, whatever the content mode asks for: the entries themselves,

@@ -35,8 +35,10 @@ import {
 
 // The palette's paper, for a shared preset only: a colors.js house function
 // has no paper, so its sketches keep their own colours.
-function paperOf( palette ) {
-  if ( !palette || HOUSE_PALETTE_IDS.includes( palette ) ) {
+function paperOf(
+  palette, own = []
+) {
+  if ( !palette || HOUSE_PALETTE_IDS.includes( palette ) || own.includes( palette ) ) {
     return null;
   }
 
@@ -56,7 +58,9 @@ function withAlpha(
 
 /**
  * @param {*} value the stored background: a colour array or a gradient object
- * @param {{ fallback?: number[], palette?: string }} [options]
+ * @param {{ fallback?: number[], palette?: string, own?: string[] }} [options]
+ *   `own`: palette ids the sketch draws itself (shader-loops' house formulas,
+ *   one of them named like a shared preset), which therefore have no paper.
  * @returns {number[] & { spec?: object }}
  */
 export function resolveBackground(
@@ -66,7 +70,8 @@ export function resolveBackground(
       0,
       0
     ],
-    palette
+    palette,
+    own = []
   } = {}
 ) {
   if ( !isBackgroundObject( value ) ) {
@@ -74,7 +79,10 @@ export function resolveBackground(
   }
 
   const spec = normalizeBackground( value );
-  const paper = spec.source === "palette" ? paperOf( palette ) : null;
+  const paper = spec.source === "palette" ? paperOf(
+    palette,
+    own
+  ) : null;
   const from = paper ? withAlpha(
     paper.top,
     spec.from
@@ -268,4 +276,111 @@ export function paintBackground(
   );
   ctx.depthMask( true );
   target.pop();
+}
+
+const STOP_SLOTS = 25;
+
+/**
+ * The background as uniforms for `BACKGROUND_GLSL` (backgroundGlsl.js), for a
+ * shader that paints its own background — a ray that misses, fog fading into
+ * it — instead of letting the 2D canvas show through. The stops are the very
+ * ones the 2D painter lays, as 0–1 RGBA; a plain colour fills every slot, so
+ * `backgroundAt()` returns exactly the colour the shader used to get.
+ *
+ * @param {number[] & { spec?: object }} background resolveBackground's result
+ * @param {{ width: number, height: number, target?: object }} frame the canvas size
+ */
+export function backgroundUniforms(
+  background, {
+    width, height, target = getP5()
+  }
+) {
+  const spec = background?.spec;
+  const flat = [];
+
+  if ( !spec || spec.kind === "solid" ) {
+    const [
+      r,
+      g,
+      b,
+      a
+    ] = levels(
+      target,
+      background
+    );
+
+    for ( let i = 0; i < STOP_SLOTS; i++ ) {
+      flat.push(
+        r / 255,
+        g / 255,
+        b / 255,
+        a / 255
+      );
+    }
+
+    return {
+      uBgKind: 0,
+      uBgStops: {
+        vec4v: flat
+      },
+      uBgLine: [
+        0,
+        0,
+        0,
+        1
+      ],
+      uBgCircle: [
+        0,
+        0,
+        1
+      ],
+      uBgSize: [
+        width,
+        height
+      ]
+    };
+  }
+
+  const geometry = geometryFor(
+    spec,
+    target,
+    width,
+    height
+  );
+
+  for ( let i = 0; i < STOP_SLOTS; i++ ) {
+    const color = geometry.stops[ Math.min(
+      i,
+      geometry.stops.length - 1
+    ) ].color;
+
+    flat.push(
+      color[ 0 ] / 255,
+      color[ 1 ] / 255,
+      color[ 2 ] / 255,
+      color[ 3 ] / 255
+    );
+  }
+
+  return {
+    uBgKind: geometry.kind === "radial" ? 2 : 1,
+    uBgStops: {
+      vec4v: flat
+    },
+    uBgLine: geometry.line ?? [
+      0,
+      0,
+      0,
+      1
+    ],
+    uBgCircle: geometry.circle ?? [
+      0,
+      0,
+      1
+    ],
+    uBgSize: [
+      width,
+      height
+    ]
+  };
 }

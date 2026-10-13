@@ -46,8 +46,12 @@ import {
   buildTransition
 } from "./virtualPointers.js";
 import {
-  shaderPalette, shaderPaletteBackground
+  shaderPalette
 } from "@/p5/utils/palettes.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // rings v8 — morph hyper interactive.
@@ -1133,14 +1137,17 @@ sketch.draw( () => {
   const grab = o.grab ?? {};
 
   p.clear();
-  p.background( ...( shaderPaletteBackground(
-    o.colors,
-    o.backgroundColor
-  ) ?? [
-    0,
-    0,
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0
+      ],
+      palette: o.colors?.palette
+    }
+  ) );
 
   // ── The text cycle: one geometry per entry (letters, words or multi-line
   // blocks — real newlines from the textarea, or a literal "\n") ─────────────

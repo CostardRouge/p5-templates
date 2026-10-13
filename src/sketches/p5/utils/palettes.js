@@ -981,8 +981,7 @@ export function shaderPaletteOptions( original = "oil-slick" ) {
 export const SHADER_PALETTE_OPTIONS = shaderPaletteOptions();
 
 export const shaderPaletteFormValues = {
-  palette: "original",
-  paletteBackground: false
+  palette: "original"
 };
 
 /** The colour group's palette fields, for a family whose own colour is `original`. */
@@ -992,10 +991,6 @@ export function shaderPaletteFields( original = "oil-slick" ) {
       label: "Palette",
       component: "palette-picker",
       options: shaderPaletteOptions( original )
-    },
-    paletteBackground: {
-      label: "Use the palette's background",
-      component: "checkbox"
     }
   };
 }
@@ -1008,48 +1003,6 @@ function presetFor(
   id, own = []
 ) {
   return id && id !== "original" && !own.includes( id ) ? PALETTES[ id ] ?? null : null;
-}
-
-/**
- * The background colour a shader sketch should clear to: its own, unless the
- * palette's is asked for and the palette has one (then the paper's two colours
- * averaged, keeping the sketch's own alpha).
- */
-export function shaderPaletteBackground(
-  colors, background, {
-    own = []
-  } = {}
-) {
-  const preset = presetFor(
-    colors?.palette,
-    own
-  );
-
-  if ( !colors?.paletteBackground || !preset?.paper ) {
-    return background;
-  }
-
-  const {
-    top, bottom = top
-  } = preset.paper;
-  const mixed = [
-    0,
-    1,
-    2
-  ].map( ( i ) => Math.round( ( channel(
-    top,
-    i
-  ) + channel(
-    bottom,
-    i
-  ) ) / 2 ) );
-
-  return Array.isArray( background ) && background.length > 3
-    ? [
-      ...mixed,
-      background[ 3 ]
-    ]
-    : mixed;
 }
 
 const NO_RAMP = {

@@ -13,8 +13,12 @@ import {
 } from "@/p5/utils/braidShader.js";
 import easing from "@/p5/utils/easing.js";
 import {
-  shaderPalette, shaderPaletteBackground
+  shaderPalette
 } from "@/p5/utils/palettes.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // rings v1 — flythrough.
@@ -242,14 +246,17 @@ sketch.draw( () => {
   const rendering = o.rendering ?? {};
 
   p.clear();
-  p.background( ...( shaderPaletteBackground(
-    o.colors,
-    o.backgroundColor
-  ) ?? [
-    0,
-    0,
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0
+      ],
+      palette: o.colors?.palette
+    }
+  ) );
 
   const timeScale = o.timeScale ?? 1;
   const t = animation.angle;

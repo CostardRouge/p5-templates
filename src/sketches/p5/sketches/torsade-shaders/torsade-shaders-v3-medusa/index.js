@@ -10,8 +10,12 @@ import {
   PALETTE_IRIDESCENT_GLSL
 } from "@/p5/utils/braidShader.js";
 import {
-  shaderPalette, shaderPaletteBackground
+  shaderPalette
 } from "@/p5/utils/palettes.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // torsade-shaders v3 — medusa.
@@ -233,16 +237,19 @@ sketch.draw( () => {
 
   p.clear();
 
-  const bg = shaderPaletteBackground(
-    o.colors,
-    o.backgroundColor
-  ) ?? [
-    0,
-    0,
-    0
-  ];
+  const bg = resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0
+      ],
+      palette: o.colors?.palette
+    }
+  );
 
-  p.background( ...bg );
+  paintBackground( bg );
 
   // Glow first (underneath), then the medusa dots composite over it.
   drawGlow(
@@ -282,6 +289,9 @@ sketch.draw( () => {
     rows: shadowSteps * spiralCount,
     background: bg,
     clearAlpha: 0,
+    // A gradient: clear to transparent black, or its first colour, left under
+    // alpha 0, is added over the whole canvas. The plain colour keeps its look.
+    alphaOver: !!bg.spec,
     uniforms: {
       uT: time,
       uXCount: xCount,

@@ -8,8 +8,7 @@ import {
   housePaletteOptions,
   paletteColorAt,
   paletteSampler,
-  shaderPalette,
-  shaderPaletteBackground
+  shaderPalette
 } from "../palettes.js";
 
 describe(
@@ -112,45 +111,6 @@ describe(
         expect( first.uniforms.uPaletteOn ).toBe( 1 );
         expect( first.textures.uPaletteRamp.width ).toBe( 256 );
         expect( second.textures.uPaletteRamp ).toBe( first.textures.uPaletteRamp );
-      }
-    );
-
-    it(
-      "keeps the sketch's background unless the palette's is asked for",
-      () => {
-        const own = [
-          10,
-          20,
-          30,
-          255
-        ];
-
-        expect( shaderPaletteBackground(
-          {
-            palette: "riso-pink-blue"
-          },
-          own
-        ) ).toBe( own );
-        expect( shaderPaletteBackground(
-          {
-            palette: "original",
-            paletteBackground: true
-          },
-          own
-        ) ).toBe( own );
-        // Riso paper: (245,240,230) over (234,227,212), averaged, own alpha kept.
-        expect( shaderPaletteBackground(
-          {
-            palette: "riso-pink-blue",
-            paletteBackground: true
-          },
-          own
-        ) ).toEqual( [
-          240,
-          234,
-          221,
-          255
-        ] );
       }
     );
 
