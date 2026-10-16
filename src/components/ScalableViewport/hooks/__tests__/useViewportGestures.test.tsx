@@ -11,13 +11,42 @@ import type {
   TransformState
 } from "../useTransformState";
 import {
+  isMouseWheelEvent,
   useViewportGestures
 } from "../useViewportGestures";
 
-// Wheel events on the viewport container: a plain one is a two-finger
-// trackpad scroll (or a mouse wheel) and must pan; a ctrl-modified one is
-// what browsers synthesise for a trackpad pinch and belongs to the pinch
+// Wheel events on the viewport container: a mouse wheel zooms about the
+// cursor, a two-finger trackpad scroll pans, and a ctrl-modified one is what
+// browsers synthesise for a trackpad pinch and belongs to the pinch
 // recogniser, so the wheel handler must not touch the transform for it.
+
+type WheelInit = WheelEventInit & { wheelDeltaY?: number };
+
+// jsdom's WheelEvent has no legacy `wheelDeltaY`; Chromium and WebKit do.
+function wheelEvent( {
+  wheelDeltaY, ...init
+}: WheelInit ): WheelEvent {
+  const event = new WheelEvent(
+    "wheel",
+    {
+      bubbles: true,
+      cancelable: true,
+      ...init
+    }
+  );
+
+  if ( wheelDeltaY !== undefined ) {
+    Object.defineProperty(
+      event,
+      "wheelDeltaY",
+      {
+        value: wheelDeltaY
+      }
+    );
+  }
+
+  return event;
+}
 
 function mountGestures() {
   const container = document.createElement( "div" );
@@ -53,15 +82,8 @@ function mountGestures() {
     } );
   } );
 
-  const wheel = ( init: WheelEventInit ) => act( () => {
-    container.dispatchEvent( new WheelEvent(
-      "wheel",
-      {
-        bubbles: true,
-        cancelable: true,
-        ...init
-      }
-    ) );
+  const wheel = ( init: WheelInit ) => act( () => {
+    container.dispatchEvent( wheelEvent( init ) );
   } );
 
   return {
@@ -173,6 +195,154 @@ describe(
         expect( g.onInteractionEnd ).toHaveBeenCalledTimes( 1 );
 
         g.unmount();
+      }
+    );
+
+    it(
+      "zooms on a mouse wheel, keeping the point under the cursor in place",
+      () => {
+        const g = mountGestures();
+        // The content point under the cursor before the zoom.
+        const clientX = 300;
+        const clientY = 200;
+        const under = ( t: TransformState ) => [
+          ( clientX - t.x ) / t.scale,
+          ( clientY - t.y ) / t.scale
+        ];
+        const before = under( {
+          ...g.transform
+        } );
+
+        // A Chromium mouse notch: 100 px, legacy delta −120.
+        g.wheel( {
+          deltaY: -100,
+          wheelDeltaY: 120,
+          clientX,
+          clientY
+        } );
+
+        expect( g.transform.scale ).toBeCloseTo( Math.exp( 1 ) );
+        expect( under( g.transform )[ 0 ] ).toBeCloseTo( before[ 0 ] );
+        expect( under( g.transform )[ 1 ] ).toBeCloseTo( before[ 1 ] );
+        expect( g.onInteractionStart ).toHaveBeenCalledWith( "zooming" );
+        expect( g.onInteractionStart ).not.toHaveBeenCalledWith( "panning" );
+
+        g.unmount();
+      }
+    );
+
+    it(
+      "zooms out on a wheel turned toward the user, in lines as Firefox reports it",
+      () => {
+        const g = mountGestures();
+
+        g.wheel( {
+          deltaY: 3,
+          deltaMode: 1
+        } );
+
+        expect( g.transform.scale ).toBeLessThan( 1 );
+
+        g.unmount();
+      }
+    );
+
+    it(
+      "pans on a trackpad scroll, whose legacy delta is −3 × its pixel delta",
+      () => {
+        const g = mountGestures();
+
+        g.wheel( {
+          deltaY: 40,
+          wheelDeltaY: -120
+        } );
+
+        expect( g.transform.scale ).toBe( 1 );
+        expect( g.transform.y ).toBe( 10 );
+        expect( g.onInteractionStart ).toHaveBeenCalledWith( "panning" );
+
+        g.unmount();
+      }
+    );
+
+    it(
+      "keeps one mode for a whole burst, and decides again for the next",
+      () => {
+        const g = mountGestures();
+
+        // A trackpad scroll, then an event that alone would read as a wheel.
+        g.wheel( {
+          deltaY: 4,
+          wheelDeltaY: -12
+        } );
+        g.wheel( {
+          deltaY: 100,
+          wheelDeltaY: -120
+        } );
+
+        expect( g.transform.scale ).toBe( 1 );
+        expect( g.onInteractionStart ).toHaveBeenCalledTimes( 1 );
+
+        act( () => {
+          jest.runOnlyPendingTimers();
+        } );
+        expect( g.onInteractionEnd ).toHaveBeenCalledTimes( 1 );
+
+        g.wheel( {
+          deltaY: 100,
+          wheelDeltaY: -120
+        } );
+
+        expect( g.transform.scale ).toBeLessThan( 1 );
+        expect( g.onInteractionStart ).toHaveBeenLastCalledWith( "zooming" );
+
+        g.unmount();
+      }
+    );
+  }
+);
+
+describe(
+  "isMouseWheelEvent",
+  () => {
+    it(
+      "reads a line-mode event, or a ±120 legacy notch on one axis, as a mouse wheel",
+      () => {
+        expect( isMouseWheelEvent( wheelEvent( {
+          deltaY: 3,
+          deltaMode: 1
+        } ) ) ).toBe( true );
+        expect( isMouseWheelEvent( wheelEvent( {
+          deltaY: 100,
+          wheelDeltaY: -120
+        } ) ) ).toBe( true );
+        // WebKit on macOS: a small pixel delta, still a ±120 notch.
+        expect( isMouseWheelEvent( wheelEvent( {
+          deltaY: -4,
+          wheelDeltaY: 120
+        } ) ) ).toBe( true );
+      }
+    );
+
+    it(
+      "reads two axes, a −3× legacy delta, or no legacy delta at all as a trackpad",
+      () => {
+        expect( isMouseWheelEvent( wheelEvent( {
+          deltaX: 2,
+          deltaY: 30
+        } ) ) ).toBe( false );
+        expect( isMouseWheelEvent( wheelEvent( {
+          deltaY: 40,
+          wheelDeltaY: -120
+        } ) ) ).toBe( false );
+        // Page zoom leaves the pixel delta fractional and the legacy one rounded.
+        expect( isMouseWheelEvent( wheelEvent( {
+          deltaY: 1.3333,
+          wheelDeltaY: -4
+        } ) ) ).toBe( false );
+        expect( isMouseWheelEvent( wheelEvent( {
+          deltaY: 30
+        } ) ) ).toBe( false );
       }
     );
   }
