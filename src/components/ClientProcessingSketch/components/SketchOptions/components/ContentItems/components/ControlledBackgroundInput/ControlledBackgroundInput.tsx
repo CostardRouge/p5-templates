@@ -315,7 +315,11 @@ export default function ControlledBackgroundInput( {
           <p className="text-[11px] leading-4 text-label">
             {paper
               ? `The paper of ${ preset?.label ?? paletteId } — top and bottom — follows the palette as it changes.`
-              : "The palette in use has no paper (the sketch's own colours do not carry one): its own colours paint for now."}
+              // Every id of a presets-only palette has a paper but the custom
+              // look, whose colours are the ones below.
+              : config.presetsOnly
+                ? "The custom look has no paper: the colours below paint until a palette is picked."
+                : "The palette in use has no paper (the sketch's own colours do not carry one): its own colours paint for now."}
           </p>
         )}
 
