@@ -1,3 +1,6 @@
+import {
+  shaderPaletteFields, shaderPaletteFormValues
+} from "@/p5/utils/palettes.js";
 
 export const formValues = {
   grid: {
@@ -23,6 +26,7 @@ export const formValues = {
     waveSpeed: 0
   },
   colors: {
+    ...shaderPaletteFormValues,
     hueRange: 1.54,
     hueOffset: 1.58840734641021,
     opacityMax: 12.6,
@@ -156,6 +160,7 @@ export const formConfiguration: Record<string, any> = {
     component: "nested-object",
     label: "Colors",
     fields: {
+      ...shaderPaletteFields( "rainbow" ),
       hueRange: {
         label: "Hue range",
         component: "slider",
@@ -187,7 +192,8 @@ export const formConfiguration: Record<string, any> = {
     }
   },
   backgroundColor: {
-    component: "color",
+    component: "background",
+    palette: "colors/palette",
     label: "Background color"
   }
 };

@@ -1,6 +1,9 @@
 import {
   fontNames
 } from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/constants/field-config";
+import {
+  shaderPaletteFormFields, shaderPaletteFormValues
+} from "@/p5/utils/palettes.js";
 
 export const formValues = {
   timeScale: 1,
@@ -32,6 +35,7 @@ export const formValues = {
     bank: -0.64
   },
   colors: {
+    ...shaderPaletteFormValues,
     hueSpeed: 1,
     hueSpread: 1.73,
     huePhase: 2.6,
@@ -237,6 +241,7 @@ export const formConfiguration: Record<string, any> = {
     component: "nested-object",
     label: "Iridescent",
     fields: {
+      ...shaderPaletteFormFields,
       hueSpeed: {
         label: "Hue speed (snaps to whole cycles/loop)",
         component: "slider",
@@ -405,7 +410,8 @@ export const formConfiguration: Record<string, any> = {
     }
   },
   backgroundColor: {
-    component: "color",
+    component: "background",
+    palette: "colors/palette",
     label: "Background color"
   }
 };

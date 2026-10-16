@@ -89,7 +89,7 @@ export const formConfiguration: Record<string, any> = {
     label: "Display easing function"
   },
   backgroundColor: {
-    component: "color",
+    component: "background",
     label: "Background color"
   }
 };

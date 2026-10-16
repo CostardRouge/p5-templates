@@ -25,7 +25,7 @@ export const formConfiguration: Record<string, any> = {
     component: "nested-object",
     fields: {
       background: {
-        component: "color",
+        component: "background",
         label: "Background color"
       },
       text: {

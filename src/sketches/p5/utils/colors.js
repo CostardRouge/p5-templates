@@ -1,6 +1,48 @@
 import {
   getP5
 } from "./sketch.js";
+import {
+  HOUSE_PALETTE_IDS,
+  paletteSampler
+} from "./palettes.js";
+
+const TAU = Math.PI * 2;
+const rampColorFunctions = new Map();
+
+// A shared preset drawn with the house functions' signature: the ramp read at
+// (hueOffset + hueIndex) / 2π — one turn of the ramp per turn of the sine the
+// house rainbow walks — divided by opacityFactor as they divide. min / max and
+// easingFunction shape a house formula; a ramp has no use for them.
+function rampColorFunction( id ) {
+  if ( !rampColorFunctions.has( id ) ) {
+    const sample = paletteSampler( id );
+
+    rampColorFunctions.set(
+      id,
+      sample && ( ( {
+        hueOffset = 0,
+        hueIndex = 0,
+        opacityFactor = 1,
+        alpha = 255
+      } ) => {
+        const [
+          r,
+          g,
+          b
+        ] = sample( ( hueOffset + hueIndex ) / TAU );
+
+        return getP5().color(
+          r / opacityFactor,
+          g / opacityFactor,
+          b / opacityFactor,
+          alpha
+        );
+      } )
+    );
+  }
+
+  return rampColorFunctions.get( id );
+}
 
 const colors = {
   test: ( {
@@ -204,6 +246,25 @@ const colors = {
       2,
       8
     ),
+
+  /**
+   * The colour function a 2D sketch's palette id names: the house function of
+   * that name (rainbow, purple, …), a shared preset read off its ramp with the
+   * same signature, or `fallback`'s house function for anything else — so a
+   * stored id from before the shared palettes resolves exactly as it did.
+   *
+   * @param {string} [id]
+   * @param {string} [fallback]
+   */
+  palette: (
+    id, fallback = "rainbow"
+  ) => {
+    if ( id && HOUSE_PALETTE_IDS.includes( id ) ) {
+      return colors[ id ];
+    }
+
+    return ( id && rampColorFunction( id ) ) || colors[ fallback ];
+  },
 
   chunk: (
     array, chunkSize

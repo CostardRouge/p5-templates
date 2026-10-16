@@ -17,6 +17,9 @@ import {
 
 import scripts from "@/p5/utils/scripts.js";
 import Matter from "@/public/assets/libraries/matter.min.js";
+import {
+  paintBackground
+} from "@/p5/utils/background.js";
 
 // Matter's concave-decomposition dependency, loaded once for every
 // hand-capture sketch that builds bodies through this module.
@@ -134,7 +137,7 @@ export class HandCaptureScene {
     const p = getP5();
 
     if ( background ) {
-      p.background( ...background );
+      paintBackground( background );
     }
   }
 
@@ -814,7 +817,7 @@ export class HandCaptureScene {
 
     // 3. Final frame: repaint the background (the live-hand pass cleared it) and
     //    lay the accumulator — aged echoes plus the crisp live hand — on top.
-    p.background( ...background );
+    paintBackground( background );
     p.image(
       layer,
       0,

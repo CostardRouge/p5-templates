@@ -204,7 +204,7 @@ export const formConfiguration: Record<string, any> = {
     yDown: true
   },
   backgroundColor: {
-    component: "color",
+    component: "background",
     label: "Background color"
   }
 };

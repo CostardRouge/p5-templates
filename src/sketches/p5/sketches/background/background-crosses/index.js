@@ -5,6 +5,10 @@ import sketch, {
 import shapes from "@/p5/utils/shapes.js";
 import colors from "@/p5/utils/colors.js";
 import animation from "@/p5/utils/animation.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 sketch.setup( () => {} );
 
@@ -23,11 +27,17 @@ sketch.draw( () => {
   const cfg = options.sketch ?? {};
 
   p.clear();
-  p.background( ...( cfg.backgroundColor ?? [
-    0,
-    0,
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    cfg.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0
+      ],
+      palette: cfg?.palette
+    }
+  ) );
 
   const columns = cfg.columns ?? 9;
   const proportional = cfg.proportional ?? true;
@@ -38,7 +48,7 @@ sketch.draw( () => {
     )
     : cfg.rows ?? 9;
 
-  const colorFunction = PALETTES[ cfg.palette ] ?? colors.rainbow;
+  const colorFunction = PALETTES[ cfg.palette ] ?? colors.palette( cfg.palette );
   const size = cfg.size ?? 18;
   const amount = cfg.amount ?? 2;
   const strokeWeight = cfg.strokeWeight ?? 3;

@@ -10,6 +10,10 @@ import {
   computeOpacityFactor,
   paletteStroke
 } from "../_shared.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 function drawClosedRadial( {
   time,
@@ -61,12 +65,17 @@ sketch.draw( ( time ) => {
   const o = options.sketch ?? {};
 
   p.clear();
-  p.background( ...( o.backgroundColor ?? [
-    0,
-    0,
-    0,
-    255
-  ] ) );
+  paintBackground( resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0,
+        255
+      ]
+    }
+  ) );
 
   p.translate(
     p.width / 2,

@@ -10,6 +10,10 @@ import {
   getPointers,
   initInteraction
 } from "@/p5/utils/interaction/index.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // ── voice-portrait ─────────────────────────────────────────────────────────
 // The "turn your sound on" format: the webcam portrait is rebuilt as a coarse
@@ -49,14 +53,19 @@ sketch.draw( () => {
   const reaction = options.sketch?.reaction ?? {};
   const appearance = options.sketch?.appearance ?? {};
   const overlay = options.sketch?.overlay ?? {};
-  const background = options.sketch?.backgroundColor ?? [
-    8,
-    8,
-    12
-  ];
+  const background = resolveBackground(
+    options.sketch?.backgroundColor,
+    {
+      fallback: [
+        8,
+        8,
+        12
+      ]
+    }
+  );
 
   p.clear();
-  p.background( ...background );
+  paintBackground( background );
 
   // Pump the interaction system so this frame's audio features exist.
   getPointers( interaction );

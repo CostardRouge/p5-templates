@@ -1,34 +1,16 @@
+import {
+  housePaletteOptions
+} from "@/p5/utils/palettes.js";
 
-const PALETTE_OPTIONS = [
-  {
-    label: "Rainbow",
-    value: "rainbow"
-  },
-  {
-    label: "Rainbow crazy",
-    value: "rainbowCrazy"
-  },
-  {
-    label: "Test (sin/cos channels)",
-    value: "test"
-  },
-  {
-    label: "Purple",
-    value: "purple"
-  },
-  {
-    label: "Dark blue / yellow",
-    value: "darkBlueYellow"
-  },
-  {
-    label: "Green",
-    value: "green"
-  },
-  {
-    label: "Black",
-    value: "black"
-  }
-];
+const PALETTE_OPTIONS = housePaletteOptions( [
+  "rainbow",
+  "rainbowCrazy",
+  "test",
+  "purple",
+  "darkBlueYellow",
+  "green",
+  "black"
+] );
 
 export const formValues = {
   steps: 400,
@@ -254,7 +236,7 @@ export const formConfiguration: Record<string, any> = {
     fields: {
       palette: {
         label: "Palette",
-        component: "select",
+        component: "palette-picker",
         options: PALETTE_OPTIONS
       },
       hueIndexMultiplier: {
@@ -315,13 +297,14 @@ export const formConfiguration: Record<string, any> = {
       },
       palette: {
         label: "Grid palette",
-        component: "select",
+        component: "palette-picker",
         options: PALETTE_OPTIONS
       }
     }
   },
   backgroundColor: {
-    component: "color",
+    component: "background",
+    palette: "colors/palette",
     label: "Background color"
   }
 };

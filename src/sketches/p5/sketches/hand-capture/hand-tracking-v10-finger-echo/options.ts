@@ -100,7 +100,7 @@ export const formConfiguration: Record<string, any> = {
     initialExpanded: true,
     fields: {
       backgroundColor: {
-        component: "color",
+        component: "background",
         label: "Background color"
       },
       showVideo: {

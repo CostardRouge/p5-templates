@@ -16,6 +16,10 @@ import {
 import {
   drawInteractionOverlay
 } from "@/p5/utils/interaction/overlay.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // The letters live on their own buffer so their per-letter transforms stay
 // isolated from the main canvas; the interaction overlay (crosshairs, pointer
@@ -36,16 +40,21 @@ const sketchState = sketch.state( () => ( {
 } ) );
 
 const getBackgroundColor = () =>
-  options.sketch.backgroundColor ?? [
-    246,
-    235,
-    225
-  ];
+  resolveBackground(
+    options.sketch.backgroundColor,
+    {
+      fallback: [
+        246,
+        235,
+        225
+      ]
+    }
+  );
 
 sketch.setup( async() => {
   const p = getP5();
 
-  p.background( ...getBackgroundColor() );
+  paintBackground( getBackgroundColor() );
 
   // One call boots every enabled interaction source (mouse, touch, vision,
   // orbit, audio, gyroscope…) declared in the shared `interaction` options.
@@ -72,7 +81,7 @@ sketch.draw( () => {
   const interaction = options.sketch?.interaction ?? {};
 
   p.clear();
-  p.background( ...getBackgroundColor() );
+  paintBackground( getBackgroundColor() );
 
   sketchState.letters = cache.store(
     cache.key(

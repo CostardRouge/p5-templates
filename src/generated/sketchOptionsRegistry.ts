@@ -297,6 +297,7 @@ export const sketchFormLoaders: Record<string, SketchModuleLoader> = {
   "p5:text-morphing/text-morphing-rotating-scene": () => import( "@/p5/sketches/text-morphing/text-morphing-rotating-scene/options" ),
   "p5:text/hello-world": () => import( "@/p5/sketches/text/hello-world/options" ),
   "p5:text/text-animated-points": () => import( "@/p5/sketches/text/text-animated-points/options" ),
+  "p5:text/text-animation-typein-typeout": () => import( "@/p5/sketches/text/text-animation-typein-typeout/options" ),
   "p5:text/text-decomposition": () => import( "@/p5/sketches/text/text-decomposition/options" ),
   "p5:text/text-dice": () => import( "@/p5/sketches/text/text-dice/options" ),
   "p5:text/text-layered-spline": () => import( "@/p5/sketches/text/text-layered-spline/options" ),

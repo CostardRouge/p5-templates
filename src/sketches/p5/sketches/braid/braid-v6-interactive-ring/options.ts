@@ -2,6 +2,9 @@ import {
   interactionFormValues,
   interactionFormConfiguration
 } from "@/p5/utils/interaction/defaults.js";
+import {
+  shaderPaletteFormFields, shaderPaletteFormValues
+} from "@/p5/utils/palettes.js";
 
 // The v5 Turk's-head weave woven around a DEFORMABLE ring: the centerline is a
 // periodic spline through control points that are dragged on the canvas — with
@@ -130,6 +133,7 @@ export const formValues = {
   },
 
   colors: {
+    ...shaderPaletteFormValues,
     hueSpeed: 0.5,
     hueSpread: 3.16,
     huePhase: 2.6,
@@ -419,6 +423,7 @@ export const formConfiguration: Record<string, any> = {
     component: "nested-object",
     label: "Iridescent",
     fields: {
+      ...shaderPaletteFormFields,
       hueSpeed: {
         label: "Hue speed (snaps to whole cycles/loop)",
         component: "slider",
@@ -630,7 +635,8 @@ export const formConfiguration: Record<string, any> = {
   },
 
   backgroundColor: {
-    component: "color",
+    component: "background",
+    palette: "colors/palette",
     label: "Background color"
   }
 };

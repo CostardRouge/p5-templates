@@ -1,3 +1,6 @@
+import {
+  housePaletteField
+} from "@/p5/utils/palettes.js";
 
 export const formValues = {
   grid: {
@@ -28,6 +31,7 @@ export const formValues = {
     strokeWeight: 4.4
   },
   colors: {
+    palette: "rainbow",
     hueRange: Math.PI / 2,
     hueOffset: 0,
     opacityMax: 3,
@@ -159,6 +163,9 @@ export const formConfiguration: Record<string, any> = {
     component: "nested-object",
     label: "Colors",
     fields: {
+      palette: housePaletteField( [
+        "rainbow"
+      ] ),
       hueRange: {
         label: "Hue range",
         component: "slider",
@@ -190,7 +197,8 @@ export const formConfiguration: Record<string, any> = {
     }
   },
   backgroundColor: {
-    component: "color",
+    component: "background",
+    palette: "colors/palette",
     label: "Background color"
   }
 };

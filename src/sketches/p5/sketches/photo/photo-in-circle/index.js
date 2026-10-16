@@ -7,6 +7,10 @@ import imageUtils from "@/p5/utils/imageUtils.js";
 import {
   getP5
 } from "@/p5/utils/sketch.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 const getEasing = (
   name, fallback = easing.easeInOutExpo
@@ -17,7 +21,7 @@ const getEasing = (
 sketch.setup( () => {
   const p = getP5();
 
-  p.background( ...options.sketch.backgroundColor );
+  paintBackground( resolveBackground( options.sketch.backgroundColor ) );
 } );
 
 sketch.draw( (
@@ -26,7 +30,7 @@ sketch.draw( (
   const p = getP5();
 
   p.clear();
-  p.background( ...options.sketch.backgroundColor );
+  paintBackground( resolveBackground( options.sketch.backgroundColor ) );
 
   const images = imageUtils.getImages();
 

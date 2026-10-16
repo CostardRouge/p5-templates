@@ -6,6 +6,16 @@ import animation from "@/p5/utils/animation.js";
 import createNoiseFieldRenderer, {
   easingId
 } from "@/p5/utils/noiseFieldGpu.js";
+import {
+  PALETTE_RAINBOW_GLSL
+} from "@/p5/utils/paletteGlsl.js";
+import {
+  shaderPalette
+} from "@/p5/utils/palettes.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GPU port of "noise grid v12 — field on fire".
@@ -26,6 +36,8 @@ const FRAGMENT = `
   uniform float uT;
   uniform float uZMax;
   uniform float uHueOffset;
+
+  ${ PALETTE_RAINBOW_GLSL }
   uniform float uHueIndexMult;
   uniform float uWaveSpeed;
   uniform float uOpacityMax;
@@ -57,7 +69,7 @@ const FRAGMENT = `
     );
     float hueIndex = remap(z, -uZMax, uZMax, -PI, PI) * uHueIndexMult;
 
-    return paletteRainbow(uHueOffset, hueIndex, opacityFactor);
+    return paletteRainbowRamp(uHueOffset, hueIndex, opacityFactor);
   }
 
   void main() {
@@ -125,9 +137,15 @@ sketch.draw( (
   const p = getP5();
 
   p.clear();
-  p.background( ...( options.sketch.backgroundColor ?? [
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    options.sketch.backgroundColor,
+    {
+      fallback: [
+        0
+      ],
+      palette: options.sketch.colors?.palette
+    }
+  ) );
 
   const t = animation.angle;
 
@@ -153,7 +171,10 @@ sketch.draw( (
   const cellWidth = p.width / columns;
   const zMax = cellWidth * zScale;
 
+  const palette = shaderPalette( options.sketch.colors );
+
   field.render( {
+    textures: palette.textures,
     seed,
     octaves: detailLod,
     falloff: detailFalloff,
@@ -170,6 +191,7 @@ sketch.draw( (
       uZTimeMult: zTimeMult,
       uT: t,
       uZMax: zMax,
+      uPaletteOn: palette.uniforms.uPaletteOn,
       uHueOffset: t * hueOffsetSpeed,
       uHueIndexMult: hueIndexMultiplier,
       uWaveSpeed: waveSpeed,

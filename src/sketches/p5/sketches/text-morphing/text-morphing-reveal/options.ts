@@ -1,6 +1,9 @@
 import {
   fontNames
 } from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/constants/field-config";
+import {
+  housePaletteField
+} from "@/p5/utils/palettes.js";
 
 // Default values only — exposed at runtime as `options.sketch.*`
 export const formValues = {
@@ -34,7 +37,10 @@ export const formValues = {
     0,
     0,
     0
-  ]
+  ],
+  colors: {
+    palette: "rainbow"
+  }
 };
 
 // UI configuration only
@@ -153,7 +159,17 @@ export const formConfiguration: Record<string, any> = {
   },
 
   backgroundColor: {
-    component: "color",
+    component: "background",
+    palette: "colors/palette",
     label: "Background color"
+  },
+  colors: {
+    component: "nested-object",
+    label: "Colors",
+    fields: {
+      palette: housePaletteField( [
+        "rainbow"
+      ] )
+    }
   }
 };

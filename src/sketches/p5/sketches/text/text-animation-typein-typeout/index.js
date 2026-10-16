@@ -10,11 +10,22 @@ import animation from "@/p5/utils/animation.js";
 import {
   getP5
 } from "@/p5/utils/sketch.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
+
+const getBackground = () => resolveBackground(
+  options.sketch?.backgroundColor ?? options.colors.background,
+  {
+    fallback: [
+      0
+    ]
+  }
+);
 
 sketch.setup( () => {
-  const p = getP5();
-
-  p.background( ...options.colors.background );
+  paintBackground( getBackground() );
 } );
 
 function drawRectangle( {
@@ -96,7 +107,7 @@ sketch.draw( (
   const p = getP5();
 
   p.clear();
-  p.background( ...options.colors.background );
+  paintBackground( getBackground() );
 
   const {
     x: rectangleWidth, y: rectangleHeight

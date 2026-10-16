@@ -14,6 +14,10 @@ import {
   createSeededRandom
 } from "@/p5/shared/wavetable.js";
 import auroraPad from "@/p5/shared/wavetables/aurora-pad.json";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 /**
  * WAVETABLE — an Ableton Wavetable-style synth voice as a sketch.
@@ -477,11 +481,16 @@ sketch.draw( ( time ) => {
   ) * 5 );
 
   p.clear();
-  p.background( ...( look.background ?? [
-    8,
-    10,
-    14
-  ] ) );
+  paintBackground( resolveBackground(
+    look.background,
+    {
+      fallback: [
+        8,
+        10,
+        14
+      ]
+    }
+  ) );
 
   if ( !table ) {
     return;

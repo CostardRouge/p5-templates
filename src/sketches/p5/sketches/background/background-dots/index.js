@@ -4,6 +4,10 @@ import sketch, {
 } from "@/p5/utils/sketch.js";
 import shapes from "@/p5/utils/shapes.js";
 import animation from "@/p5/utils/animation.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 sketch.setup( () => {} );
 
@@ -12,11 +16,16 @@ sketch.draw( () => {
   const cfg = options.sketch ?? {};
 
   p.clear();
-  p.background( ...( cfg.backgroundColor ?? [
-    0,
-    0,
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    cfg.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0
+      ]
+    }
+  ) );
 
   const columns = cfg.columns ?? 24;
   const proportional = cfg.proportional ?? true;

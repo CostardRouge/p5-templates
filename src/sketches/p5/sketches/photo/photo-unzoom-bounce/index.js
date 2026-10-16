@@ -8,6 +8,10 @@ import imageUtils from "@/p5/utils/imageUtils.js";
 import {
   getP5
 } from "@/p5/utils/sketch.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 sketch.setup( () => {
   applyBackground();
@@ -17,11 +21,16 @@ function applyBackground() {
   const p = getP5();
 
   p.clear();
-  p.background( ...( options.sketch?.backgroundColor ?? [
-    255,
-    255,
-    255
-  ] ) );
+  paintBackground( resolveBackground(
+    options.sketch?.backgroundColor,
+    {
+      fallback: [
+        255,
+        255,
+        255
+      ]
+    }
+  ) );
 }
 
 sketch.draw( ( _time ) => {

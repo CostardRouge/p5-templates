@@ -7,6 +7,9 @@ import {
 import {
   dragClickFormConfiguration, dragClickFormValues
 } from "@/p5/utils/interaction/dragClickOptions.js";
+import {
+  shaderPaletteFormFields, shaderPaletteFormValues
+} from "@/p5/utils/palettes.js";
 
 // v6's hand-sculpted letter, plus the option structure for VIRTUAL POINTERS:
 // fictional cursors that will move around the canvas on their own. This is the
@@ -408,6 +411,7 @@ export const formValues = {
   },
 
   colors: {
+    ...shaderPaletteFormValues,
     hueSpeed: 0.5,
     hueSpread: 2,
     huePhase: 2.6,
@@ -864,6 +868,7 @@ export const formConfiguration: Record<string, any> = {
     component: "nested-object",
     label: "Iridescent",
     fields: {
+      ...shaderPaletteFormFields,
       hueSpeed: {
         label: "Hue speed (snaps to whole cycles/loop)",
         component: "slider",
@@ -1047,7 +1052,8 @@ export const formConfiguration: Record<string, any> = {
   },
 
   backgroundColor: {
-    component: "color",
+    component: "background",
+    palette: "colors/palette",
     label: "Background color"
   }
 };

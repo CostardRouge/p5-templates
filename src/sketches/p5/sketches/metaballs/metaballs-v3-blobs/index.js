@@ -19,6 +19,10 @@ import {
   marchingSquaresContour,
   palette
 } from "../_metaballs.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // metaballs v3 — gooey blobs.
@@ -68,12 +72,17 @@ sketch.draw( () => {
   const o = options.sketch ?? {};
 
   p.clear();
-  p.background( ...( o.backgroundColor ?? [
-    6,
-    4,
-    12,
-    255
-  ] ) );
+  paintBackground( resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        6,
+        4,
+        12,
+        255
+      ]
+    }
+  ) );
 
   ensureBalls( o );
 

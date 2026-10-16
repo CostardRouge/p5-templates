@@ -30,7 +30,7 @@ export const formConfiguration: Record<string, any> = {
 
   // Colors
   backgroundColor: {
-    component: "color",
+    component: "background",
     label: "Background color"
   },
   textColor: {

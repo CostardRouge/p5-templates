@@ -5,6 +5,10 @@ import sketch, {
 import {
   renderReveal
 } from "../_shared.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // The whole word in view, several pens per outline drawing at once — the word
 // materialises out of nothing and "completes" from several points. The pens can
@@ -16,12 +20,18 @@ sketch.draw( () => {
   const o = options.sketch ?? {};
 
   p.clear();
-  p.background( ...( o.backgroundColor ?? [
-    0,
-    0,
-    0,
-    255
-  ] ) );
+  paintBackground( resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0,
+        255
+      ],
+      palette: o.stroke?.palette
+    }
+  ) );
 
   renderReveal( o );
 } );

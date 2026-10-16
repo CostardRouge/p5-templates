@@ -1,6 +1,9 @@
 import {
   fontNames
 } from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/constants/field-config";
+import {
+  shaderPaletteFormFields, shaderPaletteFormValues
+} from "@/p5/utils/palettes.js";
 
 // v2's board, raymarched in one pass instead of baked into cards: the tiles
 // are v1's tubes for real, so the specular travels as a tile turns and the
@@ -81,6 +84,7 @@ export const formValues = {
   },
 
   colors: {
+    ...shaderPaletteFormValues,
     hueSpeed: 0,
     hueSpread: 1.73,
     huePhase: 2.6,
@@ -490,6 +494,7 @@ export const formConfiguration: Record<string, any> = {
     component: "nested-object",
     label: "Iridescent",
     fields: {
+      ...shaderPaletteFormFields,
       hueSpeed: {
         label: "Hue scroll (snaps to whole cycles per loop)",
         component: "slider",
@@ -672,7 +677,8 @@ export const formConfiguration: Record<string, any> = {
     }
   },
   backgroundColor: {
-    component: "color",
+    component: "background",
+    palette: "colors/palette",
     label: "Background color"
   }
 };

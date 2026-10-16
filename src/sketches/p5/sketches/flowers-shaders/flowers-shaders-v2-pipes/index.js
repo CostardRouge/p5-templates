@@ -4,6 +4,16 @@ import sketch, {
 } from "@/p5/utils/sketch.js";
 import animation from "@/p5/utils/animation.js";
 import createNoiseFieldRenderer from "@/p5/utils/noiseFieldGpu.js";
+import {
+  PALETTE_IRIDESCENT_GLSL
+} from "@/p5/utils/braidShader.js";
+import {
+  shaderPalette
+} from "@/p5/utils/palettes.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // flowers-shaders v2 — pipes.
@@ -103,15 +113,7 @@ const FRAGMENT = `
   // melted: a cosine (IQ) spectrum with the RGB channels phase-shifted so the hue
   // sweeps cleanly through the rainbow, desaturated toward luma and scaled by
   // brightness.
-  vec3 iridescent(float t) {
-    vec3 spectrum = 0.5 + 0.5 * cos(
-      TAU * (uHueSpread * t + vec3(0.0, 0.33, 0.67)) + uHuePhase
-    );
-
-    float luma = dot(spectrum, vec3(0.299, 0.587, 0.114));
-
-    return clamp(mix(vec3(luma), spectrum, uSaturation) * uBrightness, 0.0, 1.0);
-  }
+  ${ PALETTE_IRIDESCENT_GLSL }
 
   // braidRadius pulsing along the axis — the 3D echo of v1's size pulse that made
   // the flower cluster breathe along its path.
@@ -306,9 +308,15 @@ sketch.draw( () => {
   const aberration = o.aberration ?? {};
 
   p.clear();
-  p.background( ...( o.backgroundColor ?? [
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        0
+      ],
+      palette: o.colors?.palette
+    }
+  ) );
 
   const timeScale = o.timeScale ?? 1;
 
@@ -359,7 +367,10 @@ sketch.draw( () => {
     -Math.cos( el ) * Math.cos( az )
   ];
 
+  const palette = shaderPalette( colors );
+
   pipes.render( {
+    textures: palette.textures,
     columns: 1,
     rows: 1,
     uniforms: {
@@ -378,6 +389,7 @@ sketch.draw( () => {
       uPitch: camera.pitch ?? 0.18,
       uYaw: ( camera.yaw ?? 0.5 ) + t * orbitTurns,
       uHueSpeed: hueSpread ? hueCycles / ( p.TAU * hueSpread ) : 0,
+      uPaletteOn: palette.uniforms.uPaletteOn,
       uHueSpread: hueSpread,
       uHuePhase: colors.huePhase ?? 0,
       uLengthHueShift: colors.lengthHueShift ?? 0.2,

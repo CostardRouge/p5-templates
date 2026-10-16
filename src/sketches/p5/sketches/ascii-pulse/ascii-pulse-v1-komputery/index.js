@@ -6,6 +6,10 @@ import sketch, {
 import audio from "@/p5/utils/audio.js";
 import string from "@/p5/utils/string.js";
 import animation from "@/p5/utils/animation.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ascii-pulse v1 — komputery.
@@ -124,14 +128,19 @@ sketch.draw( () => {
   const audioOpts = o.audio ?? {};
   const colors = o.colors ?? {};
 
-  const background = colors.backgroundColor ?? [
-    8,
-    8,
-    10
-  ];
+  const background = resolveBackground(
+    colors.backgroundColor,
+    {
+      fallback: [
+        8,
+        8,
+        10
+      ]
+    }
+  );
 
   p.clear();
-  p.background( ...background );
+  paintBackground( background );
 
   const field = resolveField(
     p,

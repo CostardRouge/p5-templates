@@ -15,6 +15,10 @@ import {
   defaultVariant,
   expandForGroup
 } from "./_soundDesign.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 /**
  * Motion-foley — a demo gallery that pairs ten shape-animation gestures with
@@ -199,11 +203,16 @@ sketch.draw( ( time ) => {
   const tiles = CATEGORY_LIST.filter( ( category ) => ( o[ category ]?.enabled ?? true ) );
 
   p.clear();
-  p.background( ...( appearance.background ?? [
-    10,
-    10,
-    16
-  ] ) );
+  paintBackground( resolveBackground(
+    appearance.background,
+    {
+      fallback: [
+        10,
+        10,
+        16
+      ]
+    }
+  ) );
 
   if ( tiles.length === 0 ) {
     return;

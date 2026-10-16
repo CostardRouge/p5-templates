@@ -6,6 +6,10 @@ import mappers from "@/p5/utils/mappers.js";
 import {
   SpiralBase, rebuildGrid
 } from "../_shared.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 const sketchState = sketch.state( () => ( {
   shapes: [],
@@ -138,9 +142,14 @@ sketch.draw( ( time ) => {
 
   p.noStroke();
   p.clear();
-  p.background( ...( options.sketch?.backgroundColor ?? [
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    options.sketch?.backgroundColor,
+    {
+      fallback: [
+        0
+      ]
+    }
+  ) );
 
   sketchState.shapes.forEach( (
     shape, index

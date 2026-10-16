@@ -23,6 +23,10 @@ import {
   drawExtrudedGlyph,
   fillOutline
 } from "../_extrude3d.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // letter-grid v3 — "leap"
@@ -139,15 +143,20 @@ sketch.draw( () => {
   const colorsCfg = o.colors ?? {};
   const vignetteCfg = o.vignette ?? {};
 
-  const background = o.backgroundColor ?? [
-    8,
-    8,
-    12,
-    255
-  ];
+  const background = resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        8,
+        8,
+        12,
+        255
+      ]
+    }
+  );
 
   p.clear();
-  p.background( ...background );
+  paintBackground( background );
 
   const g = state.scene;
 

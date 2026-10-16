@@ -9,6 +9,10 @@ import animation from "@/p5/utils/animation.js";
 
 import scripts from "@/p5/utils/scripts.js";
 import Matter from "@/public/assets/libraries/matter.min.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // Matter's concave-decomposition dependency (loaded once); the letter bodies are
 // plain rectangles, but this keeps parity with the other Matter sketches.
@@ -90,14 +94,20 @@ sketch.draw( () => {
   const text = o.text ?? {};
   const physics = o.physics ?? {};
   const scene = o.scene ?? {};
-  const background = scene.backgroundColor ?? [
-    12,
-    12,
-    16
-  ];
+  const background = resolveBackground(
+    scene.backgroundColor,
+    {
+      fallback: [
+        12,
+        12,
+        16
+      ],
+      palette: o.colors?.palette
+    }
+  );
 
   p.clear();
-  p.background( ...background );
+  paintBackground( background );
 
   const params = resolveParams(
     p,
@@ -449,7 +459,7 @@ function drawLetters(
     } = letter.body.position;
 
     if ( rainbow ) {
-      p.fill( colors.rainbow( {
+      p.fill( colors.palette( options.sketch.colors?.palette )( {
         hueOffset: 0,
         hueIndex: ( letter.index / total ) * Math.PI * 2 * ( text.hueSpread ?? 1 )
       } ) );

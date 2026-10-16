@@ -10,12 +10,22 @@ import * as common from "@/p5/utils/common.js";
 import {
   getP5
 } from "@/p5/utils/sketch.js";
+import {
+  mixBackground,
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
-const getBg = () => options.sketch?.colors?.background ?? [
-  0,
-  0,
-  0
-];
+const getBg = () => resolveBackground(
+  options.sketch?.colors?.background,
+  {
+    fallback: [
+      0,
+      0,
+      0
+    ]
+  }
+);
 const getImages = () => {
   const imagesFromOptions =
     options.sketch?.images && options.sketch.images.length
@@ -59,16 +69,24 @@ sketch.draw( (
 
   p.clear();
 
-  if ( animationConfig.variableBackgroundColor ) {
+  const background = getBg();
+
+  if ( animationConfig.variableBackgroundColor && background.spec ) {
+    paintBackground( mixBackground(
+      background,
+      favoriteColor,
+      animation.triangleProgression()
+    ) );
+  } else if ( animationConfig.variableBackgroundColor ) {
     const backgroundColor = p.lerpColor(
-      p.color( ...getBg() ),
+      p.color( ...background ),
       favoriteColor,
       animation.triangleProgression()
     );
 
     p.background( backgroundColor );
   } else {
-    p.background( ...getBg() );
+    paintBackground( background );
   }
 
   if ( cylinderConfig.variableZoom ) {

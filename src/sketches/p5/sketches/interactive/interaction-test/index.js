@@ -8,6 +8,10 @@ import {
 import {
   drawInteractionOverlay
 } from "@/p5/utils/interaction/overlay.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // The whole sketch IS the debug overlay: clear, paint the background, then let
 // the shared overlay draw every visualisation the form exposes.
@@ -19,14 +23,19 @@ sketch.setup( async() => {
 sketch.draw( () => {
   const p = getP5();
   const interaction = options.sketch?.interaction ?? {};
-  const bg = options.sketch?.backgroundColor ?? [
-    20,
-    20,
-    20
-  ];
+  const bg = resolveBackground(
+    options.sketch?.backgroundColor,
+    {
+      fallback: [
+        20,
+        20,
+        20
+      ]
+    }
+  );
 
   p.clear();
-  p.background( ...bg );
+  paintBackground( bg );
 
   drawInteractionOverlay( interaction );
 } );

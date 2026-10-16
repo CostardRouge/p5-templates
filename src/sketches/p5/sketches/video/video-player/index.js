@@ -7,6 +7,10 @@ import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
 import videos from "@/p5/utils/videos.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 let pool;
 
@@ -18,11 +22,16 @@ sketch.draw( () => {
   const p = getP5();
 
   p.clear();
-  p.background( ...( options.sketch?.backgroundColor ?? [
-    10,
-    10,
-    12
-  ] ) );
+  paintBackground( resolveBackground(
+    options.sketch?.backgroundColor,
+    {
+      fallback: [
+        10,
+        10,
+        12
+      ]
+    }
+  ) );
 
   const items = ( pool?.list() ?? [] ).filter( ( v ) => v.ready );
 

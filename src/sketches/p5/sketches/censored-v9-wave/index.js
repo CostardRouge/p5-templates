@@ -8,6 +8,10 @@ import sketch from "@/p5/utils/sketch.js";
 import {
   getP5
 } from "@/p5/utils/sketch.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 const canvases = sketch.state( () => ( {} ) );
 let o = options;
@@ -87,7 +91,7 @@ function drawShape( {
       const {
         x, y
       } = points[ i ];
-      const colorFunction = colors?.[ options.sketch.shape.colorScheme ];
+      const colorFunction = colors.palette( options.sketch.shape.colorScheme );
 
       const opacityFactor =
         mappers.fn(
@@ -195,9 +199,14 @@ sketch.draw( (
   p.noSmooth();
 
   p.clear();
-  p.background( ...( options.sketch.backgroundColor ?? [
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    options.sketch.backgroundColor,
+    {
+      fallback: [
+        0
+      ]
+    }
+  ) );
 
   drawShape( {
     canvas: canvases.buffer,

@@ -36,10 +36,14 @@ export function deepMerge(
     const sourceValue = sourceObject[ key ];
     const targetValue = mergedObject[ key ];
 
+    // An object over an array is a change of shape, not a partial edit: a
+    // background colour [r, g, b] that became a gradient { kind, from, … }
+    // must arrive whole, not as an array with keys bolted on.
     if (
       typeof sourceValue === "object" &&
       sourceValue !== null &&
-      !Array.isArray( sourceValue )
+      !Array.isArray( sourceValue ) &&
+      !Array.isArray( targetValue )
     ) {
       mergedObject[ key ] = deepMerge(
         targetValue || {},

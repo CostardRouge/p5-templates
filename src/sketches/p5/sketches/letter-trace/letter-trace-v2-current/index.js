@@ -5,6 +5,10 @@ import sketch, {
 import {
   renderCurrent
 } from "../_shared.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // One pen follows the outline like the scribe, but the camera also ROTATES the
 // world so the trace always flows toward a fixed screen direction (a 2D vector):
@@ -16,12 +20,18 @@ sketch.draw( () => {
   const o = options.sketch ?? {};
 
   p.clear();
-  p.background( ...( o.backgroundColor ?? [
-    0,
-    0,
-    0,
-    255
-  ] ) );
+  paintBackground( resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0,
+        255
+      ],
+      palette: o.stroke?.palette
+    }
+  ) );
 
   renderCurrent( o );
 } );

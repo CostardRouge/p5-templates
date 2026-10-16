@@ -10,6 +10,10 @@ import mediapipe, {
 import {
   drawSegmentationMask
 } from "@/p5/utils/segmentation.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // video-atlas — the "Bicep / Atlas" look from a plain webcam. MediaPipe
 // (DeepLabV3) mattes you out of the background every frame; the cutout is
@@ -409,11 +413,16 @@ sketch.draw( () => {
   ensureCamera( cfg );
 
   p.clear();
-  p.background( ...( cfg.backgroundColor ?? [
-    240,
-    52,
-    40
-  ] ) );
+  paintBackground( resolveBackground(
+    cfg.backgroundColor,
+    {
+      fallback: [
+        240,
+        52,
+        40
+      ]
+    }
+  ) );
 
   const layers = Math.round( clamp(
     cfg.layers ?? 24,

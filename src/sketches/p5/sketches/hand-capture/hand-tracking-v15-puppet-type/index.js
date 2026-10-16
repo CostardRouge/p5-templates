@@ -12,6 +12,9 @@ import {
   HandCaptureScene
 } from "../_shared.js";
 import renderLegacyTitle from "@/p5/utils/title/renderLegacyTitle.js";
+import {
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // ── puppet-type ────────────────────────────────────────────────────────────
 // The word is a marionette and your hand is the puppeteer. Each letter is a
@@ -56,11 +59,16 @@ sketch.draw( () => {
   const spring = options.sketch?.spring ?? {};
   const motion = options.sketch?.motion ?? {};
   const handDrawing = options.sketch?.hands ?? {};
-  const background = options.sketch?.backgroundColor ?? [
-    12,
-    12,
-    14
-  ];
+  const background = resolveBackground(
+    options.sketch?.backgroundColor,
+    {
+      fallback: [
+        12,
+        12,
+        14
+      ]
+    }
+  );
 
   scene.beginFrame( background );
   scene.readInteraction( interaction );

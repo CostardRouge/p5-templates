@@ -13,6 +13,10 @@ import mediapipe from "@/p5/utils/mediapipe/mediapipe.js";
 import {
   renderSplines
 } from "../../splines/_shared.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // ── video-hand-cutout ──────────────────────────────────────────────────────
 // The video-atlas idea, but the cutout is your HANDS instead of a full-body
@@ -610,11 +614,16 @@ sketch.draw( () => {
   const echo = o.echo ?? {};
   const splines = o.splines ?? {};
   const perf = o.performance ?? {};
-  const background = display.backgroundColor ?? [
-    0,
-    0,
-    0
-  ];
+  const background = resolveBackground(
+    display.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0
+      ]
+    }
+  );
   const layers = Math.round( clamp(
     echo.layers ?? 24,
     2,
@@ -663,7 +672,7 @@ sketch.draw( () => {
 
   // ── Compose ───────────────────────────────────────────────────────────────
   p.clear();
-  p.background( ...background );
+  paintBackground( background );
 
   // Full source frame underneath, so most of the picture stays visible.
   if ( ready && display.showVideo !== false ) {

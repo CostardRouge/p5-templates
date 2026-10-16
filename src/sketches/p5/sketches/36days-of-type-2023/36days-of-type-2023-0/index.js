@@ -7,6 +7,10 @@ import colors from "@/p5/utils/colors.js";
 import easing from "@/p5/utils/easing.js";
 import animation from "@/p5/utils/animation.js";
 import string from "@/p5/utils/string.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 sketch.setup(
   undefined,
@@ -16,17 +20,23 @@ sketch.setup(
 );
 
 const getBackgroundColor = () =>
-  options.sketch?.backgroundColor ?? [
-    0,
-    0,
-    0
-  ];
+  resolveBackground(
+    options.sketch?.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0
+      ],
+      palette: options.sketch.colors?.palette
+    }
+  );
 
 sketch.draw( () => {
   const p = getP5();
 
   p.clear();
-  p.background( ...getBackgroundColor() );
+  paintBackground( getBackgroundColor() );
   p.noFill();
 
   const fontName = options.sketch?.shape?.font ?? "sans";
@@ -120,7 +130,7 @@ sketch.draw( () => {
       );
 
       if ( opacityFactor < opacityThreshold ) {
-        const tint = colors.rainbow( {
+        const tint = colors.palette( options.sketch.colors?.palette )( {
           hueOffset: animation.angle,
           hueIndex: p.map(
             progression,

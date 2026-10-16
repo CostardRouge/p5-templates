@@ -1,4 +1,7 @@
 import {
+  housePaletteOptions
+} from "@/p5/utils/palettes.js";
+import {
   blendSelectOptions,
   fontNames
 } from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/constants/field-config";
@@ -58,7 +61,7 @@ export const formValues = {
   ]
 };
 
-const paletteOptions = [
+const paletteOptions = housePaletteOptions( [
   "rainbow",
   "rainbowCrazy",
   "test",
@@ -67,10 +70,7 @@ const paletteOptions = [
   "purpleSimple",
   "green",
   "black"
-].map( ( value ) => ( {
-  value,
-  label: value
-} ) );
+] );
 
 const renderModeOptions = [
   {
@@ -279,7 +279,7 @@ export const formConfiguration: Record<string, any> = {
     fields: {
       palette: {
         label: "Palette",
-        component: "select",
+        component: "palette-picker",
         options: paletteOptions
       },
       opacityFactor: {
@@ -345,7 +345,8 @@ export const formConfiguration: Record<string, any> = {
     }
   },
   backgroundColor: {
-    component: "color",
+    component: "background",
+    palette: "color/palette",
     label: "Background color"
   }
 };

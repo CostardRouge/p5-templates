@@ -45,6 +45,7 @@ export const formValues = {
     zAmplitude: 1.43
   },
   colors: {
+    palette: "rainbow",
     hueIndexMultiplier: 8,
     hueOffset: 0,
     opacityMin: 1.5,
@@ -110,7 +111,8 @@ export const formConfiguration: Record<string, any> = {
   colors: colorsForm,
   loop: loopForm,
   backgroundColor: {
-    component: "color",
+    component: "background",
+    palette: "colors/palette",
     label: "Background color"
   }
 };

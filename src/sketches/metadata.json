@@ -523,7 +523,7 @@
     "name": "text-animation-typein-typeout",
     "engine": "p5",
     "category": "text",
-    "hasSketchForm": false,
+    "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
     "hiddenFromHome": false,

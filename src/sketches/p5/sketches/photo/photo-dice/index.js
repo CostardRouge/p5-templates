@@ -7,6 +7,10 @@ import imageUtils from "@/p5/utils/imageUtils.js";
 import {
   getP5
 } from "@/p5/utils/sketch.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 const canvases = sketch.state( () => ( {} ) );
 
@@ -19,7 +23,7 @@ sketch.setup( () => {
     p.WEBGL
   );
 
-  p.background( ...options.sketch.backgroundColor );
+  paintBackground( resolveBackground( options.sketch.backgroundColor ) );
 } );
 
 function dice(
@@ -75,7 +79,7 @@ sketch.draw( (
   const p = getP5();
 
   p.clear();
-  p.background( ...options.sketch.backgroundColor );
+  paintBackground( resolveBackground( options.sketch.backgroundColor ) );
 
   // Images from UI or cache
   const images = imageUtils.getImages();
@@ -114,7 +118,10 @@ sketch.draw( (
 
   // Prepare p.WEBGL canvas
   canvases.dice.push();
-  canvases.dice.background( ...options.sketch.backgroundColor );
+  paintBackground(
+    resolveBackground( options.sketch.backgroundColor ),
+    canvases.dice
+  );
 
   canvases.dice.rotateX( rX );
   canvases.dice.rotateY( rY );

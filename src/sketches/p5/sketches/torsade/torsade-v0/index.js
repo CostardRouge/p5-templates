@@ -8,6 +8,10 @@ import converters from "@/p5/utils/converters.js";
 import {
   SpiralBase, rebuildGrid
 } from "../_shared.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 const sketchState = sketch.state( () => ( {
   shapes: [],
@@ -235,14 +239,20 @@ sketch.draw( ( time ) => {
     SpiralClass: Spiral
   } );
 
-  const bg = options.sketch?.background?.color ?? [
-    0,
-    0,
-    0,
-    8
-  ];
+  // An alpha below 255 is the trail: kept on both ends of a gradient.
+  const bg = resolveBackground(
+    options.sketch?.background?.color,
+    {
+      fallback: [
+        0,
+        0,
+        0,
+        8
+      ]
+    }
+  );
 
-  p.background( ...bg );
+  paintBackground( bg );
 
   sketchState.shapes.forEach( (
     shape, index

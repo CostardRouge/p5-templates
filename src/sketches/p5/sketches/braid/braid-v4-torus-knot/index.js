@@ -6,13 +6,20 @@ import animation from "@/p5/utils/animation.js";
 import createNoiseFieldRenderer from "@/p5/utils/noiseFieldGpu.js";
 import {
   BRAID_UNIFORMS_GLSL,
-  IRIDESCENT_GLSL,
+  PALETTE_IRIDESCENT_GLSL,
   BRAID_CAMERA_MAIN_GLSL,
   braidShadingGlsl,
   lightDirFrom,
   focalFromFov,
   lipschitzDivisor
 } from "@/p5/utils/braidShader.js";
+import {
+  shaderPalette
+} from "@/p5/utils/palettes.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // braid v4 — torus knot (laid-rope grommet).
@@ -70,7 +77,7 @@ const FRAGMENT = `
   uniform float uSpin;      // poloidal roll over time (whole turns/loop)
   uniform float uLipschitz; // CPU safety divisor for the bent-space march
 
-  ${ IRIDESCENT_GLSL }
+  ${ PALETTE_IRIDESCENT_GLSL }
 
   // Poloidal angle of the whole bundle at ring-angle u (+ the rolling spin).
   float layPhase(float u) {
@@ -141,11 +148,17 @@ sketch.draw( () => {
   const rendering = o.rendering ?? {};
 
   p.clear();
-  p.background( ...( o.backgroundColor ?? [
-    0,
-    0,
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0
+      ],
+      palette: o.colors?.palette
+    }
+  ) );
 
   const timeScale = o.timeScale ?? 1;
   const t = animation.angle;
@@ -209,7 +222,10 @@ sketch.draw( () => {
     light.elevation ?? 0.5
   );
 
+  const palette = shaderPalette( colors );
+
   knotRenderer.render( {
+    textures: palette.textures,
     columns: 1,
     rows: 1,
     resolutionScale: rendering.resolutionScale ?? 0.75,
@@ -228,6 +244,7 @@ sketch.draw( () => {
       uYaw: ( camera.yaw ?? 0 ) + t * orbitTurns,
       uRoll: roll,
       uHueSpeed: hueSpread ? hueCycles / ( p.TAU * hueSpread ) : 0,
+      uPaletteOn: palette.uniforms.uPaletteOn,
       uHueSpread: hueSpread,
       uHuePhase: colors.huePhase ?? 2.6,
       uLengthHueShift: colors.lengthHueShift ?? 0.4,

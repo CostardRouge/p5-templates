@@ -12,12 +12,19 @@ import {
 } from "@/p5/utils/letterPaths.js";
 import {
   BRAID_UNIFORMS_GLSL,
-  IRIDESCENT_GLSL,
+  PALETTE_IRIDESCENT_GLSL,
   braidShadingGlsl,
   lightDirFrom,
   focalFromFov
 } from "@/p5/utils/braidShader.js";
 import easing from "@/p5/utils/easing.js";
+import {
+  shaderPalette
+} from "@/p5/utils/palettes.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // rings v5 — constellation.
@@ -77,7 +84,7 @@ const FRAGMENT = `
   uniform float uTubeR;                       // tube radius (world)
   uniform float uSmoothK;                     // smooth-union fillet (world)
 
-  ${ IRIDESCENT_GLSL }
+  ${ PALETTE_IRIDESCENT_GLSL }
 
   // Polynomial smooth-minimum (iq): melts nearby capsules into a rounded fillet.
   float smin(float a, float b, float k) {
@@ -643,15 +650,22 @@ sketch.draw( () => {
   const constellation = o.constellation ?? {};
   const camera = o.camera ?? {};
   const colors = o.colors ?? {};
+  const palette = shaderPalette( colors );
   const light = o.light ?? {};
   const rendering = o.rendering ?? {};
 
   p.clear();
-  p.background( ...( o.backgroundColor ?? [
-    0,
-    0,
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0
+      ],
+      palette: o.colors?.palette
+    }
+  ) );
 
   const field = getLetterField( {
     text: ( textCfg.value ?? "stellar" ).toString(),
@@ -926,6 +940,7 @@ sketch.draw( () => {
       uCamUp: up,
       uFocal: focalFromFov( fov ),
       uHueSpeed: hueSpread ? hueCycles / ( p.TAU * hueSpread ) : 0,
+      uPaletteOn: palette.uniforms.uPaletteOn,
       uHueSpread: hueSpread,
       uHuePhase: colors.huePhase ?? 2.6,
       uLengthHueShift: colors.lengthHueShift ?? -0.25,
@@ -946,6 +961,7 @@ sketch.draw( () => {
   );
 
   constellationRenderer.render( {
+    textures: palette.textures,
     columns: 1,
     rows: 1,
     resolutionScale: rendering.resolutionScale ?? 0.7,
