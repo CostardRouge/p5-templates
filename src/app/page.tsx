@@ -10,6 +10,9 @@ import {
 import {
   getSketchesData
 } from "./sketches/getSketchesData";
+import {
+  APP_VERSION
+} from "@/lib/version";
 
 export const metadata: Metadata = {
   title: SITE_NAME,
@@ -57,6 +60,7 @@ export default async function Home() {
         sketches={ gallerySketches }
         engineLabels={ engineLabels }
         studioFeatures={ <StudioFeatures /> }
+        version={ APP_VERSION }
       />
     </>
   );
