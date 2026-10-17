@@ -1,6 +1,6 @@
 {
   "name": "sketchbook",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "sketch:meta": "node scripts/watch-sketches.mjs",

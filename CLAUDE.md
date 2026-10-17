@@ -158,6 +158,47 @@ A change a returning reader does not need — tooling, a typo, a refactor —
 carries no block. A question, an exploration or an explanation changes no
 state and writes no block.
 
+## Rule 5 — Versions and releases (MANDATORY)
+
+The project carries **one version**, `version` in the root `package.json`, in
+[Semantic Versioning](https://semver.org/spec/v2.0.0.html): `MAJOR.MINOR.PATCH`.
+`CHANGELOG.md` says what each release brings to the people who use the
+project, newest first, in the [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
+shape. **It is written in English, like the code, even when the project
+speaks French.** Each release has a **codename**: here a mathematical curve,
+in alphabetical order (0.1.0 Astroid … 0.10.0 Kappa, 1.0.0 Lemniscate; the
+next starts with M or later).
+
+- **Every pull request that changes what users get** adds its lines under
+  `## [Unreleased]` (`### Added`, `### Changed`, `### Fixed`, `### Removed`,
+  `### Security`), written for a user, not a developer. Tooling, a refactor or
+  a test adds nothing there. It does not touch the version.
+- **A release is its own pull request**, made when the owner asks for one: it
+  moves the `Unreleased` lines under `## [x.y.z] - YYYY-MM-DD — Codename` and
+  sets `package.json` to the same version, nothing else. PATCH for fixes only;
+  MINOR for anything new; MAJOR when something users relied on stops working
+  (stored data that does not carry over, a link, a protocol, a removed
+  feature). Before 1.0.0, MINOR covers both. A new MINOR or MAJOR takes a new
+  codename, never reused; a PATCH keeps its minor's. When a milestone ends or
+  `Unreleased` holds something worth announcing, say so in the final message:
+  the owner decides when to release.
+- **Never tag nor publish a release by hand.** On `main`,
+  `.github/workflows/release.yml` gives every section that has none its tag
+  `vX.Y.Z` and its GitHub Release; on every pull request its `check` job
+  refuses a `CHANGELOG.md` that disagrees with `package.json` or breaks the
+  shape. Run `node .github/release.mjs check` before pushing a release.
+- **A backfilled release** — a version given after the fact to a past state —
+  is a section placed at its rank in the file, with
+  `<!-- commit: <full sha> -->` right under its heading; the workflow tags that
+  commit. It never rewrites a section that already has its release. GitHub
+  refuses the workflow's own token a tag on a commit whose workflows differ
+  from `main`'s, so here a backfill is skipped with a warning and the rest
+  still ships; `second-brain`'s "Backfill releases" workflow, which holds the
+  owner's token, publishes it (`release.mjs backfill`).
+- **A repo that serves a page shows its version** where a user can find it (a
+  footer, an about line, a settings screen), read from `package.json` at build
+  time, so a phone in hand says which build it runs.
+
 ## Verification — trust the disk, not the context
 
 - A tool answering "success" is not proof. Before saying a change is done, prove it through the repo: `git status --porcelain`, `git diff`, `grep` for the expected value, `git show HEAD:<file>` compared to the file on disk.
@@ -179,6 +220,7 @@ state and writes no block.
 
 - `AGENTS.md`: points to this file for tools that do not read `CLAUDE.md`.
 - `MEMORY.md` + `docs/memory/`: project long-term memory (rule 2).
+- `CHANGELOG.md`: what each release brings (rule 5); `.github/release.mjs` + `.github/workflows/release.yml` tag and publish it.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

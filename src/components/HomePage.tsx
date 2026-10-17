@@ -18,6 +18,9 @@ import {
 import type {
   SketchItem
 } from "@/app/sketches/getSketchesData";
+import {
+  APP_VERSION
+} from "@/lib/version";
 
 type HomePageProps = {
   sketches: SketchItem[];
@@ -648,6 +651,10 @@ export default function HomePage( {
                 site map
               </Link>
               { " · mit license · " }
+              <span className="normal-case tabular-nums">
+                v{ APP_VERSION }
+              </span>
+              { " · " }
               { new Date().getFullYear() }
             </p>
           </footer>
