@@ -18,9 +18,6 @@ import {
 import type {
   SketchItem
 } from "@/app/sketches/getSketchesData";
-import {
-  APP_VERSION
-} from "@/lib/version";
 
 type HomePageProps = {
   sketches: SketchItem[];
@@ -32,6 +29,12 @@ type HomePageProps = {
    * component would ship the whole thing to the browser.
    */
   studioFeatures?: React.ReactNode;
+  /**
+   * The build's version, read by the server page and handed down as a string:
+   * importing `@/lib/version` from this client component would ship the whole
+   * package.json, every dependency included, in its chunk (measured).
+   */
+  version: string;
 };
 
 // Still the p5-templates slug until the repo itself is renamed (see TODO.md,
@@ -254,7 +257,8 @@ function SketchCard( {
 export default function HomePage( {
   sketches,
   engineLabels,
-  studioFeatures
+  studioFeatures,
+  version
 }: HomePageProps ) {
   const [
     query,
@@ -652,7 +656,7 @@ export default function HomePage( {
               </Link>
               { " · mit license · " }
               <span className="normal-case tabular-nums">
-                v{ APP_VERSION }
+                v{ version }
               </span>
               { " · " }
               { new Date().getFullYear() }
