@@ -20,3 +20,22 @@ Read before touching the Dockerfile, `docker-compose.yml`, the deploy workflow o
 ## The NAS hardware (2026-10-10)
 
 An Intel 2nd-generation i7 (Sandy Bridge, amd64), per the maintainer, who expects its integrated GPU to serve headless Chromium. Not yet verified in the container: Sandy Bridge HD graphics is old enough that Chrome may blocklist it or offer no WebGL2, in which case the backend renders on SwiftShader (`recording.md`'s numbers). **How to apply**: amd64 means Google Chrome (with H.264) can go in the image if the server-side front encoder is ever built; check GPU use with `chrome://gpu` from inside the container, and pass the render device through (`/dev/dri`) in `docker-compose.yml`, before quoting any GPU speed.
+
+## Versions and releases ride the same deploy (2026-10-17)
+
+**Decision**: Sketchbook carries one SemVer version in the root `package.json`
+(1.0.0 « Lemniscate »), `CHANGELOG.md` as the source, and `.github/release.mjs`
++ `.github/workflows/release.yml` (identical across the portfolio, C13 in
+`second-brain`) tag and publish each section on `main`. The Docker build and the
+Watchtower call are unchanged: a release is a tag beside the image, not a gate
+in front of it. **Why**: the owner made SemVer mandatory on every repo that
+ships, and steevepommier.com will show each project's version and changelog.
+**How to apply**: the home footer reads the version through `src/lib/version.ts`,
+a named JSON import so the client bundle carries only the string. 0.1.0–0.10.0
+are backfilled sections (`<!-- commit: sha -->`, first-parent commits of
+`main`): GitHub refuses the workflow's own token a tag on a commit whose
+workflows differ from `main`'s, so `release.yml` skips them with a warning and
+`second-brain`'s "Backfill releases" workflow publishes them with the owner's
+token. **Trap**: a tag or release made with `GITHUB_TOKEN` triggers no other
+workflow, so a deploy that should follow a release must run inside
+`release.yml`'s publish job.
