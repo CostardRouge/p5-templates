@@ -79,6 +79,8 @@ describe(
       "does not store the same document twice in a row, but takes a new title",
       async() => {
         const store = new GalleryStore( memoryBackend() );
+        // Every keep gets its own `at`: two keeps in the same millisecond tie
+        // on the clock, and the store breaks the tie on the (random) id.
         const input = {
           engine: "p5",
           name: "noise-v1",
@@ -88,12 +90,16 @@ describe(
         };
         const first = await keepPiece(
           store,
-          input
+          {
+            ...input,
+            at: 1
+          }
         );
         const again = await keepPiece(
           store,
           {
             ...input,
+            at: 2,
             options: {
               ...document,
               id: "another-job"
@@ -111,6 +117,7 @@ describe(
           store,
           {
             ...input,
+            at: 3,
             options: {
               ...document,
               sketch: {
@@ -126,7 +133,10 @@ describe(
         // Back to the first document: the NEWEST entry differs, so it is kept again.
         expect( ( await keepPiece(
           store,
-          input
+          {
+            ...input,
+            at: 4
+          }
         ) ).kept ).toBe( true );
       }
     );

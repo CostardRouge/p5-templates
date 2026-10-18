@@ -36,9 +36,27 @@ function setup( document: Record<string, any> = {
 describe(
   "gallery commands",
   () => {
+    afterEach( () => {
+      jest.restoreAllMocks();
+    } );
+
     it(
       "keep the piece on screen once, list it, look at it, remove it",
       async() => {
+        // `gallery.keep` takes no `at`, so the clock advances on each read:
+        // two keeps in the same millisecond tie on it, and the store breaks
+        // the tie on the (random) id.
+        let now = Date.parse( "2026-10-11T12:00:00Z" );
+
+        jest.spyOn(
+          Date,
+          "now"
+        ).mockImplementation( () => {
+          now += 1000;
+
+          return now;
+        } );
+
         const {
           registry, handles
         } = setup();
