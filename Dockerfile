@@ -19,7 +19,7 @@ ARG NEXT_PUBLIC_VAPID_PUBLIC_KEY=
 # silently ship every image with analytics off. The id mirrors the default in
 # src/lib/analytics/umami.ts — keep the two in sync, or pass --build-arg to
 # override (an explicitly empty id disables tracking).
-ARG NEXT_PUBLIC_UMAMI_SRC=https://insight.steeve.website/insight
+ARG NEXT_PUBLIC_UMAMI_SRC=https://insight.steevepommier.com/insight
 ARG NEXT_PUBLIC_UMAMI_WEBSITE_ID=3c44d1c6-1c3e-4ef7-aeb8-646012e9b963
 ARG NEXT_PUBLIC_UMAMI_DOMAINS=p5.steeve.website
 
