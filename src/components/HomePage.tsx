@@ -18,6 +18,9 @@ import {
 import type {
   SketchItem
 } from "@/app/sketches/getSketchesData";
+import {
+  SOURCE_URL
+} from "@/config/site";
 
 type HomePageProps = {
   sketches: SketchItem[];
@@ -37,9 +40,6 @@ type HomePageProps = {
   version: string;
 };
 
-// Still the p5-templates slug until the repo itself is renamed (see TODO.md,
-// "Rename follow-ups") — GitHub will redirect the old URL afterwards.
-const GITHUB_URL = "https://github.com/CostardRouge/p5-templates";
 const LATEST_COUNT = 8;
 const RANDOM_COUNT = 4;
 
@@ -637,7 +637,7 @@ export default function HomePage( {
                 <ArrowUpRight className="w-4 h-4" />
               </Link>
               <a
-                href={ GITHUB_URL }
+                href={ SOURCE_URL }
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 rounded-xl border border-border px-6 py-3 text-sm font-semibold text-foreground/80 hover:text-foreground hover:border-foreground/30 hover:bg-hover/50 transition-colors"
@@ -653,6 +653,13 @@ export default function HomePage( {
                 className="hover:text-foreground transition-colors"
               >
                 site map
+              </Link>
+              { " · " }
+              <Link
+                href="/legal"
+                className="hover:text-foreground transition-colors"
+              >
+                legal
               </Link>
               { " · mit license · " }
               <span className="normal-case tabular-nums">
