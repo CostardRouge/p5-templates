@@ -87,7 +87,7 @@ INTERACTION_BINDINGS=true   # in .env / .env.local, then restart the dev server
 
 ## Checks
 
-What CI runs (Node 24, four parallel jobs), and what to run before opening a pull request:
+What CI runs (the Node of `.nvmrc`, 24 — `engines` keeps the floor at 22 — in four parallel jobs), and what to run before opening a pull request:
 
 ```bash
 npm run check               # lint + typecheck + test
