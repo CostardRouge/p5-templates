@@ -2,8 +2,10 @@ name: Lint fix on demand
 
 # Triggered by posting `/fix-lint` as a comment on a PR. The workflow checks
 # out the PR's head branch, runs `npm run lint:fix`, and pushes any resulting
-# changes back to the same branch as a single `chore: apply lint --fix`
-# commit. Restricted to repo collaborators so random commenters can't push.
+# changes back to the same branch as a single commit titled "Apply the lint
+# fixes" — the same title rule as a human's commit (English imperative, no
+# `chore:`-style prefix, CLAUDE.md rule 1). Restricted to repo collaborators
+# so random commenters can't push.
 
 on:
   issue_comment:
@@ -101,7 +103,7 @@ jobs:
           fi
 
           git add -A
-          git commit -m "chore: apply lint --fix
+          git commit -m "Apply the lint fixes
 
           Triggered by /fix-lint on PR #${{ github.event.issue.number }}."
           git push origin HEAD:${{ steps.pr.outputs.ref }}
