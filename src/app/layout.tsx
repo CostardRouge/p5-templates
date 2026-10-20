@@ -25,6 +25,7 @@ import {
   SITE_KEYWORDS,
   SITE_LOCALE,
   SITE_NAME,
+  SITE_SHORT_NAME,
   THEME_COLOR_DARK,
   THEME_COLOR_LIGHT
 } from "@/lib/seo";
@@ -116,9 +117,37 @@ export const metadata: Metadata = {
       "max-snippet": -1
     }
   },
+  // The icon set of the portfolio standard (C11): the .ico and the two raster
+  // favicons for the tab, the opaque 180 px touch icon iOS builds its
+  // home-screen icon from (it reads nothing else), the manifest's icons for
+  // Android. `scripts/gen-icons.mjs` draws the favicons and the touch icon;
+  // `src/app/__tests__/icons.test.ts` checks what is committed.
   icons: {
-    icon: "/favicon.ico",
-    apple: "/apple-touch-icon.png"
+    icon: [
+      {
+        url: "/favicon.ico",
+        sizes: "16x16 32x32 48x48"
+      },
+      {
+        url: "/favicon-32.png",
+        sizes: "32x32",
+        type: "image/png"
+      },
+      {
+        url: "/favicon-16.png",
+        sizes: "16x16",
+        type: "image/png"
+      }
+    ],
+    apple: {
+      url: "/apple-touch-icon.png",
+      sizes: "180x180",
+      type: "image/png"
+    }
+  },
+  // `apple-mobile-web-app-title`: the name under the home-screen icon.
+  appleWebApp: {
+    title: SITE_SHORT_NAME
   },
   category: SITE_CATEGORY
 };

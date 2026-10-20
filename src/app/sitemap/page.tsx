@@ -258,6 +258,11 @@ export default async function SiteMapPage() {
                 Gallery
               </Link>
             </li>
+            <li>
+              <Link href="/legal" className={ LINK_CLASS }>
+                Legal notice
+              </Link>
+            </li>
             { showRecordings && (
               <li>
                 <Link href="/recordings" className={ LINK_CLASS }>

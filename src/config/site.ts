@@ -25,6 +25,11 @@ export const SITE_URL = "https://p5.steeve.website";
 // ─── Author / Publisher ───────────────────────────────────────────────────────
 export const SITE_AUTHOR = "Steeve Pommier";
 
+// The source repository, linked from the home page's footer and the legal
+// notice. Still the p5-templates slug until the repo itself is renamed (see
+// TODO.md, "Rename follow-ups") — GitHub will redirect the old URL afterwards.
+export const SOURCE_URL = "https://github.com/CostardRouge/p5-templates";
+
 // ─── Locale & Category ───────────────────────────────────────────────────────
 export const SITE_LOCALE = "en_US";
 export const SITE_CATEGORY = "technology";

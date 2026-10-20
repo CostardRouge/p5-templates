@@ -9,6 +9,13 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
 
 ## [Unreleased]
 
+### Added
+
+- A legal notice at `/legal`: who publishes and hosts Sketchbook, what stays in your browser, what a recording handed
+  to the server sends, and what the audience measurement counts — linked from the home page's footer and the site map.
+- Raster favicons (16 and 32 px) beside the icon, and a home-screen icon that shows the mark on white on an iPhone
+  instead of on black.
+
 ## [1.0.0] - 2026-10-17 — Lemniscate
 
 The first numbered release: Sketchbook as it is deployed today.

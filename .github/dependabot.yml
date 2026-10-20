@@ -1,0 +1,44 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    ignore:
+      # Keep Node type definitions in step with the Node.js version in .nvmrc.
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
+      # `typescript` stays on 6 on purpose: ts-jest, typescript-eslint and
+      # `next build` need the JS compiler API that 7 dropped. `typescript7` is
+      # the alias that follows 7 (docs/memory/tooling.md).
+      - dependency-name: 'typescript'
+        update-types: ['version-update:semver-major']
+    groups:
+      # The CLI generates the client into src/generated/prisma: the two move
+      # together or not at all (docs/memory/tooling.md).
+      prisma:
+        patterns: ['prisma', '@prisma/*']
+      dev-dependencies:
+        dependency-type: development
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      actions:
+        patterns: ['*']
+
+  # The Playwright base image of the Dockerfile. A bump here must land with
+  # the same bump of the `playwright` package (scripts/__tests__/dockerfile.test.ts
+  # holds the two together), so one of the two pull requests is red until the
+  # other side is pushed onto its branch.
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday

@@ -6,7 +6,9 @@ Agents read this file at the start of every session. These rules override the ag
 
 - **Sketchbook** — a Next.js 16 (App Router, Turbopack) / React 19 / TypeScript-strict app for building, parameterizing and exporting visuals from creative-coding sketches. Rendering is engine-agnostic: p5.js, GSAP and Three.js sketches all drive the same `SketchEngine` contract (`src/engines/types.ts`). Prisma 7 + PostgreSQL for persistence, BullMQ + Redis for the recording queue, MinIO/S3 for artefacts, Playwright + FFmpeg for headless capture. Package manager: **npm** — the lockfile is `package-lock.json` (it is the only lockfile; keep it that way).
 - Deploys as a Docker image: a push to `main` builds and publishes `ghcr.io/costardrouge/p5-templates`, and a Watchtower HTTP-API call re-pulls it on the maintainer's NAS (`deploy/README.md`, `.github/workflows/docker-build.yml`).
-- Commands: `npm run dev` (dev server) · `npm run watch` (dev server + sketch-metadata watcher) · `npm run build` · `npm test` · `npm run lint` / `lint:fix` · `npm run typecheck` · **`npm run check`** = lint + typecheck + test. CI runs lint, typecheck, test and build as four parallel jobs on Node 24.
+- Commands: `npm run dev` (dev server) · `npm run watch` (dev server + sketch-metadata watcher) · `npm run build` · `npm test` · `npm run lint` / `lint:fix` · `npm run typecheck` · **`npm run check`** = lint + typecheck + test. CI runs lint, typecheck, test and build as four parallel jobs on the Node of `.nvmrc` (24; `engines` keeps the floor at 22, and the Docker image's exact Playwright tag is held to the lockfile by a test). Dependabot raises npm, the actions and that image weekly.
+- **This repository is PUBLIC** (measured 2026-10-19). So rule 4's public-repo restriction applies: a Registry block carries only `Project:`, ticked boxes and one `Log:` line — never a `Last point:` nor an open box. `registry.yml` reads the visibility itself, so nothing here needs changing if the repo goes private.
+- **The site speaks English only**, every string inline in the components, no dictionary. The portfolio standard (C17, decision N4) asks a public page for English and French, or an exception written here: neither is decided — a French twin of the whole studio is the owner's call (`MEMORY.md`, open items). Meanwhile a new string is English, and nothing invents a second language.
 - Several agent sessions may run **in parallel** on this repo. Git history must stay readable: **one commit = one task**.
 - **Local sessions: never `git push`** — the developer tests locally and pushes himself. **Cloud / web sessions (ephemeral container): push the working branch and open a pull request**, it is the only way the code gets out. Never push to `main` either way.
 
@@ -24,7 +26,7 @@ As soon as a task requested by the user is finished (feature, fix, refactor, con
    - Never stage: `.env` and any secret file, `.idea/`, `.vscode/`, `.next/` (including `.next/cache/eslint`), `/tmp/p5-templates-build`, `node_modules/`, `.DS_Store`, `src/generated/prisma/` — unless the task is explicitly about them. If one of these turns out to be *tracked*, say so: it must be untracked and gitignored, not carefully avoided at every commit.
    - Exception, and it is not optional: the **pre-commit hook regenerates and stages** `src/sketches/metadata.json`, `src/generated/sketchModuleRegistry.ts` and `src/generated/sketchOptionsRegistry.ts` whenever a sketch or template asset is part of the commit. Those three belong in your commit — do not unstage them.
    - Check with `git diff --cached --stat` before committing.
-3. **Commit with a readable message** (format below). Always use a HEREDOC to keep title + body:
+3. **Commit with a readable message** (format below). Always use a HEREDOC to keep title + body, and end it with the attribution trailer(s) your harness asks for:
 
    ```bash
    git commit -m "$(cat <<'EOF'
@@ -33,12 +35,12 @@ As soon as a task requested by the user is finished (feature, fix, refactor, con
    Why this change, what it does concretely, non-obvious decisions.
    One line per idea. Mention the files/areas touched if useful.
 
-   Co-Authored-By: Claude <noreply@anthropic.com>
+   Co-Authored-By: …
    EOF
    )"
    ```
 
-4. Do not push (local sessions). End the reply with a recap: short hash + commit title + the list of files that were modified but deliberately left uncommitted, if any, so the user knows where every change comes from.
+4. **Push only from a cloud session** (see Context). End the reply with a recap: short hash + commit title + the list of files that were modified but deliberately left uncommitted, if any, so the user knows where every change comes from.
 5. If a git hook changes or refuses something: read the output, fix, recommit. Never `--no-verify`.
 
 ### Commit message format
@@ -218,7 +220,7 @@ next starts with M or later).
 
 ## Related files
 
-- `AGENTS.md`: points to this file for tools that do not read `CLAUDE.md`.
+- `AGENTS.md`: a symlink to this file, for tools that do not read `CLAUDE.md`.
 - `MEMORY.md` + `docs/memory/`: project long-term memory (rule 2).
 - `CHANGELOG.md`: what each release brings (rule 5); `.github/release.mjs` + `.github/workflows/release.yml` tag and publish it.
 
