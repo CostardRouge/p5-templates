@@ -31,7 +31,7 @@ jobs:
 
     steps:
       - name: Acknowledge command
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             await github.rest.reactions.createForIssueComment({
@@ -43,7 +43,7 @@ jobs:
 
       - name: Resolve PR head ref
         id: pr
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const { data: pr } = await github.rest.pulls.get({
@@ -64,7 +64,7 @@ jobs:
           exit 1
 
       - name: Checkout PR branch
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           ref: ${{ steps.pr.outputs.ref }}
           # Need a token that can push back to the PR branch.
@@ -72,7 +72,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Node.js
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: npm
@@ -111,7 +111,7 @@ jobs:
 
       - name: React to comment with result
         if: always()
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const ok = '${{ job.status }}' === 'success';
