@@ -8,12 +8,15 @@
  * not restarting.
  */
 
-/** Tracker URL. Served from a sibling subdomain of the measured site, so it is
- * first-party and no blocker cuts it on a third-party-domain rule. The path is
- * `/insight` rather than Umami's default `/script.js`, which appears in filter
- * lists. */
+/** Tracker URL. Served from the portfolio's one Umami host,
+ * `insight.steevepommier.com` (COMMON-PROJECT-SPEC N5, the maintainer's
+ * decision of 2026-10-19) — third-party to p5.steeve.website, so a blocker's
+ * third-party-domain rule can cut it; `insight.steeve.website/insight` is the
+ * same instance on a sibling of this domain and stays the first-party
+ * fallback through NEXT_PUBLIC_UMAMI_SRC. The path is `/insight` rather than
+ * Umami's default `/script.js`, which appears in filter lists. */
 export const UMAMI_SRC =
-  process.env.NEXT_PUBLIC_UMAMI_SRC || "https://insight.steeve.website/insight";
+  process.env.NEXT_PUBLIC_UMAMI_SRC || "https://insight.steevepommier.com/insight";
 
 /** Website id created in Umami for p5.steeve.website. An explicitly empty
  * value is a kill switch: no script is emitted and nothing is sent. `??` (not

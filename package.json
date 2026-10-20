@@ -2,6 +2,9 @@
   "name": "sketchbook",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "sketch:meta": "node scripts/watch-sketches.mjs",
     "sketch:meta:write": "node scripts/watch-sketches.mjs --once",
