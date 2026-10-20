@@ -1026,7 +1026,7 @@ const effectSeedField: FieldConfig = {
   step: 1
 };
 
-const SEQUENCE_TRANSITION_LABELS: Record<string, string> = {
+export const SEQUENCE_TRANSITION_LABELS: Record<string, string> = {
   cut: "Cut",
   fade: "Crossfade",
   dip: "Dip through colour",
@@ -1451,16 +1451,50 @@ const sequencePlateField: FieldConfig = {
 
 // The scene cut (SceneCutSchema): a slide's entrance and exit against a
 // plate, edited in the transition band (SceneCutSettings) with the same
-// blocks a sequence's scenes use.
-export const sceneCutFieldConfigs: Record<"in" | "out" | "plate", FieldConfig> = {
+// blocks a sequence's scenes use. The exit follows the entrance unless told
+// otherwise (`outFollows`), so `out` only shows when it is its own; while it
+// follows, `outDuration` is the one field of `out` the panel still offers.
+export const sceneCutFieldConfigs: Record<
+  "in" | "out" | "plate" | "outFollows" | "outOwnDuration" | "outDuration",
+  FieldConfig
+> = {
   in: {
     ...sequenceTransitionField,
     label: "In — out of the plate"
   },
+  outFollows: {
+    label: "Out — into the plate",
+    component: "select",
+    options: [
+      {
+        label: "↺ Rewind in (matched)",
+        value: "rewind"
+      },
+      {
+        label: "→ Same as in",
+        value: "same"
+      },
+      {
+        label: "Own settings",
+        value: "own"
+      }
+    ]
+  },
+  outOwnDuration: {
+    label: "Own duration",
+    component: "checkbox"
+  },
+  outDuration: {
+    label: "Out duration (s)",
+    component: "slider",
+    min: 0,
+    max: 10,
+    step: 0.05
+  },
   out: {
     ...sequenceTransitionField,
-    label: "Out — into the plate",
-    initialExpanded: false
+    label: "Out — own settings",
+    initialExpanded: true
   },
   plate: sequencePlateField
 };

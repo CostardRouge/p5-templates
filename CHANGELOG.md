@@ -17,7 +17,8 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
   a camera move (push-in, pan, drift, orbit, handheld) and a film grade (letterbox, vignette, grain, chromatic
   aberration, tint, scanlines), optionally with a sound at each cut. Deterministic, so an export cuts like the preview.
 - A scene cut on every slide and on the document: the loop opens out of a colour plate and closes back into it
-  through the same transitions, so slides joined in one video cut like a film.
+  through the same transitions, so slides joined in one video cut like a film. The exit is set once: by default it
+  plays the entrance backwards, or plays it again, or takes its own settings, and it can keep its own length.
 - A legal notice at `/legal`: who publishes and hosts Sketchbook, what stays in your browser, what a recording handed
   to the server sends, and what the audience measurement counts — linked from the home page's footer and the site map.
 - Raster favicons (16 and 32 px) beside the icon, and a home-screen icon that shows the mark on white on an iPhone

@@ -333,7 +333,10 @@ export const IDENTITY_CAMERA = [
  * which side plays at loop time `seconds`, with its eased progress, or null
  * in between. Each side is capped at half the loop so the two never overlap.
  *
- * @returns {{ side: "in"|"out", spec: object, raw: number, mix: number }|null}
+ * On the exit side, `rewind` says the entrance is being played backwards:
+ * the picture is then the "to" of the transition, as on the way in.
+ *
+ * @returns {{ side: "in"|"out", rewind?: boolean, spec: object, raw: number, mix: number }|null}
  */
 export function resolveSceneCut(
   cut, seconds, loopSeconds
@@ -350,11 +353,13 @@ export function resolveSceneCut(
       Number( cut.in?.duration ) || 0
     )
   );
+  // The exit's settings: its own, or the entrance's (sceneCutExit).
+  const exit = sceneCutExit( cut );
   const outDuration = Math.min(
     half,
     Math.max(
       0,
-      Number( cut.out?.duration ) || 0
+      Number( exit.duration ) || 0
     )
   );
 
@@ -374,15 +379,52 @@ export function resolveSceneCut(
 
   if ( outDuration > 0 && seconds >= outStart ) {
     const raw = ( seconds - outStart ) / outDuration;
-    const ease = easing[ cut.out?.easing ] ?? easing.linear;
+    const ease = easing[ exit.spec.easing ] ?? easing.linear;
+
+    if ( exit.rewind ) {
+      // The entrance played backwards: plate → picture with the progress
+      // running 1 → 0, its easing reversed in time with it.
+      return {
+        side: "out",
+        rewind: true,
+        spec: exit.spec,
+        raw,
+        mix: clamp01( ease( 1 - raw ) )
+      };
+    }
 
     return {
       side: "out",
-      spec: cut.out ?? {},
+      rewind: false,
+      spec: exit.spec,
       raw,
       mix: clamp01( ease( raw ) )
     };
   }
 
   return null;
+}
+
+/**
+ * Where a cut's exit takes its settings (SceneCutSchema.outFollows): its own
+ * `out` block, or the entrance played again ("same") or backwards ("rewind").
+ * A block without the key is read as "own" — the shape before the link.
+ * `duration` is the exit's length: `out.duration` when the exit is its own or
+ * keeps its own length (`outOwnDuration`), the entrance's otherwise.
+ *
+ * @returns {{ spec: object, rewind: boolean, duration: number }}
+ */
+export function sceneCutExit( cut ) {
+  const follows = cut?.outFollows ?? "own";
+  const own = follows !== "rewind" && follows !== "same";
+  const spec = ( own ? cut?.out : cut?.in ) ?? {};
+  const duration = own || cut?.outOwnDuration
+    ? cut?.out?.duration
+    : cut?.in?.duration;
+
+  return {
+    spec,
+    rewind: follows === "rewind",
+    duration: Number( duration ) || 0
+  };
 }

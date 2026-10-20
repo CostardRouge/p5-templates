@@ -2385,11 +2385,28 @@ export const SlideTransitionSchema = z.object( {
 // from a document that never asked for it (the montage's `transition` is the
 // precedent). `SceneCutSchema.parse( {} )` still fills every default — the
 // panel's switch parses the whole block in that way.
+export const SCENE_CUT_OUT_FOLLOWS = [
+  "rewind",
+  "same",
+  "own"
+] as const;
+
 export const SceneCutSchema = z.object( {
   enabled: z.boolean().default( false ),
   // The ground the picture comes out of and goes back into.
   plate: SequencePlateSchema,
   in: SequenceTransitionSchema,
+  // Where the exit takes its settings, so they are set once: "rewind" plays
+  // the entrance backwards (an iris that opened closes again — a matched pair
+  // no setting of `out` can express), "same" plays the entrance again over
+  // the plate, "own" plays `out`. The motion-foley release select, with its
+  // "↺ Reverse (matched)" default, is the precedent.
+  outFollows: z.enum( SCENE_CUT_OUT_FOLLOWS ).default( "rewind" ),
+  // While the exit follows the entrance, it may still keep its own length
+  // (`out.duration`): in over 1.2 s, out over 0.6 s.
+  outOwnDuration: z.boolean().default( false ),
+  // Read whole when `outFollows` is "own", for its duration alone when
+  // `outOwnDuration` is on; kept while unused so "own" finds it again.
   out: SequenceTransitionSchema
 } );
 

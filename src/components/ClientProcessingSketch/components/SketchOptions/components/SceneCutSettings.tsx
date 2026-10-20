@@ -9,8 +9,26 @@ import {
 } from "@/types/sketch.types";
 import FieldRenderer from "./FieldRenderer";
 import {
-  sceneCutFieldConfigs
+  SEQUENCE_TRANSITION_LABELS, sceneCutFieldConfigs
 } from "./ContentItems/constants/field-config";
+
+type TransitionLike = {
+  duration?: number;
+  easing?: string;
+  effect?: {
+    kind?: string;
+  };
+};
+
+/** One line naming what the exit plays while it follows the entrance. */
+function followSummary(
+  entrance: TransitionLike | undefined, rewind: boolean
+) {
+  const kind = entrance?.effect?.kind ?? "fade";
+  const label = SEQUENCE_TRANSITION_LABELS[ kind ] ?? kind;
+
+  return `${ label } · ${ entrance?.easing ?? "linear" } — ${ rewind ? "the entrance played backwards" : "the entrance played again" }`;
+}
 
 type Props = {
   /** The slide being edited, or undefined for the root document. */
@@ -42,6 +60,36 @@ export default function SceneCutSettings( {
   } ) as Record<string, unknown> | undefined;
 
   const enabled = Boolean( cut?.enabled );
+  // A block saved before the link reads as "own", as in resolveSceneCut.
+  const follows = ( cut?.outFollows as string | undefined ) ?? "own";
+  const followsEntrance = follows === "rewind" || follows === "same";
+  const ownDuration = Boolean( cut?.outOwnDuration );
+
+  // "Detach": the exit takes a copy of the entrance as its own settings,
+  // keeping its own length if it had one. From "rewind" the copy then plays
+  // forward — a rewound iris has no setting to say it.
+  const handleDetach = () => {
+    const entrance = ( cut?.in ?? {} ) as TransitionLike;
+    const exit = ( cut?.out ?? {} ) as TransitionLike;
+
+    setValue(
+      `${ base }.out`,
+      {
+        ...structuredClone( entrance ),
+        duration: ownDuration ? exit.duration : entrance.duration
+      },
+      {
+        shouldDirty: true
+      }
+    );
+    setValue(
+      `${ base }.outFollows`,
+      "own",
+      {
+        shouldDirty: true
+      }
+    );
+  };
 
   const handleToggle = ( on: boolean ) => {
     if ( on ) {
@@ -94,10 +142,48 @@ export default function SceneCutSettings( {
           />
           <FieldRenderer
             fieldBasePath={ base }
-            fieldName="out"
-            config={ sceneCutFieldConfigs.out }
+            fieldName="outFollows"
+            config={ sceneCutFieldConfigs.outFollows }
             depth={ 1 }
           />
+          {followsEntrance ? (
+            <div className="flex flex-col gap-1 pl-2 border-l border-theme">
+              <p className="px-1 text-[0.65rem] leading-snug text-label">
+                { followSummary(
+                  cut?.in as TransitionLike | undefined,
+                  follows === "rewind"
+                ) }
+              </p>
+              <FieldRenderer
+                fieldBasePath={ base }
+                fieldName="outOwnDuration"
+                config={ sceneCutFieldConfigs.outOwnDuration }
+                depth={ 1 }
+              />
+              {ownDuration && (
+                <FieldRenderer
+                  fieldBasePath={ `${ base }.out` }
+                  fieldName="duration"
+                  config={ sceneCutFieldConfigs.outDuration }
+                  depth={ 1 }
+                />
+              )}
+              <button
+                type="button"
+                onClick={ handleDetach }
+                className="self-start px-1 py-0.5 text-[0.7rem] text-label underline underline-offset-2 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50 rounded"
+              >
+                Detach: edit Out on its own
+              </button>
+            </div>
+          ) : (
+            <FieldRenderer
+              fieldBasePath={ base }
+              fieldName="out"
+              config={ sceneCutFieldConfigs.out }
+              depth={ 1 }
+            />
+          )}
           <FieldRenderer
             fieldBasePath={ base }
             fieldName="plate"

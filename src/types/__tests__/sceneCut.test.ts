@@ -8,7 +8,7 @@ import {
   OptionsSchema, SceneCutSchema, SlideSchema
 } from "@/types/sketch.types";
 import {
-  resolveSceneCut
+  resolveSceneCut, sceneCutExit
 } from "@/p5/utils/sequence/timeline.js";
 import {
   sceneCutFieldConfigs
@@ -27,6 +27,9 @@ describe(
         expect( cut.out.duration ).toBeGreaterThan( 0 );
         expect( cut.in.effect.kind ).toBe( "wipe" );
         expect( cut.plate.gradient ).toBe( "linear" );
+        // Set once: the exit plays the entrance backwards until told otherwise.
+        expect( cut.outFollows ).toBe( "rewind" );
+        expect( cut.outOwnDuration ).toBe( false );
       }
     );
 
@@ -63,6 +66,7 @@ describe(
   () => {
     const cut = SceneCutSchema.parse( {
       enabled: true,
+      outFollows: "own",
       in: {
         duration: 2,
         easing: "linear"
@@ -125,6 +129,154 @@ describe(
           1,
           2
         )?.side ).toBe( "out" );
+      }
+    );
+
+    it(
+      "rewinds the entrance by default: its settings, its length, run backwards",
+      () => {
+        const linked = SceneCutSchema.parse( {
+          enabled: true,
+          in: {
+            duration: 2,
+            easing: "easeInCubic",
+            effect: {
+              kind: "iris"
+            }
+          },
+          out: {
+            duration: 1,
+            easing: "linear",
+            effect: {
+              kind: "fade"
+            }
+          }
+        } );
+
+        // Out lasts the entrance's 2 s, not its own 1 s.
+        expect( resolveSceneCut(
+          linked,
+          7.9,
+          10
+        ) ).toBeNull();
+
+        const cue = resolveSceneCut(
+          linked,
+          8.5,
+          10
+        );
+
+        expect( cue ).toMatchObject( {
+          side: "out",
+          rewind: true,
+          raw: 0.25,
+          spec: {
+            effect: {
+              kind: "iris"
+            }
+          }
+        } );
+        // The entrance at 75 % of its way in, eased the entrance's way.
+        expect( cue?.mix ).toBeCloseTo( 0.75 ** 3 );
+        expect( sceneCutExit( linked ) ).toMatchObject( {
+          rewind: true,
+          duration: 2
+        } );
+      }
+    );
+
+    it(
+      "plays the entrance again, forward, when the exit follows it the same way",
+      () => {
+        const same = SceneCutSchema.parse( {
+          enabled: true,
+          outFollows: "same",
+          in: {
+            duration: 2,
+            easing: "linear",
+            effect: {
+              kind: "iris"
+            }
+          }
+        } );
+
+        expect( resolveSceneCut(
+          same,
+          8.5,
+          10
+        ) ).toMatchObject( {
+          side: "out",
+          rewind: false,
+          raw: 0.25,
+          mix: 0.25,
+          spec: {
+            effect: {
+              kind: "iris"
+            }
+          }
+        } );
+      }
+    );
+
+    it(
+      "keeps the exit's own length when asked, while following the entrance",
+      () => {
+        const short = SceneCutSchema.parse( {
+          enabled: true,
+          outOwnDuration: true,
+          in: {
+            duration: 2,
+            easing: "linear"
+          },
+          out: {
+            duration: 0.5
+          }
+        } );
+
+        expect( resolveSceneCut(
+          short,
+          9.4,
+          10
+        ) ).toBeNull();
+        expect( resolveSceneCut(
+          short,
+          9.75,
+          10
+        ) ).toMatchObject( {
+          rewind: true,
+          raw: 0.5,
+          mix: 0.5
+        } );
+      }
+    );
+
+    it(
+      "reads a block saved without the link as the exit's own settings",
+      () => {
+        const legacy = {
+          enabled: true,
+          in: {
+            duration: 2,
+            easing: "linear"
+          },
+          out: {
+            duration: 1,
+            easing: "linear",
+            effect: {
+              kind: "fade"
+            }
+          }
+        };
+
+        expect( sceneCutExit( legacy ) ).toMatchObject( {
+          rewind: false,
+          duration: 1,
+          spec: {
+            effect: {
+              kind: "fade"
+            }
+          }
+        } );
       }
     );
 

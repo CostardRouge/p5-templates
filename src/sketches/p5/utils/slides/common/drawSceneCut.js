@@ -98,7 +98,9 @@ export default function drawSceneCut( cut ) {
 
   const plateCanvas = plate.elt ?? plate.canvas;
   const spec = cue.spec;
-  const entering = cue.side === "in";
+  // A rewound exit is the entrance played backwards: plate → picture, as on
+  // the way in, with its progress running down.
+  const entering = cue.side === "in" || cue.rewind === true;
   const composite = renderComposite(
     CUT_KEY,
     {
