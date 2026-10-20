@@ -17,7 +17,7 @@ import {
   AddItemHandler, ItemKind
 } from "./types/item-kinds";
 import {
-  loadSketchForm, type SketchChoice
+  loadSketchForm, sketchNameFromPath, type SketchChoice
 } from "@/lib/sketchLayerCatalogue";
 
 type Props = {
@@ -41,19 +41,73 @@ type Props = {
  * seeded with the chosen sketch and its own defaults. Adding it blind would put
  * an empty rectangle in the list and make choosing a second step.
  */
+/** The two kinds whose tile picks a sketch before adding. */
+type PickingKind = "sketch" | "sequence";
+
+/**
+ * A new reel opens on a splash card naming the picked sketch, then cuts into
+ * it — the system is visible the moment the layer lands, instead of asking
+ * for a scene list first.
+ */
+export function sequenceSeedFor(
+  path: string, settings: Record<string, unknown>
+): Record<string, unknown> {
+  const name = sketchNameFromPath( path );
+
+  return {
+    scenes: [
+      {
+        kind: "splash",
+        weight: 0.6,
+        title: name.toUpperCase().replaceAll(
+          "-",
+          "\n"
+        ),
+        subtitle: "SKETCHBOOK",
+        transition: {
+          effect: {
+            kind: "iris",
+            shape: "circle",
+            center: {
+              x: 0.5,
+              y: 0.5
+            },
+            softness: 0.05
+          }
+        }
+      },
+      {
+        kind: "sketch",
+        sketch: path,
+        settings,
+        weight: 2,
+        transition: {
+          effect: {
+            kind: "wipe",
+            angle: 0,
+            softness: 0.08
+          }
+        }
+      }
+    ]
+  };
+}
+
 export default function AddLayerPopover( {
   onAdd,
   ariaLabel,
   onOpen
 }: Props ) {
   const [
-    pickingSketch,
-    setPickingSketch
-  ] = React.useState( false );
+    picking,
+    setPicking
+  ] = React.useState<PickingKind | null>( null );
 
   const handlePick = React.useCallback(
     ( choice: SketchChoice ) => {
-      setPickingSketch( false );
+      const kind = picking ?? "sketch";
+
+      setPicking( null );
 
       // The layer is added either way: a failed form fetch leaves it running
       // on the sketch's own code defaults, which is far better than swallowing
@@ -64,15 +118,21 @@ export default function AddLayerPopover( {
           () => ( {} )
         )
         .then( ( settings ) => onAdd(
-          "sketch",
-          {
-            sketch: choice.path,
-            settings
-          }
+          kind,
+          kind === "sequence"
+            ? sequenceSeedFor(
+              choice.path,
+              settings
+            )
+            : {
+              sketch: choice.path,
+              settings
+            }
         ) );
     },
     [
-      onAdd
+      onAdd,
+      picking
     ]
   );
 
@@ -82,8 +142,8 @@ export default function AddLayerPopover( {
     ) => {
       close();
 
-      if ( kind === "sketch" ) {
-        setPickingSketch( true );
+      if ( kind === "sketch" || kind === "sequence" ) {
+        setPicking( kind );
         return;
       }
 
@@ -126,9 +186,9 @@ export default function AddLayerPopover( {
 
       {/* Portalled to the body, so it outlives the popover that opened it. */}
       <SketchPickerDialog
-        open={ pickingSketch }
+        open={ picking !== null }
         onPick={ handlePick }
-        onClose={ () => setPickingSketch( false ) }
+        onClose={ () => setPicking( null ) }
       />
     </>
   );

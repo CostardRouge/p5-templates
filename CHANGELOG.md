@@ -11,6 +11,14 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
 
 ### Added
 
+- A Sequence layer: whole sketches, splash cards, loading screens and colour plates cut together into one reel,
+  each scene entering through one of twenty GL transitions (wipe, iris, push, zoom, dissolve, glitch, blinds,
+  tiles, clock wipe, ripple, swirl, cube, melt, film burn, luma, slices…) with an edge light drawn from a palette,
+  a camera move (push-in, pan, drift, orbit, handheld) and a film grade (letterbox, vignette, grain, chromatic
+  aberration, tint, scanlines), optionally with a sound at each cut. Deterministic, so an export cuts like the preview.
+- A scene cut on every slide and on the document: the loop opens out of a colour plate and closes back into it
+  through the same transitions, so slides joined in one video cut like a film. The exit is set once: by default it
+  plays the entrance backwards, or plays it again, or takes its own settings, and it can keep its own length.
 - A legal notice at `/legal`: who publishes and hosts Sketchbook, what stays in your browser, what a recording handed
   to the server sends, and what the audience measurement counts — linked from the home page's footer and the site map.
 - Raster favicons (16 and 32 px) beside the icon, and a home-screen icon that shows the mark on white on an iPhone

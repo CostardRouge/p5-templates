@@ -152,6 +152,12 @@ export default function ConditionalGroup( {
 
   const conditionalFieldName = `${ basePath }.${ conditionalOn }`;
   const activeConfig = configs[ watchedValue as keyof typeof configs ];
+  const selectedLabel = typeSelector.options.find( ( option ) => option.value === watchedValue )?.label;
+  // In a list of look-alike rows (a sequence's scenes) the header names the
+  // variant, so a shut row still says what it is.
+  const headerLabel = config.headerShowsValue && selectedLabel
+    ? `${ config.label ?? "" } · ${ selectedLabel }`
+    : config.label;
 
   return (
     <CollapsibleItem
@@ -172,7 +178,7 @@ export default function ConditionalGroup( {
             } }
           />
           <span className="truncate">
-            {config.label}
+            {headerLabel}
           </span>
         </div>
       ) }

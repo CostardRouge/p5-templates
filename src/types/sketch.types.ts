@@ -1489,6 +1489,617 @@ export const LEGACY_HUD_WIDGETS = [
   }
 ] as const;
 
+/* ---------------- transition sound (montage + sequence) ---------- */
+
+// How a single transition sounds: one hit, or an N-hit burst with an optional
+// pitch ramp (a "spin-up" whoosh as the variant snaps in). Discriminated union
+// so the panel shows only the controls the picked mode uses, matching the
+// specs sound-on-change pattern.
+export const SlideTransitionSoundRepeatSchema = z
+  .discriminatedUnion(
+    "mode",
+    [
+      z.object( {
+        mode: z.literal( "once" )
+      } ),
+      z.object( {
+        mode: z.literal( "count" ),
+        // total hits per transition (first one included)
+        times: z.number().int()
+          .min( 2 )
+          .max( 16 )
+          .default( 3 ),
+        // seconds between hits of the burst
+        interval: soundRepeatInterval.default( 0.06 ),
+        // pitch ramp per hit, in octaves ( + rises, - falls, 0 = flat )
+        pitchStep: z.number().min( -0.5 )
+          .max( 0.5 )
+          .default( 0.35 )
+      } )
+    ]
+  )
+  // Default to a short 3-hit rising burst: the "spin-up" reads more clearly as
+  // a transition than a single tick. Fully specified so the parsed default is
+  // complete (a bare { mode } would leave the burst fields unbound in the UI).
+  .default( {
+    mode: "count",
+    times: 3,
+    interval: 0.06,
+    pitchStep: 0.35
+  } );
+
+// Sound played when a montage advances from one variant to the next — the
+// audible counterpart of the visual dip / title switch, heard "in between" the
+// two slides at each transition. Off by default so existing decks stay silent;
+// routes through the sketch audio engine (audio.trigger("click", …)) so it is
+// heard live AND baked into recordings, sample-accurate in deterministic
+// captures. The sequence item plays the same hit at each scene change.
+export const SlideTransitionSoundSchema = z
+  .object( {
+    // Master switch (independent from the montage master switch).
+    enabled: z.boolean().default( false ),
+    // Voice from the shared click synth.
+    preset: z.enum( SPECS_SOUND_PRESETS ).default( "pop" ),
+    volume: z.number().min( 0 )
+      .max( 1 )
+      .default( 0.5 ),
+    // Global pitch multiplier (1 = as designed, 2 = octave up).
+    pitch: z.number().min( 0.25 )
+      .max( 4 )
+      .default( 1 ),
+    // Random per-transition detune, 0..1 (1 ≈ ±half an octave) — "humanize".
+    pitchVariation: z.number().min( 0 )
+      .max( 1 )
+      .default( 0 ),
+    // Pitch offset by the arriving variant's index, in octaves across the
+    // montage, so each slide lands on its own note (a small arpeggio as the
+    // montage cycles). 0 = every transition sounds at the same pitch.
+    slidePitchSpread: z.number().min( -2 )
+      .max( 2 )
+      .default( 1.05 ),
+    repeat: SlideTransitionSoundRepeatSchema
+  } )
+  .prefault( {} );
+
+/* ---------------- sequence: whole sketches cut together ----------- */
+// A "sequence" content item is a reel. Its scenes — a whole other sketch, a
+// splash card, a loading screen, a colour plate — take turns on screen over the
+// loop, each one ENTERING through a GL transition (the catalogue below), each
+// framed by a camera move, and the whole thing graded like film (letterbox,
+// vignette, grain, chromatic aberration…). Every scene is drawn into its own
+// buffer — a sketch scene through the same runtime a "sketch" layer uses
+// (nestedSketch.js) — and a fragment shader composites the two scenes a
+// transition straddles. Everything is a pure function of the loop clock, so a
+// capture renders the same cut as the preview. Runtime:
+// src/sketches/p5/utils/sequence/.
+
+/** What a scene is. */
+export const SEQUENCE_SCENE_KINDS = [
+  "sketch",
+  "splash",
+  "loader",
+  "plate"
+] as const;
+
+/** `cyclic` plays the last scene's cut back into the first; `once` holds the last. */
+export const SEQUENCE_LOOP_MODES = [
+  "cyclic",
+  "once"
+] as const;
+
+/**
+ * The GL transition catalogue (transitionGlsl.js has one fragment per kind).
+ * `cut` is the hard cut; `dip` and `flash` go through the transition colour;
+ * everything else reveals the arriving scene through a mask or a warp whose
+ * edge can carry the colour (or a palette ramp) as a glow.
+ */
+export const SEQUENCE_TRANSITION_KINDS = [
+  "cut",
+  "fade",
+  "dip",
+  "flash",
+  "wipe",
+  "iris",
+  "push",
+  "zoom",
+  "dissolve",
+  "pixelate",
+  "glitch",
+  "blinds",
+  "tiles",
+  "radial",
+  "ripple",
+  "swirl",
+  "cube",
+  "doom",
+  "burn",
+  "luma",
+  "slice"
+] as const;
+
+export const SEQUENCE_IRIS_SHAPES = [
+  "circle",
+  "diamond",
+  "square",
+  "star"
+] as const;
+
+export const SEQUENCE_PUSH_MODES = [
+  "push",
+  "cover",
+  "reveal"
+] as const;
+
+export const SEQUENCE_ZOOM_DIRECTIONS = [
+  "in",
+  "out"
+] as const;
+
+export const SEQUENCE_TILE_MOTIONS = [
+  "flip",
+  "shrink",
+  "fall",
+  "spin"
+] as const;
+
+export const SEQUENCE_CUBE_AXES = [
+  "horizontal",
+  "vertical"
+] as const;
+
+/** A scene's camera move over its own time on screen. */
+export const SEQUENCE_CAMERA_MOVES = [
+  "none",
+  "push-in",
+  "pull-out",
+  "pan-left",
+  "pan-right",
+  "pan-up",
+  "pan-down",
+  "drift",
+  "orbit",
+  "handheld"
+] as const;
+
+/** How a plate (a splash / loader / plate scene's background) lays its two colours. */
+export const SEQUENCE_PLATE_GRADIENTS = [
+  "solid",
+  "linear",
+  "radial",
+  "conic",
+  "stripes"
+] as const;
+
+export const SEQUENCE_SPLASH_ANIMATIONS = [
+  "none",
+  "rise",
+  "letters",
+  "typewriter",
+  "scale",
+  "slide"
+] as const;
+
+export const SEQUENCE_SPLASH_ACCENTS = [
+  "none",
+  "bars",
+  "rings",
+  "grid",
+  "confetti",
+  "glow"
+] as const;
+
+export const SEQUENCE_LOADER_STYLES = [
+  "bar",
+  "ring",
+  "dots",
+  "blocks",
+  "boot"
+] as const;
+
+/**
+ * Where a transition's or a plate's colours come from: the item's own colour
+ * field(s), or a shared palette (utils/palettes.js) whose ramp is swept — the
+ * edge of a wipe walks the ramp as it crosses, a plate's gradient reads two
+ * points of it. Kept a plain string: an unknown id falls back to the colour.
+ */
+export const SEQUENCE_PALETTE_OWN = "color";
+
+const unitAmount = z.number().min( 0 )
+  .max( 1 );
+const angleDegrees = z.number().min( 0 )
+  .max( 360 );
+const effectSeed = z.number().int()
+  .min( 0 )
+  .max( 9999 )
+  .default( 7 );
+const effectCenter = Vec2.default( {
+  x: 0.5,
+  y: 0.5
+} );
+
+// Each effect carries only the parameters it reads, so the panel shows exactly
+// those (conditional-group on `kind`). Every field has an explicit default:
+// a branch switch rebuilds the object from them (see sketches.md on
+// conditional-group).
+export const SequenceEffectSchema = z
+  .discriminatedUnion(
+    "kind",
+    [
+      z.object( {
+        kind: z.literal( "cut" )
+      } ),
+      z.object( {
+        kind: z.literal( "fade" )
+      } ),
+      z.object( {
+        kind: z.literal( "dip" )
+      } ),
+      z.object( {
+        kind: z.literal( "flash" ),
+        // How white-hot the flash gets at its peak (1 = a full frame of colour).
+        intensity: unitAmount.default( 0.85 )
+      } ),
+      z.object( {
+        kind: z.literal( "wipe" ),
+        angle: angleDegrees.default( 0 ),
+        softness: unitAmount.default( 0.08 )
+      } ),
+      z.object( {
+        kind: z.literal( "iris" ),
+        shape: z.enum( SEQUENCE_IRIS_SHAPES ).default( "circle" ),
+        center: effectCenter,
+        softness: unitAmount.default( 0.05 )
+      } ),
+      z.object( {
+        kind: z.literal( "push" ),
+        angle: angleDegrees.default( 0 ),
+        mode: z.enum( SEQUENCE_PUSH_MODES ).default( "push" )
+      } ),
+      z.object( {
+        kind: z.literal( "zoom" ),
+        direction: z.enum( SEQUENCE_ZOOM_DIRECTIONS ).default( "in" ),
+        amount: unitAmount.default( 0.6 ),
+        center: effectCenter
+      } ),
+      z.object( {
+        kind: z.literal( "dissolve" ),
+        // Noise cells across the frame: low = big blotches, high = fine grain.
+        scale: z.number().min( 1 )
+          .max( 64 )
+          .default( 8 ),
+        softness: unitAmount.default( 0.15 ),
+        seed: effectSeed
+      } ),
+      z.object( {
+        kind: z.literal( "pixelate" ),
+        // Coarsest mosaic reached mid-transition, in cells across the frame.
+        cells: z.number().int()
+          .min( 2 )
+          .max( 200 )
+          .default( 24 )
+      } ),
+      z.object( {
+        kind: z.literal( "glitch" ),
+        intensity: unitAmount.default( 0.7 ),
+        blocks: z.number().int()
+          .min( 2 )
+          .max( 64 )
+          .default( 12 ),
+        seed: effectSeed
+      } ),
+      z.object( {
+        kind: z.literal( "blinds" ),
+        count: z.number().int()
+          .min( 1 )
+          .max( 64 )
+          .default( 8 ),
+        angle: angleDegrees.default( 90 ),
+        softness: unitAmount.default( 0.05 )
+      } ),
+      z.object( {
+        kind: z.literal( "tiles" ),
+        columns: z.number().int()
+          .min( 1 )
+          .max( 32 )
+          .default( 6 ),
+        rows: z.number().int()
+          .min( 1 )
+          .max( 32 )
+          .default( 8 ),
+        // 0 = every tile turns at once, 1 = one after the other.
+        stagger: unitAmount.default( 0.6 ),
+        motion: z.enum( SEQUENCE_TILE_MOTIONS ).default( "flip" ),
+        seed: effectSeed
+      } ),
+      z.object( {
+        kind: z.literal( "radial" ),
+        center: effectCenter,
+        softness: unitAmount.default( 0.04 ),
+        clockwise: z.boolean().default( true ),
+        startAngle: angleDegrees.default( 0 )
+      } ),
+      z.object( {
+        kind: z.literal( "ripple" ),
+        rings: z.number().min( 1 )
+          .max( 40 )
+          .default( 10 ),
+        amplitude: unitAmount.default( 0.3 ),
+        center: effectCenter
+      } ),
+      z.object( {
+        kind: z.literal( "swirl" ),
+        // Turns at the centre at the peak; negative swirls the other way.
+        strength: z.number().min( -3 )
+          .max( 3 )
+          .default( 1.5 ),
+        center: effectCenter
+      } ),
+      z.object( {
+        kind: z.literal( "cube" ),
+        axis: z.enum( SEQUENCE_CUBE_AXES ).default( "horizontal" ),
+        perspective: unitAmount.default( 0.4 )
+      } ),
+      z.object( {
+        kind: z.literal( "doom" ),
+        columns: z.number().int()
+          .min( 2 )
+          .max( 200 )
+          .default( 40 ),
+        seed: effectSeed
+      } ),
+      z.object( {
+        kind: z.literal( "burn" ),
+        scale: z.number().min( 1 )
+          .max( 64 )
+          .default( 6 ),
+        softness: unitAmount.default( 0.25 ),
+        seed: effectSeed
+      } ),
+      z.object( {
+        kind: z.literal( "luma" ),
+        softness: unitAmount.default( 0.1 ),
+        // Dark parts of the outgoing scene go first instead of the bright ones.
+        invert: z.boolean().default( false )
+      } ),
+      z.object( {
+        kind: z.literal( "slice" ),
+        count: z.number().int()
+          .min( 2 )
+          .max( 64 )
+          .default( 10 ),
+        angle: angleDegrees.default( 0 ),
+        stagger: unitAmount.default( 0.5 )
+      } )
+    ]
+  )
+  .default( {
+    kind: "wipe",
+    angle: 0,
+    softness: 0.08
+  } );
+
+// How a scene ENTERS. The duration is in seconds of the piece and is taken out
+// of the scene's own time on screen; the outgoing scene keeps drawing under it.
+export const SequenceTransitionSchema = z
+  .object( {
+    duration: z.number().min( 0 )
+      .max( 10 )
+      .default( 0.8 ),
+    // Easing key from easing.js, applied to the transition's progress.
+    easing: z.string().default( "easeInOutCubic" ),
+    // The colour a dip / flash passes through and the glow on a reveal's edge.
+    color: RGBA.default( [
+      8,
+      8,
+      12
+    ] ),
+    // "color" = the colour above; a palette id sweeps that palette's ramp
+    // along the edge over the transition.
+    palette: z.string().default( SEQUENCE_PALETTE_OWN ),
+    // Width and strength of the light along a reveal's edge (0 = none).
+    glow: unitAmount.default( 0.35 ),
+    effect: SequenceEffectSchema
+  } )
+  .prefault( {} );
+
+// A scene's camera: a slow move over the time it is on screen, applied to the
+// scene's buffer when it is composited — the scene itself never knows.
+export const SequenceCameraSchema = z
+  .object( {
+    move: z.enum( SEQUENCE_CAMERA_MOVES ).default( "none" ),
+    // How far the move travels (1 = the whole frame's worth).
+    amount: unitAmount.default( 0.25 ),
+    easing: z.string().default( "linear" ),
+    // Handheld jitter on top of the move, from the loop clock (deterministic).
+    shake: unitAmount.default( 0 ),
+    // Dutch angle, in degrees, reached at the end of the move.
+    roll: z.number().min( -45 )
+      .max( 45 )
+      .default( 0 )
+  } )
+  .prefault( {} );
+
+// A plate: the ground a splash / loader / plate scene paints, two colours (or
+// two points of a palette ramp) laid as a gradient that can travel over the
+// scene, with an optional static grain.
+export const SequencePlateSchema = z
+  .object( {
+    palette: z.string().default( SEQUENCE_PALETTE_OWN ),
+    gradient: z.enum( SEQUENCE_PLATE_GRADIENTS ).default( "linear" ),
+    from: RGBA.default( [
+      24,
+      20,
+      60
+    ] ),
+    to: RGBA.default( [
+      255,
+      90,
+      140
+    ] ),
+    angle: angleDegrees.default( 135 ),
+    // How far the gradient travels over the scene's time (0 = still).
+    drift: unitAmount.default( 0.3 ),
+    grain: unitAmount.default( 0.15 )
+  } )
+  .prefault( {} );
+
+// Every scene: how long it stays relative to the others, how it enters, how
+// its camera moves while it is on.
+const sequenceSceneBase = {
+  weight: z.number().min( 0.1 )
+    .max( 10 )
+    .default( 1 ),
+  transition: SequenceTransitionSchema,
+  camera: SequenceCameraSchema
+};
+
+// A whole other sketch, run as a "sketch" layer is (same buffer, same swaps).
+export const SequenceSketchSceneSchema = z.object( {
+  kind: z.literal( "sketch" ),
+  ...sequenceSceneBase,
+  // Catalogue path, "<category>/<name>" — the string a sketch layer stores.
+  sketch: z.string().default( "" ),
+  // That sketch's own parameters, rendered from its formConfiguration.
+  settings: z.any().default( {} ),
+  // Loops of the sketch's own animation played over the scene's time on
+  // screen; 0 follows the host's clock instead.
+  loops: z.number().min( 0 )
+    .max( 8 )
+    .default( 1 ),
+  // Where in its loop the sketch starts the scene.
+  progression: unitAmount.default( 0 ),
+  // Redraws per second of loop time; 0 follows the host.
+  framerate: z.number().min( 0 )
+    .max( 120 )
+    .default( 0 ),
+  // Buffer pixel density, as on a sketch layer.
+  resolution: z.number().min( 0.05 )
+    .max( 2 )
+    .default( 1 ),
+  // A scene is the whole picture, so unlike a layer it paints its own
+  // background by default.
+  drawBackground: z.boolean().default( true ),
+  clearEachFrame: z.boolean().default( true )
+} );
+
+// A title card: a headline (and a line under it) animated in over a plate.
+export const SequenceSplashSceneSchema = z.object( {
+  kind: z.literal( "splash" ),
+  ...sequenceSceneBase,
+  title: z.string().default( "SKETCHBOOK" ),
+  subtitle: z.string().default( "" ),
+  font: z.string().default( "martian" ),
+  size: z.number().positive()
+    .default( 120 ),
+  fill: RGBA.default( [
+    255,
+    255,
+    255
+  ] ),
+  align: HorizontalAlign.default( "center" ),
+  position: Vec2.default( {
+    x: 0.5,
+    y: 0.5
+  } ),
+  animation: z.enum( SEQUENCE_SPLASH_ANIMATIONS ).default( "letters" ),
+  // Decorative motion behind the words, coloured from the plate.
+  accent: z.enum( SEQUENCE_SPLASH_ACCENTS ).default( "bars" ),
+  background: SequencePlateSchema
+} );
+
+// A loading screen that fills over the scene's time — a fake progress read as
+// a beat, not a real one.
+export const SequenceLoaderSceneSchema = z.object( {
+  kind: z.literal( "loader" ),
+  ...sequenceSceneBase,
+  label: z.string().default( "LOADING" ),
+  style: z.enum( SEQUENCE_LOADER_STYLES ).default( "bar" ),
+  font: z.string().default( "spaceMonoRegular" ),
+  size: z.number().positive()
+    .default( 28 ),
+  fill: RGBA.default( [
+    255,
+    255,
+    255
+  ] ),
+  showPercent: z.boolean().default( true ),
+  // How much the progress hesitates on its way up (0 = a straight ramp).
+  stutter: unitAmount.default( 0.35 ),
+  background: SequencePlateSchema
+} );
+
+// A bare plate: a beat of colour between two scenes.
+export const SequencePlateSceneSchema = z.object( {
+  kind: z.literal( "plate" ),
+  ...sequenceSceneBase,
+  background: SequencePlateSchema
+} );
+
+export const SequenceSceneSchema = z.discriminatedUnion(
+  "kind",
+  [
+    SequenceSketchSceneSchema,
+    SequenceSplashSceneSchema,
+    SequenceLoaderSceneSchema,
+    SequencePlateSceneSchema
+  ]
+);
+
+// The finish laid over the whole composite, every frame: film chrome.
+export const SequenceGradeSchema = z
+  .object( {
+    // Black bars top and bottom, as a fraction of the height (0 = none).
+    letterbox: z.number().min( 0 )
+      .max( 0.4 )
+      .default( 0 ),
+    vignette: unitAmount.default( 0 ),
+    // Animated film grain, from the loop clock.
+    grain: unitAmount.default( 0 ),
+    // Chromatic aberration: the colour channels split towards the edges.
+    aberration: unitAmount.default( 0 ),
+    saturation: z.number().min( 0 )
+      .max( 2 )
+      .default( 1 ),
+    contrast: z.number().min( 0.5 )
+      .max( 2 )
+      .default( 1 ),
+    tint: RGBA.default( [
+      255,
+      200,
+      120
+    ] ),
+    tintAmount: unitAmount.default( 0 ),
+    scanlines: unitAmount.default( 0 )
+  } )
+  .prefault( {} );
+
+export const SequenceItemSchema = z.object( {
+  type: z.literal( "sequence" ),
+  enabled: z.boolean().default( true ),
+  scenes: z.array( SequenceSceneSchema ).default( [] ),
+  loop: z.enum( SEQUENCE_LOOP_MODES ).default( "cyclic" ),
+  // Placed and sized like a sketch layer, so a sequence can be the whole
+  // picture (the default) or a picture-in-picture.
+  position: Vec2.default( {
+    x: 0.5,
+    y: 0.5
+  } ),
+  scale: z.number().min( 0.05 )
+    .max( 4 )
+    .default( 1 ),
+  aspectRatio: SketchLayerAspectRatio.default( "canvas" ),
+  rotation: z.number().default( 0 ),
+  opacity: unitAmount.default( 1 ),
+  blend: Blend.default( "source-over" ),
+  // Pixel density of the composite buffer (the scene buffers follow it).
+  resolution: z.number().min( 0.05 )
+    .max( 2 )
+    .default( 1 ),
+  grade: SequenceGradeSchema,
+  // A hit at each scene change, through the sketch audio engine.
+  sound: SlideTransitionSoundSchema
+} );
+
 export const ContentItemSchema = z.discriminatedUnion(
   "type",
   [
@@ -1501,6 +2112,7 @@ export const ContentItemSchema = z.discriminatedUnion(
     ImagesStackItemSchema,
     ImageItemSchema,
     SketchLayerItemSchema,
+    SequenceItemSchema,
     QrCodeItemSchema,
     HudBadgeItemSchema,
     HudGaugeItemSchema,
@@ -1688,76 +2300,9 @@ export const SlideTitleSchema = z.object( {
 } );
 
 /* ---------------- montage transition sound ---------------------- */
-
-// How a single transition sounds: one hit, or an N-hit burst with an optional
-// pitch ramp (a "spin-up" whoosh as the variant snaps in). Discriminated union
-// so the panel shows only the controls the picked mode uses, matching the
-// specs sound-on-change pattern.
-export const SlideTransitionSoundRepeatSchema = z
-  .discriminatedUnion(
-    "mode",
-    [
-      z.object( {
-        mode: z.literal( "once" )
-      } ),
-      z.object( {
-        mode: z.literal( "count" ),
-        // total hits per transition (first one included)
-        times: z.number().int()
-          .min( 2 )
-          .max( 16 )
-          .default( 3 ),
-        // seconds between hits of the burst
-        interval: soundRepeatInterval.default( 0.06 ),
-        // pitch ramp per hit, in octaves ( + rises, - falls, 0 = flat )
-        pitchStep: z.number().min( -0.5 )
-          .max( 0.5 )
-          .default( 0.35 )
-      } )
-    ]
-  )
-  // Default to a short 3-hit rising burst: the "spin-up" reads more clearly as
-  // a transition than a single tick. Fully specified so the parsed default is
-  // complete (a bare { mode } would leave the burst fields unbound in the UI).
-  .default( {
-    mode: "count",
-    times: 3,
-    interval: 0.06,
-    pitchStep: 0.35
-  } );
-
-// Sound played when a montage advances from one variant to the next — the
-// audible counterpart of the visual dip / title switch, heard "in between" the
-// two slides at each transition. Off by default so existing decks stay silent;
-// routes through the sketch audio engine (audio.trigger("click", …)) so it is
-// heard live AND baked into recordings, sample-accurate in deterministic
-// captures.
-export const SlideTransitionSoundSchema = z
-  .object( {
-    // Master switch (independent from the montage master switch).
-    enabled: z.boolean().default( false ),
-    // Voice from the shared click synth.
-    preset: z.enum( SPECS_SOUND_PRESETS ).default( "pop" ),
-    volume: z.number().min( 0 )
-      .max( 1 )
-      .default( 0.5 ),
-    // Global pitch multiplier (1 = as designed, 2 = octave up).
-    pitch: z.number().min( 0.25 )
-      .max( 4 )
-      .default( 1 ),
-    // Random per-transition detune, 0..1 (1 ≈ ±half an octave) — "humanize".
-    pitchVariation: z.number().min( 0 )
-      .max( 1 )
-      .default( 0 ),
-    // Pitch offset by the arriving variant's index, in octaves across the
-    // montage, so each slide lands on its own note (a small arpeggio as the
-    // montage cycles). 0 = every transition sounds at the same pitch.
-    slidePitchSpread: z.number().min( -2 )
-      .max( 2 )
-      .default( 1.05 ),
-    repeat: SlideTransitionSoundRepeatSchema
-  } )
-  .prefault( {} );
+// SlideTransitionSoundRepeatSchema / SlideTransitionSoundSchema are declared
+// above the content-item union: the sequence item plays the same hit at each
+// scene change.
 
 // A "montage" slide morphs the sketch parameters of several OTHER slides into
 // one another over its own duration, in a loop. Only the sources' `sketch`
@@ -1826,6 +2371,45 @@ export const SlideTransitionSchema = z.object( {
   sound: SlideTransitionSoundSchema.prefault( {} )
 } );
 
+/* ---------------- scene cut: a slide's entrance and exit ---------- */
+
+// A slide (or the root document) opens its loop out of a colour plate and
+// closes it back into it, through the sequence item's transition catalogue:
+// the first `in.duration` seconds reveal the picture, the last `out.duration`
+// seconds hide it. Slides joined in one export then cut like a film instead of
+// jumping; a lone loop gets a bookend. Optional and absent until switched on,
+// like the montage; a slide's block wins over the root's. Runtime:
+// slides/common/drawSceneCut.js.
+// No `.prefault` on the block itself: under zod 4 an optional key whose schema
+// carries one is materialised on every parse, and the cut must stay absent
+// from a document that never asked for it (the montage's `transition` is the
+// precedent). `SceneCutSchema.parse( {} )` still fills every default — the
+// panel's switch parses the whole block in that way.
+export const SCENE_CUT_OUT_FOLLOWS = [
+  "rewind",
+  "same",
+  "own"
+] as const;
+
+export const SceneCutSchema = z.object( {
+  enabled: z.boolean().default( false ),
+  // The ground the picture comes out of and goes back into.
+  plate: SequencePlateSchema,
+  in: SequenceTransitionSchema,
+  // Where the exit takes its settings, so they are set once: "rewind" plays
+  // the entrance backwards (an iris that opened closes again — a matched pair
+  // no setting of `out` can express), "same" plays the entrance again over
+  // the plate, "own" plays `out`. The motion-foley release select, with its
+  // "↺ Reverse (matched)" default, is the precedent.
+  outFollows: z.enum( SCENE_CUT_OUT_FOLLOWS ).default( "rewind" ),
+  // While the exit follows the entrance, it may still keep its own length
+  // (`out.duration`): in over 1.2 s, out over 0.6 s.
+  outOwnDuration: z.boolean().default( false ),
+  // Read whole when `outFollows` is "own", for its duration alone when
+  // `outOwnDuration` is on; kept while unused so "own" finds it again.
+  out: SequenceTransitionSchema
+} );
+
 /* ---------------- slide schema (with name) ---------------------- */
 export const SlideSchema = z.object( {
   // Persisted, durable id (see makeSlideId). Backfilled on every parse when
@@ -1841,7 +2425,8 @@ export const SlideSchema = z.object( {
   // Per-slide interaction-bindings namespace (`{ bindings, interaction }`),
   // overriding the root `interactive` key-by-key — see migrateInteractiveOptions.
   interactive: z.any().optional(),
-  transition: SlideTransitionSchema.optional()
+  transition: SlideTransitionSchema.optional(),
+  cut: SceneCutSchema.optional()
 } );
 
 /* ---------------- root options.json ----------------------------- */
@@ -1871,7 +2456,9 @@ export const OptionsSchema = z.object( {
   // kept OUTSIDE `sketch` so binding data never pollutes the sketch's own
   // parameters (exports, save-defaults, randomize, sketch code). Untyped like
   // `sketch` — its shape belongs to the plugin, not this root schema.
-  interactive: z.any().optional()
+  interactive: z.any().optional(),
+  // The document's own scene cut, for a piece without slides (a slide's wins).
+  cut: SceneCutSchema.optional()
 } );
 
 export type ContentItem = z.infer<typeof ContentItemSchema>;
@@ -1881,6 +2468,14 @@ export type SlideOption = z.infer<typeof SlideSchema>;
 export type SlideTransitionOption = z.infer<typeof SlideTransitionSchema>;
 export type SlideTitleOption = z.infer<typeof SlideTitleSchema>;
 export type SlideTransitionSoundOption = z.infer<typeof SlideTransitionSoundSchema>;
+export type SequenceItemOption = z.infer<typeof SequenceItemSchema>;
+export type SequenceSceneOption = z.infer<typeof SequenceSceneSchema>;
+export type SequenceTransitionOption = z.infer<typeof SequenceTransitionSchema>;
+export type SequenceEffectOption = z.infer<typeof SequenceEffectSchema>;
+export type SequenceCameraOption = z.infer<typeof SequenceCameraSchema>;
+export type SequencePlateOption = z.infer<typeof SequencePlateSchema>;
+export type SequenceGradeOption = z.infer<typeof SequenceGradeSchema>;
+export type SceneCutOption = z.infer<typeof SceneCutSchema>;
 export type AssetsOption = z.infer<typeof Assets>;
 
 export type SketchOption = z.infer<typeof OptionsSchema>;

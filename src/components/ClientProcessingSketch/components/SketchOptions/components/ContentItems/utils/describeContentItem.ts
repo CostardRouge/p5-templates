@@ -110,6 +110,25 @@ export default function describeContentItem( item: unknown ): ContentItemDescrip
         return path ? basename( path ) : undefined;
       }
 
+      // A reel is recognised by the sketches it cuts between, else by its
+      // scene count.
+      case "sequence": {
+        const scenes = Array.isArray( record.scenes ) ? record.scenes as Record<string, unknown>[] : [];
+        const names = scenes
+          .map( ( scene ) => ( scene?.kind === "sketch" && typeof scene.sketch === "string" && scene.sketch
+            ? basename( scene.sketch )
+            : undefined ) )
+          .filter( ( name ): name is string => Boolean( name ) );
+
+        if ( names.length > 0 ) {
+          return names.join( " → " );
+        }
+
+        return scenes.length > 0
+          ? `${ scenes.length } scene${ scenes.length === 1 ? "" : "s" }`
+          : undefined;
+      }
+
       case "specs":
         return firstNonEmpty( record.style );
 

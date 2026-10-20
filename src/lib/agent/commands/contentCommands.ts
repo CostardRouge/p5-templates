@@ -30,6 +30,7 @@ export const ITEM_KINDS = [
   "specs",
   "breakdown",
   "sketch",
+  "sequence",
   "hud-badge",
   "hud-gauge",
   "hud-sparkline",
@@ -62,7 +63,8 @@ const POSITION_PLACED = new Set( [
   "qrcode",
   "specs",
   "breakdown",
-  "sketch"
+  "sketch",
+  "sequence"
 ] );
 
 const ITEM_PATH = /^(content|slides\.(\d+)\.content)\.(\d+)$/;
@@ -221,7 +223,7 @@ export function contentCommands( h: StudioHandles ): CommandSpec[] {
     {
       id: "content.kinds",
       title: "Content item kinds",
-      description: "Every kind of content item with its fields and their defaults (text, title, image, qrcode, background, meta, specs, breakdown, sketch layer, the nine hud-* widgets…). Give a kind for one.",
+      description: "Every kind of content item with its fields and their defaults (text, title, image, qrcode, background, meta, specs, breakdown, sketch layer, sequence — a reel of scenes cut with GL transitions —, the nine hud-* widgets…). Give a kind for one.",
       params: {
         kind: {
           type: "string",
@@ -281,7 +283,7 @@ export function contentCommands( h: StudioHandles ): CommandSpec[] {
     {
       id: "content.add",
       title: "Add a content item",
-      description: "Add a content item — e.g. { kind: \"text\", fields: { content: \"HELLO\", size: 96, fill: [255,255,255], position: { x: 0.5, y: 0.8 } } } — to the active slide (or the slide named), or to the root with scope \"global\" (drawn on every slide). Fields are checked by the item's schema (content.kinds shows them); a sketch layer takes fields.sketch (\"<category>/<name>\") and gets that sketch's defaults. Positions are 0–1 of the canvas.",
+      description: "Add a content item — e.g. { kind: \"text\", fields: { content: \"HELLO\", size: 96, fill: [255,255,255], position: { x: 0.5, y: 0.8 } } } — to the active slide (or the slide named), or to the root with scope \"global\" (drawn on every slide). Fields are checked by the item's schema (content.kinds shows them); a sketch layer takes fields.sketch (\"<category>/<name>\") and gets that sketch's defaults, as does every { kind: \"sketch\", sketch } scene of a sequence (fields.scenes; the other scene kinds are splash, loader and plate, each with a transition { duration, easing, effect: { kind } } and a camera). Positions are 0–1 of the canvas.",
       params: {
         kind: {
           type: "string",
@@ -336,6 +338,26 @@ export function contentCommands( h: StudioHandles ): CommandSpec[] {
           fields = {
             ...await h.sketchLayerSeed( fields.sketch ),
             ...fields
+          };
+        }
+        // A reel's sketch scenes get their sketch's own defaults the way a
+        // sketch layer does, unless the caller sent settings of its own: a
+        // scene running on `{}` reads nested parameters that do not exist.
+        if ( kind === "sequence" && Array.isArray( fields.scenes ) ) {
+          fields = {
+            ...fields,
+            scenes: await Promise.all( fields.scenes.map( async( scene ) => {
+              if ( !isRecord( scene ) || scene.kind !== "sketch" || typeof scene.sketch !== "string" || isRecord( scene.settings ) ) {
+                return scene;
+              }
+
+              const seed = await h.sketchLayerSeed( scene.sketch );
+
+              return {
+                ...scene,
+                settings: isRecord( seed.settings ) ? seed.settings : {}
+              };
+            } ) )
           };
         }
 

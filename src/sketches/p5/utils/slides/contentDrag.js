@@ -69,7 +69,8 @@ const DRAGGABLE_TYPES = new Set( [
   "qrcode",
   "specs",
   "breakdown",
-  "sketch"
+  "sketch",
+  "sequence"
 ] );
 
 // Items whose renderer offsets the anchor by the item's own margins:

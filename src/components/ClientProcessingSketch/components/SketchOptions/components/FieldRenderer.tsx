@@ -47,6 +47,8 @@ import ControlledJoypadDeviceSelect
   from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/ControlledJoypadDeviceSelect";
 import ControlledSketchPicker
   from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/SketchLayerPicker/ControlledSketchPicker";
+import EmbeddedSketchFields
+  from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/SketchLayerPicker/EmbeddedSketchFields";
 import CollapsibleItem from "@/components/CollapsibleItem";
 import RandomizeSettingsButton from "@/components/RandomizeSettingsButton";
 import RandomizeFieldButton from "@/components/RandomizeFieldButton";
@@ -798,6 +800,12 @@ export default function FieldRenderer( {
             label={ inlineLabel }
           />
         );
+
+      // The embedded sketch's own form, for the `settings` beside a
+      // `sketch-picker` (a sequence's sketch scene declares it; the sketch
+      // layer renders it by name in GenericItemForm).
+      case "sketch-settings":
+        return <EmbeddedSketchFields itemPath={ fieldBasePath } />;
 
       case "json":
         return (

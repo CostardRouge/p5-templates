@@ -541,6 +541,9 @@ const sketch = {
     // element) each. nestedSketch.js installs this when it loads; a static
     // import here would make the core runtime depend on the embedding feature.
     sketch.disposeNestedSketches?.();
+    // Same arrangement for the sequence item's composites and scene buffers
+    // (slides/common/drawSlideSequence.js installs it on first render).
+    sketch.disposeSequences?.();
 
     setP5( null );
     setContainer( null );

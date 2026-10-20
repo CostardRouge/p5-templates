@@ -16,6 +16,8 @@ import drawSlideImages from "./common/drawSlideImages.js";
 import drawSlideBackground from "./common/drawSlideBackground.js";
 import drawSlideImagesStack from "./common/drawSlideImagesStack.js";
 import drawSlideSketch from "./common/drawSlideSketch.js";
+import drawSlideSequence from "./common/drawSlideSequence.js";
+import drawSceneCut from "./common/drawSceneCut.js";
 import drawSlideQrCode from "./common/drawSlideQrCode.js";
 import drawSlideBreakdown from "./common/drawSlideBreakdown.js";
 
@@ -80,6 +82,8 @@ const slides = {
         slides.renderMontageOverlay();
         slides.renderMontageTitle();
         slides.updateMontageSound();
+        // Last: the cut reads the finished frame off the canvas.
+        slides.renderSceneCut();
       }
     );
 
@@ -321,6 +325,18 @@ const slides = {
             )
           );
           break;
+        // A reel of whole sketches: its scene buffers and its composite are
+        // keyed by the layer's address like an embedded sketch's buffer.
+        case "sequence":
+          drawSlideSequence(
+            item,
+            source,
+            itemBoundsKey(
+              scope,
+              index
+            )
+          );
+          break;
         case "qrcode":
           drawSlideQrCode(
             item,
@@ -375,6 +391,17 @@ const slides = {
         slide,
         options?.slides || []
       );
+    }
+  },
+
+  // Open and close the loop through the scene cut (slides/common/drawSceneCut
+  // .js): the slide's own block when it has one, else the document's. Draws
+  // only inside the cut's in / out windows.
+  renderSceneCut() {
+    const cut = this.current?.cut ?? options?.cut;
+
+    if ( cut?.enabled ) {
+      drawSceneCut( cut );
     }
   },
 
