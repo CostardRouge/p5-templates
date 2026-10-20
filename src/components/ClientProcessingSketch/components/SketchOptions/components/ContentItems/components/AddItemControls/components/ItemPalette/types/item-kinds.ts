@@ -1,5 +1,6 @@
 export type ItemKind =
   | "sketch"
+  | "sequence"
   | "text"
   | "title"
   | "meta"

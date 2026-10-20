@@ -6,6 +6,7 @@ import {
   Layers as StackIcon,
   PaintBucket as BgIcon,
   Blocks as SketchIcon,
+  Clapperboard as SequenceIcon,
   Terminal as SpecsIcon,
   QrCode as QrCodeIcon,
   ListOrdered as BreakdownIcon,
@@ -28,6 +29,7 @@ import {
 
 export const ITEM_ORDER: ItemKind[] = [
   "sketch",
+  "sequence",
   "text",
   "title",
   "image",
@@ -56,6 +58,7 @@ export const ITEM_GROUPS: ItemKindGroup[] = [
     label: "Content",
     kinds: [
       "sketch",
+      "sequence",
       "text",
       "title",
       "image",
@@ -179,6 +182,11 @@ export const ITEM_META: Record<ItemKind, ItemKindMeta> = {
     label: "Sketch",
     Icon: SketchIcon,
     description: "Another sketch, running in its own buffer as a layer"
+  },
+  sequence: {
+    label: "Sequence",
+    Icon: SequenceIcon,
+    description: "A reel: whole sketches, splash and loading screens cut together with GL transitions, camera moves and a film grade"
   },
   qrcode: {
     label: "QR code",

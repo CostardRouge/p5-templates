@@ -25,6 +25,7 @@ import type {
 const ContentLayers = dynamic( () => import( "./ContentLayers/ContentLayers" ) );
 const ContentLayerDetail = dynamic( () => import( "./ContentLayers/ContentLayerDetail" ) );
 const SlideTransitionSettings = dynamic( () => import( "./SlideTransitionSettings" ) );
+const SceneCutSettings = dynamic( () => import( "./SceneCutSettings" ) );
 
 import {
   parseLayerPath
@@ -233,17 +234,20 @@ export function OptionsPanelBody( {
       </PanelSection>
 
       {/* A transition belongs to the slide, not to any layer, so it stays a
-          band of its own rather than a row in the list. */}
-      {hasActiveSlide && (
-        <PanelSection
-          label="transition"
-          expanded={ collapsibleStates.transition }
-          onToggle={ () => onCollapsibleToggle( "transition" ) }
-          last
-        >
+          band of its own rather than a row in the list. The scene cut (the
+          loop's entrance and exit) exists for the root document too; the
+          montage only makes sense with slides to morph between. */}
+      <PanelSection
+        label="transition"
+        expanded={ collapsibleStates.transition }
+        onToggle={ () => onCollapsibleToggle( "transition" ) }
+        last
+      >
+        <SceneCutSettings activeIndex={ activeSlideIndex } />
+        {hasActiveSlide && (
           <SlideTransitionSettings activeIndex={ activeSlideIndex } />
-        </PanelSection>
-      )}
+        )}
+      </PanelSection>
     </div>
   );
 }

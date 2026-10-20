@@ -1,5 +1,5 @@
 import type {
-  ZodDiscriminatedUnion, ZodObject
+  ZodType
 } from "zod";
 import {
   Blend,
@@ -8,12 +8,31 @@ import {
   ImageItemAnimations,
   ImagesStackAnimations,
   PatternSchema,
+  SEQUENCE_CAMERA_MOVES,
+  SEQUENCE_CUBE_AXES,
+  SEQUENCE_IRIS_SHAPES,
+  SEQUENCE_LOADER_STYLES,
+  SEQUENCE_LOOP_MODES,
+  SEQUENCE_PALETTE_OWN,
+  SEQUENCE_PLATE_GRADIENTS,
+  SEQUENCE_PUSH_MODES,
+  SEQUENCE_SPLASH_ACCENTS,
+  SEQUENCE_SPLASH_ANIMATIONS,
+  SEQUENCE_TILE_MOTIONS,
+  SEQUENCE_TRANSITION_KINDS,
+  SEQUENCE_ZOOM_DIRECTIONS,
   SPECS_SOUND_PRESETS,
+  SequenceEffectSchema,
+  SequenceSceneSchema,
+  SlideTransitionSoundRepeatSchema,
   SpecsHighlightSchema,
   SpecsSoundRepeatSchema,
   SpecsVisibilitySchema,
   VerticalAlign
 } from "@/types/sketch.types";
+import {
+  PALETTE_PRESET_OPTIONS
+} from "@/p5/utils/palettes.js";
 
 import type {
   InactiveUnless
@@ -181,10 +200,15 @@ export interface ConditionalGroupConfig extends BaseConfig {
   configs: Record<string, Record<string, FieldConfig>>;
   // Zod schema used to create default objects when the type changes. Optional:
   // without one, defaults are derived per-field from the branch's configs.
-  schema?: ZodDiscriminatedUnion<any, any> | ZodObject<any>;
+  // Any schema whose `parse( { [conditionalOn]: type } )` fills a whole
+  // variant: a discriminated union, with or without its own `.default()`.
+  schema?: ZodType;
   // When true, omit the empty "--" (None) option from the selector. Use it for
   // required discriminators that should always resolve to a concrete variant.
   hideNone?: boolean;
+  // Name the selected variant in the collapsed header ("Scene · Splash"), for
+  // a group that sits in a list where every row would otherwise read alike.
+  headerShowsValue?: boolean;
 }
 
 type Scope =
@@ -242,6 +266,15 @@ interface HiddenFieldConfig extends BaseConfig {
 // nobody picks a visual out of 298 names, and the thumbnails already exist.
 interface SketchPickerConfig extends BaseConfig {
   component: "sketch-picker";
+}
+
+// The embedded sketch's own parameters, rendered from that sketch's
+// formConfiguration against the sibling `settings` of the `sketch` path the
+// picker writes (EmbeddedSketchFields). The "sketch" item renders it by name;
+// a sequence's sketch scene declares it, so the scene's form shows the same
+// controls the layer's does.
+interface SketchSettingsConfig extends BaseConfig {
+  component: "sketch-settings";
 }
 
 interface EasingConfig extends BaseConfig {
@@ -459,6 +492,7 @@ export type FieldConfig =
   | ItemListConfig
   | HiddenFieldConfig
   | SketchPickerConfig
+  | SketchSettingsConfig
   | EasingConfig
   | Vector2DConfig
   | Vector3DConfig
@@ -864,7 +898,6 @@ const soundOnChangeField: FieldConfig = {
         }
       },
 
-      // @ts-expect-error schema carries a .default() wrapper
       schema: SpecsSoundRepeatSchema
     }
   }
@@ -872,6 +905,742 @@ const soundOnChangeField: FieldConfig = {
 
 // Main configuration object
 // The top-level keys MUST match the 'type' in your Zod discriminated union
+/* ---------------- shared layer / sequence fragments ------------------ */
+
+// Layer box shapes beside "follow the host canvas" (SketchLayerAspectRatio),
+// shared by the sketch layer and the sequence.
+const layerAspectRatioOptions: SelectOption[] = [
+  {
+    value: "canvas",
+    label: "Follow the canvas"
+  },
+  {
+    value: "1:1",
+    label: "1:1 — square"
+  },
+  {
+    value: "4:5",
+    label: "4:5 — portrait"
+  },
+  {
+    value: "3:4",
+    label: "3:4"
+  },
+  {
+    value: "2:3",
+    label: "2:3"
+  },
+  {
+    value: "9:16",
+    label: "9:16 — story"
+  },
+  {
+    value: "3:2",
+    label: "3:2"
+  },
+  {
+    value: "4:3",
+    label: "4:3"
+  },
+  {
+    value: "16:9",
+    label: "16:9 — wide"
+  }
+];
+
+const titleCase = ( value: string ) => value.charAt( 0 ).toUpperCase() + value.slice( 1 ).replaceAll(
+  "-",
+  " "
+);
+
+const enumOptions = (
+  values: readonly string[], labels: Record<string, string> = {}
+): SelectOption[] => values.map( ( value ) => ( {
+  value,
+  label: labels[ value ] ?? titleCase( value )
+} ) );
+
+// Where a transition's or a plate's colours come from: the item's own colour
+// fields, drawn as a neutral tile since the picker cannot show a single
+// colour live, then every shared palette by its swatch.
+const sequencePaletteOptions: PaletteOption[] = [
+  {
+    value: SEQUENCE_PALETTE_OWN,
+    label: "Own colours",
+    group: "Your own",
+    description: "The colour fields of this block",
+    stops: [
+      [
+        70,
+        70,
+        82
+      ],
+      [
+        70,
+        70,
+        82
+      ]
+    ],
+    hardness: 0
+  },
+  // The presets are plain JS records (palettes.js); every one carries a label,
+  // a group and its swatch stops, which is all a PaletteOption asks for.
+  ...( PALETTE_PRESET_OPTIONS as unknown as PaletteOption[] )
+];
+
+const unitSlider = ( label: string ): FieldConfig => ( {
+  label,
+  component: "slider",
+  min: 0,
+  max: 1,
+  step: 0.01
+} );
+
+const angleSlider = ( label: string ): FieldConfig => ( {
+  label,
+  component: "slider",
+  min: 0,
+  max: 360,
+  step: 1
+} );
+
+const effectCenterField: FieldConfig = {
+  label: "Centre",
+  component: "vector2d",
+  allowNegative: false,
+  min: 0,
+  max: 1,
+  step: 0.01,
+  yDown: true,
+  default: {
+    x: 0.5,
+    y: 0.5
+  }
+};
+
+const effectSeedField: FieldConfig = {
+  label: "Seed",
+  component: "slider",
+  min: 0,
+  max: 9999,
+  step: 1
+};
+
+const SEQUENCE_TRANSITION_LABELS: Record<string, string> = {
+  cut: "Cut",
+  fade: "Crossfade",
+  dip: "Dip through colour",
+  flash: "Flash",
+  wipe: "Wipe",
+  iris: "Iris",
+  push: "Push / slide",
+  zoom: "Zoom punch",
+  dissolve: "Dissolve",
+  pixelate: "Pixelate",
+  glitch: "Glitch",
+  blinds: "Blinds",
+  tiles: "Tiles",
+  radial: "Clock wipe",
+  ripple: "Ripple",
+  swirl: "Swirl",
+  cube: "Cube",
+  doom: "Melt",
+  burn: "Film burn",
+  luma: "Luma wipe",
+  slice: "Slices"
+};
+
+// One branch per transition kind, carrying only the parameters it reads
+// (transitionGlsl.js effectUniforms). Every field carries a `default` so a
+// kind switch rebuilds the object with sensible values.
+const sequenceEffectConfigs: Record<string, Record<string, FieldConfig>> = {
+  cut: {},
+  fade: {},
+  dip: {},
+  flash: {
+    intensity: {
+      ...unitSlider( "Intensity" ),
+      default: 0.85
+    }
+  },
+  wipe: {
+    angle: {
+      ...angleSlider( "Direction (°)" ),
+      default: 0
+    },
+    softness: {
+      ...unitSlider( "Softness" ),
+      default: 0.08
+    }
+  },
+  iris: {
+    shape: {
+      label: "Shape",
+      component: "select",
+      options: enumOptions( SEQUENCE_IRIS_SHAPES ),
+      default: "circle"
+    },
+    center: effectCenterField,
+    softness: {
+      ...unitSlider( "Softness" ),
+      default: 0.05
+    }
+  },
+  push: {
+    angle: {
+      ...angleSlider( "Direction (°)" ),
+      default: 0
+    },
+    mode: {
+      label: "Motion",
+      component: "select",
+      options: enumOptions(
+        SEQUENCE_PUSH_MODES,
+        {
+          push: "Push (both move)",
+          cover: "Cover (new slides over)",
+          reveal: "Reveal (old slides away)"
+        }
+      ),
+      default: "push"
+    }
+  },
+  zoom: {
+    direction: {
+      label: "Direction",
+      component: "select",
+      options: enumOptions(
+        SEQUENCE_ZOOM_DIRECTIONS,
+        {
+          in: "Punch in",
+          out: "Pull out"
+        }
+      ),
+      default: "in"
+    },
+    amount: {
+      ...unitSlider( "Amount" ),
+      default: 0.6
+    },
+    center: effectCenterField
+  },
+  dissolve: {
+    scale: {
+      label: "Noise scale",
+      component: "slider",
+      min: 1,
+      max: 64,
+      step: 1,
+      default: 8
+    },
+    softness: {
+      ...unitSlider( "Softness" ),
+      default: 0.15
+    },
+    seed: {
+      ...effectSeedField,
+      default: 7
+    }
+  },
+  pixelate: {
+    cells: {
+      label: "Coarsest cells",
+      component: "slider",
+      min: 2,
+      max: 200,
+      step: 1,
+      default: 24
+    }
+  },
+  glitch: {
+    intensity: {
+      ...unitSlider( "Intensity" ),
+      default: 0.7
+    },
+    blocks: {
+      label: "Blocks",
+      component: "slider",
+      min: 2,
+      max: 64,
+      step: 1,
+      default: 12
+    },
+    seed: {
+      ...effectSeedField,
+      default: 7
+    }
+  },
+  blinds: {
+    count: {
+      label: "Blinds",
+      component: "slider",
+      min: 1,
+      max: 64,
+      step: 1,
+      default: 8
+    },
+    angle: {
+      ...angleSlider( "Direction (°)" ),
+      default: 90
+    },
+    softness: {
+      ...unitSlider( "Softness" ),
+      default: 0.05
+    }
+  },
+  tiles: {
+    columns: {
+      label: "Columns",
+      component: "slider",
+      min: 1,
+      max: 32,
+      step: 1,
+      default: 6
+    },
+    rows: {
+      label: "Rows",
+      component: "slider",
+      min: 1,
+      max: 32,
+      step: 1,
+      default: 8
+    },
+    stagger: {
+      ...unitSlider( "Stagger" ),
+      default: 0.6
+    },
+    motion: {
+      label: "Motion",
+      component: "select",
+      options: enumOptions( SEQUENCE_TILE_MOTIONS ),
+      default: "flip"
+    },
+    seed: {
+      ...effectSeedField,
+      default: 7
+    }
+  },
+  radial: {
+    center: effectCenterField,
+    softness: {
+      ...unitSlider( "Softness" ),
+      default: 0.04
+    },
+    clockwise: {
+      label: "Clockwise",
+      component: "checkbox",
+      default: true
+    },
+    startAngle: {
+      ...angleSlider( "Start angle (°)" ),
+      default: 0
+    }
+  },
+  ripple: {
+    rings: {
+      label: "Rings",
+      component: "slider",
+      min: 1,
+      max: 40,
+      step: 1,
+      default: 10
+    },
+    amplitude: {
+      ...unitSlider( "Amplitude" ),
+      default: 0.3
+    },
+    center: effectCenterField
+  },
+  swirl: {
+    strength: {
+      label: "Strength (turns)",
+      component: "slider",
+      min: -3,
+      max: 3,
+      step: 0.05,
+      default: 1.5
+    },
+    center: effectCenterField
+  },
+  cube: {
+    axis: {
+      label: "Axis",
+      component: "select",
+      options: enumOptions( SEQUENCE_CUBE_AXES ),
+      default: "horizontal"
+    },
+    perspective: {
+      ...unitSlider( "Perspective" ),
+      default: 0.4
+    }
+  },
+  doom: {
+    columns: {
+      label: "Columns",
+      component: "slider",
+      min: 2,
+      max: 200,
+      step: 1,
+      default: 40
+    },
+    seed: {
+      ...effectSeedField,
+      default: 7
+    }
+  },
+  burn: {
+    scale: {
+      label: "Noise scale",
+      component: "slider",
+      min: 1,
+      max: 64,
+      step: 1,
+      default: 6
+    },
+    softness: {
+      ...unitSlider( "Softness" ),
+      default: 0.25
+    },
+    seed: {
+      ...effectSeedField,
+      default: 7
+    }
+  },
+  luma: {
+    softness: {
+      ...unitSlider( "Softness" ),
+      default: 0.1
+    },
+    invert: {
+      label: "Dark areas first",
+      component: "checkbox",
+      default: false
+    }
+  },
+  slice: {
+    count: {
+      label: "Slices",
+      component: "slider",
+      min: 2,
+      max: 64,
+      step: 1,
+      default: 10
+    },
+    angle: {
+      ...angleSlider( "Direction (°)" ),
+      default: 0
+    },
+    stagger: {
+      ...unitSlider( "Stagger" ),
+      default: 0.5
+    }
+  }
+};
+
+const sequenceTransitionField: FieldConfig = {
+  label: "Transition in",
+  component: "nested-object",
+  initialExpanded: true,
+  fields: {
+    duration: {
+      label: "Duration (s)",
+      component: "slider",
+      min: 0,
+      max: 10,
+      step: 0.05
+    },
+    easing: {
+      label: "Easing",
+      component: "easing"
+    },
+    effect: {
+      label: "Effect",
+      component: "conditional-group",
+      conditionalOn: "kind",
+      hideNone: true,
+      headerShowsValue: true,
+      schema: SequenceEffectSchema,
+      typeSelector: {
+        label: "Kind",
+        options: enumOptions(
+          SEQUENCE_TRANSITION_KINDS,
+          SEQUENCE_TRANSITION_LABELS
+        )
+      },
+      configs: sequenceEffectConfigs
+    },
+    color: {
+      label: "Colour",
+      component: "color"
+    },
+    palette: {
+      label: "Edge palette",
+      component: "palette-picker",
+      options: sequencePaletteOptions
+    },
+    glow: unitSlider( "Edge light" )
+  }
+};
+
+const sequenceCameraField: FieldConfig = {
+  label: "Camera",
+  component: "nested-object",
+  fields: {
+    move: {
+      label: "Move",
+      component: "select",
+      options: enumOptions(
+        SEQUENCE_CAMERA_MOVES,
+        {
+          none: "Still",
+          "push-in": "Push in",
+          "pull-out": "Pull out",
+          "pan-left": "Pan left",
+          "pan-right": "Pan right",
+          "pan-up": "Pan up",
+          "pan-down": "Pan down",
+          drift: "Drift",
+          orbit: "Orbit",
+          handheld: "Handheld"
+        }
+      )
+    },
+    amount: unitSlider( "Amount" ),
+    easing: {
+      label: "Easing",
+      component: "easing"
+    },
+    shake: unitSlider( "Shake" ),
+    roll: {
+      label: "Roll (°)",
+      component: "slider",
+      min: -45,
+      max: 45,
+      step: 0.5
+    }
+  }
+};
+
+const sequencePlateField: FieldConfig = {
+  label: "Plate",
+  component: "nested-object",
+  fields: {
+    palette: {
+      label: "Palette",
+      component: "palette-picker",
+      options: sequencePaletteOptions
+    },
+    gradient: {
+      label: "Gradient",
+      component: "select",
+      options: enumOptions( SEQUENCE_PLATE_GRADIENTS )
+    },
+    from: {
+      label: "From",
+      component: "color"
+    },
+    to: {
+      label: "To",
+      component: "color"
+    },
+    angle: angleSlider( "Angle (°)" ),
+    drift: unitSlider( "Drift" ),
+    grain: unitSlider( "Grain" )
+  }
+};
+
+// The scene cut (SceneCutSchema): a slide's entrance and exit against a
+// plate, edited in the transition band (SceneCutSettings) with the same
+// blocks a sequence's scenes use.
+export const sceneCutFieldConfigs: Record<"in" | "out" | "plate", FieldConfig> = {
+  in: {
+    ...sequenceTransitionField,
+    label: "In — out of the plate"
+  },
+  out: {
+    ...sequenceTransitionField,
+    label: "Out — into the plate",
+    initialExpanded: false
+  },
+  plate: sequencePlateField
+};
+
+// Every scene: its share of the loop, its entrance, its camera.
+const sequenceSceneBaseConfig: Record<string, FieldConfig> = {
+  weight: {
+    label: "Weight (relative length)",
+    component: "slider",
+    min: 0.1,
+    max: 10,
+    step: 0.1,
+    default: 1
+  },
+  transition: sequenceTransitionField,
+  camera: sequenceCameraField
+};
+
+const sequenceSceneConfigs: Record<string, Record<string, FieldConfig>> = {
+  sketch: {
+    sketch: {
+      label: "Sketch",
+      component: "sketch-picker"
+    },
+    settings: {
+      component: "sketch-settings",
+      default: {}
+    },
+    ...sequenceSceneBaseConfig,
+    loops: {
+      label: "Loops over the scene (0 = follow)",
+      component: "slider",
+      min: 0,
+      max: 8,
+      step: 0.25,
+      default: 1
+    },
+    progression: {
+      ...unitSlider( "Start at" ),
+      default: 0
+    },
+    framerate: {
+      label: "Frame rate (0 = follow)",
+      component: "slider",
+      min: 0,
+      max: 120,
+      step: 1,
+      default: 0
+    },
+    resolution: {
+      label: "Render resolution",
+      component: "slider",
+      min: 0.05,
+      max: 2,
+      step: 0.05,
+      default: 1
+    },
+    drawBackground: {
+      label: "Draw its own background",
+      component: "checkbox",
+      default: true
+    },
+    clearEachFrame: {
+      label: "Clear between frames",
+      component: "checkbox",
+      default: true
+    }
+  },
+  splash: {
+    title: {
+      label: "Title",
+      component: "textarea",
+      default: "SKETCHBOOK"
+    },
+    subtitle: {
+      label: "Subtitle",
+      component: "text",
+      default: ""
+    },
+    ...sequenceSceneBaseConfig,
+    font: {
+      label: "Font",
+      component: "select",
+      options: fontSelectOptions,
+      default: "martian"
+    },
+    size: {
+      label: "Size",
+      component: "slider",
+      min: 8,
+      max: 400,
+      step: 1,
+      default: 120
+    },
+    fill: {
+      label: "Text colour",
+      component: "color"
+    },
+    align: {
+      label: "Align",
+      component: "select",
+      options: enumOptions( HorizontalAlign.options ),
+      default: "center"
+    },
+    position: {
+      label: "Position",
+      component: "vector2d",
+      allowNegative: false,
+      min: 0,
+      max: 1,
+      step: 0.01,
+      yDown: true
+    },
+    animation: {
+      label: "Text animation",
+      component: "select",
+      options: enumOptions( SEQUENCE_SPLASH_ANIMATIONS ),
+      default: "letters"
+    },
+    accent: {
+      label: "Accent",
+      component: "select",
+      options: enumOptions( SEQUENCE_SPLASH_ACCENTS ),
+      default: "bars"
+    },
+    background: sequencePlateField
+  },
+  loader: {
+    label: {
+      label: "Label",
+      component: "text",
+      default: "LOADING"
+    },
+    style: {
+      label: "Style",
+      component: "select",
+      options: enumOptions(
+        SEQUENCE_LOADER_STYLES,
+        {
+          boot: "Boot log"
+        }
+      ),
+      default: "bar"
+    },
+    ...sequenceSceneBaseConfig,
+    font: {
+      label: "Font",
+      component: "select",
+      options: fontSelectOptions,
+      default: "spaceMonoRegular"
+    },
+    size: {
+      label: "Size",
+      component: "slider",
+      min: 8,
+      max: 120,
+      step: 1,
+      default: 28
+    },
+    fill: {
+      label: "Colour",
+      component: "color"
+    },
+    showPercent: {
+      label: "Show percent",
+      component: "checkbox",
+      default: true
+    },
+    stutter: {
+      ...unitSlider( "Stutter" ),
+      default: 0.35
+    },
+    background: sequencePlateField
+  },
+  plate: {
+    ...sequenceSceneBaseConfig,
+    background: sequencePlateField
+  }
+};
+
 export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
   meta: {
     fill: {
@@ -1260,7 +2029,6 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
         permanent: {}
       },
 
-      // @ts-expect-error schema carries a .default() wrapper
       schema: SpecsVisibilitySchema
     },
     highlight: {
@@ -1375,7 +2143,6 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
         }
       },
 
-      // @ts-expect-error schema carries a .default() wrapper
       schema: SpecsHighlightSchema
     },
     sound: soundOnChangeField
@@ -1925,7 +2692,6 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
       },
 
       // The schema is needed to create default objects when the type changes
-      // @ts-expect-error
       schema: PatternSchema
     }
   },
@@ -2110,44 +2876,7 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
     aspectRatio: {
       label: "Aspect ratio",
       component: "select",
-      options: [
-        {
-          value: "canvas",
-          label: "Follow the canvas"
-        },
-        {
-          value: "1:1",
-          label: "1:1 — square"
-        },
-        {
-          value: "4:5",
-          label: "4:5 — portrait"
-        },
-        {
-          value: "3:4",
-          label: "3:4"
-        },
-        {
-          value: "2:3",
-          label: "2:3"
-        },
-        {
-          value: "9:16",
-          label: "9:16 — story"
-        },
-        {
-          value: "3:2",
-          label: "3:2"
-        },
-        {
-          value: "4:3",
-          label: "4:3"
-        },
-        {
-          value: "16:9",
-          label: "16:9 — wide"
-        }
-      ]
+      options: layerAspectRatioOptions
     },
     // What "Size" does to the sketch inside. The two are genuinely different
     // looks, not a right and a wrong one — a background reflows into the layer,
@@ -2219,6 +2948,229 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
     clearEachFrame: {
       label: "Clear between frames",
       component: "checkbox"
+    }
+  },
+  sequence: {
+    enabled: {
+      label: "Visible",
+      component: "checkbox"
+    },
+    // Each row is one scene; the kind selector inside it swaps the row's
+    // fields, and a new row is a whole default scene (SequenceSceneSchema).
+    scenes: {
+      label: "Scenes",
+      component: "item-list",
+      itemConfig: {
+        label: "Scene",
+        component: "conditional-group",
+        conditionalOn: "kind",
+        hideNone: true,
+        headerShowsValue: true,
+        schema: SequenceSceneSchema,
+        typeSelector: {
+          label: "Kind",
+          options: enumOptions(
+            [
+              "sketch",
+              "splash",
+              "loader",
+              "plate"
+            ],
+            {
+              sketch: "Sketch",
+              splash: "Splash card",
+              loader: "Loading screen",
+              plate: "Colour plate"
+            }
+          )
+        },
+        configs: sequenceSceneConfigs
+      }
+    },
+    loop: {
+      label: "Loop",
+      component: "select",
+      options: enumOptions(
+        SEQUENCE_LOOP_MODES,
+        {
+          cyclic: "Cyclic (last cuts back to first)",
+          once: "Once (hold the last scene)"
+        }
+      )
+    },
+    position: {
+      label: "Position",
+      component: "vector2d",
+      allowNegative: false,
+      min: 0,
+      max: 1,
+      step: 0.01,
+      yDown: true
+    },
+    scale: {
+      label: "Size",
+      component: "slider",
+      min: 0.05,
+      max: 4,
+      step: 0.01
+    },
+    aspectRatio: {
+      label: "Aspect ratio",
+      component: "select",
+      options: layerAspectRatioOptions
+    },
+    rotation: {
+      label: "Rotation",
+      component: "slider",
+      min: 0,
+      max: Math.PI * 2,
+      step: 0.001
+    },
+    opacity: unitSlider( "Opacity" ),
+    blend: {
+      label: "Blend",
+      component: "select",
+      options: blendSelectOptions
+    },
+    resolution: {
+      label: "Render resolution",
+      component: "slider",
+      min: 0.05,
+      max: 2,
+      step: 0.05
+    },
+    grade: {
+      label: "Film grade",
+      component: "nested-object",
+      fields: {
+        letterbox: {
+          label: "Letterbox",
+          component: "slider",
+          min: 0,
+          max: 0.4,
+          step: 0.005
+        },
+        vignette: unitSlider( "Vignette" ),
+        grain: unitSlider( "Grain" ),
+        aberration: unitSlider( "Chromatic aberration" ),
+        saturation: {
+          label: "Saturation",
+          component: "slider",
+          min: 0,
+          max: 2,
+          step: 0.01
+        },
+        contrast: {
+          label: "Contrast",
+          component: "slider",
+          min: 0.5,
+          max: 2,
+          step: 0.01
+        },
+        tint: {
+          label: "Tint",
+          component: "color"
+        },
+        tintAmount: unitSlider( "Tint amount" ),
+        scanlines: unitSlider( "Scanlines" )
+      }
+    },
+    sound: {
+      label: "Cut sound",
+      component: "nested-object",
+      fields: {
+        enabled: {
+          label: "Play a hit at each cut",
+          component: "checkbox"
+        },
+        preset: {
+          label: "Sound",
+          component: "select",
+          options: enumOptions(
+            SPECS_SOUND_PRESETS,
+            {
+              wood: "Woodblock"
+            }
+          )
+        },
+        volume: {
+          label: "Volume",
+          component: "slider",
+          min: 0,
+          max: 1,
+          step: 0.05
+        },
+        pitch: {
+          label: "Pitch (×)",
+          component: "slider",
+          min: 0.25,
+          max: 4,
+          step: 0.05
+        },
+        pitchVariation: {
+          label: "Humanize",
+          component: "slider",
+          min: 0,
+          max: 1,
+          step: 0.05
+        },
+        slidePitchSpread: {
+          label: "Pitch by scene (oct)",
+          component: "slider",
+          min: -2,
+          max: 2,
+          step: 0.05
+        },
+        repeat: {
+          label: "Repeat",
+          component: "conditional-group",
+          conditionalOn: "mode",
+          hideNone: true,
+          schema: SlideTransitionSoundRepeatSchema,
+          typeSelector: {
+            label: "Mode",
+            options: [
+              {
+                value: "once",
+                label: "Once per cut"
+              },
+              {
+                value: "count",
+                label: "Burst (N hits)"
+              }
+            ]
+          },
+          configs: {
+            once: {},
+            count: {
+              times: {
+                label: "Hits",
+                component: "slider",
+                min: 2,
+                max: 16,
+                step: 1,
+                default: 3
+              },
+              interval: {
+                label: "Interval (s)",
+                component: "slider",
+                min: 0.02,
+                max: 2,
+                step: 0.01,
+                default: 0.06
+              },
+              pitchStep: {
+                label: "Pitch ramp (oct/hit)",
+                component: "slider",
+                min: -0.5,
+                max: 0.5,
+                step: 0.01,
+                default: 0.35
+              }
+            }
+          }
+        }
+      }
     }
   },
   qrcode: {
