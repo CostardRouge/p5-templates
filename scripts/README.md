@@ -99,9 +99,13 @@ node scripts/bench-sketch.mjs --diff tmp/bench/v2-before tmp/bench/v2-after
 
 **Software GL vs a real GPU:** by default the browser runs SwiftShader, which prices texture fetches higher than a GPU does relative to arithmetic; its numbers are before/after ratios, not desktop frame times. `--gpu` drops the software-GL flags to time the machine's own GPU. Headless Chromium parks the mouse at (0, 0), which the interaction layer reports as a real pointer: pass `interaction.mouse.enabled false` in `--options` for a sketch that reacts to the cursor.
 
-### `create-placeholder-icons.mjs`
+### `gen-icons.mjs`
 
-Creates placeholder icons for PWA.
+Draws the raster favicons (`public/favicon-16.png`, `favicon-32.png`) and the opaque 180 × 180 `public/apple-touch-icon.png` from `public/assets/images/icon-512x512.png`, the one source of the mark (no SVG of it exists yet). Run it after changing the mark and commit the PNGs; `src/app/__tests__/icons.test.ts` checks the sizes and the alpha of what is committed, and `/debug/icons` (dev only) shows the same checks in a page.
+
+```bash
+node scripts/gen-icons.mjs
+```
 
 ### `generate-vapid-keys.mjs`
 

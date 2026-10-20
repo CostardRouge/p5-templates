@@ -165,6 +165,15 @@ async function analyze( d: Descriptor ): Promise<IconCheck> {
     } );
   }
 
+  // iOS composes the home-screen icon from this file alone and paints
+  // transparency black under its own rounded mask (COMMON-PROJECT-SPEC C11).
+  if ( d.purpose === "apple-touch" && check.hasAlpha === true ) {
+    check.issues.push( {
+      level: "error",
+      msg: "The Apple touch icon has an alpha channel — iOS shows its transparent pixels black. Regenerate it with scripts/gen-icons.mjs."
+    } );
+  }
+
   return check;
 }
 
@@ -191,6 +200,28 @@ export default async function IconDebugPage() {
       type: "image/x-icon",
       purpose: "favicon",
       source: "document"
+    },
+    {
+      src: "/favicon-32.png",
+      declaredSizes: "32x32",
+      type: "image/png",
+      purpose: "favicon",
+      source: "document",
+      expect: {
+        w: 32,
+        h: 32
+      }
+    },
+    {
+      src: "/favicon-16.png",
+      declaredSizes: "16x16",
+      type: "image/png",
+      purpose: "favicon",
+      source: "document",
+      expect: {
+        w: 16,
+        h: 16
+      }
     },
     {
       src: "/apple-touch-icon.png",
