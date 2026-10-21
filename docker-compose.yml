@@ -53,7 +53,7 @@ services:
 
   # ─── Redis for BullMQ queue ────────────────────────────────────────────────
   redis:
-    image: redis:7-alpine
+    image: redis:8-alpine
     restart: unless-stopped
     networks:
       - pipeline
