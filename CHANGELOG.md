@@ -9,6 +9,8 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-21 — Nephroid
+
 ### Added
 
 - A Sequence layer: whole sketches, splash cards, loading screens and colour plates cut together into one reel,
