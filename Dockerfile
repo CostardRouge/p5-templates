@@ -2,7 +2,7 @@
 
 # ─── Stage 1: build ──────────────────────────────────────────────────────────
 # Full toolchain (dev deps included) to compile the Next.js standalone bundle.
-FROM mcr.microsoft.com/playwright:v1.62.0-jammy AS builder
+FROM mcr.microsoft.com/playwright:v1.64.1-jammy AS builder
 
 WORKDIR /app
 
@@ -65,7 +65,7 @@ RUN npm run build
 # with its FULL dependency closure (@prisma/*, effect, c12, deepmerge-ts, …).
 # The runtime runs `migrate deploy` on startup; cherry-picking node_modules
 # subtrees misses transitive deps, so install the CLI properly instead.
-FROM mcr.microsoft.com/playwright:v1.62.0-jammy AS prisma-deps
+FROM mcr.microsoft.com/playwright:v1.64.1-jammy AS prisma-deps
 
 WORKDIR /prisma-cli
 
@@ -80,7 +80,7 @@ RUN PRISMA_VERSION="$(node -p "require('./lock.json').packages['node_modules/pri
 # Slim runtime: Playwright base (browsers + Node already present) + ffmpeg.
 # Only the standalone server, static assets, public files and an isolated Prisma
 # CLI (for `migrate deploy` on startup) are copied over — no dev deps.
-FROM mcr.microsoft.com/playwright:v1.62.0-jammy AS runner
+FROM mcr.microsoft.com/playwright:v1.64.1-jammy AS runner
 
 WORKDIR /app
 
