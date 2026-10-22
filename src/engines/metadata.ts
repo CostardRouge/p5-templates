@@ -23,6 +23,20 @@ export function getMetadata(): SketchMetadata[] {
   return allMetadata as SketchMetadata[];
 }
 
+/**
+ * The sketches a crawler is told about — `/sitemap.xml` and `/llms.txt`
+ * share this one rule. Sketches marked `.hidden-template` are dropped in
+ * production, as the gallery and `/sitemap` do (`filterSketchesForGallery`):
+ * a sketch the site itself hides has no business being submitted. They stay
+ * in a development build so a work-in-progress sketch is still reachable from
+ * every listing.
+ */
+export function listIndexableSketches(): SketchMetadata[] {
+  return process.env.NODE_ENV === "production"
+    ? getMetadata().filter( ( m ) => !m.hiddenFromGallery )
+    : getMetadata();
+}
+
 /* ---- look-ups ---------------------------------------------------- */
 
 /**

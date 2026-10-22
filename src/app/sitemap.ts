@@ -2,7 +2,7 @@ import type {
   MetadataRoute
 } from "next";
 import {
-  getMetadata
+  listIndexableSketches
 } from "@/engines/metadata";
 import {
   getBaseUrl
@@ -49,16 +49,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   ];
 
-  // Studio pages — all engines, derived from unified metadata.
-  //
-  // Sketches marked `.hidden-template` are dropped in production, the same rule
-  // the gallery and `/sitemap` apply (`filterSketchesForGallery`): a sketch the
-  // site itself hides has no business being submitted to a crawler. They stay
-  // in a development build so a work-in-progress sketch is still reachable from
-  // every listing.
-  const visible = process.env.NODE_ENV === "production"
-    ? getMetadata().filter( ( m ) => !m.hiddenFromGallery )
-    : getMetadata();
+  // Studio pages — all engines, derived from unified metadata, minus the
+  // `.hidden-template` sketches in production (`listIndexableSketches`, the
+  // rule `/llms.txt` shares).
+  const visible = listIndexableSketches();
 
   const studioPages: MetadataRoute.Sitemap = visible.map( ( m ) => ( {
     url: `${ baseUrl }/sketches/${ m.engine }/${ m.category ? `${ m.category }/` : "" }${ m.name }`,
