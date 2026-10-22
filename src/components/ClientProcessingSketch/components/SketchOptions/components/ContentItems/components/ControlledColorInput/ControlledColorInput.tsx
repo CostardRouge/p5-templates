@@ -12,6 +12,10 @@ import {
 } from "react-hook-form";
 
 import useDragSlider from "@/hooks/useDragSlider";
+import {
+  bindingValueVarName
+} from "@/lib/channelBridge";
+import LiveBindingValue from "../BindingAffordance/LiveBindingValue";
 import rgbaToHex from "./utils/rgbaToHex";
 import hexToRgba from "./utils/hexToRgba";
 import {
@@ -26,7 +30,20 @@ type ControlledColorInputProps = {
   label?: string;
   isModified?: boolean;
   onReset?: ( event: React.MouseEvent ) => void;
+  /**
+   * Set while an interaction binding drives the colour: the fill shows the
+   * colour the sketch reads this frame, the swatch keeps the base one, and
+   * `ramp` (the binding's two stops) runs along the bottom edge.
+   */
+  live?: {
+    target: string;
+    ramp: { from: number[];
+      to: number[] } | null;
+  } | null;
 };
+
+const rgbaCss = ( value: number[] ) =>
+  `rgba(${ value[ 0 ] ?? 0 }, ${ value[ 1 ] ?? 0 }, ${ value[ 2 ] ?? 0 }, ${ ( value[ 3 ] ?? 255 ) / 255 })`;
 
 const CHECKERBOARD_STYLE: React.CSSProperties = {
   background: `linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc),
@@ -49,7 +66,8 @@ export default function ControlledColorInput( {
   name,
   label,
   isModified = false,
-  onReset
+  onReset,
+  live = null
 }: ControlledColorInputProps ) {
   const {
     control
@@ -169,6 +187,19 @@ export default function ControlledColorInput( {
     );
   }
 
+  // Driven: the fill reads the live colour and its alpha straight from the
+  // vars the engine writes every frame, falling back to the base value.
+  const baseFill = `rgba(${ r }, ${ g }, ${ b }, ${ a / 255 })`;
+  const fillColor = live
+    ? `var(${ bindingValueVarName( live.target ) }, ${ baseFill })`
+    : baseFill;
+  const fillWidth = live
+    ? `calc(var(${ bindingValueVarName(
+      live.target,
+      "a"
+    ) }, ${ a / 255 }) * 100%)`
+    : `${ ( a / 255 ) * 100 }%`;
+
   return (
     <div
       ref={ ref }
@@ -180,19 +211,41 @@ export default function ControlledColorInput( {
       aria-valuenow={ a }
       onBlur={ field.onBlur }
       { ...handlers }
-      className={ `group touch-pan-y select-none cursor-ew-resize outline-none focus-visible:ring-1 focus-visible:ring-focus ${ CONTROL_BAR_CLASS }` }
-      style={ CHECKERBOARD_STYLE }
+      className={ clsx(
+        "group touch-pan-y select-none cursor-ew-resize outline-none focus-visible:ring-1 focus-visible:ring-focus",
+        CONTROL_BAR_CLASS,
+        live && "binding-live-ring"
+      ) }
     >
+      {/* The checkerboard is its own layer so the bar's background stays free
+          for the driven ring. */}
       <div
-        className="pointer-events-none absolute inset-y-0 left-0"
-        style={ {
-          width: `${ ( a / 255 ) * 100 }%`,
-          backgroundColor: `rgba(${ r }, ${ g }, ${ b }, ${ a / 255 })`
-        } }
+        className="pointer-events-none absolute inset-0"
+        style={ CHECKERBOARD_STYLE }
       />
 
       <div
-        className="pointer-events-none absolute top-1/2 h-6 md:h-4 w-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-foreground/60 ring-1 ring-background/80"
+        className="pointer-events-none absolute inset-y-0 left-0"
+        style={ {
+          width: fillWidth,
+          backgroundColor: fillColor
+        } }
+      />
+
+      {live?.ramp && (
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-0.5"
+          style={ {
+            backgroundImage: `linear-gradient(90deg, ${ rgbaCss( live.ramp.from ) }, ${ rgbaCss( live.ramp.to ) })`
+          } }
+        />
+      )}
+
+      <div
+        className={ clsx(
+          "pointer-events-none absolute top-1/2 h-6 md:h-4 w-1 -translate-x-1/2 -translate-y-1/2 rounded-full ring-1 ring-background/80",
+          live ? "border border-foreground/70 bg-background" : "bg-foreground/60"
+        ) }
         style={ {
           left: `${ ( a / 255 ) * 100 }%`
         } }
@@ -201,7 +254,8 @@ export default function ControlledColorInput( {
       <div className="pointer-events-none absolute inset-0 flex items-center justify-between gap-2 px-2">
         <span className="flex min-w-0 items-center gap-1.5">
           {/* Swatch: opens the native color picker (opaque so the hue
-              stays visible even at alpha 0). */}
+              stays visible even at alpha 0). Driven, it is the base colour —
+              the one being edited — while the fill shows the live one. */}
           <span
             className="pointer-events-auto relative h-6 w-6 md:h-4 md:w-4 shrink-0 cursor-pointer overflow-hidden rounded-md border border-theme shadow-sm"
             style={ {
@@ -245,12 +299,25 @@ export default function ControlledColorInput( {
             </button>
           )}
 
+          {live && (
+            <LiveBindingValue
+              target={ live.target }
+              fallback={ hex }
+              hex
+              className="rounded bg-background/70 px-1 font-mono tabular-nums text-foreground backdrop-blur-sm"
+            />
+          )}
+
           <button
             type="button"
-            title="Tap to type an alpha percentage"
+            title={ live ? "Base alpha — tap to type a percentage" : "Tap to type an alpha percentage" }
             onClick={ () => setEditing( true ) }
             onPointerDown={ ( e ) => e.stopPropagation() }
-            className={ `${ CONTROL_VALUE_BUTTON_CLASS } bg-background/70 backdrop-blur-sm` }
+            className={ clsx(
+              CONTROL_VALUE_BUTTON_CLASS,
+              "bg-background/70 backdrop-blur-sm",
+              live && "!text-label hover:!text-foreground"
+            ) }
           >
             {alphaPercent}%
           </button>

@@ -186,7 +186,7 @@ export const formConfiguration: Record<string, any> = {
       },
       backgroundColor: {
         label: "Background color",
-        component: "color"
+        component: "background"
       },
       variableBackgroundColor: {
         label: "Animated background color",

@@ -95,7 +95,7 @@ export const formConfiguration: Record<string, any> = {
   },
   background: blurredBackgroundFormConfiguration(),
   backgroundColor: {
-    component: "color",
+    component: "background",
     label: "Background color"
   }
 };

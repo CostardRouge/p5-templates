@@ -12,6 +12,9 @@ import {
 import deepClone from "@/utils/deepClone";
 import makeSlideId from "@/utils/makeSlideId";
 import {
+  effectiveSlideInteractive
+} from "@/utils/migrateInteractiveOptions";
+import {
   indexToLetters, makeCopyName, nextSlideLetter
 } from "@/utils/slideNaming";
 import makeDefaultSlide from "../utils/makeDefaultSlide";
@@ -299,6 +302,18 @@ export function useSlideManagement( {
           : undefined;
       const inheritedSketch =
         activeSketch ?? currentGlobalSketch ?? sketchFormValues;
+      // The modulation on screen comes along for the same reason. A slide
+      // created without it kept PLAYING the root's bindings (the engine reads
+      // a slide's `interactive` key by key over the root's) while the editor,
+      // which only reads the slide's own namespace, showed every pastille dark
+      // — and the first binding added there replaced the root's list
+      // wholesale, silently stopping the rest.
+      const inheritedInteractive = effectiveSlideInteractive(
+        getValues( "interactive" ),
+        effectiveActiveIndex !== undefined
+          ? getValues( `slides.${ effectiveActiveIndex }.interactive` )
+          : undefined
+      );
 
       // The next free letter, skipping numbered copies so they never inflate
       // the count (A, A-1, B, B-1, B-2 → "C", not "F").
@@ -314,7 +329,8 @@ export function useSlideManagement( {
         size: currentGlobalSize ? deepClone( currentGlobalSize ) : currentGlobalSize,
         animation: currentGlobalAnimation
           ? deepClone( currentGlobalAnimation )
-          : currentGlobalAnimation
+          : currentGlobalAnimation,
+        interactive: inheritedInteractive
       } );
 
       appendSlide( newSlide );
@@ -482,24 +498,19 @@ export function useSlideManagement( {
         }
 
         // Interactive bindings: the slide namespace overrode the root one
-        // key-by-key at runtime (see migrateInteractiveOptions) — keep that
-        // outcome by merging with the slide's keys winning.
+        // key-by-key at runtime (see effectiveSlideInteractive) — keep that
+        // outcome, the slide's keys winning.
         const slideInteractive = lastSlide?.interactive as
           | Record<string, unknown>
           | undefined;
 
         if ( slideInteractive ) {
-          const rootInteractive = ( getValues( "interactive" ) ?? {} ) as Record<
-            string,
-            unknown
-          >;
-
           setValue(
             "interactive",
-            deepClone( {
-              ...rootInteractive,
-              ...slideInteractive
-            } )
+            effectiveSlideInteractive(
+              getValues( "interactive" ),
+              slideInteractive
+            )
           );
         }
       }

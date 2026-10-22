@@ -2,6 +2,9 @@ import {
   interactionFormValues,
   interactionFormConfiguration
 } from "@/p5/utils/interaction/defaults.js";
+import {
+  housePaletteField
+} from "@/p5/utils/palettes.js";
 
 export const formValues = {
   mode: {
@@ -57,6 +60,7 @@ export const formValues = {
   },
 
   stroke: {
+    palette: "rainbow",
     weight: 19.5,
     glow: 2,
     // Variable thickness profile: 0..2 multipliers on `weight` at each end of the
@@ -231,6 +235,9 @@ export const formConfiguration: Record<string, any> = {
     label: "Stroke",
     component: "nested-object",
     fields: {
+      palette: housePaletteField( [
+        "rainbow"
+      ] ),
       weight: {
         label: "Weight (middle of the curve)",
         component: "slider",
@@ -374,7 +381,8 @@ export const formConfiguration: Record<string, any> = {
   },
 
   backgroundColor: {
-    component: "color",
+    component: "background",
+    palette: "stroke/palette",
     label: "Background color"
   }
 };

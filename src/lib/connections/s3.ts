@@ -4,7 +4,6 @@ import {
   ObjectCannedACL,
   PutObjectCommand,
   S3Client,
-  DeleteObjectCommand,
   ListObjectsV2Command,
   DeleteObjectsCommand
 } from "@aws-sdk/client-s3";
@@ -12,6 +11,10 @@ import {
 import {
   getSignedUrl
 } from "@aws-sdk/s3-request-presigner";
+
+import {
+  isSafeJobId
+} from "@/lib/recordingInput";
 
 // Main S3 client for operations (uses internal endpoint for server-side operations)
 const s3client = new S3Client( {
@@ -184,69 +187,61 @@ export async function getObjectSize( objectKey: string ): Promise<number | null>
   }
 }
 
-export async function deleteArtifact( objectKeyOrPrefix: string ): Promise<void> {
-  try {
-    const bucketName = process.env.S3_BUCKET!;
+/**
+ * Delete everything a recording job owns: every object under `<jobId>/`, plus
+ * `extraKeys` (the job's server-written `resultUrl`, so a legacy archive
+ * stored outside that folder is not orphaned).
+ *
+ * The listing is scoped to the folder, trailing slash included. The previous
+ * bare-`jobId` prefix also matched every key that merely starts with it: a job
+ * named `1` took every recording whose id begins with 1, and a job named `""`
+ * (which the enqueue route used to accept) listed the whole bucket.
+ */
+export async function deleteJobArtifacts(
+  jobId: string,
+  extraKeys: string[] = []
+): Promise<void> {
+  if ( !isSafeJobId( jobId ) ) {
+    throw new Error( `Refusing to delete artifacts for unsafe job id ${ JSON.stringify( jobId ) }` );
+  }
 
-    // 1. Check if it's a folder (ends with slash or acts as prefix)
-    let listedObjects;
+  const bucketName = process.env.S3_BUCKET!;
+  const keys = new Set<string>( extraKeys );
+  let continuationToken: string | undefined;
 
-    try {
-      listedObjects = await s3client.send( new ListObjectsV2Command( {
-        Bucket: bucketName,
-        Prefix: objectKeyOrPrefix
-      } ) );
-    } catch( err ) {
-      console.error(
-        `Failed to list objects with prefix ${ objectKeyOrPrefix }:`,
-        err
-      );
-      throw err;
+  do {
+    const listed = await s3client.send( new ListObjectsV2Command( {
+      Bucket: bucketName,
+      Prefix: `${ jobId }/`,
+      ContinuationToken: continuationToken
+    } ) );
+
+    for ( const item of listed.Contents ?? [] ) {
+      if ( item.Key ) {
+        keys.add( item.Key );
+      }
     }
 
-    if ( listedObjects.Contents && listedObjects.Contents.length > 1 ) {
-      // Multiple objects = treat as folder (prefix)
-      try {
-        const deleteCommand = new DeleteObjectsCommand( {
-          Bucket: bucketName,
-          Delete: {
-            Objects: listedObjects.Contents.map( ( item ) => ( {
-              Key: item.Key!
-            } ) ),
-            Quiet: true // Don't return deleted objects in response
-          }
-        } );
+    continuationToken = listed.IsTruncated ? listed.NextContinuationToken : undefined;
+  } while ( continuationToken );
 
-        await s3client.send( deleteCommand );
-      } catch( err ) {
-        console.error(
-          `Failed to delete multiple objects with prefix ${ objectKeyOrPrefix }:`,
-          err
-        );
-        throw err;
-      }
-    } else if ( listedObjects.Contents && listedObjects.Contents.length === 1 ) {
-      // Single object = delete directly
-      try {
-        const deleteCommand = new DeleteObjectCommand( {
-          Bucket: bucketName,
-          Key: listedObjects.Contents[ 0 ].Key!
-        } );
+  const allKeys = [
+    ...keys
+  ];
 
-        await s3client.send( deleteCommand );
-      } catch( err ) {
-        console.error(
-          `Failed to delete object ${ objectKeyOrPrefix }:`,
-          err
-        );
-        throw err;
+  // DeleteObjects takes at most 1000 keys per request.
+  for ( let start = 0; start < allKeys.length; start += 1000 ) {
+    await s3client.send( new DeleteObjectsCommand( {
+      Bucket: bucketName,
+      Delete: {
+        Objects: allKeys.slice(
+          start,
+          start + 1000
+        ).map( ( Key ) => ( {
+          Key
+        } ) ),
+        Quiet: true
       }
-    } else {
-      // No objects found - this is OK, might have been deleted already
-      console.warn( `No objects found with prefix ${ objectKeyOrPrefix }, skipping deletion` );
-    }
-  } catch( err ) {
-    // Re-throw to let caller handle
-    throw err;
+    } ) );
   }
 }

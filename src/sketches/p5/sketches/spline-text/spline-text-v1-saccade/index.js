@@ -5,6 +5,10 @@ import sketch, {
 import {
   renderReadingSplineText
 } from "../_reading.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // A spline cluster that reads a paragraph, resting on a word then travelling to
 // the next, word by word over the full background text. The transition is chosen
@@ -16,12 +20,17 @@ sketch.draw( () => {
   const o = options.sketch ?? {};
 
   p.clear();
-  p.background( ...( o.backgroundColor ?? [
-    0,
-    0,
-    0,
-    255
-  ] ) );
+  paintBackground( resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0,
+        255
+      ]
+    }
+  ) );
   p.strokeCap( p.ROUND );
   p.strokeJoin( p.ROUND );
 

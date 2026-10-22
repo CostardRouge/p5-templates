@@ -10,12 +10,22 @@ import animation from "@/p5/utils/animation.js";
 import {
   getP5
 } from "@/p5/utils/sketch.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 const canvases = sketch.state( () => ( {} ) );
 
-const getBg = () => options.sketch?.background ?? [
-  0
-];
+const getBg = () => resolveBackground(
+  options.sketch?.background,
+  {
+    fallback: [
+      0
+    ],
+    palette: options.sketch?.palette
+  }
+);
 
 const getFont = () => {
   const key = options.sketch?.font ?? options.font ?? "martian";
@@ -31,14 +41,14 @@ sketch.setup( () => {
     p.height
   );
 
-  p.background( ...getBg() );
+  paintBackground( getBg() );
 } );
 
 sketch.draw( ( time ) => {
   const p = getP5();
 
   p.clear();
-  p.background( ...getBg() );
+  paintBackground( getBg() );
 
   // Controls
   const rows = options.sketch?.rows ?? 25;
@@ -61,10 +71,7 @@ sketch.draw( ( time ) => {
   const weightMax = options.sketch?.weightMax ?? 200;
 
   const paletteName = options.sketch?.palette ?? "rainbow";
-  const paletteFn =
-    typeof colors?.[ paletteName ] === "function"
-      ? colors[ paletteName ]
-      : colors.rainbow;
+  const paletteFn = colors.palette( paletteName );
   const hueOffset = options.sketch?.hueOffset ?? 0;
 
   const opacityFrom = options.sketch?.opacityFactorFrom ?? 2;
@@ -237,7 +244,7 @@ sketch.draw( ( time ) => {
 
   maskedImage.mask( canvases.mask );
 
-  p.background( ...getBg() );
+  paintBackground( getBg() );
   p.image(
     maskedImage,
     0,

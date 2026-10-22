@@ -5,6 +5,9 @@ import {
 import {
   createKeyedStore
 } from "./instanceState.js";
+import {
+  PALETTE_RAMP_GLSL
+} from "./paletteGlsl.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared GPU batch for 2D "glow" primitives (capsules / discs), rainbow-shaded
@@ -157,6 +160,18 @@ const FRAG_SRC = `
     return clamp(vec3(red, green, blue) / 255.0, 0.0, 1.0);
   }
 
+  ${ PALETTE_RAMP_GLSL }
+
+  // A shared palette (setPalette) read at (hueOffset + hueIndex) / 2π — one
+  // turn of the ramp per turn of the house rainbow — divided as it divides.
+  vec3 strokeColor(float hueOffset, float hueIndex, float opacityFactor) {
+    if (uPaletteOn > 0.5) {
+      return clamp(paletteRamp((hueOffset + hueIndex) / 6.28318530718) / opacityFactor, 0.0, 1.0);
+    }
+
+    return paletteRainbow(hueOffset, hueIndex, opacityFactor);
+  }
+
   void main() {
     float d   = segmentDistance(vPos, vA, vB) - vHalf;
     float cov = 1.0 - smoothstep(-uPad, uPad, d);
@@ -168,7 +183,7 @@ const FRAG_SRC = `
     // The rainbow palette is opaque (alpha 255), so coverage IS the alpha. Emit
     // premultiplied colour: the p5.Graphics WebGL canvas is premultipliedAlpha,
     // so p.image() composites the buffer onto the p2d canvas with no fringing.
-    vec3 rgb = paletteRainbow(vHueOffset, vHueIndex, vOpacity);
+    vec3 rgb = strokeColor(vHueOffset, vHueIndex, vOpacity);
 
     gl_FragColor = vec4(rgb * cov, cov);
   }
@@ -305,7 +320,7 @@ function drawArraysInstanced(
  * @returns {{
  *   begin: Function, disc: Function, capsule: Function, end: Function,
  *   beginStrokes: Function, openStroke: Function, strokeSegment: Function,
- *   drawStrokes: Function
+ *   drawStrokes: Function, setPalette: Function
  * }}
  */
 export default function createGlowBatchRenderer() {
@@ -324,6 +339,9 @@ export default function createGlowBatchRenderer() {
       program: null,
       quadVBO: null,
       instanceVBO: null,
+      rampTexture: null,
+      rampData: null,
+      palette: null,
       locs: {},
       ext: null,
       ctxRef: null,
@@ -382,6 +400,8 @@ export default function createGlowBatchRenderer() {
     state.locs = {};
     state.quadVBO = null;
     state.instanceVBO = null;
+    state.rampTexture = null;
+    state.rampData = null;
     state.ctxRef = gl;
     state.ext = getInstancingExt( gl );
 
@@ -411,7 +431,9 @@ export default function createGlowBatchRenderer() {
 
     [
       "uResolution",
-      "uPad"
+      "uPad",
+      "uPaletteRamp",
+      "uPaletteOn"
     ].forEach( ( name ) => {
       state.locs[ name ] = gl.getUniformLocation(
         state.program,
@@ -452,6 +474,75 @@ export default function createGlowBatchRenderer() {
     return true;
   }
 
+  // The shared palette's ramp on texture unit 0, uploaded when the palette
+  // changes. NEAREST: paletteRamp() interpolates by hand, as on every other
+  // surface that reads a ramp.
+  function bindPalette( gl ) {
+    const ramp = state.palette?.uniforms?.uPaletteOn
+      ? state.palette.textures.uPaletteRamp
+      : null;
+
+    gl.uniform1f(
+      state.locs.uPaletteOn,
+      ramp ? 1 : 0
+    );
+
+    if ( !ramp ) {
+      return;
+    }
+
+    gl.activeTexture( gl.TEXTURE0 );
+
+    if ( !state.rampTexture ) {
+      state.rampTexture = gl.createTexture();
+    }
+
+    gl.bindTexture(
+      gl.TEXTURE_2D,
+      state.rampTexture
+    );
+
+    if ( state.rampData !== ramp.data ) {
+      gl.pixelStorei(
+        gl.UNPACK_ALIGNMENT,
+        1
+      );
+      gl.texImage2D(
+        gl.TEXTURE_2D,
+        0,
+        gl.RGBA,
+        ramp.width,
+        ramp.height,
+        0,
+        gl.RGBA,
+        gl.UNSIGNED_BYTE,
+        ramp.data
+      );
+      [
+        gl.TEXTURE_MIN_FILTER,
+        gl.TEXTURE_MAG_FILTER
+      ].forEach( ( key ) => gl.texParameteri(
+        gl.TEXTURE_2D,
+        key,
+        gl.NEAREST
+      ) );
+      [
+        gl.TEXTURE_WRAP_S,
+        gl.TEXTURE_WRAP_T
+      ].forEach( ( key ) => gl.texParameteri(
+        gl.TEXTURE_2D,
+        key,
+        gl.CLAMP_TO_EDGE
+      ) );
+      state.rampData = ramp.data;
+    }
+
+    gl.uniform1i(
+      state.locs.uPaletteRamp,
+      0
+    );
+  }
+
   // Common per-frame GL setup: viewport, premultiplied "over" blend, clear to
   // transparent, activate the program and its shared uniforms, bind the quad.
   function beginPass(
@@ -488,6 +579,7 @@ export default function createGlowBatchRenderer() {
       state.locs.uPad,
       EDGE_PAD
     );
+    bindPalette( gl );
 
     gl.bindBuffer(
       gl.ARRAY_BUFFER,
@@ -541,6 +633,10 @@ export default function createGlowBatchRenderer() {
 
     gl.bindBuffer(
       gl.ARRAY_BUFFER,
+      null
+    );
+    gl.bindTexture(
+      gl.TEXTURE_2D,
       null
     );
     g.resetShader();
@@ -997,6 +1093,16 @@ export default function createGlowBatchRenderer() {
     );
   }
 
+  /**
+   * The palette the next batches on this surface are shaded with:
+   * `shaderPalette()`'s result (utils/palettes.js) for a shared preset, or
+   * null / a switched-off one for the house rainbow, computed as before.
+   */
+  function setPalette( palette ) {
+    bind();
+    state.palette = palette ?? null;
+  }
+
   return {
     begin,
     disc,
@@ -1005,6 +1111,7 @@ export default function createGlowBatchRenderer() {
     beginStrokes,
     openStroke,
     strokeSegment,
-    drawStrokes
+    drawStrokes,
+    setPalette
   };
 }

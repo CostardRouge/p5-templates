@@ -53,6 +53,7 @@ export default function RecordingsTable( {
               <th className="text-left px-2 py-2 sm:px-4 sm:py-4 w-8 sm:w-12">
                 <input
                   type="checkbox"
+                  aria-label="Select all recordings"
                   checked={ allSelected }
                   ref={ ( input ) => {
                     if ( input ) {

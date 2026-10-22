@@ -1,6 +1,9 @@
 import {
   ITEM_META
 } from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/AddItemControls/components/ItemPalette/constants/item-kinds";
+import {
+  vector3dViewLabel
+} from "@/p5/utils/hud/vector3dViews";
 import type {
   ItemKind
 } from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/AddItemControls/components/ItemPalette/types/item-kinds";
@@ -107,6 +110,25 @@ export default function describeContentItem( item: unknown ): ContentItemDescrip
         return path ? basename( path ) : undefined;
       }
 
+      // A reel is recognised by the sketches it cuts between, else by its
+      // scene count.
+      case "sequence": {
+        const scenes = Array.isArray( record.scenes ) ? record.scenes as Record<string, unknown>[] : [];
+        const names = scenes
+          .map( ( scene ) => ( scene?.kind === "sketch" && typeof scene.sketch === "string" && scene.sketch
+            ? basename( scene.sketch )
+            : undefined ) )
+          .filter( ( name ): name is string => Boolean( name ) );
+
+        if ( names.length > 0 ) {
+          return names.join( " → " );
+        }
+
+        return scenes.length > 0
+          ? `${ scenes.length } scene${ scenes.length === 1 ? "" : "s" }`
+          : undefined;
+      }
+
       case "specs":
         return firstNonEmpty( record.style );
 
@@ -152,6 +174,18 @@ export default function describeContentItem( item: unknown ): ContentItemDescrip
           record.label,
           record.source
         );
+
+      // Five views of one type: the row says which one is showing, so two
+      // Vector 3D layers over the same parameter stay distinguishable.
+      case "hud-vector3d": {
+        const watched = firstNonEmpty(
+          record.label,
+          record.source
+        );
+        const view = vector3dViewLabel( record.view );
+
+        return watched ? `${ watched } · ${ view }` : view;
+      }
 
       default:
         return undefined;

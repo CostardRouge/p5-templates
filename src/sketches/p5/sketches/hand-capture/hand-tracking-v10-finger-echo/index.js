@@ -13,6 +13,10 @@ import mediapipe from "@/p5/utils/mediapipe/mediapipe.js";
 import {
   renderSplines
 } from "../../splines/_shared.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // ── video-finger-echo ──────────────────────────────────────────────────────
 // A POV-camera sketch built for the "first-person hands" footage you get from
@@ -382,11 +386,16 @@ sketch.draw( () => {
   const stroke = o.stroke ?? {};
   const curve = o.curve ?? {};
   const echo = o.echo ?? {};
-  const background = display.backgroundColor ?? [
-    0,
-    0,
-    0
-  ];
+  const background = resolveBackground(
+    display.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0
+      ]
+    }
+  );
 
   ensureEchoLayer( p );
 
@@ -473,7 +482,7 @@ sketch.draw( () => {
 
   // 3. Compose: background, the full source frame, then the glowing trail.
   p.clear();
-  p.background( ...background );
+  paintBackground( background );
 
   const ctx = p.drawingContext;
 

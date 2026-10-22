@@ -1,6 +1,9 @@
 import {
   updateJob, getJobById
 } from "@/lib/jobStore";
+import {
+  jobFailureReason
+} from "@/lib/jobFailure";
 
 import fs from "node:fs/promises";
 import path from "path";
@@ -59,7 +62,8 @@ async function runRecording( jobId: string ) {
       jobId,
       {
         status: "failed",
-        progress: 100
+        progress: 100,
+        error: jobFailureReason( error )
       }
     );
     throw error;

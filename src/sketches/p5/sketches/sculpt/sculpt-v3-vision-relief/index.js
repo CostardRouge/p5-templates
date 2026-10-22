@@ -7,7 +7,7 @@ import easing from "@/p5/utils/easing.js";
 import createNoiseFieldRenderer from "@/p5/utils/noiseFieldGpu.js";
 import {
   BRAID_UNIFORMS_GLSL,
-  IRIDESCENT_GLSL,
+  PALETTE_IRIDESCENT_GLSL,
   braidShadingGlsl,
   lightDirFrom,
   focalFromFov
@@ -54,6 +54,13 @@ import {
   processMask,
   maskPresenceAt
 } from "../_silhouette.js";
+import {
+  shaderPalette
+} from "@/p5/utils/palettes.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // sculpt v3 — vision relief.
@@ -129,7 +136,7 @@ const FRAGMENT = `
   uniform float uViewH;          // orthographic view height (world units)
   uniform float uOrtho;
 
-  ${ IRIDESCENT_GLSL }
+  ${ PALETTE_IRIDESCENT_GLSL }
 
   // A bound must never read as a surface: kept above SURF_EPS.
   const float SLACK = 0.006;
@@ -882,11 +889,17 @@ sketch.draw( () => {
   const interaction = interactionFor( o );
 
   p.clear();
-  p.background( ...( o.backgroundColor ?? [
-    0,
-    0,
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0
+      ],
+      palette: o.colors?.palette
+    }
+  ) );
 
   // ── The clock ──────────────────────────────────────────────────────────────
   const loop = ( ( animation.progression % 1 ) + 1 ) % 1;
@@ -1288,11 +1301,14 @@ sketch.draw( () => {
   const linkMode = layout === "hex" ? 2 : ( links.diagonals !== false ? 1 : 0 );
   const aberration = o.aberration ?? {};
 
+  const palette = shaderPalette( colors );
+
   reliefRenderer.render( {
     columns: 1,
     rows: 1,
     resolutionScale: rendering.resolutionScale ?? 0.6,
     textures: {
+      ...palette.textures,
       uSheet: {
         data: state.packed,
         width: sheet.columns,
@@ -1351,6 +1367,7 @@ sketch.draw( () => {
       uPitch: rig.tilt,
       uRoll: 0,
       uHueSpeed: hueSpread ? hueCycles / ( p.TAU * hueSpread ) : 0,
+      uPaletteOn: palette.uniforms.uPaletteOn,
       uHueSpread: hueSpread,
       uHuePhase: colors.huePhase ?? 2.6,
       uLengthHueShift: colors.lengthHueShift ?? -0.6,

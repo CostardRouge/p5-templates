@@ -25,6 +25,10 @@
 // The noiseFieldGpu stdlib already provides `vUv`, `uResolution`, `PI`, `TAU`.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import {
+  PALETTE_RAMP_GLSL
+} from "./paletteGlsl.js";
+
 // Every uniform the shared chunks read. `uRoll` is new relative to the v2-pipes
 // camera: it rotates the screen-space ray basis so the scene's vertical axis can
 // point along any on-screen direction (driven by a vector2d "orientation"
@@ -76,6 +80,33 @@ export const IRIDESCENT_GLSL = `
     vec3 spectrum = 0.5 + 0.5 * cos(
       TAU * (uHueSpread * t + vec3(0.0, 0.33, 0.67)) + uHuePhase
     );
+
+    float luma = dot(spectrum, vec3(0.299, 0.587, 0.114));
+
+    return clamp(mix(vec3(luma), spectrum, uSaturation) * uBrightness, 0.0, 1.0);
+  }
+`;
+
+// The same spectrum with a palette in front of it (utils/palettes.js): while
+// `uPaletteOn` is 0 the cosine below runs with its exact arithmetic — the
+// "original" palette, pixel-identical to IRIDESCENT_GLSL — and while it is 1
+// the spectrum is read from `uPaletteRamp` instead, at the same coordinate the
+// cosine walks (hue spread × t + phase, one ramp loop per cosine period), so
+// the sketch's hue speed / spread / phase still scroll it and its saturation
+// and brightness still grade it. The ramp is a noiseFieldGpu data texture
+// (NEAREST), interpolated by hand between texels. `shaderPalette()` supplies
+// both the texture and the switch.
+export const PALETTE_IRIDESCENT_GLSL = `${ PALETTE_RAMP_GLSL }
+  vec3 iridescent(float t) {
+    vec3 spectrum;
+
+    if (uPaletteOn > 0.5) {
+      spectrum = paletteRamp(uHueSpread * t + uHuePhase / TAU);
+    } else {
+      spectrum = 0.5 + 0.5 * cos(
+        TAU * (uHueSpread * t + vec3(0.0, 0.33, 0.67)) + uHuePhase
+      );
+    }
 
     float luma = dot(spectrum, vec3(0.299, 0.587, 0.114));
 

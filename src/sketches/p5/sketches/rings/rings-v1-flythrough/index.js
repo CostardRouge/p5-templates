@@ -6,12 +6,19 @@ import animation from "@/p5/utils/animation.js";
 import createNoiseFieldRenderer from "@/p5/utils/noiseFieldGpu.js";
 import {
   BRAID_UNIFORMS_GLSL,
-  IRIDESCENT_GLSL,
+  PALETTE_IRIDESCENT_GLSL,
   braidShadingGlsl,
   lightDirFrom,
   focalFromFov
 } from "@/p5/utils/braidShader.js";
 import easing from "@/p5/utils/easing.js";
+import {
+  shaderPalette
+} from "@/p5/utils/palettes.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // rings v1 — flythrough.
@@ -71,7 +78,7 @@ const FRAGMENT = `
   uniform vec3 uCamRight;
   uniform vec3 uCamUp;
 
-  ${ IRIDESCENT_GLSL }
+  ${ PALETTE_IRIDESCENT_GLSL }
 
   // Exact distance to torus k: split the offset into the ring plane and along
   // its normal, then it is a circle-of-radius-uRingR distance minus the tube.
@@ -233,16 +240,23 @@ sketch.draw( () => {
   const path = o.path ?? {};
   const camera = o.camera ?? {};
   const colors = o.colors ?? {};
+  const palette = shaderPalette( colors );
   const light = o.light ?? {};
   const aberration = o.aberration ?? {};
   const rendering = o.rendering ?? {};
 
   p.clear();
-  p.background( ...( o.backgroundColor ?? [
-    0,
-    0,
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0
+      ],
+      palette: o.colors?.palette
+    }
+  ) );
 
   const timeScale = o.timeScale ?? 1;
   const t = animation.angle;
@@ -505,6 +519,7 @@ sketch.draw( () => {
     uCamUp: up,
     uFocal: focalFromFov( fov ),
     uHueSpeed: hueSpread ? hueCycles / ( p.TAU * hueSpread ) : 0,
+    uPaletteOn: palette.uniforms.uPaletteOn,
     uHueSpread: hueSpread,
     uHuePhase: colors.huePhase ?? 2.6,
     uLengthHueShift: colors.lengthHueShift ?? -0.25,
@@ -533,6 +548,7 @@ sketch.draw( () => {
   }
 
   ringsRenderer.render( {
+    textures: palette.textures,
     columns: 1,
     rows: 1,
     resolutionScale: rendering.resolutionScale ?? 0.75,

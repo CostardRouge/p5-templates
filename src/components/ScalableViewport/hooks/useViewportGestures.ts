@@ -9,7 +9,8 @@ import type {
 } from "./useTransformState";
 import {
   MIN_SCALE,
-  MAX_SCALE
+  MAX_SCALE,
+  calculateZoomTarget
 } from "../utils/zoomCalculations";
 
 // A trackpad pinch reaches the page as a wheel event with `ctrlKey` set (every
@@ -23,6 +24,38 @@ export const PINCH_WHEEL_MODIFIER = "ctrlKey" as const;
 
 export function isPinchWheelEvent( event: WheelEvent ): boolean {
   return Boolean( event[ PINCH_WHEEL_MODIFIER ] );
+}
+
+// How much one pixel of mouse-wheel travel zooms: `exp( -deltaY * k )`, the
+// factor the wheel always used before it learned to pan.
+export const WHEEL_ZOOM_PER_PIXEL = 0.01;
+
+/**
+ * A mouse wheel ZOOMS; a two-finger trackpad scroll PANS. Both arrive as plain
+ * wheel events, told apart by what only a wheel does:
+ * - it scrolls in lines (`deltaMode` 1 — Firefox reports every notch so);
+ * - it has one axis, where two fingers always drift on both (`deltaX`);
+ * - in Chromium and WebKit, its legacy `wheelDeltaY` is a ±120 notch, while a
+ *   trackpad's is exactly −3 × its pixel `deltaY` (± rounding at page zoom).
+ * Anything that fits none of these is treated as a trackpad, so a scroll
+ * nobody can classify still pans, as it did before.
+ */
+export function isMouseWheelEvent( event: WheelEvent ): boolean {
+  if ( event.deltaMode !== 0 ) {
+    return true;
+  }
+
+  if ( event.deltaX !== 0 ) {
+    return false;
+  }
+
+  const legacyDeltaY = ( event as WheelEvent & { wheelDeltaY?: number } ).wheelDeltaY;
+
+  if ( typeof legacyDeltaY === "number" && legacyDeltaY !== 0 ) {
+    return Math.abs( legacyDeltaY + 3 * event.deltaY ) > 1.5;
+  }
+
+  return false;
 }
 
 interface UseViewportGesturesProps {
@@ -68,9 +101,10 @@ export function useViewportGestures( {
   onInteractionStart,
   onInteractionEnd
 }: UseViewportGesturesProps ) {
-  // True between the first plain wheel event of a scroll and the wheel
-  // recogniser's end; ctrl+wheel (pinch) events never open it.
-  const wheelPanActive = useRef( false );
+  // What the current wheel burst does, decided by its first plain event and
+  // kept until the wheel recogniser's end, so a scroll never flips between
+  // panning and zooming halfway; ctrl+wheel (pinch) events never set it.
+  const wheelMode = useRef<"pan" | "zoom" | null>( null );
 
   useGesture(
     {
@@ -107,14 +141,14 @@ export function useViewportGestures( {
       },
       onPinchEnd: () => onInteractionEnd?.(),
       // The wheel recogniser also sees the pinch's ctrl+wheel events, so the
-      // pan interaction is opened lazily by the first *plain* wheel event in
+      // interaction is opened lazily by the first *plain* wheel event in
       // `onWheel` (below) rather than here, and closed only if it was opened.
       onWheelEnd: () => {
-        if ( !wheelPanActive.current ) {
+        if ( !wheelMode.current ) {
           return;
         }
 
-        wheelPanActive.current = false;
+        wheelMode.current = null;
         onInteractionEnd?.();
       },
 
@@ -222,9 +256,9 @@ export function useViewportGestures( {
         return memo;
       },
 
-      // Wheel / two-finger trackpad scroll = Pan. Zoom is the pinch's job
-      // (touch pinch, or ctrl+wheel — what a trackpad pinch and a mouse
-      // ctrl+scroll both arrive as), handled by `onPinch` above.
+      // Mouse wheel = Zoom about the cursor; two-finger trackpad scroll = Pan
+      // (`isMouseWheelEvent`). A pinch — touch, or ctrl+wheel, which is what a
+      // trackpad pinch and a mouse ctrl+scroll both arrive as — is `onPinch`'s.
       onWheel: ( {
         event, delta: [
           deltaX,
@@ -237,10 +271,31 @@ export function useViewportGestures( {
 
         event.preventDefault();
 
-        if ( !wheelPanActive.current ) {
-          wheelPanActive.current = true;
+        if ( !wheelMode.current ) {
+          wheelMode.current = isMouseWheelEvent( event ) ? "zoom" : "pan";
           cancelAnimation();
-          onInteractionStart?.( "panning" );
+          onInteractionStart?.( wheelMode.current === "zoom" ? "zooming" : "panning" );
+        }
+
+        if ( wheelMode.current === "zoom" ) {
+          const container = containerRef.current;
+
+          if ( !container ) {
+            return;
+          }
+
+          setTransform(
+            calculateZoomTarget(
+              transform.current.scale * Math.exp( -deltaY * WHEEL_ZOOM_PER_PIXEL ),
+              event.clientX,
+              event.clientY,
+              container.getBoundingClientRect(),
+              transform.current
+            ),
+            contentRef.current
+          );
+
+          return;
         }
 
         const {

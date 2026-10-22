@@ -14,6 +14,10 @@ import animation from "@/p5/utils/animation.js";
 import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 sketch.setup(
   undefined,
@@ -194,11 +198,16 @@ sketch.draw( () => {
   );
   const progression = animation.progression;
 
-  const background = o.backgroundColor ?? [
-    12,
-    12,
-    16
-  ];
+  const background = resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        12,
+        12,
+        16
+      ]
+    }
+  );
   const object = o.object ?? {};
   const light = o.light ?? {};
   const spin = o.spin ?? {};
@@ -250,7 +259,7 @@ sketch.draw( () => {
   const floorY = POSITION_BOX.y[ 1 ] * scale;
 
   p.clear();
-  p.background( ...background );
+  paintBackground( background );
 
   // ── Camera: an orbit driven by the loop clock ─────────────────────────────
   const distance = numberOr(

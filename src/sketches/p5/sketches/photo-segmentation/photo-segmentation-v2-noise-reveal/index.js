@@ -20,6 +20,10 @@ import {
   setSketchOptions,
   subscribeSketchOptions
 } from "@/p5/shared/syncSketchOptions.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 /* ------------------------------------------------------------------ */
 /*  Sketch state                                                       */
@@ -606,13 +610,27 @@ function drawBackground(
   }
 
   if ( mode === "color" ) {
+    const color = resolveBackground(
+      bg.color,
+      {
+        fallback: [
+          0,
+          0,
+          0
+        ]
+      }
+    );
+
+    // A gradient is laid over the whole canvas, as the rectangle was.
+    if ( color.spec ) {
+      paintBackground( color );
+
+      return;
+    }
+
     p.push();
     p.noStroke();
-    p.fill( ...( bg.color ?? [
-      0,
-      0,
-      0
-    ] ) );
+    p.fill( ...color );
     p.rect(
       0,
       0,
@@ -769,7 +787,7 @@ function drawMarker( p ) {
 sketch.setup( () => {
   const p = getP5();
 
-  p.background( ...options.sketch.backgroundColor );
+  paintBackground( resolveBackground( options.sketch.backgroundColor ) );
 
   state.imagePath = resolveImagePath( options.sketch?.photo?.image );
   state.autoPickIndex = -1;
@@ -855,7 +873,7 @@ events.register(
 sketch.draw( () => {
   const p = getP5();
 
-  p.background( ...options.sketch.backgroundColor );
+  paintBackground( resolveBackground( options.sketch.backgroundColor ) );
 
   const photo = common.getAsset( state.imagePath );
 

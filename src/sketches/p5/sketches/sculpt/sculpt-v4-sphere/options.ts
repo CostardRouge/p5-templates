@@ -6,6 +6,9 @@ import {
   cameraFormValues,
   cameraFormConfiguration
 } from "@/p5/utils/cameraRig.js";
+import {
+  shaderPaletteFormFields, shaderPaletteFormValues
+} from "@/p5/utils/palettes.js";
 
 // v1's scatter lattice with a SKIN: a share of the points sits exactly on the
 // sphere (a Fibonacci spiral), the rest is thrown inside, and the links cross
@@ -157,6 +160,7 @@ export const formValues = {
   },
 
   colors: {
+    ...shaderPaletteFormValues,
     hueBy: "rank" as "rank" | "link" | "node",
     hueSpeed: 0.5,
     hueSpread: 2,
@@ -588,7 +592,8 @@ export const formConfiguration: Record<string, any> = {
   },
 
   // Focused subset of the shared interaction form: only the modalities this
-  // sketch reads (mouse, touch, camera hands).
+  // sketch reads (mouse, touch, camera hands), plus MIDI, whose port is what
+  // resolves the knobs the camera rig declares.
   interaction: {
     component: "nested-object",
     label: "Input sources",
@@ -614,7 +619,8 @@ export const formConfiguration: Record<string, any> = {
             }
           }
         }
-      }
+      },
+      midi: interactionFormConfiguration.fields.midi
     }
   },
 
@@ -713,6 +719,7 @@ export const formConfiguration: Record<string, any> = {
     component: "nested-object",
     label: "Iridescent",
     fields: {
+      ...shaderPaletteFormFields,
       hueBy: {
         label: "Hue carried by",
         component: "select",
@@ -907,7 +914,8 @@ export const formConfiguration: Record<string, any> = {
   },
 
   backgroundColor: {
-    component: "color",
+    component: "background",
+    palette: "colors/palette",
     label: "Background color"
   }
 };

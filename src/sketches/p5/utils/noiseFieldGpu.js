@@ -1538,6 +1538,11 @@ export function createInstancedFieldRenderer( {
    *   cleared to, so blended dots composite correctly. Defaults to black.
    * @param {number} [params.clearAlpha=1]  clear alpha; pass 0 to composite the
    *   dots over whatever is already on the main canvas (e.g. a glow underneath).
+   * @param {boolean} [params.alphaOver=false]  composite the dots over what lies
+   *   beneath (a background gradient): clear to transparent black and blend the
+   *   alpha as "over" (one, one-minus-src-alpha), so the buffer holds valid
+   *   premultiplied pixels. Overrides `clearAlpha`. Without it, a cleared colour
+   *   under alpha 0 or a squared dot alpha brightens the canvas toward white.
    */
   function render( params ) {
     state = store.current();
@@ -1555,6 +1560,7 @@ export function createInstancedFieldRenderer( {
         0
       ],
       clearAlpha = 1,
+      alphaOver = false,
       uniforms = {}
     } = params;
 
@@ -1590,21 +1596,34 @@ export function createInstancedFieldRenderer( {
     );
     gl.disable( gl.DEPTH_TEST );
     gl.enable( gl.BLEND );
-    gl.blendFunc(
-      gl.SRC_ALPHA,
-      gl.ONE_MINUS_SRC_ALPHA
-    );
+
+    if ( alphaOver ) {
+      gl.blendFuncSeparate(
+        gl.SRC_ALPHA,
+        gl.ONE_MINUS_SRC_ALPHA,
+        gl.ONE,
+        gl.ONE_MINUS_SRC_ALPHA
+      );
+    } else {
+      gl.blendFunc(
+        gl.SRC_ALPHA,
+        gl.ONE_MINUS_SRC_ALPHA
+      );
+    }
 
     // Clear to the opaque background so blended dots composite correctly
     // (blending over a transparent buffer would premultiply the colours).
     // Sketches that want the dots to sit over content already on the main
     // canvas (e.g. a glow drawn underneath) can pass clearAlpha: 0 — the WebGL
     // canvas is premultiplied, so standard src-over blending stays correct.
+    // alphaOver clears to transparent BLACK: the canvas reads its pixels as
+    // premultiplied, and a colour left under alpha 0 is added to what lies
+    // beneath (a cream background clipped a gradient to white).
     gl.clearColor(
-      ( background[ 0 ] ?? 0 ) / 255,
-      ( background[ 1 ] ?? 0 ) / 255,
-      ( background[ 2 ] ?? 0 ) / 255,
-      clearAlpha
+      alphaOver ? 0 : ( background[ 0 ] ?? 0 ) / 255,
+      alphaOver ? 0 : ( background[ 1 ] ?? 0 ) / 255,
+      alphaOver ? 0 : ( background[ 2 ] ?? 0 ) / 255,
+      alphaOver ? 0 : clearAlpha
     );
     gl.clear( gl.COLOR_BUFFER_BIT );
 

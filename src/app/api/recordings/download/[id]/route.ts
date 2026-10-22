@@ -4,10 +4,7 @@ import {
 import {
   getJobById
 } from "@/lib/jobStore";
-import {
-  getDownloadUrlFromS3Url
-} from "@/lib/connections/s3";
-import downloadFromUrlResponse from "@/utils/downloadFromUrlResponse";
+import downloadObjectResponse from "@/utils/downloadObjectResponse";
 
 /**
  * GET /api/recordings/download/[id]
@@ -47,9 +44,7 @@ export async function GET(
       );
     }
 
-    const s3DownloadUrl = await getDownloadUrlFromS3Url( s3Url );
-
-    return downloadFromUrlResponse( s3DownloadUrl );
+    return downloadObjectResponse( s3Url );
   } catch( error ) {
     console.error(
       `[GET /api/recordings/download/${ jobId }]`,

@@ -45,6 +45,7 @@ export const formValues = {
     weight: 4
   },
   colors: {
+    palette: "test",
     hueIndexMultiplier: 8,
     hueOffset: 0,
     opacityMin: 1.5,
@@ -140,7 +141,8 @@ export const formConfiguration: Record<string, any> = {
   colors: colorsForm,
   loop: loopForm,
   backgroundColor: {
-    component: "color",
+    component: "background",
+    palette: "colors/palette",
     label: "Background color"
   }
 };

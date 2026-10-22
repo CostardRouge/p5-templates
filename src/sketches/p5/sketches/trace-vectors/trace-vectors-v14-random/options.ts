@@ -17,6 +17,10 @@ export const formValues = {
   trajectory: {
     ...gridTraceFormValuesBase.trajectory,
     random: false
+  },
+  colors: {
+    ...gridTraceFormValuesBase.colors,
+    palette: "test"
   }
 };
 

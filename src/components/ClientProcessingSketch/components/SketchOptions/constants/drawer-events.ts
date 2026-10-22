@@ -10,6 +10,14 @@
 export const CONTENT_ITEM_SELECT_EVENT = "studio:content-item-select";
 
 /**
+ * Window event dispatched by contentDrag.js on a right-click over a content
+ * item that has an on-canvas menu (today the Vector 3D element's views).
+ * `detail`: `{ scope: "global" | "slide:<n>", index, type, clientX, clientY }`.
+ * Same duplicated-literal rule as CONTENT_ITEM_SELECT_EVENT.
+ */
+export const CONTENT_ITEM_MENU_EVENT = "studio:content-item-menu";
+
+/**
  * Root-level CSS variable holding the rendered height of the open mobile
  * drawer (0 when collapsed or on desktop). The sketch viewport subtracts it
  * from its own height so fit-to-viewport targets the visible area above the

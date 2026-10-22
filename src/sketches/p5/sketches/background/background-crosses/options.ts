@@ -1,4 +1,7 @@
-const paletteOptions = [
+import {
+  housePaletteOptions
+} from "@/p5/utils/palettes.js";
+const paletteOptions = housePaletteOptions( [
   "rainbow",
   "rainbowCrazy",
   "darkBlueYellow",
@@ -6,10 +9,7 @@ const paletteOptions = [
   "purpleSimple",
   "green",
   "black"
-].map( ( value ) => ( {
-  value,
-  label: value
-} ) );
+] );
 
 export const formValues = {
   backgroundColor: [
@@ -31,11 +31,12 @@ export const formValues = {
 
 export const formConfiguration: Record<string, any> = {
   backgroundColor: {
-    component: "color",
+    component: "background",
+    palette: "palette",
     label: "Background color"
   },
   palette: {
-    component: "select",
+    component: "palette-picker",
     label: "Palette",
     options: paletteOptions
   },

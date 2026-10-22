@@ -1,6 +1,6 @@
 import {
   PALETTE_OPTIONS
-} from "./_shared.js";
+} from "./_paletteOptions.js";
 
 export const linesFormValues = ( overrides: Record<string, any> = {} ) => ( {
   length: 40,

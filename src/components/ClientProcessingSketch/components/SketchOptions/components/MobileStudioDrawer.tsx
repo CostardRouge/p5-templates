@@ -16,7 +16,9 @@ import RootSettings from "./RootSettings/RootSettings";
 import PanelSection from "./PanelSection";
 import SketchAssetsProvider from "./SketchAssetsProvider/SketchAssetsProvider";
 import RecordingLockBanner from "./RecordingLockBanner";
-import ImportSuccessBanner from "./ImportSuccessBanner";
+import ImportSuccessBanner, {
+  type ImportBannerState
+} from "./ImportSuccessBanner";
 import UndoRedo from "./UndoRedo";
 import {
   OptionsPanelBody, type OptionsPanelBodyProps
@@ -54,7 +56,7 @@ type MobileStudioDrawerProps = {
   lifecycle: RecordingLifecycle;
   bannerCloning: boolean;
   onBannerClone: () => void;
-  importBanner: string | null;
+  importBanner: ImportBannerState | null;
   onImportBannerDismiss: () => void;
 };
 
@@ -277,7 +279,9 @@ export default function MobileStudioDrawer( {
           {importBanner && (
             <div className="mb-2 px-3">
               <ImportSuccessBanner
-                message={ importBanner }
+                key={ importBanner.message }
+                message={ importBanner.message }
+                tone={ importBanner.tone }
                 onDismiss={ onImportBannerDismiss }
               />
             </div>

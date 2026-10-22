@@ -189,6 +189,7 @@ export default function ControlledJsonInput( {
             </div>
 
             <textarea
+              aria-label={ label ?? name }
               className={ textareaClassName }
               rows={ config.rows ?? 4 }
               value={ formatValue( field.value ) }

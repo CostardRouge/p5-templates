@@ -604,6 +604,7 @@ function ShareField( {
       {multiline ? (
         <textarea
           readOnly
+          aria-label={ label }
           value={ value }
           rows={ 5 }
           onFocus={ ( event ) => event.currentTarget.select() }
@@ -615,6 +616,7 @@ function ShareField( {
       ) : (
         <input
           readOnly
+          aria-label={ label }
           value={ value }
           onFocus={ ( event ) => event.currentTarget.select() }
           className={ clsx(

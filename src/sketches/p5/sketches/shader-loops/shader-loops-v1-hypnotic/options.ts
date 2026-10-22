@@ -1,3 +1,7 @@
+import {
+  PALETTE_PRESET_OPTIONS, formulaStops
+} from "@/p5/utils/palettes.js";
+
 const PATTERN_OPTIONS = [
   {
     label: "Tunnel (infinite zoom)",
@@ -13,23 +17,49 @@ const PATTERN_OPTIONS = [
   }
 ];
 
-const PALETTE_OPTIONS = [
+// The four house formulas this sketch has always drawn itself (their ids are
+// what saved documents hold, so they keep their own GLSL path), drawn as
+// swatches, then the shared presets read through the palette ramp. The shared
+// "rainbow" and "oil-slick" would duplicate two of the four, and the shared
+// "iridescent" (the iridescent category's reference ramp) would collide with
+// this sketch's own "iridescent" id, which means its oil-slick spectrum.
+const OWN_PALETTES = [
   {
+    value: "iridescent",
     label: "Iridescent (oil-slick)",
-    value: "iridescent"
+    formula: "oil-slick"
   },
   {
+    value: "rainbow",
     label: "Rainbow",
-    value: "rainbow"
+    formula: "rainbow"
   },
   {
+    value: "purple",
     label: "Purple",
-    value: "purple"
+    formula: "purple"
   },
   {
+    value: "darkBlueYellow",
     label: "Dark blue / yellow",
-    value: "darkBlueYellow"
+    formula: "dark-blue-yellow"
   }
+];
+
+const PALETTE_OPTIONS = [
+  ...OWN_PALETTES.map( ( {
+    formula, ...option
+  } ) => ( {
+    ...option,
+    group: "Built in",
+    stops: formulaStops( formula ),
+    hardness: 0
+  } ) ),
+  ...PALETTE_PRESET_OPTIONS.filter( ( option ) => ![
+    "rainbow",
+    "oil-slick",
+    "iridescent"
+  ].includes( option.value ) )
 ];
 
 // Default values only — exposed at runtime as `options.sketch.*`.
@@ -137,7 +167,7 @@ export const formConfiguration: Record<string, any> = {
     fields: {
       palette: {
         label: "Palette",
-        component: "select",
+        component: "palette-picker",
         options: PALETTE_OPTIONS
       },
       hueCycles: {
@@ -190,7 +220,8 @@ export const formConfiguration: Record<string, any> = {
     label: "Scene",
     fields: {
       backgroundColor: {
-        component: "color",
+        component: "background",
+        palette: "../colors/palette",
         label: "Background color"
       },
       vignette: {

@@ -65,6 +65,7 @@ export default function RecordingCard( {
         <div className="absolute top-2 left-2 sm:top-3 sm:left-3 z-20">
           <input
             type="checkbox"
+            aria-label={ `Select ${ job.sketch }` }
             checked={ isSelected }
             onChange={ onToggleSelection }
             className="w-5 h-5 rounded border-2 border-white shadow-lg text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer bg-white/90 backdrop-blur-sm"
@@ -89,6 +90,7 @@ export default function RecordingCard( {
         <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-40">
           <StatusBadge
             status={ job.status }
+            reason={ job.error }
             className="shadow-lg backdrop-blur-sm"
           />
         </div>

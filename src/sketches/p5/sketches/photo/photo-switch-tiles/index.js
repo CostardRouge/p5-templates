@@ -10,6 +10,10 @@ import imageUtils from "@/p5/utils/imageUtils.js";
 import {
   getP5
 } from "@/p5/utils/sketch.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 const sketchState = sketch.state( () => ( {
   buffer: null
@@ -18,7 +22,7 @@ const sketchState = sketch.state( () => ( {
 sketch.setup( () => {
   const p = getP5();
 
-  p.background( ...options.sketch.backgroundColor );
+  paintBackground( resolveBackground( options.sketch.backgroundColor ) );
 
   sketchState.buffer = graphics.createAutoResizableGraphics(
     p.width,
@@ -32,7 +36,7 @@ sketch.draw( (
   const p = getP5();
 
   p.clear();
-  p.background( ...options.sketch.backgroundColor );
+  paintBackground( resolveBackground( options.sketch.backgroundColor ) );
 
   const rows = options.sketch.grid.rows ?? 16; // columns*p.height/p.width;
   const columns = options.sketch.grid.columns ?? 9; // rows*p.width/p.height;

@@ -11,6 +11,10 @@ import {
   drawRadialPattern,
   paletteStroke
 } from "../_shared.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 const sketchState = sketch.state( () => ( {
   pixilatedCanvas: null
@@ -34,12 +38,17 @@ sketch.draw( ( time ) => {
   const buffer = sketchState.pixilatedCanvas;
 
   p.clear();
-  p.background( ...( o.backgroundColor ?? [
-    0,
-    0,
-    0,
-    255
-  ] ) );
+  paintBackground( resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0,
+        255
+      ]
+    }
+  ) );
 
   if ( buffer ) {
     buffer.filter(

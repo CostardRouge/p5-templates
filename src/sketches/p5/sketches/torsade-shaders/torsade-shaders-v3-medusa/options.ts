@@ -1,3 +1,6 @@
+import {
+  shaderPaletteFormFields, shaderPaletteFormValues
+} from "@/p5/utils/palettes.js";
 
 export const formValues = {
   layout: {
@@ -22,6 +25,7 @@ export const formValues = {
     rotationMaxMax: 5
   },
   colors: {
+    ...shaderPaletteFormValues,
     weightMaxMin: 50,
     weightMaxMax: 100,
     hueSpeed: 1,
@@ -187,6 +191,7 @@ export const formConfiguration: Record<string, any> = {
     component: "nested-object",
     label: "Colors",
     fields: {
+      ...shaderPaletteFormFields,
       weightMaxMin: {
         label: "Base weight min",
         component: "slider",
@@ -336,7 +341,8 @@ export const formConfiguration: Record<string, any> = {
     }
   },
   backgroundColor: {
-    component: "color",
+    component: "background",
+    palette: "colors/palette",
     label: "Background color"
   }
 };

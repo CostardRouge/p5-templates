@@ -36,7 +36,14 @@ export async function getJSONSketchOptions(
     const options = await loaders.loadOptionsJson( sketchPath );
 
     return ( options as Partial<SketchOption> ) ?? {};
-  } catch {
+  } catch( error ) {
+    // A missing file resolves to {} upstream; reaching here means the module
+    // threw at import. Say so: silently it is a sketch with no form at all.
+    console.warn(
+      `[sketch options] ${ engineId }:${ sketchName } options.json failed to load:`,
+      error
+    );
+
     return {};
   }
 }
@@ -113,7 +120,15 @@ export async function getSketchMeta(
         } as unknown as FieldConfig
       }
     };
-  } catch {
+  } catch( error ) {
+    // An options.ts that imports the p5 runtime (anything reaching
+    // utils/sketch.js) throws here, server-side — and the studio then shows
+    // the sketch with no controls at all. Keep that failure visible.
+    console.warn(
+      `[sketch options] ${ engineId }:${ sketchName } options.ts failed to load:`,
+      error
+    );
+
     return {};
   }
 }

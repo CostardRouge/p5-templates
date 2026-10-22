@@ -6,6 +6,16 @@ import animation from "@/p5/utils/animation.js";
 import {
   createInstancedFieldRenderer
 } from "@/p5/utils/noiseFieldGpu.js";
+import {
+  PALETTE_IRIDESCENT_GLSL
+} from "@/p5/utils/braidShader.js";
+import {
+  shaderPalette
+} from "@/p5/utils/palettes.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // torsade-shaders v3 — medusa.
@@ -69,15 +79,7 @@ const VERTEX = `
 
   // Oil-slick / thin-film iridescence: a cosine spectrum (IQ palette) with the
   // RGB channels phase-shifted so the hue sweeps cleanly through the rainbow.
-  vec3 iridescent(float t) {
-    vec3 spectrum = 0.5 + 0.5 * cos(
-      TAU * (uHueSpread * t + vec3(0.0, 0.33, 0.67)) + uHuePhase
-    );
-
-    float luma = dot(spectrum, vec3(0.299, 0.587, 0.114));
-
-    return clamp(mix(vec3(luma), spectrum, uSaturation) * uBrightness, 0.0, 1.0);
-  }
+  ${ PALETTE_IRIDESCENT_GLSL }
 
   void computeInstance(
     float col, float row,
@@ -235,13 +237,19 @@ sketch.draw( () => {
 
   p.clear();
 
-  const bg = o.backgroundColor ?? [
-    0,
-    0,
-    0
-  ];
+  const bg = resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0
+      ],
+      palette: o.colors?.palette
+    }
+  );
 
-  p.background( ...bg );
+  paintBackground( bg );
 
   // Glow first (underneath), then the medusa dots composite over it.
   drawGlow(
@@ -273,11 +281,17 @@ sketch.draw( () => {
     shadowSteps = Math.floor( shadowsCount / shadowIndexStep + 1e-9 ) + 1;
   }
 
+  const palette = shaderPalette( colors );
+
   field.render( {
+    textures: palette.textures,
     columns,
     rows: shadowSteps * spiralCount,
     background: bg,
     clearAlpha: 0,
+    // A gradient: clear to transparent black, or its first colour, left under
+    // alpha 0, is added over the whole canvas. The plain colour keeps its look.
+    alphaOver: !!bg.spec,
     uniforms: {
       uT: time,
       uXCount: xCount,
@@ -301,6 +315,7 @@ sketch.draw( () => {
       uEndcapWeight: endcap.weight ?? 4,
       uEndcapDarken: endcap.darken ?? 32,
       uHueSpeed: colors.hueSpeed ?? 1,
+      uPaletteOn: palette.uniforms.uPaletteOn,
       uHueSpread: colors.hueSpread ?? 1,
       uHuePhase: colors.huePhase ?? 0,
       uDepthHue: colors.depthHue ?? 1,

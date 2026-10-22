@@ -186,6 +186,7 @@ export default function SlideThumbnail( {
           <input
             ref={ inputRef }
             type="text"
+            aria-label="Slide name"
             value={ editedName }
             onChange={ ( e ) => setEditedName( e.target.value ) }
             onBlur={ handleRenameSubmit }

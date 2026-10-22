@@ -5,7 +5,7 @@ import {
   Popover, PopoverButton, PopoverPanel
 } from "@headlessui/react";
 import {
-  Activity, ChevronDown, Crosshair, Plus, RotateCcw, Trash2, X
+  ChevronDown, Crosshair, Plus, RotateCcw, Trash2, X
 } from "lucide-react";
 import clsx from "clsx";
 import {
@@ -31,15 +31,20 @@ import {
 import {
   interactionBindingsEnabled
 } from "@/lib/interactionBindings";
-// bindings.js is already a small, pure module statically imported by the
-// engine runtime for every sketch (see options.js) — importing it here too is
-// no added weight. defaults.js (the ~1000-line panel/values data) is dynamic
-// -imported lazily inside enableSourceInputs below, so an editor session that
-// never binds a live input source never pulls it into the client bundle.
+import BindingGlyph from "./BindingGlyph";
 import {
-  needsInteractionBlock
-} from "@/p5/utils/interaction/bindings.js";
+  type BindingFormIO,
+  enableSourceInputs as enableSourceInputs_,
+  pruneInteractionIfUnused as pruneInteractionIfUnused_,
+  writeBindingList
+} from "./bindingWrites";
+import {
+  describeFieldBinding, useResolvedDeclared
+} from "./useFieldBinding";
 import ControlledColorInput from "../ControlledColorInput/ControlledColorInput";
+import {
+  resolveAxes3D
+} from "../ControlledVector3DInput/utils/vector3dMath";
 import {
   type Binding,
   type BindingKind,
@@ -66,7 +71,6 @@ import {
   encodeSource,
   getSketchScope,
   interactiveScopeFor,
-  interactionEnablePaths,
   makeDefaultBinding,
   SEQUENCE_MODE_OPTIONS,
   SOURCE_CATEGORIES,
@@ -82,6 +86,10 @@ type Props = {
   fieldPath: string;
   component: FieldConfig[ "component" ];
   config: FieldConfig;
+  // Beside a one-line bar control: the button takes the bar's own height on
+  // both breakpoints (h-10 on a phone, h-7 from md) so the pair reads as one
+  // row. Elsewhere (checkbox row, pad label row) it stays a compact h-7.
+  matchBar?: boolean;
 };
 
 // Opaque black — the stop a colour ramp falls back to when the field carries
@@ -315,7 +323,8 @@ function SourceBar( {
 export default function BindingAffordance( {
   fieldPath,
   component,
-  config
+  config,
+  matchBar = false
 }: Props ) {
   const {
     setValue, register, getValues
@@ -337,6 +346,10 @@ export default function BindingAffordance( {
     selLayer,
     setSelLayer
   ] = React.useState( 0 );
+
+  // A control the sketch itself declared on this field, wired because the
+  // connected port maps it: never in the form, but it drives the field.
+  const declared = useResolvedDeclared( target );
 
   // Off unless the interaction-bindings plugin is enabled, and only for sketch
   // parameters (so non-bindable panels — size, animation, … — show nothing).
@@ -393,40 +406,36 @@ export default function BindingAffordance( {
   // control.
   const bindingPath = `${ bindingsPath }.${ index }`;
 
-  // Strip the plugin-managed `interaction` block once no binding needs it any
-  // more — the inverse of enableSourceInputs' on-demand seed below. Checked
-  // after every bindings-array write (add / remove / reset) and every source-
-  // category switch, so a sketch never carries the block, or shows its
+  // The write path is shared with the agent's bindings.* commands
+  // (bindingWrites.ts): store the list, flip a live source's enable flags on,
+  // prune the plugin-managed `interaction` block once nothing needs it —
+  // checked after every bindings-array write (add / remove / reset) and every
+  // source-category switch, so a sketch never carries the block, or shows its
   // settings panel (gated the same way in GenericObjectForm), once its last
-  // interactive binding is gone. Only the `interactive` namespace is pruned —
-  // a sketch-DECLARED block at `${scope}.interaction` is a real sketch
-  // parameter (hand-tracking, audio, …) and is never touched.
-  const pruneInteractionIfUnused = ( nextList: Binding[] ) => {
-    if ( needsInteractionBlock( nextList ) ) {
-      return;
-    }
-
-    if ( getValues( `${ interactiveScope }.interaction` ) !== undefined ) {
-      setValue(
-        `${ interactiveScope }.interaction`,
-        undefined,
-        {
-          shouldDirty: true
-        }
-      );
-    }
-  };
-
-  const writeBindings = ( next: Binding[] ) => {
-    setValue(
-      bindingsPath,
-      next,
+  // interactive binding is gone.
+  const io: BindingFormIO = {
+    getValues,
+    setValue: (
+      path, value
+    ) => setValue(
+      path,
+      value,
       {
         shouldDirty: true
       }
-    );
-    pruneInteractionIfUnused( next );
+    )
   };
+  const pruneInteractionIfUnused = ( nextList: Binding[] ) => pruneInteractionIfUnused_(
+    io,
+    interactiveScope,
+    nextList
+  );
+
+  const writeBindings = ( next: Binding[] ) => writeBindingList(
+    io,
+    interactiveScope,
+    next
+  );
 
   const setField = (
     subPath: string, value: unknown
@@ -440,55 +449,12 @@ export default function BindingAffordance( {
     );
   };
 
-  // Picking an interaction input source should make it actually produce a
-  // channel — flip the matching `interaction.*` enable flags on so the camera /
-  // mic / sensor for that source boots immediately. The flags land wherever
-  // the interaction block actually lives: a sketch-DECLARED block at the
-  // sketch scope (hand-tracking, audio, … — their own panel and sketch code
-  // read it, and the engine gives it precedence) is written in place;
-  // otherwise the plugin-managed block in the `interactive` namespace is
-  // seeded from an inert clone of the shared defaults on first use, then
-  // flipped. The seed never touches sketch parameters, and is pruned again by
-  // pruneInteractionIfUnused once no binding needs it.
-  const enableSourceInputs = async( source: string ) => {
-    const paths = interactionEnablePaths( source );
-
-    // Generators (and unknown ids) have no source to enable — and must not
-    // seed an interaction block they'd never read.
-    if ( paths.length === 0 ) {
-      return;
-    }
-
-    let interactionScope = scope;
-
-    if ( getValues( `${ scope }.interaction` ) === undefined ) {
-      interactionScope = interactiveScope;
-
-      if ( getValues( `${ interactiveScope }.interaction` ) === undefined ) {
-        const {
-          inertInteractionFormValues
-        } = await import( "@/p5/utils/interaction/defaults.js" );
-
-        setValue(
-          `${ interactiveScope }.interaction`,
-          inertInteractionFormValues(),
-          {
-            shouldDirty: true
-          }
-        );
-      }
-    }
-
-    for ( const path of paths ) {
-      setValue(
-        `${ interactionScope }.interaction.${ path }`,
-        true,
-        {
-          shouldDirty: true
-        }
-      );
-    }
-  };
+  const enableSourceInputs = ( source: string ) => enableSourceInputs_(
+    io,
+    scope,
+    interactiveScope,
+    source
+  );
 
   // Append a new layer (binding) for this parameter and select it. A continuous
   // target starts on the oscillator (see makeDefaultBinding) — a generator, so
@@ -499,11 +465,32 @@ export default function BindingAffordance( {
   // Boolean and enum default to no smoothing: a lagged signal there delays the
   // flip rather than calming it.
   const defaultSmoothing =
-    kind === "vector2d"
+    kind === "vector2d" || kind === "vector3d"
       ? 0.15
       : ( kind === "boolean" || kind === "enum" ? 0 : 0.2 );
 
+  // A 3D vector carries one range per axis (shared min/max, then per-axis
+  // overrides), which `fieldDomain`'s single min/max cannot express.
+  const axes3 = kind === "vector3d" ? resolveAxes3D( config as any ) : null;
+  const axis3Of = ( axis: "x" | "y" | "z" ) => ( axis === "x"
+    ? axes3!.xAxis
+    : axis === "y" ? axes3!.yAxis : axes3!.zAxis );
+
   const defaultMapping = () => {
+    if ( kind === "vector3d" ) {
+      const span = ( axis: "x" | "y" | "z" ) => ( {
+        min: axis3Of( axis ).min,
+        max: axis3Of( axis ).max
+      } );
+
+      return {
+        x: span( "x" ),
+        y: span( "y" ),
+        z: span( "z" ),
+        curve: "linear"
+      };
+    }
+
     if ( kind === "vector2d" ) {
       return {
         x: {
@@ -783,12 +770,29 @@ export default function BindingAffordance( {
   // by the resolver — so it works for input channels AND generators alike.
   const meterVar = bindingSignalVarName( target );
   const category = sourceCategory( binding?.source );
-  const enabled = binding?.enabled !== false;
+  // The glyph speaks for the field, not for the layer being edited: driven as
+  // soon as any layer on it plays, whichever one the popover has selected.
+  const outline = describeFieldBinding(
+    [
+      ...declared,
+      ...list
+    ],
+    target
+  );
+  const playing = outline.live;
+  // Declared and nothing hand-made: the glyph says driven, the title says by
+  // what — and that a modulation added here would play on top of it (a
+  // hand-authored layer lands last in the fold, so it wins).
+  const title = bound
+    ? "Edit modulation"
+    : outline.declared.length > 0
+      ? `Driven by ${ outline.declared.join( ", " ) } (declared by the sketch) — click to add your own modulation`
+      : "Modulate this parameter";
 
   return (
     <Popover className="relative shrink-0">
       <PopoverButton
-        title={ bound ? "Edit modulation" : "Modulate this parameter" }
+        title={ title }
         onClick={ () => {
           // First click on an unbound field creates the first layer AND opens
           // the popover (no preventDefault) so it can be configured immediately.
@@ -797,26 +801,18 @@ export default function BindingAffordance( {
           }
         } }
         className={ clsx(
-          "relative grid h-7 w-7 place-items-center rounded-md border transition-colors outline-none focus-visible:ring-1 focus-visible:ring-focus",
-          bound && enabled
-            ? "border-focus/60 text-focus"
+          "relative grid place-items-center rounded-md border transition-colors outline-none focus-visible:ring-1 focus-visible:ring-focus",
+          matchBar ? "h-10 w-10 md:h-7 md:w-7" : "h-7 w-7",
+          playing
+            ? "border-focus/60 text-focus hover:bg-hover"
             : bound
-              ? "border-theme text-label"
+              ? "border-theme text-label hover:text-foreground hover:bg-hover"
               : "border-theme text-label/60 hover:text-foreground hover:bg-hover"
         ) }
       >
-        {/* Live VU glow behind the icon, driven purely by the binding's CSS var. */}
-        {bound && enabled && (
-          <span
-            aria-hidden
-            className="pointer-events-none absolute inset-0 rounded-md bg-focus/30"
-            style={ {
-              opacity: `var(${ meterVar }, 0)`,
-              transform: `scale(calc(0.4 + 0.6 * var(${ meterVar }, 0)))`
-            } }
-          />
-        )}
-        <Activity className="relative h-3.5 w-3.5" />
+        {/* No pulse: the moving value is on the field's own bar now. The
+            diamond only says which state the field is in. */}
+        <BindingGlyph state={ playing ? "live" : bound ? "muted" : "free" } />
       </PopoverButton>
 
       <PopoverPanel
@@ -1368,6 +1364,35 @@ export default function BindingAffordance( {
             )}
 
             {/* Colour: the two stops the signal crossfades between. */}
+            {/* 3D: one range per axis; the signal sweeps all three at once,
+                so min → max is the path between two corners of the box. */}
+            {kind === "vector3d" && axes3 && (
+              <div className="flex flex-col gap-1">
+                {( [
+                  "x",
+                  "y",
+                  "z"
+                ] as const ).flatMap( ( axis ) => ( [
+                  "min",
+                  "max"
+                ] as const ).map( ( end ) => (
+                  <ControlledSliderInput
+                    key={ `${ axis }.${ end }` }
+                    name={ `${ bindingPath }.mapping.${ axis }.${ end }` }
+                    label={ `${ axis.toUpperCase() } ${ end }` }
+                    min={ axis3Of( axis ).min }
+                    max={ axis3Of( axis ).max }
+                    step={ axis3Of( axis ).step }
+                    { ...resetFor(
+                      `mapping.${ axis }.${ end }`,
+                      binding.mapping?.[ axis ]?.[ end ],
+                      axis3Of( axis )[ end ]
+                    ) }
+                  />
+                ) ) )}
+              </div>
+            )}
+
             {kind === "color" && (
               <div className="flex flex-col gap-1">
                 <ControlledColorInput

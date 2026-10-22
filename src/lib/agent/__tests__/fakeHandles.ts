@@ -1,0 +1,549 @@
+import type {
+  ExportVariant
+} from "../../export/variants";
+import {
+  memoryBackend
+} from "../../gallery/memoryBackend";
+import {
+  GalleryStore
+} from "../../gallery/store";
+import type {
+  StudioHandles
+} from "../handles";
+
+/** A studio without React: a plain document, recorded writes and calls. */
+export function fakeHandles(
+  document: Record<string, any>, overrides: Partial<StudioHandles> = {}
+) {
+  const writes: [ string, unknown ][] = [];
+  const calls: string[] = [];
+  let active: number | undefined;
+  let variants: ExportVariant[] = [];
+  let opened = "p5/noise/noise-v1";
+  let made = 0;
+  // A document handed to the next page, consumed when that page "mounts" (open).
+  let staged: unknown = null;
+
+  function makeVariant( key: string ): ExportVariant {
+    made += 1;
+
+    return {
+      id: `v${ made }`,
+      name: key === "still" ? "Still image" : "Square",
+      kind: key === "still" ? "image" : "video",
+      size: key === "still" ? null : {
+        width: 1080,
+        height: 1080
+      },
+      framerate: null,
+      format: "mp4",
+      frameCount: 10,
+      slides: "current",
+      delivery: "separate",
+      sizeStrategy: "smallest"
+    };
+  }
+
+  function at( path?: string ) {
+    if ( !path ) {
+      return document;
+    }
+
+    return path.split( "." ).reduce<any>(
+      (
+        node, key
+      ) => node?.[ key ],
+      document
+    );
+  }
+
+  function put(
+    path: string, value: unknown
+  ) {
+    const keys = path.split( "." );
+    const last = keys.pop() as string;
+    const parent = keys.reduce<any>(
+      (
+        node, key
+      ) => {
+        node[ key ] ??= {};
+
+        return node[ key ];
+      },
+      document
+    );
+
+    parent[ last ] = value;
+  }
+
+  const handles: StudioHandles = {
+    sketchId: "p5/voronoi/voronoi-v1-cells",
+    engineId: "p5",
+    getValues: ( path ) => at( path ),
+    setValue: (
+      path, value
+    ) => {
+      writes.push( [
+        path,
+        value
+      ] );
+      put(
+        path,
+        value
+      );
+    },
+    formConfiguration: {
+      render: {
+        component: "nested-object",
+        fields: {
+          hueSpeed: {
+            component: "slider",
+            min: 0,
+            max: 3
+          },
+          palette: {
+            component: "select",
+            options: [
+              {
+                value: "rainbow"
+              },
+              {
+                value: "sunset"
+              }
+            ]
+          }
+        }
+      }
+    },
+    formValues: {
+      render: {
+        hueSpeed: 0,
+        palette: "rainbow"
+      }
+    },
+    activeSlide: () => active,
+    slides: {
+      select: ( index ) => {
+        calls.push( `select ${ index }` );
+        active = index;
+      },
+      add: () => {
+        calls.push( "add" );
+        document.slides = [
+          ...( document.slides ?? [] ),
+          {
+            name: `Slide ${ ( document.slides ?? [] ).length + 1 }`,
+            content: []
+          }
+        ];
+        active = document.slides.length - 1;
+      },
+      duplicate: ( index ) => {
+        calls.push( `duplicate ${ index }` );
+        document.slides.splice(
+          index + 1,
+          0,
+          structuredClone( document.slides[ index ] )
+        );
+        active = index + 1;
+      },
+      remove: ( index ) => {
+        calls.push( `remove ${ index }` );
+        document.slides.splice(
+          index,
+          1
+        );
+        active = document.slides.length ? Math.min(
+          index,
+          document.slides.length - 1
+        ) : undefined;
+      },
+      move: (
+        from, to
+      ) => {
+        calls.push( `move ${ from } ${ to }` );
+        const [
+          slide
+        ] = document.slides.splice(
+          from,
+          1
+        );
+
+        document.slides.splice(
+          to,
+          0,
+          slide
+        );
+        active = to;
+      },
+      rename: (
+        index, name
+      ) => {
+        calls.push( `rename ${ index } ${ name }` );
+        document.slides[ index ].name = name;
+      }
+    },
+    history: {
+      undo: () => calls.push( "undo" ),
+      redo: () => calls.push( "redo" ),
+      canUndo: () => true,
+      canRedo: () => false
+    },
+    playback: {
+      isPlaying: () => true,
+      play: () => calls.push( "play" ),
+      pause: () => calls.push( "pause" ),
+      seek: ( progress ) => calls.push( `seek ${ progress }` ),
+      progress: () => 0.25
+    },
+    timing: () => ( {
+      frameRate: 60,
+      duration: 12,
+      totalFrames: 720
+    } ),
+    snapshot: async() => new Blob( [
+      "png"
+    ] ),
+    imageResult: async(
+      _blob, maxEdge, format, note
+    ) => ( {
+      kind: "image",
+      mimeType: format === "png" ? "image/png" : "image/jpeg",
+      data: "QQ==",
+      width: maxEdge,
+      height: maxEdge,
+      note
+    } ),
+    selectPath: ( path ) => calls.push( `selectPath ${ path }` ),
+    makeItem: (
+      kind, seed
+    ) => ( {
+      type: kind,
+      enabled: true,
+      position: {
+        x: 0.5,
+        y: 0.5
+      },
+      ...seed
+    } ),
+    validateDocument: ( doc: any ) => ( {
+      issues: [],
+      normalized: doc
+    } ),
+    randomize: ( basePath ) => calls.push( `randomize ${ basePath }` ),
+    saveFile: async(
+      _blob, name
+    ) => ( {
+      path: `/out/${ name }`,
+      bytes: 3
+    } ),
+    relayConnected: () => true,
+    navigation: {
+      catalogue: () => [
+        {
+          engine: "p5",
+          category: "voronoi",
+          name: "voronoi-v1-cells",
+          description: "Coloured cells drifting.",
+          tags: [
+            "geometry",
+            "flat-colour"
+          ]
+        },
+        {
+          engine: "p5",
+          category: "voronoi",
+          name: "voronoi-v2-draft",
+          hiddenFromGallery: true
+        },
+        {
+          engine: "threejs",
+          category: "dragon",
+          name: "dragon-corridor"
+        }
+      ],
+      open: ( href ) => {
+        calls.push( `open ${ href }` );
+        opened = href.replace(
+          "/sketches/",
+          ""
+        );
+        staged = null;
+      },
+      currentSketch: () => opened
+    },
+    addAsset: async(
+      file, kind, slide
+    ) => {
+      const path = `${ slide === undefined ? "global" : `slide-${ slide }` }/${ kind }/${ file.name }`;
+      const base = slide === undefined ? "assets" : `slides.${ slide }.assets`;
+
+      put(
+        `${ base }.${ kind }`,
+        [
+          ...( at( `${ base }.${ kind }` ) ?? [] ),
+          path
+        ]
+      );
+      calls.push( `asset ${ path } ${ file.size }` );
+
+      return path;
+    },
+    exports: {
+      supported: () => true,
+      presets: [
+        {
+          key: "square",
+          label: "Square",
+          size: {
+            width: 1080,
+            height: 1080
+          }
+        },
+        {
+          key: "still",
+          label: "Still image",
+          kind: "image"
+        }
+      ],
+      list: () => variants,
+      add: ( key ) => {
+        const variant = makeVariant( key );
+
+        variants.push( variant );
+
+        return variant;
+      },
+      make: makeVariant,
+      patch: (
+        id, patch
+      ) => {
+        const index = variants.findIndex( ( variant ) => variant.id === id );
+
+        variants[ index ] = {
+          ...variants[ index ],
+          ...patch
+        };
+      },
+      remove: ( id ) => {
+        variants = variants.filter( ( variant ) => variant.id !== id );
+      },
+      nativeFramerate: () => 30,
+      run: async(
+        list, onArtifacts, onProgress
+      ) => {
+        calls.push( `export ${ list.map( ( variant ) => variant.name ).join( "," ) }` );
+
+        const items = list.map( ( variant ) => {
+          onArtifacts(
+            variant.id,
+            [
+              {
+                fileName: `${ variant.name }.${ variant.kind === "image" ? "png" : variant.format }`,
+                blob: new Blob( [
+                  "x"
+                ] )
+              }
+            ],
+            `${ variant.name }.zip`
+          );
+
+          return {
+            variantId: variant.id,
+            status: "done" as const,
+            percentage: 100,
+            phase: "encoding" as const,
+            phaseProgress: 1
+          };
+        } );
+
+        onProgress( items );
+
+        return items;
+      }
+    },
+    // Only the second item is "on screen", drawn at its own offset.
+    itemBounds: async( path ) => path === "content.1" ? {
+      x: 0.1,
+      y: 0.1,
+      w: 0.2,
+      h: 0.1
+    } : null,
+    sketchLayerSeed: async( path ) => {
+      if ( path !== "noise/noise-v1" ) {
+        throw new Error( `no sketch "${ path }" can be a layer` );
+      }
+
+      return {
+        sketch: path,
+        settings: {
+          amount: 1
+        }
+      };
+    },
+    addHudForControl: (
+      registeredName, kind
+    ) => {
+      const kinds = registeredName.endsWith( "hueSpeed" ) ? [
+        "hud-counter",
+        "hud-gauge",
+        "hud-sparkline"
+      ] : [];
+      const chosen = kind ?? kinds[ 0 ];
+
+      if ( !chosen || !kinds.includes( chosen ) ) {
+        return {
+          path: null,
+          kinds
+        };
+      }
+      calls.push( `hud ${ registeredName } ${ chosen }` );
+
+      return {
+        path: "content.0",
+        kinds
+      };
+    },
+    gallery: {
+      store: new GalleryStore( memoryBackend() ),
+      thumbnail: async() => new Blob(
+        [
+          "jpg"
+        ],
+        {
+          type: "image/jpeg"
+        }
+      ),
+      importDocument: ( options ) => {
+        calls.push( "import" );
+        Object.assign(
+          document,
+          options as Record<string, unknown>
+        );
+
+        return {
+          ok: true
+        };
+      },
+      stageImport: ( options ) => {
+        calls.push( "stage" );
+        staged = options;
+
+        return true;
+      },
+      importPending: () => staged !== null
+    },
+    contactSheet: async(
+      frames, maxEdge, format, note
+    ) => {
+      calls.push( `sheet ${ frames.map( ( frame ) => frame.label ).join( "|" ) }` );
+
+      return {
+        kind: "image",
+        mimeType: format === "png" ? "image/png" : "image/jpeg",
+        data: "QQ==",
+        width: maxEdge,
+        height: maxEdge,
+        note
+      };
+    },
+    transaction: async(
+      label, fn
+    ) => {
+      calls.push( `begin ${ label }` );
+      try {
+        return await fn();
+      } finally {
+        calls.push( `end ${ label }` );
+      }
+    },
+    // The affordance's model, reduced: sliders bind as continuous, selects as
+    // enum; an oscillator over the control's range by default.
+    bindings: {
+      enabled: () => true,
+      kindFor: ( component ) => component === "slider" ? "continuous" : component === "select" ? "enum" : null,
+      scope: ( slide ) => slide === undefined ? "interactive" : `slides.${ slide }.interactive`,
+      // As the picker: every scalar kind takes the input channels (a vector
+      // one projected) and the generators; a pad takes vector channels only.
+      sources: ( kind ) => kind === "vector2d" ? [
+        {
+          source: "mouse",
+          label: "Mouse"
+        }
+      ] : [
+        {
+          source: "mouse",
+          project: "x",
+          label: "Mouse · X"
+        },
+        {
+          source: "audio.bass",
+          label: "Audio · Bass"
+        },
+        {
+          source: "oscillator",
+          label: "Oscillator"
+        },
+        {
+          source: "ramp",
+          label: "Ramp"
+        }
+      ],
+      generatorSeed: (
+        source, binding
+      ) => source === "ramp" && !binding.ramp ? {
+        ramp: {
+          easing: "linear",
+          count: 1
+        }
+      } : {},
+      makeDefault: (
+        target, _slide, source, project
+      ) => ( {
+        id: `b-${ target }`,
+        source: source ?? "oscillator",
+        ...( project ? {
+          project
+        } : {} ),
+        target,
+        kind: target.endsWith( "palette" ) ? "enum" : "continuous",
+        oscillator: {
+          wave: "sine",
+          cycles: 1,
+          phase: 0
+        },
+        mapping: {
+          min: 0,
+          max: 3,
+          curve: "linear"
+        },
+        smoothing: 0.2,
+        enabled: true,
+        weight: 1,
+        blend: "replace"
+      } ),
+      write: async(
+        slide, list, enableSource
+      ) => {
+        const base = slide === undefined ? "interactive" : `slides.${ slide }.interactive`;
+
+        put(
+          `${ base }.bindings`,
+          list
+        );
+        calls.push( `bindings ${ base } ${ list.length }${ enableSource ? ` enable ${ enableSource }` : "" }` );
+      }
+    },
+    ...overrides
+  };
+
+  return {
+    handles,
+    writes,
+    calls,
+    document,
+    setActive: ( index: number | undefined ) => {
+      active = index;
+    }
+  };
+}

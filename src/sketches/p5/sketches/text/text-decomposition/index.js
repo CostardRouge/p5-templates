@@ -5,14 +5,23 @@ import cache from "@/p5/utils/cache.js";
 import {
   getP5
 } from "@/p5/utils/sketch.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 sketch.draw( () => {
   const p = getP5();
 
   p.clear();
-  p.background( ...( options.sketch?.backgroundColor ?? [
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    options.sketch?.backgroundColor,
+    {
+      fallback: [
+        0
+      ]
+    }
+  ) );
 
   const horizontalMargin = 0.05;
   const verticalMargin = 0.01;

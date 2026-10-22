@@ -1,3 +1,6 @@
+import {
+  housePaletteField
+} from "@/p5/utils/palettes.js";
 export const formValues = {
   points: {
     count: 11,
@@ -14,6 +17,7 @@ export const formValues = {
     tension: 1.5
   },
   stroke: {
+    palette: "rainbow",
     weight: 27,
     glow: 2,
     // Variable thickness profile: 0..2 multipliers on `weight` at each end of the
@@ -178,6 +182,9 @@ export const formConfiguration: Record<string, any> = {
     label: "Stroke",
     component: "nested-object",
     fields: {
+      palette: housePaletteField( [
+        "rainbow"
+      ] ),
       weight: {
         label: "Weight (middle of the curve)",
         component: "slider",
@@ -319,7 +326,8 @@ export const formConfiguration: Record<string, any> = {
     }
   },
   backgroundColor: {
-    component: "color",
+    component: "background",
+    palette: "stroke/palette",
     label: "Background color"
   }
 };

@@ -58,8 +58,11 @@ export async function POST( req: NextRequest ) {
       if ( bullJob ) {
         const state = await bullJob.getState();
 
+        // Not started yet. Every job is added with a priority, so a queued
+        // job is "prioritized" in BullMQ, not "waiting".
         if ( [
           "waiting",
+          "prioritized",
           "delayed"
         ].includes( state ) ) {
           await bullJob.remove();

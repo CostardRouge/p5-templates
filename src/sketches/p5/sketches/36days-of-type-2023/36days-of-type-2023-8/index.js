@@ -13,6 +13,10 @@ import animation from "@/p5/utils/animation.js";
 import string from "@/p5/utils/string.js";
 
 import addScreenPositionFunction from "@/utils/addScreenPositionFunction.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 const interactive = {
   currentTimeValue: 0,
@@ -47,7 +51,7 @@ sketch.setup( async() => {
     "webgl"
   );
 
-  p.background( ...getBackgroundColor() );
+  paintBackground( getBackgroundColor() );
 
   // screenPosition has to read the 3D buffer's matrices, not the 2D canvas'.
   await addScreenPositionFunction( shape.graphics );
@@ -102,11 +106,17 @@ function createGridAlphaPoints(
 }
 
 const getBackgroundColor = () =>
-  options.sketch?.backgroundColor ?? [
-    246,
-    235,
-    225
-  ];
+  resolveBackground(
+    options.sketch?.backgroundColor,
+    {
+      fallback: [
+        246,
+        235,
+        225
+      ],
+      palette: options.sketch.colors?.palette
+    }
+  );
 
 sketch.draw( () => {
   const p = getP5();
@@ -125,7 +135,7 @@ sketch.draw( () => {
   }
 
   p.clear();
-  p.background( ...getBackgroundColor() );
+  paintBackground( getBackgroundColor() );
   g.clear();
 
   const size = options.sketch?.shape?.size * p.width ?? p.width;
@@ -303,7 +313,7 @@ sketch.draw( () => {
     const hueMultiplier = options.sketch?.color?.hueMultiplier ?? 2;
     const opacityFactor = options.sketch?.color?.opacityFactor ?? 1.5;
 
-    const tint = colors.rainbow( {
+    const tint = colors.palette( options.sketch.colors?.palette )( {
       hueOffset: animation.circularProgression,
       hueIndex: p.map(
         hue,

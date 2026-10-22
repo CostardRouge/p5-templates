@@ -26,6 +26,15 @@ export function useInterval( {
 }: UseIntervalOptions ) {
   const intervalRef = useRef<NodeJS.Timeout | null>( null );
   const isExecutingRef = useRef( false );
+  // The latest callback, read when the timer fires. Depending on `callback`
+  // directly restarted the interval on every render that passed a new inline
+  // function — the studio re-renders on every edit, so its 10 s autosave
+  // never got to fire while someone was actually editing.
+  const callbackRef = useRef( callback );
+
+  useEffect( () => {
+    callbackRef.current = callback;
+  } );
 
   const execute = useCallback(
     async() => {
@@ -35,7 +44,7 @@ export function useInterval( {
 
       try {
         isExecutingRef.current = true;
-        await callback();
+        await callbackRef.current();
       } catch( error ) {
         console.error(
           "[useInterval] Callback execution failed:",
@@ -46,7 +55,6 @@ export function useInterval( {
       }
     },
     [
-      callback,
       preventConcurrent
     ]
   );

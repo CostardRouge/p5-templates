@@ -2,7 +2,7 @@ import dynamic from "next/dynamic";
 import clsx from "clsx";
 import type React from "react";
 import {
-  useCallback, useEffect, useRef, useState
+  useCallback, useEffect, useMemo, useRef, useState
 } from "react";
 import {
   createPortal
@@ -10,7 +10,7 @@ import {
 import {
   FormProvider, useFieldArray, useWatch
 } from "react-hook-form";
-import initOptions from "@/utils/initOptions";
+import parseImportedOptions from "@/utils/parseImportedOptions";
 import {
   withUiSoundSuppressed
 } from "@/lib/uiSound";
@@ -28,11 +28,15 @@ import type {
 import useBrowserRecordingSupported from "./components/CaptureActions/hooks/useBrowserRecordingSupported";
 import useDeclaredBindings from "./hooks/useDeclaredBindings";
 import OptionsPanel from "./components/OptionsPanel";
+import StudioCommands from "./components/StudioCommands";
+import CanvasItemMenu from "./components/CanvasItemMenu";
 import {
   FormUndoRedo
 } from "./components/FormUndoRedo";
 import RecordingLockBanner from "./components/RecordingLockBanner";
-import ImportSuccessBanner from "./components/ImportSuccessBanner";
+import ImportSuccessBanner, {
+  type ImportBannerState
+} from "./components/ImportSuccessBanner";
 import SketchSettings from "./components/SketchSettings/SketchSettings";
 import CaptureDialog from "./components/CaptureDialog";
 import TransportBar from "./components/TransportBar";
@@ -145,13 +149,13 @@ export default function SketchOptions( {
     setBannerCloning
   ] = useState( false );
 
-  // Success banner shown above the options panel after an import applies —
-  // covers both the manual Import button and the sketches-listing handoff,
-  // since both funnel through handleImportOptions below.
+  // Banner shown above the options panel after an import — applied, or
+  // refused — covering both the manual Import button and the
+  // sketches-listing handoff, since both funnel through handleImportOptions.
   const [
     importBanner,
     setImportBanner
-  ] = useState<string | null>( null );
+  ] = useState<ImportBannerState | null>( null );
 
   // The capture dialog: opened by the transport bar's record dot and, in the
   // docked layout, by the top bar's Export button. One dialog, one mounted
@@ -506,10 +510,23 @@ export default function SketchOptions( {
   );
 
   const handleImportOptions = ( importedOptions: SketchOption ) => {
-    const processedOptions = initOptions( importedOptions );
+    // Strict, not initOptions: a file that does not parse used to reset the
+    // whole document to blank defaults and still report success.
+    const parsed = parseImportedOptions( importedOptions );
 
-    reset( processedOptions );
-    setImportBanner( "Options imported successfully" );
+    if ( !parsed.ok ) {
+      setImportBanner( {
+        tone: "error",
+        message: `Import refused, nothing was changed — ${ parsed.reason }`
+      } );
+      return;
+    }
+
+    reset( parsed.options );
+    setImportBanner( {
+      tone: "success",
+      message: "Options imported successfully"
+    } );
   };
 
   // One-shot handoff from the sketches listing page's "Import .json"
@@ -635,6 +652,35 @@ export default function SketchOptions( {
     onRename: handleRenameSlide
   };
 
+  const studioSlideHandlers = useMemo(
+    () => ( {
+      select: ( index: number ) => handleSlideSelect( index ),
+      add: () => handleAddSlide(),
+      duplicate: ( index: number ) => handleDuplicateSlide( index ),
+      remove: ( index: number ) => handleDeleteSlide( index ),
+      move: (
+        from: number, to: number
+      ) => handleReorderSlides(
+        from,
+        to
+      ),
+      rename: (
+        index: number, name: string
+      ) => handleRenameSlide(
+        index,
+        name
+      )
+    } ),
+    [
+      handleSlideSelect,
+      handleAddSlide,
+      handleDuplicateSlide,
+      handleDeleteSlide,
+      handleReorderSlides,
+      handleRenameSlide
+    ]
+  );
+
   const captureProps = {
     name,
     options: methods.watch(),
@@ -671,6 +717,17 @@ export default function SketchOptions( {
               onSelectSlide={ handleSlideSelect }
               activeSlideIndex={ activeSlideIndex }
             />
+            {/* The agent commands (MCP level 1): registered while this form
+                is mounted, wired to the same handlers as the controls. */}
+            <StudioCommands
+              activeSlideIndex={ activeSlideIndex }
+              slides={ studioSlideHandlers }
+              name={ name }
+              exportSupported={ browserRecordingSupported }
+            />
+            {/* Right-click on a canvas item that has a menu (the Vector 3D
+                element's views): answered here, written through the form. */}
+            <CanvasItemMenu />
             {/* Everything from here to the mixer is studio chrome: the rails,
                 the filmstrip, the mobile drawer, the transport bar. A
                 presentation hides the lot — but the form itself, and
@@ -721,7 +778,9 @@ export default function SketchOptions( {
 
                           {importBanner && (
                             <ImportSuccessBanner
-                              message={ importBanner }
+                              key={ importBanner.message }
+                              message={ importBanner.message }
+                              tone={ importBanner.tone }
                               onDismiss={ () => setImportBanner( null ) }
                             />
                           )}

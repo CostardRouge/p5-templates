@@ -1,4 +1,7 @@
 import {
+  housePaletteField
+} from "@/p5/utils/palettes.js";
+import {
   fontNames
 } from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/constants/field-config";
 import {
@@ -93,6 +96,10 @@ export const colorsForm = {
   component: "nested-object",
   label: "Colors",
   fields: {
+    palette: housePaletteField( [
+      "rainbow",
+      "test"
+    ] ),
     hueIndexMultiplier: {
       label: "Hue index multiplier",
       component: "slider",

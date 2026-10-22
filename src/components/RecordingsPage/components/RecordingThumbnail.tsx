@@ -91,9 +91,14 @@ export default function RecordingThumbnail( {
       )}
       {showEyeIcon && showEyeInCorner && (
         <div className="absolute bottom-3 left-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200 z-40">
-          <button className="p-2 bg-background/90 backdrop-blur-sm hover:bg-hover rounded-lg border border-border shadow-lg transition-colors inline-flex items-center justify-center">
+          {/* A hint, not a control: it has no handler — the card itself opens
+              the preview — so it is not a focusable, unnamed button. */}
+          <span
+            aria-hidden="true"
+            className="p-2 bg-background/90 backdrop-blur-sm hover:bg-hover rounded-lg border border-border shadow-lg transition-colors inline-flex items-center justify-center"
+          >
             <Eye className="h-4 w-4 text-foreground" />
-          </button>
+          </span>
         </div>
       )}
       {isRecording && (

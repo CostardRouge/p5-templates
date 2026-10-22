@@ -115,11 +115,22 @@ export function CardLabelHeader( {
  */
 export function ToggleSwitch( {
   inputProps,
-  className
+  className,
+  live
 }: {
   inputProps?: React.InputHTMLAttributes<HTMLInputElement>;
   className?: string;
+  /**
+   * Set while an interaction binding drives the boolean: the switch shows the
+   * state the sketch reads this frame (`--binding-value-<target>`, 0 or 1)
+   * instead of the checkbox's own, which stays the base a click edits; without
+   * a live value yet it shows `base`.
+   */
+  live?: { varName: string;
+    base: boolean } | null;
 } ) {
+  const on = live ? `var(${ live.varName }, ${ live.base ? 1 : 0 })` : null;
+
   return (
     <span
       className={ clsx(
@@ -132,8 +143,25 @@ export function ToggleSwitch( {
         { ...inputProps }
         className="peer sr-only"
       />
-      <span className="h-6 w-10 md:h-5 md:w-9 rounded-full border border-theme bg-foreground/10 transition-colors peer-checked:bg-foreground peer-focus-visible:ring-2 peer-focus-visible:ring-focus/50" />
-      <span className="pointer-events-none absolute left-0.5 top-1/2 h-5 w-5 md:h-4 md:w-4 -translate-y-1/2 rounded-full border border-theme bg-background shadow transition-transform peer-checked:translate-x-4" />
+      {on ? (
+        <span className="binding-live-ring relative h-6 w-10 overflow-hidden md:h-5 md:w-9 rounded-full border border-theme peer-focus-visible:ring-2 peer-focus-visible:ring-focus/50">
+          <span
+            className="binding-iridescent absolute inset-0 transition-opacity"
+            style={ {
+              opacity: on
+            } }
+          />
+        </span>
+      ) : (
+        <span className="h-6 w-10 md:h-5 md:w-9 rounded-full border border-theme bg-foreground/10 transition-colors peer-checked:bg-foreground peer-focus-visible:ring-2 peer-focus-visible:ring-focus/50" />
+      )}
+      <span
+        className="pointer-events-none absolute left-0.5 top-1/2 h-5 w-5 md:h-4 md:w-4 -translate-y-1/2 rounded-full border border-theme bg-background shadow transition-transform peer-checked:translate-x-4"
+        style={ on ? {
+          // The knob travels 1rem (`translate-x-4`) at every size.
+          transform: `translateY(-50%) translateX(calc(${ on } * 1rem))`
+        } : undefined }
+      />
     </span>
   );
 }

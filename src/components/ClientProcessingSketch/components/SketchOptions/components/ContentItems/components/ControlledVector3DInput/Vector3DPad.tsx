@@ -1,5 +1,6 @@
 "use client";
 
+import type React from "react";
 import {
   useRef
 } from "react";
@@ -32,6 +33,8 @@ type Props = {
   ariaLabel?: string;
   /** Overrides the wrapper sizing. Defaults to a compact 176px-wide column. */
   className?: string;
+  /** Driven by an interaction binding — see {@link Vector3DBox}'s `live`. */
+  live?: React.ComponentProps<typeof Vector3DBox>[ "live" ];
 };
 
 /**
@@ -48,7 +51,7 @@ type Props = {
  * switcher without that conversation happening again.
  */
 export default function Vector3DPad( {
-  value, onChange, config = {}, ariaLabel = "vector", className
+  value, onChange, config = {}, ariaLabel = "vector", className, live = null
 }: Props ) {
   const axes = resolveAxes3D( config );
   const yDown = config.yDown ?? false;
@@ -128,6 +131,7 @@ export default function Vector3DPad( {
         kind={ kind }
         commit={ commit }
         ariaLabel={ ariaLabel }
+        live={ live }
       />
     </div>
   );

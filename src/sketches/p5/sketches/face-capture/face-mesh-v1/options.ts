@@ -2,6 +2,9 @@ import {
   interactionFormValues,
   interactionFormConfiguration
 } from "@/p5/utils/interaction/defaults.js";
+import {
+  housePaletteField
+} from "@/p5/utils/palettes.js";
 
 // Default values only
 export const formValues = {
@@ -34,7 +37,10 @@ export const formValues = {
     8,
     10,
     18
-  ]
+  ],
+  colors: {
+    palette: "rainbow"
+  }
 };
 
 // UI configuration only
@@ -58,7 +64,17 @@ export const formConfiguration: Record<string, any> = {
   },
 
   backgroundColor: {
-    component: "color",
+    component: "background",
+    palette: "colors/palette",
     label: "Background color"
+  },
+  colors: {
+    component: "nested-object",
+    label: "Colors",
+    fields: {
+      palette: housePaletteField( [
+        "rainbow"
+      ] )
+    }
   }
 };

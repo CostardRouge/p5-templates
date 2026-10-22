@@ -13,7 +13,7 @@ change never needs a code edit.
 
 | Constant | Env override | Default |
 | --- | --- | --- |
-| `UMAMI_SRC` | `NEXT_PUBLIC_UMAMI_SRC` | `https://insight.steeve.website/insight` |
+| `UMAMI_SRC` | `NEXT_PUBLIC_UMAMI_SRC` | `https://insight.steevepommier.com/insight` |
 | `UMAMI_WEBSITE_ID` | `NEXT_PUBLIC_UMAMI_WEBSITE_ID` | `3c44d1c6-1c3e-4ef7-aeb8-646012e9b963` |
 | `UMAMI_DOMAINS` | `NEXT_PUBLIC_UMAMI_DOMAINS` | `p5.steeve.website` |
 | — | `NEXT_PUBLIC_UMAMI_DEV` | unset (`"true"` enables tracking outside production) |
@@ -31,15 +31,22 @@ server is not enough. The `Dockerfile` therefore declares them as `ARG`s, and
 unlike the other `NEXT_PUBLIC_*` args they are **not** empty-defaulted: an empty
 default would silently ship every image with analytics off.
 
-## Why the tracker is served from `insight.steeve.website/insight`
+## Why the tracker is served from `insight.steevepommier.com/insight`
 
-- Same registrable domain as the measured site, so the request is first-party
-  and no blocker cuts it on a third-party-domain rule.
+- One Umami host for the whole portfolio, `insight.steevepommier.com`
+  (COMMON-PROJECT-SPEC N5 in `second-brain`, the maintainer's decision of
+  2026-10-19). It is **third-party** to `p5.steeve.website`, so a blocker's
+  third-party-domain rule can cut the request; one host across every site was
+  chosen over that.
 - The path is `/insight`, not Umami's default `/script.js`, which appears in
   filter lists.
-- `insight.steevepommier.com/insight` is the same instance and works (CORS is
-  permissive), but it makes the request third-party again. Use it only as a
-  fallback, via `NEXT_PUBLIC_UMAMI_SRC`.
+- `insight.steeve.website/insight` is the same instance on a sibling of this
+  site's domain — first-party, which is why it was the default until
+  2026-10-19. It still works (CORS is permissive) and is the fallback if the
+  third-party host is ever cut, via `NEXT_PUBLIC_UMAMI_SRC`.
+- Neither `docker-build.yml` nor the deployed stack passes a Umami variable
+  (checked in the `homelab` snapshot of 2026-10-16), so the Dockerfile's `ARG`
+  default is what production ships; a stack variable would override it.
 
 ## Why auto-tracking is off
 

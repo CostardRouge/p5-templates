@@ -7,6 +7,10 @@ import {
   renderScribe
 } from "@/p5/sketches/letter-trace/_shared.js";
 import drawInstrument from "../_instrument.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SIGNALS — 06 / SCRIBE
@@ -79,12 +83,18 @@ sketch.draw( () => {
   const o = options.sketch ?? {};
 
   p.clear();
-  p.background( ...( o.backgroundColor ?? [
-    0,
-    0,
-    0,
-    255
-  ] ) );
+  paintBackground( resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0,
+        255
+      ],
+      palette: o.stroke?.palette
+    }
+  ) );
 
   renderScribe( o );
 

@@ -15,6 +15,10 @@ export {
   easingId
 };
 
+// The GLSL stdlib, the WebGL plumbing and the p5-camera matrices below are also
+// exported (at the bottom of this file) for spikeMeshGpu.js, which rasterises
+// the same peaks geometry as solid surfaces instead of disc billboards.
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared GPU engine for the "peaks" family (a 3D point cloud on a surface).
 //
@@ -506,6 +510,80 @@ function writePerlinTexture(
   );
 }
 
+// A shared palette's ramp (`shaderPalette()`, utils/palettes.js) on texture
+// unit 1, for a point body that reads it through PALETTE_RAMP_GLSL — sampled
+// in the vertex stage, like the Perlin table on unit 0. Uploaded when the
+// palette changes; with none, `uPaletteOn` is 0 and the house rainbow runs.
+function bindPalette(
+  gl, palette, state
+) {
+  const ramp = palette?.uniforms?.uPaletteOn ? palette.textures.uPaletteRamp : null;
+  const onLocation = gl.getUniformLocation(
+    state.program,
+    "uPaletteOn"
+  );
+
+  gl.uniform1f(
+    onLocation,
+    ramp ? 1 : 0
+  );
+
+  if ( !ramp ) {
+    return;
+  }
+
+  gl.activeTexture( gl.TEXTURE1 );
+
+  if ( !state.rampTexture ) {
+    state.rampTexture = gl.createTexture();
+  }
+
+  gl.bindTexture(
+    gl.TEXTURE_2D,
+    state.rampTexture
+  );
+
+  if ( state.rampData !== ramp.data ) {
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,
+      gl.RGBA,
+      ramp.width,
+      ramp.height,
+      0,
+      gl.RGBA,
+      gl.UNSIGNED_BYTE,
+      ramp.data
+    );
+    [
+      gl.TEXTURE_MIN_FILTER,
+      gl.TEXTURE_MAG_FILTER
+    ].forEach( ( key ) => gl.texParameteri(
+      gl.TEXTURE_2D,
+      key,
+      gl.NEAREST
+    ) );
+    [
+      gl.TEXTURE_WRAP_S,
+      gl.TEXTURE_WRAP_T
+    ].forEach( ( key ) => gl.texParameteri(
+      gl.TEXTURE_2D,
+      key,
+      gl.CLAMP_TO_EDGE
+    ) );
+    state.rampData = ramp.data;
+  }
+
+  gl.uniform1i(
+    gl.getUniformLocation(
+      state.program,
+      "uPaletteRamp"
+    ),
+    1
+  );
+  gl.activeTexture( gl.TEXTURE0 );
+}
+
 function isWebGL2( gl ) {
   return typeof WebGL2RenderingContext !== "undefined"
     && gl instanceof WebGL2RenderingContext;
@@ -712,16 +790,49 @@ function rotationZMat4( a ) {
   ];
 }
 
+function translationMat4( t ) {
+  return [
+    1,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    t[ 0 ],
+    t[ 1 ],
+    t[ 2 ],
+    1
+  ];
+}
+
 // Model-view for the default camera with the sketch's rotateX/Y/Z applied in
-// p5's order (uModelMatrix = Rx·Ry·Rz, then the camera view in front).
-function modelViewMat4( rotation ) {
-  const model = multiplyMat4(
+// p5's order (uModelMatrix = Rx·Ry·Rz, then the camera view in front). An
+// optional `translate` is applied to the vertices first — p5's
+// `rotate…(); translate( … )` order, which peaks-tunnel uses to centre its
+// tunnel on the origin before the wobble.
+function modelViewMat4(
+  rotation, translate = null
+) {
+  let model = multiplyMat4(
     multiplyMat4(
       rotationXMat4( rotation.x ),
       rotationYMat4( rotation.y )
     ),
     rotationZMat4( rotation.z )
   );
+
+  if ( translate ) {
+    model = multiplyMat4(
+      model,
+      translationMat4( translate )
+    );
+  }
 
   return multiplyMat4(
     viewMat4(),
@@ -810,6 +921,8 @@ export default function createPeaksFieldRenderer( {
       gridKey: null,
       perlinTexture: null,
       perlinSeed: null,
+      rampTexture: null,
+      rampData: null,
       locs: {},
       ctxRef: null,
       ext: null,
@@ -867,6 +980,8 @@ export default function createPeaksFieldRenderer( {
     state.gl = gl;
     state.perlinTexture = null;
     state.perlinSeed = null;
+    state.rampTexture = null;
+    state.rampData = null;
     state.cellVBO = null;
     state.gridKey = null;
     state.quadVBO = null;
@@ -1003,7 +1118,8 @@ export default function createPeaksFieldRenderer( {
     seed = 42,
     octaves = 4,
     falloff = 0.5,
-    uniforms = {}
+    uniforms = {},
+    palette = null
   } ) {
     state = store.current();
 
@@ -1130,6 +1246,11 @@ export default function createPeaksFieldRenderer( {
         int: 0
       }
     );
+    bindPalette(
+      gl,
+      palette,
+      state
+    );
 
     for ( const [
       name,
@@ -1218,3 +1339,27 @@ export default function createPeaksFieldRenderer( {
     render
   };
 }
+
+// ─── Shared with spikeMeshGpu.js ──────────────────────────────────────────────
+// The solid-surface renderer draws the same peaks placements (the same Perlin
+// table, the same mapEase / easing dispatch, the same p5 default camera) as
+// lit meshes rather than disc billboards. It reuses these rather than restating
+// them, so the two renderers can never disagree on a noise value or a matrix.
+export const PEAKS_STDLIB_GLSL = CONSTANTS_GLSL + PERLIN_GLSL + MAPPERS_GLSL + EASINGS_GLSL + MAPEASE_GLSL + PALETTE_GLSL;
+
+export {
+  buildProgram,
+  writePerlinTexture,
+  isWebGL2,
+  getInstancingExt,
+  setDivisor,
+  setUniformValue,
+  multiplyMat4,
+  modelViewMat4,
+  perspectiveMat4
+};
+
+// The easing dispatch alone — remap, the easing curves and mapEase, without
+// the Perlin table or its uniforms — for a FRAGMENT shader that wants a
+// selectable curve (the iridescent material). Needs PI and TAU declared first.
+export const PEAKS_EASING_GLSL = MAPPERS_GLSL + EASINGS_GLSL + MAPEASE_GLSL;

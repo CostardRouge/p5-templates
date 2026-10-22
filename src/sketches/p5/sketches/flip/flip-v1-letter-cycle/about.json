@@ -1,0 +1,4 @@
+{
+  "description": "A single glyph — a letter or a word from your list, drawn as a chain of iridescent tubes on black — turning on a horizontal or vertical axis; every time the plane passes edge-on the next entry takes over, so the cycle reads as a letter flipping into the next (a, b, c…). Chunky 3D lettering with a chrome ramp.",
+  "tags": [ "typography", "3d", "raymarched", "iridescent", "flip", "needs-text" ]
+}

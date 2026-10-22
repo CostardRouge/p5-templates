@@ -7,7 +7,7 @@ import createNoiseFieldRenderer from "@/p5/utils/noiseFieldGpu.js";
 import easing from "@/p5/utils/easing.js";
 import {
   BRAID_UNIFORMS_GLSL,
-  IRIDESCENT_GLSL,
+  PALETTE_IRIDESCENT_GLSL,
   braidShadingGlsl,
   lightDirFrom
 } from "@/p5/utils/braidShader.js";
@@ -38,6 +38,13 @@ import {
   envelopeAt,
   linkStateAt
 } from "../_wave.js";
+import {
+  shaderPalette
+} from "@/p5/utils/palettes.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // sculpt v4 — sphere.
@@ -88,7 +95,7 @@ const FRAGMENT = `
   uniform float uSmoothK;                // smooth-union fillet
   uniform float uTaper;                  // 0..1 thins the growing tip
 
-  ${ IRIDESCENT_GLSL }
+  ${ PALETTE_IRIDESCENT_GLSL }
 
   // Polynomial smooth-minimum (iq): melts touching tubes into a rounded fillet.
   float smin(float a, float b, float k) {
@@ -399,11 +406,17 @@ sketch.draw( () => {
   const rendering = o.rendering ?? {};
 
   p.clear();
-  p.background( ...( o.backgroundColor ?? [
-    0,
-    0,
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0
+      ],
+      palette: o.colors?.palette
+    }
+  ) );
 
   // ── The lattice (memoised on its parameters): a sphere with a skin ─────────
   const lattice = getLattice( {
@@ -883,7 +896,10 @@ sketch.draw( () => {
     light.elevation ?? 0.45
   );
 
+  const palette = shaderPalette( colors );
+
   sphereRenderer.render( {
+    textures: palette.textures,
     columns: 1,
     rows: 1,
     resolutionScale: rendering.resolutionScale ?? 0.7,
@@ -909,6 +925,7 @@ sketch.draw( () => {
       uTaper: taper,
       ...cameraUniforms( basis ),
       uHueSpeed: hueSpread ? hueCycles / ( p.TAU * hueSpread ) : 0,
+      uPaletteOn: palette.uniforms.uPaletteOn,
       uHueSpread: hueSpread,
       uHuePhase: colors.huePhase ?? 2.6,
       uLengthHueShift: colors.lengthHueShift ?? -0.25,

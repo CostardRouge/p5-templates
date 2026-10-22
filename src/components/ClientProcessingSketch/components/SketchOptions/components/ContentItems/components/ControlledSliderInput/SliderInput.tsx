@@ -9,6 +9,10 @@ import React, {
 import clsx from "clsx";
 import useDragSlider from "@/hooks/useDragSlider";
 import {
+  bindingValueVarName
+} from "@/lib/channelBridge";
+import LiveBindingValue from "../BindingAffordance/LiveBindingValue";
+import {
   CONTROL_BAR_CLASS,
   CONTROL_EDIT_INPUT_CLASS,
   CONTROL_RESET_BUTTON_CLASS,
@@ -25,6 +29,17 @@ type SliderInputProps = {
   step?: number;
   isModified?: boolean;
   onReset?: ( event: React.MouseEvent ) => void;
+  /**
+   * Set while an interaction binding drives the field: the bar then shows the
+   * value the sketch reads this frame instead of the one being edited. `target`
+   * keys the live value on the channel bridge; `range` is the span the
+   * modulation sweeps, drawn along the bar's bottom edge.
+   */
+  live?: {
+    target: string;
+    range: { min: number;
+      max: number } | null;
+  } | null;
 };
 
 /**
@@ -50,7 +65,8 @@ export default function SliderInput( {
   max = 100,
   step = 1,
   isModified = false,
-  onReset
+  onReset,
+  live = null
 }: SliderInputProps ) {
   const [
     editing,
@@ -121,6 +137,21 @@ export default function SliderInput( {
     );
   }
 
+  // Driven: the fill follows the live value in pure CSS — the engine writes
+  // the number to a var every frame, the bar maps it through its own min/max
+  // (which the engine does not know), and the base value stays as a hollow
+  // thumb. Without a live var yet, the fill falls back to the base value.
+  const span = max - min;
+  const liveFill = live && span > 0
+    ? `clamp(0%, calc((var(${ bindingValueVarName( live.target ) }, ${ value }) - ${ min }) / ${ span } * 100%), 100%)`
+    : null;
+  const band = live?.range && span > 0
+    ? {
+      left: clampFraction( ( live.range.min - min ) / span ),
+      right: clampFraction( ( live.range.max - min ) / span )
+    }
+    : null;
+
   return (
     <div
       ref={ ref }
@@ -132,17 +163,48 @@ export default function SliderInput( {
       aria-valuenow={ value }
       onBlur={ onBlur }
       { ...handlers }
-      className={ `group touch-pan-y select-none cursor-ew-resize outline-none focus-visible:ring-1 focus-visible:ring-focus ${ CONTROL_BAR_CLASS }` }
+      className={ clsx(
+        "group touch-pan-y select-none cursor-ew-resize outline-none focus-visible:ring-1 focus-visible:ring-focus",
+        CONTROL_BAR_CLASS,
+        liveFill && "binding-live-ring"
+      ) }
     >
-      <div
-        className="pointer-events-none absolute inset-y-0 left-0 bg-foreground/10 transition-colors group-hover:bg-foreground/15"
-        style={ {
-          width: `${ fraction * 100 }%`
-        } }
-      />
+      {liveFill ? (
+        <div
+          className="binding-iridescent pointer-events-none absolute inset-0 opacity-60"
+          style={ {
+            clipPath: `inset(0 calc(100% - ${ liveFill }) 0 0)`
+          } }
+        />
+      ) : (
+        <div
+          className="pointer-events-none absolute inset-y-0 left-0 bg-foreground/10 transition-colors group-hover:bg-foreground/15"
+          style={ {
+            width: `${ fraction * 100 }%`
+          } }
+        />
+      )}
+
+      {band && (
+        <div
+          className="pointer-events-none absolute bottom-0 h-0.5 bg-foreground/50"
+          style={ {
+            left: `${ band.left * 100 }%`,
+            width: `${ Math.max(
+              0,
+              band.right - band.left
+            ) * 100 }%`
+          } }
+        />
+      )}
 
       <div
-        className="pointer-events-none absolute top-1/2 h-6 md:h-4 w-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-foreground/30"
+        className={ clsx(
+          "pointer-events-none absolute top-1/2 h-6 md:h-4 w-1 -translate-x-1/2 -translate-y-1/2 rounded-full",
+          liveFill
+            ? "border border-foreground/70 bg-background"
+            : "bg-foreground/30"
+        ) }
         style={ {
           left: `${ fraction * 100 }%`
         } }
@@ -172,12 +234,27 @@ export default function SliderInput( {
             </button>
           )}
 
+          {liveFill && live && (
+            <>
+              <LiveBindingValue
+                target={ live.target }
+                fallback={ value.toFixed( decimals ) }
+                decimals={ decimals }
+                className="font-mono tabular-nums text-foreground"
+              />
+              <span aria-hidden className="text-label">·</span>
+            </>
+          )}
+
           <button
             type="button"
-            title="Tap to type a value"
+            title={ liveFill ? "Base value — tap to type one" : "Tap to type a value" }
             onClick={ () => setEditing( true ) }
             onPointerDown={ ( e ) => e.stopPropagation() }
-            className={ CONTROL_VALUE_BUTTON_CLASS }
+            className={ clsx(
+              CONTROL_VALUE_BUTTON_CLASS,
+              liveFill && "!text-label hover:!text-foreground"
+            ) }
           >
             {value.toFixed( decimals )}
           </button>

@@ -4,14 +4,23 @@ import {
   getP5
 } from "@/p5/utils/sketch.js";
 import neonGraffiti from "@/p5/utils/visuals/neonGraffiti.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 sketch.draw( ( _time ) => {
   const p = getP5();
 
   p.clear();
-  p.background( ...( options.sketch.backgroundColor ?? [
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    options.sketch.backgroundColor,
+    {
+      fallback: [
+        0
+      ]
+    }
+  ) );
   neonGraffiti( {
     amplitude: options.sketch.amplitude,
     shadowsCount: options.sketch.shadowsCount,

@@ -10,6 +10,10 @@ import traceLetters from "@/p5/utils/traceLetters.js";
 import {
   getAlphabet, drawGrid, getFont, loopedTime, drawShape
 } from "../_shared.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 sketch.setup(
   undefined,
@@ -24,9 +28,15 @@ sketch.draw( (
   const p = getP5();
 
   p.clear();
-  p.background( ...( options.sketch.backgroundColor ?? [
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    options.sketch.backgroundColor,
+    {
+      fallback: [
+        0
+      ],
+      palette: options.sketch.colors?.palette
+    }
+  ) );
   p.noFill();
 
   const time = loopedTime();
@@ -159,7 +169,7 @@ sketch.draw( (
       const vectorOffset = vectorIndexProgression * 5;
 
       const colorFunction =
-        qualityLine > chunkIndex ? colors.rainbow : colors.purple;
+        qualityLine > chunkIndex ? colors.palette( options.sketch.colors?.palette ) : colors.purple;
 
       p.stroke( colorFunction( {
         hueOffset: options.sketch.colors?.hueOffset ?? 0,

@@ -1,3 +1,6 @@
+import {
+  housePaletteOptions
+} from "@/p5/utils/palettes.js";
 
 import {
   createFixedOrVariableOption, createVariableOption
@@ -152,18 +155,12 @@ export const formConfiguration: Record<string, any> = {
     component: "nested-object",
     fields: {
       colorFunction: {
-        component: "select",
+        component: "palette-picker",
         label: "Palette",
-        options: [
-          {
-            label: "Rainbow",
-            value: "rainbow"
-          },
-          {
-            label: "Purple",
-            value: "purple"
-          }
-        ]
+        options: housePaletteOptions( [
+          "rainbow",
+          "purple"
+        ] )
       },
       opacityFactor: createVariableOption(
         "opacityFactor",
@@ -185,7 +182,7 @@ export const formConfiguration: Record<string, any> = {
   },
 
   backgroundColor: {
-    component: "color",
+    component: "background",
     label: "Background color"
   }
 };

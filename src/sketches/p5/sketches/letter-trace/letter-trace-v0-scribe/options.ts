@@ -1,4 +1,7 @@
 import {
+  housePaletteOptions
+} from "@/p5/utils/palettes.js";
+import {
   fontSelectOptions
 } from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/constants/field-config";
 
@@ -205,25 +208,13 @@ export const formConfiguration: Record<string, any> = {
       },
       palette: {
         label: "Palette",
-        component: "select",
-        options: [
-          {
-            label: "Rainbow",
-            value: "rainbow"
-          },
-          {
-            label: "Rainbow (crazy)",
-            value: "rainbowCrazy"
-          },
-          {
-            label: "Dark blue / yellow",
-            value: "darkBlueYellow"
-          },
-          {
-            label: "Purple",
-            value: "purple"
-          }
-        ]
+        component: "palette-picker",
+        options: housePaletteOptions( [
+          "rainbow",
+          "rainbowCrazy",
+          "darkBlueYellow",
+          "purple"
+        ] )
       },
       hueSpread: {
         label: "Hue spread (per letter)",
@@ -315,7 +306,8 @@ export const formConfiguration: Record<string, any> = {
     }
   },
   backgroundColor: {
-    component: "color",
+    component: "background",
+    palette: "stroke/palette",
     label: "Background color"
   }
 };

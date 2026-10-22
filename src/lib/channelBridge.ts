@@ -199,26 +199,241 @@ export function bindingSignalVarName( target: string ): string {
   ) }`;
 }
 
-/** Write each binding's resolved 0..1 signal to its CSS var on `:root`. */
+// The vars written last frame, so the ones no longer published can be removed.
+let publishedSignalVars = new Set<string>();
+
+/**
+ * Write each binding's resolved 0..1 signal to its CSS var on `:root`, and
+ * remove the vars of bindings that stopped playing — the same absence rule as
+ * the channels above. Switching to a slide whose bindings differ used to leave
+ * the previous slide's vars frozen at their last value, so a pastille or mixer
+ * meter read as live when nothing drove it. Publish `{}` to clear them all.
+ */
 export function publishBindingSignals( signals: Record<string, number> ): void {
   if ( typeof document === "undefined" || !signals ) {
     return;
   }
 
   const root = document.documentElement.style;
+  const written = new Set<string>();
 
   for ( const [
     target,
     value
   ] of Object.entries( signals ) ) {
+    const name = bindingSignalVarName( target );
+
     root.setProperty(
-      bindingSignalVarName( target ),
+      name,
       String( clamp01( value ) )
     );
+    written.add( name );
+  }
+
+  for ( const name of publishedSignalVars ) {
+    if ( !written.has( name ) ) {
+      root.removeProperty( name );
+    }
+  }
+
+  publishedSignalVars = written;
+}
+
+// ── Per-binding resolved values ─────────────────────────────────────────────
+// What a driven field's own control shows: the value the sketch reads this
+// frame, keyed by target. The controls map it in pure CSS against their own
+// domain — which the engine does not know — and the few text readouts
+// subscribe and write their node directly, so a moving value costs no React
+// render. Same absence rule as everything above: a target that stops being
+// driven loses its vars, and the control falls back to its base value.
+//
+//   number (slider, enum index, boolean) → --binding-value-<t>
+//   [r, g, b, a] bytes (colour)          → --binding-value-<t>    rgb(r g b / α)
+//                                          --binding-value-<t>-a  α, 0..1
+//   { x, y } / { x, y, z } (pads)        → --binding-value-<t>-x, -y (, -z)
+
+export type BindingValue = number | number[] | { x: number;
+  y: number;
+  z?: number };
+
+/** CSS variable name for a driven target's resolved value, or one part of it. */
+export function bindingValueVarName(
+  target: string, part?: "x" | "y" | "z" | "a"
+): string {
+  return `--binding-value-${ cssId( target ) }${ part ? `-${ part }` : "" }`;
+}
+
+function bindingValueVars(
+  target: string, value: BindingValue
+): Array<[string, string]> {
+  if ( typeof value === "number" ) {
+    return [
+      [
+        bindingValueVarName( target ),
+        String( value )
+      ]
+    ];
+  }
+
+  if ( Array.isArray( value ) ) {
+    const alpha = Math.round( ( value[ 3 ] ?? 255 ) / 255 * 1000 ) / 1000;
+
+    return [
+      [
+        bindingValueVarName( target ),
+        `rgb(${ value[ 0 ] } ${ value[ 1 ] } ${ value[ 2 ] } / ${ alpha })`
+      ],
+      [
+        bindingValueVarName(
+          target,
+          "a"
+        ),
+        String( alpha )
+      ]
+    ];
+  }
+
+  const axes: Array<[string, string]> = [
+    [
+      bindingValueVarName(
+        target,
+        "x"
+      ),
+      String( value.x )
+    ],
+    [
+      bindingValueVarName(
+        target,
+        "y"
+      ),
+      String( value.y )
+    ]
+  ];
+
+  if ( typeof value.z === "number" ) {
+    axes.push( [
+      bindingValueVarName(
+        target,
+        "z"
+      ),
+      String( value.z )
+    ] );
+  }
+
+  return axes;
+}
+
+type ValueSubscriber = ( values: Record<string, BindingValue> ) => void;
+
+let latestValues: Record<string, BindingValue> = {};
+let publishedValueVars = new Set<string>();
+const valueSubscribers = new Set<ValueSubscriber>();
+
+/** Write each driven target's resolved value to its vars and notify readers. */
+export function publishBindingValues( values: Record<string, BindingValue> ): void {
+  latestValues = values ?? {};
+
+  if ( typeof document !== "undefined" ) {
+    const root = document.documentElement.style;
+    const written = new Set<string>();
+
+    for ( const [
+      target,
+      value
+    ] of Object.entries( latestValues ) ) {
+      for ( const [
+        name,
+        text
+      ] of bindingValueVars(
+          target,
+          value
+        ) ) {
+        root.setProperty(
+          name,
+          text
+        );
+        written.add( name );
+      }
+    }
+
+    for ( const name of publishedValueVars ) {
+      if ( !written.has( name ) ) {
+        root.removeProperty( name );
+      }
+    }
+
+    publishedValueVars = written;
+  }
+
+  for ( const subscriber of valueSubscribers ) {
+    try {
+      subscriber( latestValues );
+    } catch {
+      // A subscriber must never break the publish loop.
+    }
   }
 }
 
-/** Subscribe to per-frame channel snapshots. Returns an unsubscribe function. */
+/** Latest resolved values, for a reader's first paint. */
+export function getBindingValues(): Record<string, BindingValue> {
+  return latestValues;
+}
+
+/** Subscribe to per-frame resolved values. Returns an unsubscribe function. */
+export function subscribeBindingValues( cb: ValueSubscriber ): () => void {
+  valueSubscribers.add( cb );
+
+  return () => {
+    valueSubscribers.delete( cb );
+  };
+}
+
+// ── Declared bindings the engine actually resolved ──────────────────────────
+// A sketch declares `binding: { control: "knob.1" }` on a field; the engine
+// turns it into a binding only while the connected port maps that control.
+// The editor needs to know WHICH fields that leaves driven, to give them the
+// same live treatment as a hand-made binding — and only the engine knows,
+// because only it has the port name. A set that changes on a plug or a port
+// switch, never per frame, so subscribers re-render only on a real change.
+
+let declaredTargetsKey = "";
+const declaredTargetSubscribers = new Set<() => void>();
+
+/** The targets of the declared bindings resolved this frame. */
+export function publishDeclaredTargets( targets: string[] ): void {
+  const key = [
+    ...new Set( targets )
+  ].sort().join( "\n" );
+
+  if ( key === declaredTargetsKey ) {
+    return;
+  }
+
+  declaredTargetsKey = key;
+
+  for ( const subscriber of declaredTargetSubscribers ) {
+    try {
+      subscriber();
+    } catch {
+      // A subscriber must never break the publish loop.
+    }
+  }
+}
+
+/** A stable string snapshot of the resolved declared targets (one per line). */
+export function getDeclaredTargetsKey(): string {
+  return declaredTargetsKey;
+}
+
+/** Notified when the set of resolved declared targets changes. */
+export function subscribeDeclaredTargets( cb: () => void ): () => void {
+  declaredTargetSubscribers.add( cb );
+
+  return () => {
+    declaredTargetSubscribers.delete( cb );
+  };
+}
+
 /**
  * The name of the MIDI input the engine is listening to, or "" when none is
  * picked (or every input is, which is the same as none for a controller map).
@@ -238,6 +453,7 @@ export function getMidiPortName(): string {
   return midiPort;
 }
 
+/** Subscribe to per-frame channel snapshots. Returns an unsubscribe function. */
 export function subscribeChannels( cb: Subscriber ): () => void {
   subscribers.add( cb );
 

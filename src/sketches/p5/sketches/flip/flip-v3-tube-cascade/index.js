@@ -8,7 +8,7 @@ import createNoiseFieldRenderer, {
 } from "@/p5/utils/noiseFieldGpu.js";
 import {
   BRAID_UNIFORMS_GLSL,
-  IRIDESCENT_GLSL,
+  PALETTE_IRIDESCENT_GLSL,
   braidShadingGlsl,
   lightDirFrom,
   focalFromFov
@@ -17,6 +17,13 @@ import {
   getLetterField,
   SEG_STRIDE
 } from "../_letterField.js";
+import {
+  shaderPalette
+} from "@/p5/utils/palettes.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // flip v3 — tube cascade.
@@ -122,7 +129,7 @@ const FRAGMENT = `
   uniform int   uContentMode;              // 0 chorus, 1 spell, 2 scatter
   uniform float uContentOffset;
 
-  ${ IRIDESCENT_GLSL }
+  ${ PALETTE_IRIDESCENT_GLSL }
 
   float smin(float a, float b, float k) {
     float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0);
@@ -509,11 +516,17 @@ sketch.draw( () => {
   const rendering = o.rendering ?? {};
 
   p.clear();
-  p.background( ...( o.backgroundColor ?? [
-    0,
-    0,
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0
+      ],
+      palette: o.colors?.palette
+    }
+  ) );
 
   // ── The bank: one glyph per face ──────────────────────────────────────────
   const glyphs = ( textCfg.glyphs ?? "abcd" )
@@ -683,7 +696,10 @@ sketch.draw( () => {
   const hueSpread = colors.hueSpread ?? 2;
   const hueCycles = Math.round( ( colors.hueSpeed ?? 0 ) * hueSpread );
 
+  const palette = shaderPalette( colors );
+
   boardRenderer.render( {
+    textures: palette.textures,
     columns: 1,
     rows: 1,
     resolutionScale: rendering.resolutionScale ?? 0.7,
@@ -839,6 +855,7 @@ sketch.draw( () => {
       ),
 
       uHueSpeed: hueSpread ? hueCycles / hueSpread : 0,
+      uPaletteOn: palette.uniforms.uPaletteOn,
       uHueSpread: hueSpread,
       uHuePhase: colors.huePhase ?? 2.6,
       uLengthHueShift: colors.lengthHueShift ?? -0.25,

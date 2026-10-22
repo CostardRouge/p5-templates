@@ -4,6 +4,20 @@ import sketch, {
 } from "@/p5/utils/sketch.js";
 import animation from "@/p5/utils/animation.js";
 import createNoiseFieldRenderer from "@/p5/utils/noiseFieldGpu.js";
+import {
+  PALETTE_RAMP_GLSL
+} from "@/p5/utils/paletteGlsl.js";
+import {
+  shaderPalette
+} from "@/p5/utils/palettes.js";
+import {
+  backgroundUniforms,
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
+import {
+  BACKGROUND_GLSL
+} from "@/p5/utils/backgroundGlsl.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // shader-loops v1 — hypnotic.
@@ -46,6 +60,10 @@ const PALETTE_IDS = {
   iridescent: 3
 };
 
+// Drawn on this sketch's own path; any other id is a shared preset read
+// through the palette ramp.
+const OWN_PALETTE_IDS = Object.keys( PALETTE_IDS );
+
 const FRAGMENT = `
   uniform float uPhase;         // loop phase φ ∈ [0,1)
   uniform int   uPattern;       // 0 tunnel, 1 kaleido, 2 moire
@@ -70,7 +88,7 @@ const FRAGMENT = `
   // Scene
   uniform float uVignette;
   uniform float uBreath;        // gentle brightness pulse, one breath per loop
-  uniform vec3  uBackground;    // 0..1 colour the vignette edges fade toward
+  ${ BACKGROUND_GLSL }
 
   // Oil-slick / thin-film iridescence: a cosine spectrum (IQ palette) with the
   // RGB channels phase-shifted so the hue sweeps cleanly through the rainbow.
@@ -83,8 +101,15 @@ const FRAGMENT = `
   // Map a 0..1 pattern value to a colour. The hue offset is bound to the loop
   // (φ · hueCycles) so the whole spectrum scrolls an integer number of times and
   // returns exactly to its starting hue — a seamless colour cycle.
+  ${ PALETTE_RAMP_GLSL }
+
   vec3 palette(float value) {
     float loopHue = uPhase * uHueCycles + uHuePhase;
+
+    // A shared preset: the ramp walked the way the oil slick is.
+    if (uPaletteOn > 0.5) {
+      return paletteRamp(uHueSpread * value + loopHue);
+    }
 
     if (uPaletteId == 3) {
       return iridescent(uHueSpread * value + loopHue);
@@ -175,10 +200,10 @@ const FRAGMENT = `
 
     // Radial vignette sinks the edges toward the background colour and pulls the
     // eye to the centre. At the centre vig = 1 (pure pattern); at the rim it
-    // reveals uBackground, so the Background-colour control is meaningful.
+    // reveals the background (its gradient too), so the control is meaningful.
     float vig = 1.0 - uVignette * smoothstep(0.3, 0.95, length(p));
 
-    col = mix(uBackground, col, vig);
+    col = mix(backgroundAt(vec2(vUv.x, 1.0 - vUv.y)), col, vig);
 
     gl_FragColor = vec4(clamp(col, 0.0, 1.0), 1.0);
   }
@@ -197,19 +222,34 @@ sketch.draw( () => {
   const geometry = o.geometry ?? {};
   const colors = o.colors ?? {};
   const scene = o.scene ?? {};
-  const background = scene.backgroundColor ?? [
-    0,
-    0,
-    0
-  ];
+  const background = resolveBackground(
+    scene.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0
+      ],
+      palette: colors.palette,
+      own: OWN_PALETTE_IDS
+    }
+  );
 
   p.clear();
-  p.background( ...background );
+  paintBackground( background );
 
   const patternId = PATTERN_IDS[ o.pattern ] ?? PATTERN_IDS.tunnel;
   const paletteId = PALETTE_IDS[ colors.palette ] ?? PALETTE_IDS.iridescent;
 
+  const palette = shaderPalette(
+    colors,
+    {
+      own: OWN_PALETTE_IDS
+    }
+  );
+
   loops.render( {
+    textures: palette.textures,
     columns: 1,
     rows: 1,
     resolutionScale: scene.resolutionScale ?? 1,
@@ -227,6 +267,7 @@ sketch.draw( () => {
       uPaletteId: {
         int: paletteId
       },
+      uPaletteOn: palette.uniforms.uPaletteOn,
       uHueCycles: colors.hueCycles ?? 1,
       uHueSpread: colors.hueSpread ?? 1,
       uHuePhase: colors.huePhase ?? 0,
@@ -235,11 +276,13 @@ sketch.draw( () => {
       uContrast: colors.contrast ?? 1.3,
       uVignette: scene.vignette ?? 0.6,
       uBreath: scene.breath ?? 0.08,
-      uBackground: [
-        ( background[ 0 ] ?? 0 ) / 255,
-        ( background[ 1 ] ?? 0 ) / 255,
-        ( background[ 2 ] ?? 0 ) / 255
-      ]
+      ...backgroundUniforms(
+        background,
+        {
+          width: p.width,
+          height: p.height
+        }
+      )
     }
   } );
 } );

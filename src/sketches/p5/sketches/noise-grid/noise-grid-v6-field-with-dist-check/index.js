@@ -6,6 +6,16 @@ import animation from "@/p5/utils/animation.js";
 import createNoiseFieldRenderer, {
   computeFieldRange, easingId
 } from "@/p5/utils/noiseFieldGpu.js";
+import {
+  PALETTE_RAINBOW_GLSL
+} from "@/p5/utils/paletteGlsl.js";
+import {
+  shaderPalette
+} from "@/p5/utils/palettes.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GPU port of "noise grid v6 — field with distance check".
@@ -25,6 +35,8 @@ const FRAGMENT = `
   uniform float uMin;
   uniform float uHueRange;
   uniform float uHueOffset;
+
+  ${ PALETTE_RAINBOW_GLSL }
   uniform float uWaveMin;
   uniform float uWaveMax;
   uniform float uWaveSpeed;
@@ -73,7 +85,7 @@ const FRAGMENT = `
       uOpacityMin
     );
 
-    gl_FragColor = vec4(paletteRainbow(uHueOffset, hueIndex, opacityFactor), mask);
+    gl_FragColor = vec4(paletteRainbowRamp(uHueOffset, hueIndex, opacityFactor), mask);
   }
 `;
 
@@ -90,9 +102,15 @@ sketch.draw( (
   const p = getP5();
 
   p.clear();
-  p.background( ...( options.sketch.backgroundColor ?? [
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    options.sketch.backgroundColor,
+    {
+      fallback: [
+        0
+      ],
+      palette: options.sketch.colors?.palette
+    }
+  ) );
 
   const t = animation.angle;
 
@@ -143,7 +161,10 @@ sketch.draw( (
     }
   } );
 
+  const palette = shaderPalette( options.sketch.colors );
+
   field.render( {
+    textures: palette.textures,
     seed,
     octaves: detail,
     falloff,
@@ -161,6 +182,7 @@ sketch.draw( (
       uT: t,
       uMin: range.min,
       uHueRange: hueRange,
+      uPaletteOn: palette.uniforms.uPaletteOn,
       uHueOffset: hueOffset,
       uWaveMin: waveMin,
       uWaveMax: waveMax,

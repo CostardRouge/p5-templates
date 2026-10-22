@@ -6,7 +6,7 @@ import {
 } from "react-hook-form";
 import SliderInput from "./SliderInput";
 
-type ControlledSliderInputProps = {
+type ControlledSliderInputProps = Pick<React.ComponentProps<typeof SliderInput>, "live"> & {
   name: string;
   label?: string;
   min?: number;
@@ -28,7 +28,8 @@ export default function ControlledSliderInput( {
   max = 100,
   step = 1,
   isModified = false,
-  onReset
+  onReset,
+  live
 }: ControlledSliderInputProps ) {
   const {
     field
@@ -47,6 +48,7 @@ export default function ControlledSliderInput( {
       step={ step }
       isModified={ isModified }
       onReset={ onReset }
+      live={ live }
     />
   );
 }

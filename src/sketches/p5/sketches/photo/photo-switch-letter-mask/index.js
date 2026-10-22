@@ -12,6 +12,10 @@ import {
 import {
   getP5
 } from "@/p5/utils/sketch.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 const canvases = sketch.state( () => ( {} ) );
 
@@ -23,7 +27,7 @@ sketch.setup( () => {
     p.height
   );
 
-  p.background( ...options.sketch.backgroundColor );
+  paintBackground( resolveBackground( options.sketch.backgroundColor ) );
 } );
 
 sketch.draw( (
@@ -32,7 +36,7 @@ sketch.draw( (
   const p = getP5();
 
   p.clear();
-  p.background( ...options.sketch.backgroundColor );
+  paintBackground( resolveBackground( options.sketch.backgroundColor ) );
 
   const images = imageUtils.getImages();
 
@@ -111,7 +115,7 @@ sketch.draw( (
     canvases.mask
   );
 
-  p.background( ...options.sketch.backgroundColor );
+  paintBackground( resolveBackground( options.sketch.backgroundColor ) );
   p.image(
     mask,
     0,

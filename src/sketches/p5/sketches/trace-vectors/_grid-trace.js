@@ -296,7 +296,7 @@ export function renderGridTraceCommon( {
           chunkIndex,
           vectorIndexProgression
         } )
-        : colors.rainbow( {
+        : colors.palette( opts.colors?.palette )( {
           hueOffset: time + ( opts.colors?.hueOffset ?? 0 ),
           hueIndex:
             mappers.fn(

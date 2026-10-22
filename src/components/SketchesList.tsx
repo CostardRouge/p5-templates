@@ -416,6 +416,7 @@ export default function SketchesList( {
             <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-foreground/40" />
             <input
               type="text"
+              aria-label="Search sketches"
               placeholder="Search sketches..."
               value={ search }
               onChange={ ( e ) => setSearch( e.target.value ) }

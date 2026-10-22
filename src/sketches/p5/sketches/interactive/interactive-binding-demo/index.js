@@ -18,6 +18,10 @@ import sketch from "@/p5/utils/sketch.js";
 import {
   getP5
 } from "@/p5/utils/sketch.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 function numberOr(
   value, fallback
@@ -29,11 +33,16 @@ sketch.draw( () => {
   const p = getP5();
   const s = options.sketch ?? {};
 
-  const background = s.backgroundColor ?? [
-    12,
-    12,
-    16
-  ];
+  const background = resolveBackground(
+    s.backgroundColor,
+    {
+      fallback: [
+        12,
+        12,
+        16
+      ]
+    }
+  );
   const dotColor = s.dotColor ?? [
     235,
     240,
@@ -71,7 +80,7 @@ sketch.draw( () => {
   ) * p.height;
 
   p.clear();
-  p.background( ...background );
+  paintBackground( background );
 
   // ── Ring of dots ──────────────────────────────────────────────────────────
   p.push();

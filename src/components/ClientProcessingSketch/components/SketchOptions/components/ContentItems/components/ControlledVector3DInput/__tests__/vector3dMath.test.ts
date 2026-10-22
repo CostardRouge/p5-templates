@@ -7,6 +7,7 @@ import {
   fromCube,
   length3,
   projectPoint,
+  randomDirection,
   randomVector3D,
   resolveAxes3D,
   snapToAxis,
@@ -183,6 +184,147 @@ describe(
           x: -0.37,
           y: 0.55,
           z: 6
+        } );
+      }
+    );
+
+    // A seeded generator, so the statistical checks below are deterministic.
+    const seeded = ( seed: number ) => {
+      let state = seed >>> 0;
+
+      return () => {
+        state = ( state * 1664525 + 1013904223 ) >>> 0;
+
+        return state / 2 ** 32;
+      };
+    };
+
+    it(
+      "draws a direction on the unit sphere, never a short or long one",
+      () => {
+        const random = seeded( 7 );
+
+        for ( let i = 0; i < 200; i++ ) {
+          const v = randomVector3D(
+            {
+              kind: "direction"
+            },
+            random
+          );
+
+          // Snapped to the 0.01 step, so within a rounding of length 1.
+          expect( length3( v ) ).toBeGreaterThan( 0.98 );
+          expect( length3( v ) ).toBeLessThan( 1.02 );
+        }
+      }
+    );
+
+    it(
+      "spreads directions evenly: no octant and no axis is favoured",
+      () => {
+        const random = seeded( 11 );
+        const axes = resolveAxes3D( {} );
+        const octants = new Array( 8 ).fill( 0 );
+        let nearAxis = 0;
+        const draws = 8000;
+
+        for ( let i = 0; i < draws; i++ ) {
+          const v = randomDirection(
+            axes,
+            random
+          ) as Vector3DValue;
+
+          octants[ ( v.x > 0 ? 1 : 0 ) + ( v.y > 0 ? 2 : 0 ) + ( v.z > 0 ? 4 : 0 ) ]++;
+
+          // Within ~18° of an axis: a cap of area 2π(1 − cos 18°) per axis
+          // end, six ends ≈ 14.7 % of the sphere. A draw inside the cube
+          // lands there far less often, its mass being in the corners.
+          if ( Math.max(
+            Math.abs( v.x ),
+            Math.abs( v.y ),
+            Math.abs( v.z )
+          ) > Math.cos( Math.PI / 10 ) ) {
+            nearAxis++;
+          }
+        }
+
+        for ( const count of octants ) {
+          expect( count / draws ).toBeGreaterThan( 0.1 );
+          expect( count / draws ).toBeLessThan( 0.15 );
+        }
+
+        expect( nearAxis / draws ).toBeGreaterThan( 0.12 );
+        expect( nearAxis / draws ).toBeLessThan( 0.175 );
+      }
+    );
+
+    it(
+      "keeps to the part of the sphere an unsigned box allows",
+      () => {
+        const random = seeded( 3 );
+
+        for ( let i = 0; i < 100; i++ ) {
+          const v = randomVector3D(
+            {
+              kind: "direction",
+              allowNegative: false
+            },
+            random
+          );
+
+          expect( v.x ).toBeGreaterThanOrEqual( 0 );
+          expect( v.y ).toBeGreaterThanOrEqual( 0 );
+          expect( v.z ).toBeGreaterThanOrEqual( 0 );
+          expect( length3( v ) ).toBeGreaterThan( 0.98 );
+        }
+      }
+    );
+
+    it(
+      "falls back to the box when no unit vector fits it",
+      () => {
+        const config = {
+          kind: "direction" as const,
+          min: -0.5,
+          max: 0.5
+        };
+
+        expect( randomDirection(
+          resolveAxes3D( config ),
+          seeded( 5 )
+        ) ).toBeNull();
+
+        const v = randomVector3D(
+          config,
+          seeded( 5 )
+        );
+
+        for ( const component of [
+          v.x,
+          v.y,
+          v.z
+        ] ) {
+          expect( Math.abs( component ) ).toBeLessThanOrEqual( 0.5 );
+        }
+      }
+    );
+
+    it(
+      "leaves a position's draw as it was: three draws inside the box",
+      () => {
+        expect( randomVector3D(
+          {
+            kind: "position"
+          },
+          drawsOf(
+            0.25,
+            0.5,
+            1
+          )
+        ) ).toEqual( {
+          x: -0.5,
+          y: 0,
+          z: 1
         } );
       }
     );

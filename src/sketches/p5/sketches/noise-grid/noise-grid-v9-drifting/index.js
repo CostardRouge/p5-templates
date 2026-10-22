@@ -7,6 +7,10 @@ import colors from "@/p5/utils/colors.js";
 import easing from "@/p5/utils/easing.js";
 import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 const sketchState = sketch.state( () => ( {
   min: Math.PI,
@@ -26,9 +30,15 @@ sketch.draw( () => {
   const p = getP5();
 
   p.clear();
-  p.background( ...( options.sketch.backgroundColor ?? [
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    options.sketch.backgroundColor,
+    {
+      fallback: [
+        0
+      ],
+      palette: options.sketch.colors?.palette
+    }
+  ) );
 
   const t = animation.angle;
 
@@ -144,7 +154,7 @@ sketch.draw( () => {
         angle
       );
 
-      p.stroke( colors.rainbow( {
+      p.stroke( colors.palette( options.sketch.colors?.palette )( {
         hueOffset,
         hueIndex: p.map(
           angle,

@@ -532,7 +532,8 @@ function getDefaultValueForConfig( config: FieldConfig ): any {
         255,
         255
       ];
-    case "select": {
+    case "select":
+    case "palette-picker": {
       return config.options[ 0 ]?.value ?? "";
     }
     // The pad edits an { x, y } pair in place: without a shaped default a new
@@ -569,6 +570,32 @@ function getDefaultValueForConfig( config: FieldConfig ): any {
         obj[ key ] = getDefaultValueForConfig( subConfig );
       }
       return obj;
+    }
+    // A list of variants (a sequence's scenes): a new row is the first
+    // variant, whole — parsed through the group's schema when it has one, so
+    // every nested default is filled, else built from that branch's configs.
+    case "conditional-group": {
+      const first = config.typeSelector.options[ 0 ]?.value ?? "";
+      const seed = {
+        [ config.conditionalOn ]: first
+      };
+
+      if ( config.schema && typeof ( config.schema as any ).parse === "function" ) {
+        return config.schema.parse( seed );
+      }
+
+      const branch = config.configs[ String( first ) ] ?? {};
+
+      return {
+        ...seed,
+        ...Object.fromEntries( Object.entries( branch ).map( ( [
+          key,
+          subConfig
+        ] ) => [
+          key,
+          subConfig.default !== undefined ? subConfig.default : getDefaultValueForConfig( subConfig )
+        ] ) )
+      };
     }
     default:
       return "";

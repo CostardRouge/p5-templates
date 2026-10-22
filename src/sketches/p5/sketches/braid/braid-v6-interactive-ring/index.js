@@ -6,7 +6,7 @@ import animation from "@/p5/utils/animation.js";
 import createNoiseFieldRenderer from "@/p5/utils/noiseFieldGpu.js";
 import {
   BRAID_UNIFORMS_GLSL,
-  IRIDESCENT_GLSL,
+  PALETTE_IRIDESCENT_GLSL,
   BRAID_CAMERA_MAIN_GLSL,
   braidShadingGlsl,
   lightDirFrom,
@@ -32,6 +32,13 @@ import {
 import {
   renderSplines
 } from "../../splines/_shared.js";
+import {
+  shaderPalette
+} from "@/p5/utils/palettes.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // braid v6 — interactive ring.
@@ -103,7 +110,7 @@ const FRAGMENT = `
   uniform float uBandLow;   // enclosing cylinder band (CPU, overshoot-padded)
   uniform float uBandHigh;
 
-  ${ IRIDESCENT_GLSL }
+  ${ PALETTE_IRIDESCENT_GLSL }
 
   // Periodic Catmull-Rom radius profile through the control points. Hermite on
   // the segment that contains u, with finite-difference tangents over the
@@ -801,11 +808,17 @@ sketch.draw( () => {
   }
 
   p.clear();
-  p.background( ...( o.backgroundColor ?? [
-    0,
-    0,
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0
+      ],
+      palette: o.colors?.palette
+    }
+  ) );
 
   const weave = resolveWeave( o.weave ?? {} );
   const k = projectionScale(
@@ -945,7 +958,10 @@ sketch.draw( () => {
       light.elevation ?? 0.5
     );
 
+    const palette = shaderPalette( colors );
+
     ringRenderer.render( {
+      textures: palette.textures,
       columns: 1,
       rows: 1,
       resolutionScale: rendering.resolutionScale ?? 0.6,
@@ -977,6 +993,7 @@ sketch.draw( () => {
         uYaw: 0,
         uRoll: 0,
         uHueSpeed: hueSpread ? hueCycles / ( p.TAU * hueSpread ) : 0,
+        uPaletteOn: palette.uniforms.uPaletteOn,
         uHueSpread: hueSpread,
         uHuePhase: colors.huePhase ?? 2.6,
         uLengthHueShift: colors.lengthHueShift ?? 0.35,

@@ -1,5 +1,5 @@
-import {
-  CSSProperties, JSX, useEffect, useRef, useState
+import React, {
+  CSSProperties, JSX, useEffect, useId, useRef, useState
 } from "react";
 import {
   useDrag
@@ -312,6 +312,23 @@ const CollapsibleItem = ( {
     handleToggle();
   };
 
+  // The header is a render prop that may hold its own buttons (reset, add,
+  // remove…), so it cannot be a <button>. It is made one for the keyboard
+  // instead: focusable, announced with its state, and toggled by Enter/Space
+  // — only when the header itself has focus, never from a control inside it.
+  const handleHeaderKeyDown = ( event: React.KeyboardEvent<HTMLDivElement> ) => {
+    if ( event.target !== event.currentTarget ) {
+      return;
+    }
+
+    if ( event.key === "Enter" || event.key === " " ) {
+      event.preventDefault();
+      handleToggle();
+    }
+  };
+
+  const contentId = useId();
+
   const isDragging = dragY > 0;
 
   return (
@@ -325,8 +342,16 @@ const CollapsibleItem = ( {
       } }
     >
       <div
-        className={ headerContainerClassName }
+        className={ clsx(
+          headerContainerClassName,
+          "outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-focus"
+        ) }
+        role="button"
+        tabIndex={ 0 }
+        aria-expanded={ expanded }
+        aria-controls={ contentId }
         onClick={ handleHeaderClick }
+        onKeyDown={ handleHeaderKeyDown }
         style={ gesturesEnabled ? {
           touchAction: "pan-x"
         } : undefined }
@@ -339,6 +364,7 @@ const CollapsibleItem = ( {
       </div>
 
       <div
+        id={ contentId }
         className="grid transition-[grid-template-rows] duration-200 ease-out motion-reduce:transition-none"
         style={ {
           gridTemplateRows: gridOpen ? "1fr" : "0fr"

@@ -5,7 +5,7 @@
  */
 
 import {
-  collectBranchPaths, flattenKeys, flattenPointKeys, groupKeyPaths
+  collectBranchPaths, flattenKeys, flattenPointKeys, flattenTripleKeys, groupKeyPaths
 } from "../keyPaths.js";
 
 describe(
@@ -218,6 +218,41 @@ describe(
             0.25
           ]
         } ) ).toEqual( [] );
+      }
+    );
+  }
+);
+
+describe(
+  "flattenTripleKeys",
+  () => {
+    it(
+      "lists the { x, y, z } leaves and nothing two-dimensional",
+      () => {
+        expect( flattenTripleKeys( {
+          object: {
+            position: {
+              x: 0,
+              y: 0.2,
+              z: -0.4
+            },
+            radius: 0.3
+          },
+          light: {
+            direction: {
+              x: -0.5,
+              y: -0.7,
+              z: -0.5
+            }
+          },
+          wind: {
+            x: 0.1,
+            y: 0.2
+          }
+        } ) ).toEqual( [
+          "object.position",
+          "light.direction"
+        ] );
       }
     );
   }

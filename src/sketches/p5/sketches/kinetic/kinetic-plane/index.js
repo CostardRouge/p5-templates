@@ -16,6 +16,10 @@ import {
 import {
   drawInteractionOverlay
 } from "@/p5/utils/interaction/overlay.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 const sketchState = sketch.state( () => ( {
   plane: {
@@ -30,7 +34,7 @@ const sketchState = sketch.state( () => ( {
 sketch.setup( async() => {
   const p = getP5();
 
-  p.background( ...getBackgroundColor() );
+  paintBackground( getBackgroundColor() );
   p.pixelDensity( 1 );
 
   sketchState.plane.graphics = graphics.createAutoResizableGraphics(
@@ -51,11 +55,16 @@ sketch.setup( async() => {
 } );
 
 const getBackgroundColor = () =>
-  options.sketch?.backgroundColor ?? [
-    246,
-    235,
-    225
-  ];
+  resolveBackground(
+    options.sketch?.backgroundColor,
+    {
+      fallback: [
+        246,
+        235,
+        225
+      ]
+    }
+  );
 
 // Interaction pointers arrive in top-left canvas space; the plane lives in
 // centered WEBGL model space, so shift each pointer by half the canvas. This
@@ -270,7 +279,7 @@ sketch.draw( () => {
   const interaction = options.sketch?.interaction ?? {};
 
   p.clear();
-  p.background( ...getBackgroundColor() );
+  paintBackground( getBackgroundColor() );
 
   sketchState.plane.gridData = cache.store(
     cache.key(

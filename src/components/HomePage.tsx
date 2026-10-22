@@ -18,6 +18,9 @@ import {
 import type {
   SketchItem
 } from "@/app/sketches/getSketchesData";
+import {
+  SOURCE_URL
+} from "@/config/site";
 
 type HomePageProps = {
   sketches: SketchItem[];
@@ -29,11 +32,14 @@ type HomePageProps = {
    * component would ship the whole thing to the browser.
    */
   studioFeatures?: React.ReactNode;
+  /**
+   * The build's version, read by the server page and handed down as a string:
+   * importing `@/lib/version` from this client component would ship the whole
+   * package.json, every dependency included, in its chunk (measured).
+   */
+  version: string;
 };
 
-// Still the p5-templates slug until the repo itself is renamed (see TODO.md,
-// "Rename follow-ups") — GitHub will redirect the old URL afterwards.
-const GITHUB_URL = "https://github.com/CostardRouge/p5-templates";
 const LATEST_COUNT = 8;
 const RANDOM_COUNT = 4;
 
@@ -251,7 +257,8 @@ function SketchCard( {
 export default function HomePage( {
   sketches,
   engineLabels,
-  studioFeatures
+  studioFeatures,
+  version
 }: HomePageProps ) {
   const [
     query,
@@ -410,6 +417,7 @@ export default function HomePage( {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40" />
               <input
                 type="text"
+                aria-label="Search sketches"
                 value={ query }
                 onChange={ ( e ) => setQuery( e.target.value ) }
                 placeholder={ `Search ${ sketches.length } sketches...` }
@@ -629,7 +637,7 @@ export default function HomePage( {
                 <ArrowUpRight className="w-4 h-4" />
               </Link>
               <a
-                href={ GITHUB_URL }
+                href={ SOURCE_URL }
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 rounded-xl border border-border px-6 py-3 text-sm font-semibold text-foreground/80 hover:text-foreground hover:border-foreground/30 hover:bg-hover/50 transition-colors"
@@ -646,7 +654,18 @@ export default function HomePage( {
               >
                 site map
               </Link>
+              { " · " }
+              <Link
+                href="/legal"
+                className="hover:text-foreground transition-colors"
+              >
+                legal
+              </Link>
               { " · mit license · " }
+              <span className="normal-case tabular-nums">
+                v{ version }
+              </span>
+              { " · " }
               { new Date().getFullYear() }
             </p>
           </footer>

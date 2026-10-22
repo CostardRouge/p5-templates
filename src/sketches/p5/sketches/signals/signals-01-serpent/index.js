@@ -7,6 +7,10 @@ import converters from "@/p5/utils/converters.js";
 import animation from "@/p5/utils/animation.js";
 import audio from "@/p5/utils/audio.js";
 import drawInstrument from "../_instrument.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SIGNALS — 01 / SERPENT  (hero piece, Demo Festival 2027)
@@ -90,12 +94,17 @@ sketch.draw( () => {
   const centerX = p.width / 2;
 
   p.clear();
-  p.background( ...( o.backgroundColor ?? [
-    0,
-    0,
-    0,
-    255
-  ] ) );
+  paintBackground( resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0,
+        255
+      ]
+    }
+  ) );
 
   // ── trace the spine, sampling geometry for the instrument as we go ──────────
   const lerpMin = -p.PI;

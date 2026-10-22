@@ -7,6 +7,9 @@ import {
 import {
   dragClickFormConfiguration, dragClickFormValues
 } from "@/p5/utils/interaction/dragClickOptions.js";
+import {
+  shaderPaletteFormFields, shaderPaletteFormValues
+} from "@/p5/utils/palettes.js";
 
 // A cycle of texts (single letters or whole words) physically converted into
 // one another by a troupe of virtual pointers: matched points are dragged to
@@ -182,6 +185,7 @@ export const formValues = {
   },
 
   colors: {
+    ...shaderPaletteFormValues,
     hueSpeed: -0.12,
     hueSpread: 4.03,
     huePhase: 2.6,
@@ -689,6 +693,7 @@ export const formConfiguration: Record<string, any> = {
     component: "nested-object",
     label: "Iridescent",
     fields: {
+      ...shaderPaletteFormFields,
       hueSpeed: {
         label: "Hue speed (snaps to whole cycles/loop)",
         component: "slider",
@@ -872,7 +877,8 @@ export const formConfiguration: Record<string, any> = {
   },
 
   backgroundColor: {
-    component: "color",
+    component: "background",
+    palette: "colors/palette",
     label: "Background color"
   }
 };

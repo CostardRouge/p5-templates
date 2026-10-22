@@ -12,6 +12,10 @@ import {
 import {
   renderGridTraceCommon
 } from "../_grid-trace.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 sketch.setup(
   undefined,
@@ -26,9 +30,15 @@ sketch.draw( (
   const p = getP5();
 
   p.clear();
-  p.background( ...( options.sketch.backgroundColor ?? [
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    options.sketch.backgroundColor,
+    {
+      fallback: [
+        0
+      ],
+      palette: options.sketch.colors?.palette
+    }
+  ) );
   p.noFill();
 
   const time = loopedTime();
@@ -54,7 +64,10 @@ sketch.draw( (
     positionEasing: easing.easeInOutBack,
     chunkColor: ( {
       p: pp, time: t, opts, chunkIndex, vectorIndexProgression
-    } ) => colors.test( {
+    } ) => colors.palette(
+      options.sketch.colors?.palette,
+      "test"
+    )( {
       hueOffset: t + chunkIndex + ( opts.colors?.hueOffset ?? 0 ),
       hueIndex:
         mappers.fn(

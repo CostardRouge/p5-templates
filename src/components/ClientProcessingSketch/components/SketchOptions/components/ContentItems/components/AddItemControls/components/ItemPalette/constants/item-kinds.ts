@@ -6,6 +6,7 @@ import {
   Layers as StackIcon,
   PaintBucket as BgIcon,
   Blocks as SketchIcon,
+  Clapperboard as SequenceIcon,
   Terminal as SpecsIcon,
   QrCode as QrCodeIcon,
   ListOrdered as BreakdownIcon,
@@ -17,6 +18,7 @@ import {
   Palette as SwatchIcon,
   Text as ReadoutIcon,
   SquareDot as VectorIcon,
+  Box as Vector3DIcon,
   Scan as BoundingBoxIcon
 } from "lucide-react";
 import {
@@ -27,6 +29,7 @@ import {
 
 export const ITEM_ORDER: ItemKind[] = [
   "sketch",
+  "sequence",
   "text",
   "title",
   "image",
@@ -44,6 +47,7 @@ export const ITEM_ORDER: ItemKind[] = [
   "hud-swatch",
   "hud-readout",
   "hud-vector",
+  "hud-vector3d",
   "hud-bounding-box"
 ];
 
@@ -54,6 +58,7 @@ export const ITEM_GROUPS: ItemKindGroup[] = [
     label: "Content",
     kinds: [
       "sketch",
+      "sequence",
       "text",
       "title",
       "image",
@@ -76,6 +81,7 @@ export const ITEM_GROUPS: ItemKindGroup[] = [
       "hud-swatch",
       "hud-readout",
       "hud-vector",
+      "hud-vector3d",
       "hud-bounding-box"
     ]
   }
@@ -147,6 +153,11 @@ export const ITEM_META: Record<ItemKind, ItemKindMeta> = {
     Icon: VectorIcon,
     description: "Mini x/y map of a point, in relative or absolute coordinates"
   },
+  "hud-vector3d": {
+    label: "Vector 3D",
+    Icon: Vector3DIcon,
+    description: "An x/y/z parameter as a box, three maps, bars or a gizmo"
+  },
   "hud-bounding-box": {
     label: "Bounding box",
     Icon: BoundingBoxIcon,
@@ -171,6 +182,11 @@ export const ITEM_META: Record<ItemKind, ItemKindMeta> = {
     label: "Sketch",
     Icon: SketchIcon,
     description: "Another sketch, running in its own buffer as a layer"
+  },
+  sequence: {
+    label: "Sequence",
+    Icon: SequenceIcon,
+    description: "A reel: whole sketches, splash and loading screens cut together with GL transitions, camera moves and a film grade"
   },
   qrcode: {
     label: "QR code",

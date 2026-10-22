@@ -42,6 +42,10 @@ import {
   buildSplineSpine,
   applyWave
 } from "../_shared.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 /* ------------------------------------------------------------------ */
 /*  photo-trail-effect-v2-echo                                         */
@@ -843,7 +847,7 @@ function drawHandles(
 sketch.setup( () => {
   const p = getP5();
 
-  p.background( ...options.sketch.backgroundColor );
+  paintBackground( resolveBackground( options.sketch.backgroundColor ) );
 
   state.imagePath = resolveImagePath( options.sketch?.photo?.image );
 
@@ -935,9 +939,14 @@ sketch.draw( () => {
   const p = getP5();
   const o = options.sketch ?? {};
 
-  p.background( ...( o.backgroundColor ?? [
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        0
+      ]
+    }
+  ) );
 
   const photo = common.getAsset( state.imagePath );
 

@@ -38,6 +38,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: now,
       changeFrequency: "weekly",
       priority: 0.5
+    },
+    // The legal notice: indexable, rarely changed, and nothing a visitor is
+    // looking for first.
+    {
+      url: `${ baseUrl }/legal`,
+      lastModified: now,
+      changeFrequency: "yearly",
+      priority: 0.3
     }
   ];
 

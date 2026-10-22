@@ -254,4 +254,18 @@ export interface ServerCaptureController {
    * argument.
    */
   renderFrame( index: number ): void | Promise<void>;
+  /**
+   * The loop `renderFrame` indices count in, read from the live option store
+   * at call time: frame `i` is drawn at `i / frameRate` seconds and the loop
+   * closes at `totalFrames`. Filled in by `registerServerCaptureController`,
+   * so an engine never declares it — it is what lets a caller outside the
+   * page (the agent's `render.frame`) turn a time into a frame index.
+   */
+  timing?(): CaptureTiming;
 }
+
+export type CaptureTiming = {
+  frameRate: number;
+  duration: number;
+  totalFrames: number;
+};

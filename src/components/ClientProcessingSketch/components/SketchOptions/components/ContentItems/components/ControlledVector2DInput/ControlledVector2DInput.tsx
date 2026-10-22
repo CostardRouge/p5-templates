@@ -1,5 +1,6 @@
 "use client";
 
+import type React from "react";
 import {
   useController, useFormContext
 } from "react-hook-form";
@@ -12,7 +13,7 @@ export type {
   Vector2DInputConfig, Vector2DValue
 } from "./Vector2DPad";
 
-type Props = {
+type Props = Pick<React.ComponentProps<typeof Vector2DPad>, "live"> & {
   name: string;
   config?: Vector2DInputConfig;
 };
@@ -23,7 +24,7 @@ type Props = {
  * them, so the pad can edit a position nested inside a larger value object.
  */
 export default function ControlledVector2DInput( {
-  name, config
+  name, config, live
 }: Props ) {
   const {
     control
@@ -50,6 +51,7 @@ export default function ControlledVector2DInput( {
       }
       config={ config }
       ariaLabel={ name }
+      live={ live }
     />
   );
 }

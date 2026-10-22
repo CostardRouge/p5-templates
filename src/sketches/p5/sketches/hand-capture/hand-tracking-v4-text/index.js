@@ -4,6 +4,9 @@ import sketch from "@/p5/utils/sketch.js";
 import {
   HandCaptureScene
 } from "../_shared.js";
+import {
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 const scene = new HandCaptureScene( {
   layers: {
@@ -23,9 +26,14 @@ sketch.draw( () => {
   const letters = options.sketch?.letters ?? {};
   const visuals = options.sketch?.visuals ?? {};
   const hands = options.sketch?.hands ?? {};
-  const background = options.sketch?.backgroundColor ?? options.colors?.background ?? [
-    0
-  ];
+  const background = resolveBackground(
+    options.sketch?.backgroundColor ?? options.colors?.background,
+    {
+      fallback: [
+        0
+      ]
+    }
+  );
 
   scene.beginFrame( background );
   scene.readInteraction( interaction );

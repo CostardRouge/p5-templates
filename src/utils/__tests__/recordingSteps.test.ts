@@ -32,6 +32,7 @@ describe(
       recordingStartAt: null,
       recordingEndAt: null,
       recordingDuration: null,
+      error: null,
       options: {},
       createdAt: new Date(),
       updatedAt: new Date()

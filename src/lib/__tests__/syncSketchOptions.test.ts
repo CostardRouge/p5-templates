@@ -5,6 +5,7 @@
 import {
   extractOptionsSubset,
   getSketchOptions,
+  replaceSketchOptions,
   setSketchOptions,
   subscribeSketchOptions
 } from "@/lib/syncSketchOptions";
@@ -323,6 +324,119 @@ describe(
             "gone.field"
           ]
         ) ).toBeNull();
+      }
+    );
+  }
+);
+
+describe(
+  "replaceSketchOptions",
+  () => {
+    beforeEach( resetStore );
+
+    it(
+      "drops what the previous sketch had and the next one lacks, bindings first",
+      () => {
+        // Sketch A, with a colour-ramp binding in its interactive namespace.
+        setSketchOptions( {
+          sketch: {
+            material: {
+              ramp: {
+                bands: 0.75
+              }
+            },
+            body: {
+              enabled: true
+            }
+          },
+          interactive: {
+            bindings: [
+              {
+                id: "b1",
+                target: "material.ramp.stops.0",
+                kind: "color"
+              }
+            ]
+          }
+        } );
+
+        // Sketch B mounts: same material paths, no `interactive`, no `body`.
+        replaceSketchOptions( {
+          sketch: {
+            material: {
+              ramp: {
+                bands: 0.5
+              }
+            }
+          }
+        } );
+
+        expect( getSketchOptions() ).toEqual( {
+          sketch: {
+            material: {
+              ramp: {
+                bands: 0.5
+              }
+            }
+          }
+        } );
+      }
+    );
+
+    it(
+      "keeps the store object itself, so references held elsewhere stay live",
+      () => {
+        const before = getSketchOptions();
+
+        replaceSketchOptions( {
+          sketch: {
+            speed: 3
+          }
+        } );
+
+        expect( getSketchOptions() ).toBe( before );
+        expect( before.sketch ).toEqual( {
+          speed: 3
+        } );
+      }
+    );
+
+    it(
+      "tells subscribers, even when the new options equal the old",
+      () => {
+        setSketchOptions( {
+          sketch: {
+            speed: 1
+          }
+        } );
+
+        const listener = jest.fn();
+        const unsubscribe = subscribeSketchOptions( listener );
+
+        replaceSketchOptions( {
+          sketch: {
+            speed: 1
+          }
+        } );
+        unsubscribe();
+
+        expect( listener ).toHaveBeenCalledTimes( 1 );
+      }
+    );
+
+    it(
+      "does not share nested objects with its argument",
+      () => {
+        const next = {
+          sketch: {
+            speed: 1
+          }
+        };
+
+        replaceSketchOptions( next );
+        next.sketch.speed = 9;
+
+        expect( getSketchOptions().sketch.speed ).toBe( 1 );
       }
     );
   }

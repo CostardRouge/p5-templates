@@ -25,6 +25,8 @@ import {
   randomValue,
   shapedScalar,
   computeBindingSignals,
+  computeBindingValues,
+  mapVector3,
   isGenerator,
   selectActiveBindings,
   getPath,
@@ -1878,6 +1880,250 @@ describe(
           0,
           255
         ] );
+      }
+    );
+  }
+);
+
+describe(
+  "computeBindingValues",
+  () => {
+    it(
+      "reads each driven target off the resolved clone: a number, an option index, 0/1, bytes, a pair",
+      () => {
+        const resolved = {
+          grid: {
+            rows: 287.5
+          },
+          palette: "purple",
+          stroke: true,
+          tint: [
+            1.4,
+            300,
+            -2
+          ],
+          orientation: {
+            x: 0.25,
+            y: -0.5,
+            z: 9
+          }
+        };
+        const values = computeBindingValues(
+          resolved,
+          [
+            {
+              source: "oscillator",
+              target: "grid.rows",
+              kind: "continuous"
+            },
+            {
+              source: "ramp",
+              target: "palette",
+              kind: "enum",
+              mapping: {
+                values: [
+                  "rainbow",
+                  "purple",
+                  "green"
+                ]
+              }
+            },
+            {
+              source: "oscillator",
+              target: "stroke",
+              kind: "boolean"
+            },
+            {
+              source: "oscillator",
+              target: "tint",
+              kind: "color"
+            },
+            {
+              source: "orbit",
+              target: "orientation",
+              kind: "vector2d"
+            }
+          ]
+        );
+
+        expect( values ).toEqual( {
+          "grid.rows": 287.5,
+          palette: 1,
+          stroke: 1,
+          // Whole bytes, clamped, alpha defaulting to opaque.
+          tint: [
+            1,
+            255,
+            0,
+            255
+          ],
+          // Only the pair the pad edits, whatever rides along.
+          orientation: {
+            x: 0.25,
+            y: -0.5
+          }
+        } );
+      }
+    );
+
+    it(
+      "leaves out what does not play, and an enum value off its own list",
+      () => {
+        const values = computeBindingValues(
+          {
+            a: 1,
+            b: 2,
+            palette: "gone"
+          },
+          [
+            {
+              source: "oscillator",
+              target: "a",
+              kind: "continuous",
+              enabled: false
+            },
+            {
+              source: "oscillator",
+              target: "b",
+              kind: "continuous"
+            },
+            {
+              source: "ramp",
+              target: "palette",
+              kind: "enum",
+              mapping: {
+                values: [
+                  "rainbow"
+                ]
+              }
+            }
+          ]
+        );
+
+        expect( values ).toEqual( {
+          b: 2
+        } );
+      }
+    );
+
+    it(
+      "honours solo across the whole scope",
+      () => {
+        const values = computeBindingValues(
+          {
+            a: 1,
+            b: 2
+          },
+          [
+            {
+              source: "oscillator",
+              target: "a",
+              kind: "continuous"
+            },
+            {
+              source: "oscillator",
+              target: "b",
+              kind: "continuous",
+              solo: true
+            }
+          ]
+        );
+
+        expect( values ).toEqual( {
+          b: 2
+        } );
+      }
+    );
+  }
+);
+
+describe(
+  "vector3d bindings",
+  () => {
+    const sweep = {
+      source: "oscillator",
+      target: "light",
+      kind: "vector3d",
+      mapping: {
+        x: {
+          min: -1,
+          max: 1
+        },
+        y: {
+          min: 0,
+          max: 2
+        },
+        z: {
+          min: 4,
+          max: -4
+        }
+      }
+    };
+
+    it(
+      "sweeps every axis from its min to its max on one signal",
+      () => {
+        expect( mapVector3(
+          0.25,
+          sweep
+        ) ).toEqual( {
+          x: -0.5,
+          y: 0.5,
+          z: 2
+        } );
+        expect( mapVector3(
+          2,
+          sweep
+        ) ).toEqual( {
+          x: 1,
+          y: 2,
+          z: -4
+        } );
+      }
+    );
+
+    it(
+      "resolves onto the target triple, keeping the keys stored beside it",
+      () => {
+        const resolved = resolveBindings(
+          {
+            light: {
+              x: 0,
+              y: 0,
+              z: 0,
+              label: "key"
+            },
+            bindings: [
+              {
+                ...sweep,
+                oscillator: {
+                  wave: "sine",
+                  cycles: 1
+                }
+              }
+            ]
+          },
+          {},
+          -1,
+          {
+            progression: 0.5
+          }
+        ) as Record<string, any>;
+
+        // The sine wave peaks at half a cycle: every axis at its max.
+        expect( resolved.light.x ).toBeCloseTo( 1 );
+        expect( resolved.light.y ).toBeCloseTo( 2 );
+        expect( resolved.light.z ).toBeCloseTo( -4 );
+        expect( resolved.light.label ).toBe( "key" );
+
+        expect( ( computeBindingValues(
+          resolved,
+          resolved.bindings
+        ) as Record<string, unknown> ).light ).toEqual( {
+          x: resolved.light.x,
+          y: resolved.light.y,
+          z: resolved.light.z
+        } );
       }
     );
   }

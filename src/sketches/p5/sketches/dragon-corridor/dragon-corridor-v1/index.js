@@ -5,6 +5,20 @@ import sketch, {
 import animation from "@/p5/utils/animation.js";
 import audio from "@/p5/utils/audio.js";
 import createNoiseFieldRenderer from "@/p5/utils/noiseFieldGpu.js";
+import {
+  PALETTE_IRIDESCENT_GLSL
+} from "@/p5/utils/braidShader.js";
+import {
+  shaderPalette
+} from "@/p5/utils/palettes.js";
+import {
+  backgroundUniforms,
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
+import {
+  BACKGROUND_GLSL
+} from "@/p5/utils/backgroundGlsl.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // dragon-corridor v1 — a legless, wingless dragon (a flying snake) racing down an
@@ -147,18 +161,14 @@ const FRAGMENT = `
   uniform float uGlassTint;       // how much each pane borrows the iridescent hue
   uniform float uEdgeGlow;        // bright seam along the pane boundary
   uniform float uFogDensity;
-  uniform vec3  uBgColor;
+  ${ BACKGROUND_GLSL }
+
+  // The background behind this pixel, set at the top of main(): a ray that
+  // misses and the fog both fade into it, so a gradient reaches them too.
+  vec3 uBgColor;
 
   // Oil-slick / thin-film iridescence — identical palette to flowers-shaders v2.
-  vec3 iridescent(float t) {
-    vec3 spectrum = 0.5 + 0.5 * cos(
-      TAU * (uHueSpread * t + vec3(0.0, 0.33, 0.67)) + uHuePhase
-    );
-
-    float luma = dot(spectrum, vec3(0.299, 0.587, 0.114));
-
-    return clamp(mix(vec3(luma), spectrum, uSaturation) * uBrightness, 0.0, 1.0);
-  }
+  ${ PALETTE_IRIDESCENT_GLSL }
 
   // Blocked half for a segment, read from the CPU-computed pattern. Uniform
   // arrays need constant indices in WebGL1 fragment shaders, hence the loop.
@@ -523,6 +533,8 @@ const FRAGMENT = `
   }
 
   void main() {
+    uBgColor = backgroundAt(vec2(vUv.x, 1.0 - vUv.y));
+
     vec2 frag = vec2(vUv.x * uResolution.x, vUv.y * uResolution.y);
     vec2 uv = (frag - 0.5 * uResolution) / uResolution.y;
 
@@ -639,11 +651,19 @@ sketch.draw( () => {
   const sound = o.sound ?? {};
 
   p.clear();
-  p.background( ...( o.backgroundColor ?? [
-    4,
-    4,
-    10
-  ] ) );
+  const background = resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        4,
+        4,
+        10
+      ],
+      palette: o.colors?.palette
+    }
+  );
+
+  paintBackground( background );
 
   const timeScale = o.timeScale ?? 1;
   const t = animation.angle;
@@ -935,7 +955,10 @@ sketch.draw( () => {
   );
   const ribFreq = ( p.TAU * ribsInt ) / SEG;
 
+  const palette = shaderPalette( colors );
+
   scene.render( {
+    textures: palette.textures,
     columns: 1,
     rows: 1,
     resolutionScale: camera.quality ?? 0.85,
@@ -979,6 +1002,7 @@ sketch.draw( () => {
       uYaw: yaw,
       uRoll: roll,
       uHueSpeed: hueSpeedPhase,
+      uPaletteOn: palette.uniforms.uPaletteOn,
       uHueSpread: hueSpread,
       uHuePhase: colors.huePhase ?? 0.4,
       uLengthHueShift: lengthHueShift,
@@ -1018,11 +1042,13 @@ sketch.draw( () => {
       uGlassTint: obstacles.glassTint ?? 0.3,
       uEdgeGlow: obstacles.edgeGlow ?? 0.8,
       uFogDensity: corridor.fogDensity ?? 0.13,
-      uBgColor: ( o.backgroundColor ?? [
-        4,
-        4,
-        10
-      ] ).map( ( v ) => v / 255 )
+      ...backgroundUniforms(
+        background,
+        {
+          width: p.width,
+          height: p.height
+        }
+      )
     }
   } );
 } );

@@ -9,6 +9,17 @@ import animation from "@/p5/utils/animation.js";
 import createPeaksFieldRenderer, {
   easingId
 } from "@/p5/utils/peaksFieldGpu.js";
+import {
+  PALETTE_RAINBOW_GLSL
+} from "@/p5/utils/paletteGlsl.js";
+import {
+  HOUSE_PALETTE_IDS,
+  shaderPalette
+} from "@/p5/utils/palettes.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // peaks-sphere — shaders.
@@ -76,6 +87,8 @@ const POINT_BODY = `
   uniform float uHueSurfaceMix;
   uniform int   uHueIndexEaseId;
   uniform float uHueOffset;
+
+  ${ PALETTE_RAINBOW_GLSL }
 
   void computePoint(
     float col, float row, float layer,
@@ -164,7 +177,7 @@ const POINT_BODY = `
     float opacityArg    = sin(colorNoise * TAU + progression * uProgMult + layerProgression * uLayerProgMult);
     float opacityFactor = mapEase(opacityArg, -1.0, 1.0, uOpacityMax, uOpacityMin, uOpacityEaseId);
 
-    color = paletteRainbow(uHueOffset, hueIndex, opacityFactor);
+    color = paletteRainbowRamp(uHueOffset, hueIndex, opacityFactor);
   }
 `;
 
@@ -182,9 +195,15 @@ sketch.draw( () => {
   const o = options.sketch ?? {};
 
   p.clear();
-  p.background( ...( o.backgroundColor ?? [
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        0
+      ],
+      palette: o.colors?.palette
+    }
+  ) );
 
   // ── Sphere shape ──────────────────────────────────────────────────────────
   const radiusX = o.sphere?.radiusX ?? 200;
@@ -279,6 +298,12 @@ sketch.draw( () => {
     seed,
     octaves: detail,
     falloff,
+    palette: shaderPalette(
+      o.colors,
+      {
+        own: HOUSE_PALETTE_IDS
+      }
+    ),
     uniforms: {
       uMeridians: meridians,
       uParallels: parallels,

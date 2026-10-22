@@ -3,7 +3,7 @@ import {
 } from "react";
 import useMultiRecordingStatusStream from "@/hooks/useMultiRecordingStatusStream";
 import type {
-  JobModel, JobStatusEnum, RecordingProgressionSteps
+  JobModel, JobStatusEnum, RecordingProgressionSteps, RecordingProgressionStream
 } from "@/types/recording.types";
 
 export type JobProgression = {
@@ -72,99 +72,127 @@ export default function useRecordings() {
     subscribe, unsubscribe
   } = useMultiRecordingStatusStream();
 
-  // Subscribe to in-flight job updates
+  // Subscribe to in-flight job updates. Keyed on the SET of in-flight ids,
+  // not on the array: the array changes on every progress message, and an
+  // effect on it closed and re-opened the stream for each one (dropping the
+  // messages sent in between).
+  const inFlightJobsRef = useRef( inFlightJobs );
+  const subscribedIdsRef = useRef<Set<string>>( new Set() );
+
+  useEffect( () => {
+    inFlightJobsRef.current = inFlightJobs;
+  } );
+
+  const inFlightIdsKey = inFlightJobs
+    .map( ( j ) => j.id )
+    .sort()
+    .join( "," );
+
   useEffect(
     () => {
-      if ( inFlightJobs.length === 0 ) {
+      const jobIds = inFlightIdsKey ? inFlightIdsKey.split( "," ) : [];
+
+      // Jobs that left the list some other way (cancelled, deleted, retried
+      // into a new id) stop being streamed.
+      for ( const id of subscribedIdsRef.current ) {
+        if ( !jobIds.includes( id ) ) {
+          unsubscribe( id );
+        }
+      }
+
+      subscribedIdsRef.current = new Set( jobIds );
+
+      if ( jobIds.length === 0 ) {
         return;
       }
 
-      const jobIds = inFlightJobs.map( ( j ) => j.id );
+      const handleUpdate = ( {
+        jobId, data
+      }: {
+        jobId: string;
+        data: RecordingProgressionStream;
+      } ) => {
+        setInFlightJobs( ( prev ) =>
+          prev.map( ( j ) =>
+            j.id === jobId
+              ? {
+                ...j,
+                progress: data.percentage,
+                status: data.status as JobStatusEnum,
+                recordingDuration:
+                data.recordingDuration ?? j.recordingDuration
+              }
+              : j ) );
+
+        if ( data.steps !== undefined || data.currentSlideIndex !== undefined ) {
+          setJobProgressions( ( prev ) => ( {
+            ...prev,
+            [ jobId ]: {
+              steps: data.steps,
+              currentSlideIndex: data.currentSlideIndex
+            }
+          } ) );
+        }
+
+        if ( [
+          "completed",
+          "failed",
+          "cancelled"
+        ].includes( data.status ) ) {
+          // Read before it is removed below: the fallback after a failed
+          // fetch needs the job as it was in flight.
+          const finishedJob = inFlightJobsRef.current.find( ( j ) => j.id === jobId );
+
+          setInFlightJobs( ( prev ) => prev.filter( ( j ) => j.id !== jobId ) );
+          delete recordingStartTimesRef.current[ jobId ];
+
+          setJobProgressions( ( prev ) => {
+            const next = {
+              ...prev
+            };
+
+            delete next[ jobId ];
+            return next;
+          } );
+
+          fetch( `/api/recordings/${ jobId }` )
+            .then( ( res ) => ( res.ok ? res.json() : Promise.reject( "Fetch error" ) ) )
+            .then( ( updatedJob: JobModel ) => {
+              setStaticJobs( ( prev ) => [
+                updatedJob,
+                ...prev
+              ] );
+            } )
+            .catch( ( err ) => {
+              console.error(
+                "Failed to fetch updated job:",
+                err
+              );
+              if ( finishedJob ) {
+                setStaticJobs( ( prev ) => [
+                  {
+                    ...finishedJob,
+                    progress: 100,
+                    status: data.status as JobStatusEnum,
+                    recordingDuration:
+                  data.recordingDuration ?? finishedJob.recordingDuration
+                  },
+                  ...prev
+                ] );
+              }
+            } );
+
+          unsubscribe( jobId );
+        }
+      };
 
       subscribe(
         jobIds,
-        ( {
-          jobId, data
-        } ) => {
-          setInFlightJobs( ( prev ) =>
-            prev.map( ( j ) =>
-              j.id === jobId
-                ? {
-                  ...j,
-                  progress: data.percentage,
-                  status: data.status as JobStatusEnum,
-                  recordingDuration:
-                  data.recordingDuration ?? j.recordingDuration
-                }
-                : j ) );
-
-          if ( data.steps !== undefined || data.currentSlideIndex !== undefined ) {
-            setJobProgressions( ( prev ) => ( {
-              ...prev,
-              [ jobId ]: {
-                steps: data.steps,
-                currentSlideIndex: data.currentSlideIndex
-              }
-            } ) );
-          }
-
-          if ( [
-            "completed",
-            "failed",
-            "cancelled"
-          ].includes( data.status ) ) {
-            setInFlightJobs( ( prev ) => prev.filter( ( j ) => j.id !== jobId ) );
-            delete recordingStartTimesRef.current[ jobId ];
-
-            setJobProgressions( ( prev ) => {
-              const next = {
-                ...prev
-              };
-
-              delete next[ jobId ];
-              return next;
-            } );
-
-            fetch( `/api/recordings/${ jobId }` )
-              .then( ( res ) => ( res.ok ? res.json() : Promise.reject( "Fetch error" ) ) )
-              .then( ( updatedJob: JobModel ) => {
-                setStaticJobs( ( prev ) => [
-                  updatedJob,
-                  ...prev
-                ] );
-              } )
-              .catch( ( err ) => {
-                console.error(
-                  "Failed to fetch updated job:",
-                  err
-                );
-                const completedJob = inFlightJobs.find( ( j ) => j.id === jobId );
-
-                if ( completedJob ) {
-                  setStaticJobs( ( prev ) => [
-                    {
-                      ...completedJob,
-                      progress: 100,
-                      status: data.status as JobStatusEnum,
-                      recordingDuration:
-                    data.recordingDuration ?? completedJob.recordingDuration
-                    },
-                    ...prev
-                  ] );
-                }
-              } );
-
-            unsubscribe( jobId );
-          }
-        }
+        handleUpdate
       );
-
-      return () => {
-        jobIds.forEach( unsubscribe );
-      };
     },
     [
-      inFlightJobs,
+      inFlightIdsKey,
       subscribe,
       unsubscribe
     ]

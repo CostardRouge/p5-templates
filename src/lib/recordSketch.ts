@@ -1,3 +1,6 @@
+import {
+  jobFailureReason
+} from "@/lib/jobFailure";
 import createBrowserPage from "@/utils/createBrowserPage";
 import {
   captureFramesWithStreaming
@@ -246,7 +249,8 @@ async function recordSketch(
       jobId,
       {
         status: "failed",
-        progress: 100
+        progress: 100,
+        error: jobFailureReason( error )
       }
     );
 

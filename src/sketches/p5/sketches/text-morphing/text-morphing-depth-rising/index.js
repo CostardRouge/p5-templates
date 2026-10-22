@@ -13,6 +13,10 @@ import {
 import {
   getP5
 } from "@/p5/utils/sketch.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 const sketchState = sketch.state( () => ( {
   threeDimensionGraphics: null
@@ -39,9 +43,14 @@ sketch.draw( ( time ) => {
   const p = getP5();
 
   p.clear();
-  p.background( ...( options.sketch.backgroundColor ?? [
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    options.sketch.backgroundColor,
+    {
+      fallback: [
+        0
+      ]
+    }
+  ) );
 
   const itemsToMorph = [];
 
@@ -163,7 +172,7 @@ sketch.draw( ( time ) => {
         z
       );
 
-      const colorFunction = colors?.[ options.sketch.strokeColor.colorFunction ] ?? colors.rainbow;
+      const colorFunction = colors.palette( options.sketch.strokeColor.colorFunction );
       const opacityFactor = mappers.fn(
         Math.sin( getLoopPhase( [
           [

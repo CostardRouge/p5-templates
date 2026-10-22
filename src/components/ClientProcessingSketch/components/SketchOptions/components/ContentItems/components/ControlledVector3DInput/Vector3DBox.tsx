@@ -1,9 +1,15 @@
 "use client";
 
 import clamp from "@/utils/clamp";
+import clsx from "clsx";
 import {
-  useRef, useState
+  useLayoutEffect, useRef, useState
 } from "react";
+
+import {
+  type BindingValue, getBindingValues, subscribeBindingValues
+} from "@/lib/channelBridge";
+import LiveBindingValue from "../BindingAffordance/LiveBindingValue";
 
 import {
   DEFAULT_VIEW,
@@ -33,7 +39,27 @@ type Props = {
   /** Writes a whole vector; the pad snaps and clamps it per axis. */
   commit: ( next: Vector3DValue ) => void;
   ariaLabel: string;
+  /**
+   * Set while an interaction binding drives the triple: an iridescent point
+   * and stem follow the value the sketch reads this frame, the base tip turns
+   * hollow, and the path the binding sweeps (`area`, min corner → max
+   * corner) is drawn dashed.
+   */
+  live?: {
+    target: string;
+    area: { x: { min: number;
+      max: number };
+    y: { min: number;
+      max: number };
+    z?: { min: number;
+      max: number }; } | null;
+  } | null;
 };
+
+function isTriple( value: BindingValue | undefined ): value is Vector3DValue {
+  return !!value && typeof value === "object" && !Array.isArray( value ) &&
+    Number.isFinite( value.x ) && Number.isFinite( value.y ) && Number.isFinite( value.z );
+}
 
 /** The 2D pad's frame, so the two controls read as one family. */
 const FRAME_CLASS =
@@ -220,9 +246,11 @@ const BOX_EDGES: [Vector3DValue, Vector3DValue][] = ( () => {
  * is why it won over the flat pads and the trackball (`docs/vector3d-control.md`).
  */
 export default function Vector3DBox( {
-  current, axes, yDown, kind, commit, ariaLabel
+  current, axes, yDown, kind, commit, ariaLabel, live = null
 }: Props ) {
   const frameRef = useRef<HTMLDivElement>( null );
+  const liveDotRef = useRef<HTMLSpanElement>( null );
+  const liveStemRef = useRef<SVGLineElement>( null );
   const sessionRef = useRef<Session | null>( null );
   const heldAxisRef = useRef<AxisName | null>( null );
   const [
@@ -468,6 +496,75 @@ export default function Vector3DBox( {
 
   const shadowVisible = kind === "position";
 
+  // Driven: the live point goes through the same orbit projection as the
+  // tip, which CSS cannot do, so the bridge's subscriber writes the dot's
+  // position and the stem's end directly — no React render per frame. Re-run
+  // on an orbit or a base edit, so a paused sketch still redraws in place.
+  const liveTarget = live?.target ?? null;
+
+  useLayoutEffect( () => {
+    const dot = liveDotRef.current;
+    const stem = liveStemRef.current;
+
+    if ( !liveTarget || !dot || !stem ) {
+      return;
+    }
+
+    const write = ( values: Record<string, BindingValue> ) => {
+      const value = values[ liveTarget ];
+      const point = project( clampCube( toCube(
+        isTriple( value ) ? value : current,
+        axes,
+        yDown
+      ) ) );
+
+      dot.style.left = `${ point.x }%`;
+      dot.style.top = `${ point.y }%`;
+      stem.setAttribute(
+        "x2",
+        String( point.x )
+      );
+      stem.setAttribute(
+        "y2",
+        String( point.y )
+      );
+    };
+
+    write( getBindingValues() );
+
+    return subscribeBindingValues( write );
+  } );
+
+  // The path the binding sweeps: from the corner of every axis' min to the
+  // corner of every axis' max.
+  const sweep = live?.area?.z
+    ? {
+      from: project( clampCube( toCube(
+        {
+          x: live.area.x.min,
+          y: live.area.y.min,
+          z: live.area.z.min
+        },
+        axes,
+        yDown
+      ) ) ),
+      to: project( clampCube( toCube(
+        {
+          x: live.area.x.max,
+          y: live.area.y.max,
+          z: live.area.z.max
+        },
+        axes,
+        yDown
+      ) ) )
+    }
+    : null;
+  const liveDecimals = Math.max( ...[
+    axes.xAxis.step,
+    axes.yAxis.step,
+    axes.zAxis.step
+  ].map( ( step ) => ( step !== undefined && step < 1 ? 2 : 0 ) ) );
+
   return (
     <div
       ref={ frameRef }
@@ -484,7 +581,11 @@ export default function Vector3DBox( {
       onDoubleClick={ () => setView( DEFAULT_VIEW ) }
       onKeyDown={ handleKeyDown }
       onKeyUp={ handleKeyUp }
-      className={ `${ FRAME_CLASS } aspect-square w-full cursor-grab active:cursor-grabbing` }
+      className={ clsx(
+        FRAME_CLASS,
+        "aspect-square w-full cursor-grab active:cursor-grabbing",
+        live && "binding-live-ring"
+      ) }
       title="Drag the tip to move it · Shift: depth · hold x / y / z: one axis · Ctrl: snap to the grid · Esc cancels · drag elsewhere to orbit · double-click resets the view"
     >
       <svg
@@ -562,6 +663,32 @@ export default function Vector3DBox( {
           </>
         )}
 
+        {sweep && (
+          <line
+            x1={ sweep.from.x }
+            y1={ sweep.from.y }
+            x2={ sweep.to.x }
+            y2={ sweep.to.y }
+            className="stroke-foreground/40"
+            strokeWidth={ 1 }
+            strokeDasharray="2 1.5"
+            vectorEffect="non-scaling-stroke"
+          />
+        )}
+
+        {live && (
+          <line
+            ref={ liveStemRef }
+            x1={ tail.x }
+            y1={ tail.y }
+            x2={ tip.x }
+            y2={ tip.y }
+            className="stroke-foreground"
+            strokeWidth={ 1.25 }
+            vectorEffect="non-scaling-stroke"
+          />
+        )}
+
         {/* The vector itself. */}
         <line
           x1={ tail.x }
@@ -591,11 +718,47 @@ export default function Vector3DBox( {
           cx={ tip.x }
           cy={ tip.y }
           r={ 3 }
-          className="pointer-events-none fill-foreground stroke-background"
+          className={ clsx(
+            "pointer-events-none",
+            live ? "fill-background stroke-foreground" : "fill-foreground stroke-background"
+          ) }
           strokeWidth={ 0.75 }
           vectorEffect="non-scaling-stroke"
         />
       </svg>
+
+      {live && (
+        <>
+          <span
+            ref={ liveDotRef }
+            aria-hidden="true"
+            className="binding-iridescent pointer-events-none absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border border-background shadow"
+            style={ {
+              left: `${ tip.x }%`,
+              top: `${ tip.y }%`
+            } }
+          />
+          <span className="pointer-events-none absolute bottom-0.5 left-0.5 rounded-sm bg-background/70 px-0.5 font-mono text-[9px] leading-tight tabular-nums text-foreground">
+            {( [
+              "x",
+              "y",
+              "z"
+            ] as const ).map( (
+              axis, index
+            ) => (
+              <span key={ axis }>
+                {index > 0 && ", "}
+                <LiveBindingValue
+                  target={ live.target }
+                  axis={ axis }
+                  decimals={ liveDecimals }
+                  fallback={ current[ axis ].toFixed( liveDecimals ) }
+                />
+              </span>
+            ) )}
+          </span>
+        </>
+      )}
 
       {axisLines.map( ( line ) => (
         <span

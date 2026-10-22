@@ -13,7 +13,7 @@ import {
 } from "@/p5/utils/letterPaths.js";
 import {
   BRAID_UNIFORMS_GLSL,
-  IRIDESCENT_GLSL,
+  PALETTE_IRIDESCENT_GLSL,
   braidShadingGlsl,
   BRAID_CAMERA_MAIN_GLSL,
   lightDirFrom,
@@ -40,6 +40,13 @@ import {
 import {
   createHoverSounds
 } from "./hoverSounds.js";
+import {
+  shaderPalette
+} from "@/p5/utils/palettes.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // rings v10 — magnetic fly-by.
@@ -110,7 +117,7 @@ const FRAGMENT = `
   uniform float uTubeR;                 // tube radius (world)
   uniform float uSmoothK;               // smooth-union fillet (world)
 
-  ${ IRIDESCENT_GLSL }
+  ${ PALETTE_IRIDESCENT_GLSL }
 
   // Polynomial smooth-minimum (iq): melts nearby capsules into a rounded fillet.
   float smin(float a, float b, float k) {
@@ -800,11 +807,17 @@ sketch.draw( () => {
   const rendering = o.rendering ?? {};
 
   p.clear();
-  p.background( ...( o.backgroundColor ?? [
-    0,
-    0,
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0
+      ],
+      palette: o.colors?.palette
+    }
+  ) );
 
   // ── The word (single text, multi-line supported — real newlines from the
   // textarea, or a literal "\n") ─────────────────────────────────────────────
@@ -1166,7 +1179,10 @@ sketch.draw( () => {
     light.elevation ?? 0.45
   );
 
+  const palette = shaderPalette( colors );
+
   flybyRenderer.render( {
+    textures: palette.textures,
     columns: 1,
     rows: 1,
     resolutionScale: rendering.resolutionScale ?? 0.7,
@@ -1191,6 +1207,7 @@ sketch.draw( () => {
       uRoll: 0,
       uFocal: rig.focal,
       uHueSpeed: hueSpread ? hueCycles / ( p.TAU * hueSpread ) : 0,
+      uPaletteOn: palette.uniforms.uPaletteOn,
       uHueSpread: hueSpread,
       uHuePhase: colors.huePhase ?? 2.6,
       uLengthHueShift: colors.lengthHueShift ?? -0.25,

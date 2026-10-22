@@ -1,7 +1,7 @@
-import path from "path";
 import os from "node:os";
 
 import downloadFileResponse from "@/utils/downloadFileResponse";
+import resolveInsideDirectory from "@/utils/resolveInsideDirectory";
 
 export async function GET( request: Request ) {
   const {
@@ -20,21 +20,30 @@ export async function GET( request: Request ) {
 
   const folder = searchParams.get( "folder" );
 
-  if ( folder ) {
-    return downloadFileResponse( {
-      filePath: path.join(
-        os.tmpdir(),
-        folder,
-        "assets",
-        name
-      )
-    } );
+  // Both parameters are untrusted: without the containment check a `..` in
+  // either one reads any file the server process can (env, keys, source).
+  const filePath = folder
+    ? resolveInsideDirectory(
+      os.tmpdir(),
+      folder,
+      "assets",
+      name
+    )
+    : resolveInsideDirectory(
+      os.tmpdir(),
+      name
+    );
+
+  if ( !filePath ) {
+    return new Response(
+      "Invalid asset path",
+      {
+        status: 400
+      }
+    );
   }
 
   return downloadFileResponse( {
-    filePath: path.join(
-      os.tmpdir(),
-      name
-    )
+    filePath
   } );
 }

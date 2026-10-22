@@ -79,6 +79,15 @@ export default function GenericItemForm( {
           return null;
         }
 
+        // A field that only means something for some values of a sibling
+        // (the Vector 3D spin, for the views with a camera) hides otherwise.
+        if (
+          fieldConfig.visibleWhen &&
+          !fieldConfig.visibleWhen.in.includes( watch( `${ itemPath }.${ fieldConfig.visibleWhen.field }` as any ) )
+        ) {
+          return null;
+        }
+
         return (
           <FieldRenderer
             key={ fieldName }

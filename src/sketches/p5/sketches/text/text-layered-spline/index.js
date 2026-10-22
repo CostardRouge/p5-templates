@@ -7,6 +7,10 @@ import string from "@/p5/utils/string.js";
 import {
   renderSplines
 } from "../../splines/_shared.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // ── What this sketch is ──────────────────────────────────────────────────────
 // A word, centred on the canvas, is decomposed into its individual letters so
@@ -311,12 +315,17 @@ sketch.draw( () => {
   };
 
   p.clear();
-  p.background( ...( o.backgroundColor ?? [
-    8,
-    8,
-    12,
-    255
-  ] ) );
+  paintBackground( resolveBackground(
+    o.backgroundColor,
+    {
+      fallback: [
+        8,
+        8,
+        12,
+        255
+      ]
+    }
+  ) );
   p.strokeCap( p.ROUND );
   p.strokeJoin( p.ROUND );
 

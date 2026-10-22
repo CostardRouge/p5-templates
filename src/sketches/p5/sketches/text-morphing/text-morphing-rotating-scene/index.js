@@ -9,6 +9,10 @@ import animation from "@/p5/utils/animation.js";
 import {
   getP5
 } from "@/p5/utils/sketch.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 const sketchState = sketch.state( () => ( {
   threeDimensionGraphics: null
@@ -33,9 +37,15 @@ sketch.draw( ( time ) => {
   const p = getP5();
 
   p.clear();
-  p.background( ...( options.sketch.backgroundColor ?? [
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    options.sketch.backgroundColor,
+    {
+      fallback: [
+        0
+      ],
+      palette: options.sketch.colors?.palette
+    }
+  ) );
 
   const itemsToMorph = [];
 
@@ -201,7 +211,7 @@ sketch.draw( ( time ) => {
       const {
         x, y
       } = points[ i ];
-      const colorFunction = colors.rainbow;
+      const colorFunction = colors.palette( options.sketch.colors?.palette );
       const opacityFactor = mappers.fn(
         p.sin(
           depthProgression * 20 + animation.angle * 3,

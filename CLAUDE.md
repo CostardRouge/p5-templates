@@ -6,7 +6,9 @@ Agents read this file at the start of every session. These rules override the ag
 
 - **Sketchbook** — a Next.js 16 (App Router, Turbopack) / React 19 / TypeScript-strict app for building, parameterizing and exporting visuals from creative-coding sketches. Rendering is engine-agnostic: p5.js, GSAP and Three.js sketches all drive the same `SketchEngine` contract (`src/engines/types.ts`). Prisma 7 + PostgreSQL for persistence, BullMQ + Redis for the recording queue, MinIO/S3 for artefacts, Playwright + FFmpeg for headless capture. Package manager: **npm** — the lockfile is `package-lock.json` (it is the only lockfile; keep it that way).
 - Deploys as a Docker image: a push to `main` builds and publishes `ghcr.io/costardrouge/p5-templates`, and a Watchtower HTTP-API call re-pulls it on the maintainer's NAS (`deploy/README.md`, `.github/workflows/docker-build.yml`).
-- Commands: `npm run dev` (dev server) · `npm run watch` (dev server + sketch-metadata watcher) · `npm run build` · `npm test` · `npm run lint` / `lint:fix` · `npm run typecheck` · **`npm run check`** = lint + typecheck + test. CI runs lint, typecheck, test and build as four parallel jobs on Node 24.
+- Commands: `npm run dev` (dev server) · `npm run watch` (dev server + sketch-metadata watcher) · `npm run build` · `npm test` · `npm run lint` / `lint:fix` · `npm run typecheck` · **`npm run check`** = lint + typecheck + test. CI runs lint, typecheck, test and build as four parallel jobs on the Node of `.nvmrc` (24; `engines` keeps the floor at 22, and the Docker image's exact Playwright tag is held to the lockfile by a test). Dependabot raises npm, the actions and that image weekly.
+- **This repository is PUBLIC** (measured 2026-10-19). So rule 4's public-repo restriction applies: a Registry block carries only `Project:`, ticked boxes and one `Log:` line — never a `Last point:` nor an open box. `registry.yml` reads the visibility itself, so nothing here needs changing if the repo goes private.
+- **The site speaks English only**, every string inline in the components, no dictionary. The portfolio standard (C17, decision N4) asks a public page for English and French, or an exception written here: neither is decided — a French twin of the whole studio is the owner's call (`MEMORY.md`, open items). Meanwhile a new string is English, and nothing invents a second language.
 - Several agent sessions may run **in parallel** on this repo. Git history must stay readable: **one commit = one task**.
 - **Local sessions: never `git push`** — the developer tests locally and pushes himself. **Cloud / web sessions (ephemeral container): push the working branch and open a pull request**, it is the only way the code gets out. Never push to `main` either way.
 
@@ -24,7 +26,7 @@ As soon as a task requested by the user is finished (feature, fix, refactor, con
    - Never stage: `.env` and any secret file, `.idea/`, `.vscode/`, `.next/` (including `.next/cache/eslint`), `/tmp/p5-templates-build`, `node_modules/`, `.DS_Store`, `src/generated/prisma/` — unless the task is explicitly about them. If one of these turns out to be *tracked*, say so: it must be untracked and gitignored, not carefully avoided at every commit.
    - Exception, and it is not optional: the **pre-commit hook regenerates and stages** `src/sketches/metadata.json`, `src/generated/sketchModuleRegistry.ts` and `src/generated/sketchOptionsRegistry.ts` whenever a sketch or template asset is part of the commit. Those three belong in your commit — do not unstage them.
    - Check with `git diff --cached --stat` before committing.
-3. **Commit with a readable message** (format below). Always use a HEREDOC to keep title + body:
+3. **Commit with a readable message** (format below). Always use a HEREDOC to keep title + body, and end it with the attribution trailer(s) your harness asks for:
 
    ```bash
    git commit -m "$(cat <<'EOF'
@@ -33,12 +35,12 @@ As soon as a task requested by the user is finished (feature, fix, refactor, con
    Why this change, what it does concretely, non-obvious decisions.
    One line per idea. Mention the files/areas touched if useful.
 
-   Co-Authored-By: Claude <noreply@anthropic.com>
+   Co-Authored-By: …
    EOF
    )"
    ```
 
-4. Do not push (local sessions). End the reply with a recap: short hash + commit title + the list of files that were modified but deliberately left uncommitted, if any, so the user knows where every change comes from.
+4. **Push only from a cloud session** (see Context). End the reply with a recap: short hash + commit title + the list of files that were modified but deliberately left uncommitted, if any, so the user knows where every change comes from.
 5. If a git hook changes or refuses something: read the output, fix, recommit. Never `--no-verify`.
 
 ### Commit message format
@@ -102,49 +104,102 @@ you are in for before starting.
 
 ## Rule 4 — Report the project's state (MANDATORY)
 
-The register of what is open is the `projets/` folder at the root of the
-private `second-brain` repository: one folder per project, whose `README.md`
-carries a typed front matter (`state`, `point`, `repos`) and a `## À faire`
-list of checkboxes. `PROJETS.md` beside it is GENERATED from those folders —
-never edit it, never tick a box in it. That folder is the source of truth — not
-this conversation, not Claude's memory, not `git log`, which records what
-changed and never what state the project is in.
+The register of what is open is the private `second-brain` repository: one
+folder per project, filed by group and domain and found by its slug (`p5-templates`
+here), whose `README.md` carries a typed front matter (`state`, `point`,
+`repos`) and a `## To do` list of checkboxes. `PROJECTS.md` at its root is
+GENERATED from those folders. That register is the source of truth — not this
+conversation, not Claude's memory, not `git log`, which records what changed
+and never what state the project is in.
 
 A session that changes code here changes this project's state, and the state
-has to reach that folder.
+reaches the register **through this repository: never touch `second-brain`**.
+Do not attach it (`add_repo`), do not clone it, do not commit to it — locally
+either, even though it sits beside this checkout. On every push to `main`,
+`.github/workflows/registry.yml` reads the block below from the merged pull
+request's description (or, when there is none, from the pushed commits'
+messages) and sends it to `second-brain`, whose own workflow updates the fiche
+and regenerates `PROJECTS.md`. Only what reaches `main` is reported.
 
-1. **Reach `second-brain`.** Locally it is a sibling directory
-   (`../second-brain`). In a cloud session where it is not already attached,
-   attach it yourself: call the `add_repo` tool with owner `costardrouge`,
-   repo `second-brain` and access `push`, then clone it beside this
-   repository with the command the tool returns. The session's GitHub access
-   already covers it — **never put a token for it in this repository or in
-   its environment**.
-2. Once it is reachable, edit `projets/p5-templates/README.md` and commit it there,
-   in its own commit: set `point:` to today, rewrite the `## Dernier point`
-   paragraph, tick what is done and add what is now open under `## À faire`.
-   **Never change `state:`** — the state is the maintainer's call, never the
-   agent's. Then run `node bin/projets.mjs index` from that repo's root and
-   include the regenerated `PROJETS.md` in the same commit. A cloud session
-   pushes that commit on its own working branch and opens a draft pull
-   request in `second-brain`, exactly as it does here.
-3. Only if it stays unreachable — the tool refused, or does not exist — write
-   the block below under a `### Registre` heading in the description of this
-   repository's pull request, where it can be found and collected later, and
-   end the final message with it too:
+Write the block in a cloud session in this repository's pull request
+description, **inside an HTML comment** so the rendered pull request stays
+clean and its French does not mix with an English description. The labels are
+English, what follows them is French:
 
-       projets/p5-templates/README.md — point: YYYY-MM-DD
-       Dernier point : <dernier point connu>
-       - [ ] <prochaine action>
+    <!-- Registry
+    Project: p5-templates
+    Last point: <the project as it now stands, in French>
+    - [x] <an existing box this work closes, copied from the fiche>
+    - [ ] <a new open action, in French>
+    Log: <one line for the fiche's log, in French>
+    -->
 
-The date is the day of the session. The last known point is what someone who
-has been away for three months needs in order to pick the project back up, not
-a changelog — the commit body already carries the detail. The next action is
-one gesture, not a plan: it is the first unticked box, and the generated
-register reads it from there.
+In a local session, write the same lines at the end of the task's commit body,
+after a line `Registry:`.
 
-A question, an exploration or an explanation changes no state and prints no
-block.
+Every line but the first is optional. `Last point:` REPLACES the fiche's
+paragraph: write what someone back after three months needs about the whole
+project, not a changelog — the commit body already carries the detail. A
+`- [x]` ticks a box only when its text matches one; copy it from the fiche
+when you can read it (locally `../second-brain`, or through GitHub when the
+session already has it — never attach it just to read it), otherwise leave the
+ticking to the maintainer. A new box is one gesture, not a plan. The date is
+the merge's, and `state:` is never written by a block: it is the
+maintainer's call.
+
+**Hidden is not private.** The API hands a pull request's description and a
+commit's message to anyone who can read the repository. In a **public**
+repository the block carries only what is already public: the `Project:` line,
+ticked boxes (`- [x]`) and one `Log:` line — never a `Last point:`, never an
+open box, nothing else. The `check` job of `registry.yml` checks every pull
+request before it is merged: it fails on a malformed block, on a block left
+visible under a heading, and, in a public repository, on any other line; and
+the report strips such a line if it is merged anyway.
+
+A change a returning reader does not need — tooling, a typo, a refactor —
+carries no block. A question, an exploration or an explanation changes no
+state and writes no block.
+
+## Rule 5 — Versions and releases (MANDATORY)
+
+The project carries **one version**, `version` in the root `package.json`, in
+[Semantic Versioning](https://semver.org/spec/v2.0.0.html): `MAJOR.MINOR.PATCH`.
+`CHANGELOG.md` says what each release brings to the people who use the
+project, newest first, in the [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
+shape. **It is written in English, like the code, even when the project
+speaks French.** Each release has a **codename**: here a mathematical curve,
+in alphabetical order (0.1.0 Astroid … 0.10.0 Kappa, 1.0.0 Lemniscate; the
+next starts with M or later).
+
+- **Every pull request that changes what users get** adds its lines under
+  `## [Unreleased]` (`### Added`, `### Changed`, `### Fixed`, `### Removed`,
+  `### Security`), written for a user, not a developer. Tooling, a refactor or
+  a test adds nothing there. It does not touch the version.
+- **A release is its own pull request**, made when the owner asks for one: it
+  moves the `Unreleased` lines under `## [x.y.z] - YYYY-MM-DD — Codename` and
+  sets `package.json` to the same version, nothing else. PATCH for fixes only;
+  MINOR for anything new; MAJOR when something users relied on stops working
+  (stored data that does not carry over, a link, a protocol, a removed
+  feature). Before 1.0.0, MINOR covers both. A new MINOR or MAJOR takes a new
+  codename, never reused; a PATCH keeps its minor's. When a milestone ends or
+  `Unreleased` holds something worth announcing, say so in the final message:
+  the owner decides when to release.
+- **Never tag nor publish a release by hand.** On `main`,
+  `.github/workflows/release.yml` gives every section that has none its tag
+  `vX.Y.Z` and its GitHub Release; on every pull request its `check` job
+  refuses a `CHANGELOG.md` that disagrees with `package.json` or breaks the
+  shape. Run `node .github/release.mjs check` before pushing a release.
+- **A backfilled release** — a version given after the fact to a past state —
+  is a section placed at its rank in the file, with
+  `<!-- commit: <full sha> -->` right under its heading; the workflow tags that
+  commit. It never rewrites a section that already has its release. GitHub
+  refuses the workflow's own token a tag on a commit whose workflows differ
+  from `main`'s, so here a backfill is skipped with a warning and the rest
+  still ships; `second-brain`'s "Backfill releases" workflow, which holds the
+  owner's token, publishes it (`release.mjs backfill`).
+- **A repo that serves a page shows its version** where a user can find it (a
+  footer, an about line, a settings screen), read from `package.json` at build
+  time, so a phone in hand says which build it runs.
 
 ## Verification — trust the disk, not the context
 
@@ -165,8 +220,9 @@ block.
 
 ## Related files
 
-- `AGENTS.md`: points to this file for tools that do not read `CLAUDE.md`.
+- `AGENTS.md`: a symlink to this file, for tools that do not read `CLAUDE.md`.
 - `MEMORY.md` + `docs/memory/`: project long-term memory (rule 2).
+- `CHANGELOG.md`: what each release brings (rule 5); `.github/release.mjs` + `.github/workflows/release.yml` tag and publish it.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

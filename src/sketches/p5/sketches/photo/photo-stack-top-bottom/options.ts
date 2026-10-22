@@ -46,7 +46,7 @@ export const formConfiguration: Record<string, any> = {
     component: "checkbox"
   },
   backgroundColor: {
-    component: "color",
+    component: "background",
     label: "Background color"
   }
 };

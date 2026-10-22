@@ -1,6 +1,6 @@
 import {
   PALETTE_OPTIONS
-} from "../_shared.js";
+} from "../_paletteOptions.js";
 
 export const formValues = {
   shape: {
@@ -211,7 +211,7 @@ export const formConfiguration: Record<string, any> = {
     }
   },
   backgroundColor: {
-    component: "color",
+    component: "background",
     label: "Background color"
   }
 };

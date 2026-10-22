@@ -1,4 +1,7 @@
 import {
+  housePaletteOptions
+} from "@/p5/utils/palettes.js";
+import {
   fontNames
 } from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/constants/field-config";
 
@@ -35,7 +38,7 @@ export const formValues = {
   weightMax: 200,
 
   // Color palette + styling
-  palette: "rainbow", // "rainbow" | "purple" (maps to colors[palette])
+  palette: "rainbow", // a colors.js function or a shared preset (colors.palette)
   hueOffset: 0, // passed to palette
   opacityFactorFrom: 2, // maps noise 0..1 -> [from..to]
   opacityFactorTo: 1,
@@ -61,7 +64,8 @@ export const formConfiguration: Record<string, any> = {
 
   // Colors
   background: {
-    component: "color",
+    component: "background",
+    palette: "palette",
     label: "Background color"
   },
 
@@ -158,18 +162,12 @@ export const formConfiguration: Record<string, any> = {
 
   // Color palette + styling
   palette: {
-    component: "select",
+    component: "palette-picker",
     label: "Palette",
-    options: [
-      {
-        label: "Rainbow",
-        value: "rainbow"
-      },
-      {
-        label: "Purple",
-        value: "purple"
-      }
-    ]
+    options: housePaletteOptions( [
+      "rainbow",
+      "purple"
+    ] )
   },
   hueOffset: {
     component: "slider",

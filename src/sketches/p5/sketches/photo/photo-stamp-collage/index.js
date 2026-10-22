@@ -10,6 +10,10 @@ import events from "@/p5/utils/events.js";
 import graphics from "@/p5/utils/graphics.js";
 import animation from "@/p5/utils/animation.js";
 import * as common from "@/p5/utils/common.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // Paper speckles are decorative, but they must be identical on every frame and
 // in headless capture: they are painted once into a buffer from a fixed seed
@@ -482,16 +486,24 @@ function drawCutout(
   );
   ctx.clip();
 
-  p.push();
-  p.noStroke();
-  p.fill( ...options.sketch.backgroundColor );
-  p.rect(
-    photoRect.x,
-    photoRect.y,
-    photoRect.width,
-    photoRect.height
-  );
-  p.pop();
+  const background = resolveBackground( options.sketch.backgroundColor );
+
+  // A gradient is laid again over the whole canvas, inside the clip, so the
+  // hole shows the very stretch of it the photo hides.
+  if ( background.spec ) {
+    paintBackground( background );
+  } else {
+    p.push();
+    p.noStroke();
+    p.fill( ...background );
+    p.rect(
+      photoRect.x,
+      photoRect.y,
+      photoRect.width,
+      photoRect.height
+    );
+    p.pop();
+  }
 
   drawGrain( options.sketch.paper?.grain ?? 0 );
 
@@ -689,7 +701,7 @@ sketch.setup( () => {
     }
   );
 
-  p.background( ...options.sketch.backgroundColor );
+  paintBackground( resolveBackground( options.sketch.backgroundColor ) );
 
   events.register(
     "engine-canvas-mouse-clicked",
@@ -702,7 +714,7 @@ sketch.draw( () => {
   const o = options.sketch;
 
   p.clear();
-  p.background( ...o.backgroundColor );
+  paintBackground( resolveBackground( o.backgroundColor ) );
 
   drawGrain( o.paper?.grain ?? 0 );
 

@@ -1,3 +1,6 @@
+import {
+  housePaletteField
+} from "@/p5/utils/palettes.js";
 
 export const formValues = {
   tunnel: {
@@ -46,6 +49,7 @@ export const formValues = {
     zMultiplier: 6.2
   },
   colors: {
+    palette: "rainbow",
     opacityMax: 4.1,
     opacityMin: 1.4,
     opacityEasing: "easeInQuad",
@@ -237,6 +241,9 @@ export const formConfiguration: Record<string, any> = {
     component: "nested-object",
     label: "Colors",
     fields: {
+      palette: housePaletteField( [
+        "rainbow"
+      ] ),
       opacityMax: {
         label: "Opacity max",
         component: "slider",
@@ -398,7 +405,8 @@ export const formConfiguration: Record<string, any> = {
   },
 
   backgroundColor: {
-    component: "color",
+    component: "background",
+    palette: "colors/palette",
     label: "Background color"
   }
 };

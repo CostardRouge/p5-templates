@@ -11,6 +11,10 @@ import {
   initInteraction,
   getPointerGroups
 } from "@/p5/utils/interaction/index.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // video-mosaic — the live webcam, carved into a rows × columns grid. Each cell
 // samples a (slightly displaced) crop of the same blurred frame and is tinted
@@ -266,11 +270,16 @@ sketch.draw( () => {
   ensureCamera( cfg );
 
   p.clear();
-  p.background( ...( cfg.backgroundColor ?? [
-    10,
-    10,
-    12
-  ] ) );
+  paintBackground( resolveBackground(
+    cfg.backgroundColor,
+    {
+      fallback: [
+        10,
+        10,
+        12
+      ]
+    }
+  ) );
 
   const captureElement = mediapipe.capture?.element;
   const captureReady = Boolean( captureElement?.elt?.videoWidth && captureElement.elt.videoHeight );

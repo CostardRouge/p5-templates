@@ -2,7 +2,7 @@
 
 # ─── Stage 1: build ──────────────────────────────────────────────────────────
 # Full toolchain (dev deps included) to compile the Next.js standalone bundle.
-FROM mcr.microsoft.com/playwright:v1.59.1-jammy AS builder
+FROM mcr.microsoft.com/playwright:v1.64.1-jammy AS builder
 
 WORKDIR /app
 
@@ -19,7 +19,7 @@ ARG NEXT_PUBLIC_VAPID_PUBLIC_KEY=
 # silently ship every image with analytics off. The id mirrors the default in
 # src/lib/analytics/umami.ts — keep the two in sync, or pass --build-arg to
 # override (an explicitly empty id disables tracking).
-ARG NEXT_PUBLIC_UMAMI_SRC=https://insight.steeve.website/insight
+ARG NEXT_PUBLIC_UMAMI_SRC=https://insight.steevepommier.com/insight
 ARG NEXT_PUBLIC_UMAMI_WEBSITE_ID=3c44d1c6-1c3e-4ef7-aeb8-646012e9b963
 ARG NEXT_PUBLIC_UMAMI_DOMAINS=p5.steeve.website
 
@@ -65,7 +65,7 @@ RUN npm run build
 # with its FULL dependency closure (@prisma/*, effect, c12, deepmerge-ts, …).
 # The runtime runs `migrate deploy` on startup; cherry-picking node_modules
 # subtrees misses transitive deps, so install the CLI properly instead.
-FROM mcr.microsoft.com/playwright:v1.59.1-jammy AS prisma-deps
+FROM mcr.microsoft.com/playwright:v1.64.1-jammy AS prisma-deps
 
 WORKDIR /prisma-cli
 
@@ -80,7 +80,7 @@ RUN PRISMA_VERSION="$(node -p "require('./lock.json').packages['node_modules/pri
 # Slim runtime: Playwright base (browsers + Node already present) + ffmpeg.
 # Only the standalone server, static assets, public files and an isolated Prisma
 # CLI (for `migrate deploy` on startup) are copied over — no dev deps.
-FROM mcr.microsoft.com/playwright:v1.59.1-jammy AS runner
+FROM mcr.microsoft.com/playwright:v1.64.1-jammy AS runner
 
 WORKDIR /app
 

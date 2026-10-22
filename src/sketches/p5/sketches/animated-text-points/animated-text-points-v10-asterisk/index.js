@@ -8,6 +8,10 @@ import easing from "@/p5/utils/easing.js";
 import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import string from "@/p5/utils/string.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 sketch.setup(
   undefined,
@@ -49,11 +53,17 @@ sketch.draw( () => {
   const p = getP5();
 
   p.clear();
-  p.background( ...( options.sketch?.backgroundColor ?? [
-    0,
-    0,
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    options.sketch?.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0
+      ],
+      palette: options.sketch?.color?.palette
+    }
+  ) );
 
   const shape = options.sketch?.shape ?? {};
   const flower = options.sketch?.flower ?? {};
@@ -105,7 +115,10 @@ sketch.draw( () => {
   const keepSize = flower.keepSize ?? false;
 
   const palette = color.palette ?? "test";
-  const colorFunction = colors?.[ palette ] ?? colors.test;
+  const colorFunction = colors.palette(
+    palette,
+    "test"
+  );
   const hueEasing = easing?.[ color.hueEasing ] ?? easing.easeInCubic;
   const hueMultiplier = color.hueMultiplier ?? 1;
   const opacitySinSpeed = color.opacitySinSpeed ?? 4;

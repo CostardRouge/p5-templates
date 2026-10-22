@@ -150,6 +150,10 @@ export default function CaptureDialog( {
         !open && "pointer-events-none"
       ) }
       aria-hidden={ !open }
+      // Stays mounted while closed (autosave handle, a running recording), so
+      // inert is what keeps its buttons out of the tab order and the
+      // accessibility tree — aria-hidden alone left them focusable.
+      inert={ !open }
     >
       {/* Backdrop: only painted (and clickable) while open, so the mounted-but-
           hidden dialog never swallows pointer events over the sketch. It is not

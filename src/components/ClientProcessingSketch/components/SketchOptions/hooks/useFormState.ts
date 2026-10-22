@@ -58,6 +58,10 @@ export function useFormState( {
   // coarse-pointer devices flush at ~25 Hz — see below)
   const rafRef = useRef<number | null>( null );
   const latestValueRef = useRef<SketchOption | null>( null );
+  // Set by any form change, cleared by a successful autosave. A draft save
+  // re-fetches and re-uploads every asset, and it used to run every 10 s
+  // whether or not anything had changed.
+  const unsavedChangesRef = useRef( false );
   // Dotted field paths edited since the last flush; null means an event
   // carried no field name (reset, initial populate) so the whole tree must
   // be treated as changed.
@@ -75,6 +79,18 @@ export function useFormState( {
 
       let lastFlushAt = 0;
 
+      const deliver = () => {
+        if ( latestValueRef.current !== null ) {
+          const changedPaths = changedPathsRef.current;
+
+          changedPathsRef.current = new Set();
+          onOptionsChange(
+            latestValueRef.current,
+            changedPaths ? Array.from( changedPaths ) : undefined
+          );
+        }
+      };
+
       const flush = () => {
         rafRef.current = null;
 
@@ -87,16 +103,7 @@ export function useFormState( {
         }
 
         lastFlushAt = now;
-
-        if ( latestValueRef.current !== null ) {
-          const changedPaths = changedPathsRef.current;
-
-          changedPathsRef.current = new Set();
-          onOptionsChange(
-            latestValueRef.current,
-            changedPaths ? Array.from( changedPaths ) : undefined
-          );
-        }
+        deliver();
       };
 
       const subscription = watch( (
@@ -113,6 +120,7 @@ export function useFormState( {
         }
 
         latestValueRef.current = value as SketchOption;
+        unsavedChangesRef.current = true;
 
         if ( rafRef.current === null ) {
           rafRef.current = requestAnimationFrame( flush );
@@ -125,6 +133,14 @@ export function useFormState( {
         if ( rafRef.current !== null ) {
           cancelAnimationFrame( rafRef.current );
           rafRef.current = null;
+          // A value watched but not yet flushed is delivered, not dropped.
+          // Dev's StrictMode runs this cleanup right after the first mount
+          // and mounts again: a reset made during that first mount — the
+          // document the gallery or the listing hands over through
+          // sessionStorage, consumed once — was cancelled here with its
+          // frame, so the form held the piece while the sketch kept playing
+          // its defaults until the next edit.
+          deliver();
         }
       };
     },
@@ -134,11 +150,23 @@ export function useFormState( {
     ]
   );
 
-  // Auto-save every 10 seconds when allowed by the lifecycle (draft state)
+  // Auto-save every 10 seconds when allowed by the lifecycle (draft state),
+  // and only if something changed since the last successful save. A failed
+  // save leaves the changes marked, so the next tick retries.
   useInterval( {
     callback: async() => {
-      if ( captureActionsRef.current && !captureActionsRef.current.isSaving ) {
-        await captureActionsRef.current.saveAsDraft();
+      const captureActions = captureActionsRef.current;
+
+      if ( !captureActions || captureActions.isSaving || !unsavedChangesRef.current ) {
+        return;
+      }
+
+      unsavedChangesRef.current = false;
+
+      const saved = await captureActions.saveAsDraft();
+
+      if ( !saved ) {
+        unsavedChangesRef.current = true;
       }
     },
     enabled: !!jobId && canAutoSave,

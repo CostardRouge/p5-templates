@@ -7,6 +7,10 @@ import string from "@/p5/utils/string.js";
 import {
   getP5
 } from "@/p5/utils/sketch.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 const sketchState = sketch.state( () => ( {
   shape: {
@@ -25,23 +29,28 @@ sketch.setup( ( {
     "webgl"
   );
 
-  p.background( ...getBackgroundColor() );
+  paintBackground( getBackgroundColor() );
 } );
 
 const getBackgroundColor = () =>
-  options.sketch?.backgroundColor ?? [
-    246,
-    235,
-    225
-  ];
+  resolveBackground(
+    options.sketch?.backgroundColor,
+    {
+      fallback: [
+        246,
+        235,
+        225
+      ],
+      palette: options.sketch?.color?.palette
+    }
+  );
 
 const getEasing = (
   name, fallback
 ) =>
   easing[ name ] ?? easing[ fallback ] ?? easing.linear;
 
-const getPalette = ( name ) =>
-  colors[ name ] ?? colors.rainbow;
+const getPalette = ( name ) => colors.palette( name );
 
 // Split a flat point list into subcontours based on distance jumps.
 // Threshold is relative to the canvas's larger dimension.
@@ -84,7 +93,7 @@ sketch.draw( () => {
   const graphics = sketchState.shape.graphics;
 
   p.clear();
-  p.background( ...getBackgroundColor() );
+  paintBackground( getBackgroundColor() );
 
   const shape = options.sketch?.shape ?? {};
   const render = options.sketch?.render ?? {};

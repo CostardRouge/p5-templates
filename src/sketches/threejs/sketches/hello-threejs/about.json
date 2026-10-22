@@ -1,0 +1,4 @@
+{
+  "description": "A rotating torus knot with a soft violet material on a dark blue-grey ground — the engine demo for Three.js (scene, draw loop driven by the loop phase), useful as a starting point rather than a finished piece.",
+  "tags": [ "3d", "mesh", "orbit", "demo" ]
+}

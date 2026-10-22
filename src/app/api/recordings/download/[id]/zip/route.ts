@@ -5,10 +5,9 @@ import {
   getJobById
 } from "@/lib/jobStore";
 import {
-  getBufferFromS3Url,
-  getDownloadUrlFromS3Url
+  getBufferFromS3Url
 } from "@/lib/connections/s3";
-import downloadFromUrlResponse from "@/utils/downloadFromUrlResponse";
+import downloadObjectResponse from "@/utils/downloadObjectResponse";
 import {
   ZipArchive
 } from "archiver";
@@ -52,9 +51,7 @@ export async function GET(
 
     // If this is an old recording with a zip file in resultUrl, use that
     if ( job.resultUrl?.endsWith( ".zip" ) ) {
-      const s3DownloadUrl = await getDownloadUrlFromS3Url( job.resultUrl );
-
-      return downloadFromUrlResponse( s3DownloadUrl );
+      return downloadObjectResponse( job.resultUrl );
     }
 
     // For new multi-slide recordings, create zip on-the-fly

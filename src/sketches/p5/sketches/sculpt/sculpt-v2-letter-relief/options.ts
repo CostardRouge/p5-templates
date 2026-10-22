@@ -9,6 +9,9 @@ import {
   cameraFormValues,
   cameraFormConfiguration
 } from "@/p5/utils/cameraRig.js";
+import {
+  shaderPaletteFormFields, shaderPaletteFormValues
+} from "@/p5/utils/palettes.js";
 
 // A sheet of points joined by thin tubes covers the canvas; the points that
 // fall on a letter's ink rise, in a chosen order, and the tubes between them
@@ -178,6 +181,7 @@ export const formValues = {
   },
 
   colors: {
+    ...shaderPaletteFormValues,
     hueSpeed: 0.5,
     hueSpread: 2,
     huePhase: 2.6,
@@ -723,7 +727,9 @@ export const formConfiguration: Record<string, any> = {
     }
   },
 
-  // The modalities this sketch reads: mouse, touch, camera hands.
+  // The modalities this sketch reads: mouse, touch, camera hands — and MIDI,
+  // whose port is what resolves the knobs the camera rig declares (no port
+  // picked, no declared binding: see docs/memory/interaction-midi.md).
   interaction: {
     component: "nested-object",
     label: "Input sources",
@@ -731,7 +737,8 @@ export const formConfiguration: Record<string, any> = {
       enabled: interactionFormConfiguration.fields.enabled,
       mouse: interactionFormConfiguration.fields.mouse,
       touch: interactionFormConfiguration.fields.touch,
-      vision: interactionFormConfiguration.fields.vision
+      vision: interactionFormConfiguration.fields.vision,
+      midi: interactionFormConfiguration.fields.midi
     }
   },
 
@@ -753,6 +760,7 @@ export const formConfiguration: Record<string, any> = {
     component: "nested-object",
     label: "Iridescent",
     fields: {
+      ...shaderPaletteFormFields,
       hueSpeed: {
         label: "Hue speed (snaps to whole cycles/loop)",
         component: "slider",
@@ -890,7 +898,8 @@ export const formConfiguration: Record<string, any> = {
   },
 
   backgroundColor: {
-    component: "color",
+    component: "background",
+    palette: "colors/palette",
     label: "Background color"
   }
 };

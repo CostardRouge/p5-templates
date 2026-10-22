@@ -7,6 +7,10 @@ import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
 import videos from "@/p5/utils/videos.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 let pool;
 const buffers = sketch.state( () => ( {} ) );
@@ -153,11 +157,16 @@ sketch.draw( () => {
   }
 
   p.clear();
-  p.background( ...( cfg.backgroundColor ?? [
-    10,
-    10,
-    12
-  ] ) );
+  paintBackground( resolveBackground(
+    cfg.backgroundColor,
+    {
+      fallback: [
+        10,
+        10,
+        12
+      ]
+    }
+  ) );
   p.image(
     trail,
     0,

@@ -7,21 +7,30 @@ import {
 import {
   getP5
 } from "@/p5/utils/sketch.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 sketch.setup( ( {
   canvas
 } ) => {
   const p = getP5();
 
-  p.background( ...getBackgroundColor() );
+  paintBackground( getBackgroundColor() );
 } );
 
 const getBackgroundColor = () =>
-  options.sketch?.backgroundColor ?? [
-    246,
-    235,
-    225
-  ];
+  resolveBackground(
+    options.sketch?.backgroundColor,
+    {
+      fallback: [
+        246,
+        235,
+        225
+      ]
+    }
+  );
 
 /**
  * Draws a seamless organic blob using Perlin Noise
@@ -87,7 +96,7 @@ sketch.draw( () => {
   const p = getP5();
 
   p.clear();
-  p.background( ...getBackgroundColor() );
+  paintBackground( getBackgroundColor() );
 
   p.push();
   p.translate(

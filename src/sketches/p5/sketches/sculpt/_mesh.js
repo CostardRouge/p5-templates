@@ -467,10 +467,14 @@ export function orderValues(
   return order;
 }
 
-// A point's own progress through a staggered rise: with `spread` 0 every
-// point moves with the beat, with `spread` → 1 the points go one after the
-// other in `order`. Clamped to 0..1, so a point past its window sits at 1.
-function stagger(
+/**
+ * A point's own progress through a staggered rise: with `spread` 0 every
+ * point moves with the beat, with `spread` → 1 the points go one after the
+ * other in `order`. Clamped to 0..1, so a point past its window sits at 1.
+ * Exported for the sketches that morph something other than a height (an
+ * offset, an angle) between two units with the same stagger.
+ */
+export function stagger(
   q, order, spread
 ) {
   const s = Math.min(
@@ -602,6 +606,119 @@ export function computeHeights(
 }
 
 /**
+ * The handover applied to something other than a height: per point, how far
+ * it has travelled from the current unit's value toward the next one's, 0..1,
+ * staggered exactly like `computeHeights`' crossfade — a point in the NEXT
+ * unit follows the rise order and easing, any other point the (mirrored)
+ * fall order and easing — and 0 for the whole hold. The sketch then lerps
+ * its own quantity (an offset, an angle) by it.
+ *
+ * @param {Array<{ target: Float32Array, order: Float32Array }>} units
+ * @param {number} tBeats
+ * @param {object} rhythm  as computeHeights (hold, rise, fall)
+ * @param {Float32Array} out
+ * @returns {{ current: number, next: number, q: number }}
+ */
+export function morphProgress(
+  units, tBeats, rhythm, out
+) {
+  const count = units.length;
+  const hold = clamp(
+    rhythm.hold ?? 0.4,
+    0,
+    0.95
+  );
+  const b = ( ( tBeats % count ) + count ) % count;
+  const current = Math.floor( b );
+  const next = ( current + 1 ) % count;
+  const p = b - current;
+  const q = p < hold ? 0 : ( p - hold ) / ( 1 - hold );
+  const a = units[ current ];
+  const n = units[ next ];
+  const riseEase = rhythm.rise?.ease ?? ( ( x ) => x );
+  const fallEase = rhythm.fall?.ease ?? ( ( x ) => x );
+  const riseSpread = rhythm.rise?.spread ?? 0.6;
+  const fallSpread = rhythm.fall?.spread ?? riseSpread;
+  const mirror = rhythm.fall?.mirror !== false;
+  const fallOrder = rhythm.fall?.order?.[ current ] ?? null;
+
+  if ( q <= 0 ) {
+    out.fill( 0 );
+
+    return {
+      current,
+      next,
+      q
+    };
+  }
+
+  for ( let i = 0; i < out.length; i++ ) {
+    if ( n.target[ i ] > 0 ) {
+      out[ i ] = riseEase( stagger(
+        q,
+        n.order[ i ],
+        riseSpread
+      ) );
+    } else {
+      const oa = fallOrder
+        ? fallOrder[ i ]
+        : ( mirror ? 1 - a.order[ i ] : a.order[ i ] );
+
+      out[ i ] = fallEase( stagger(
+        q,
+        oa,
+        fallSpread
+      ) );
+    }
+  }
+
+  return {
+    current,
+    next,
+    q
+  };
+}
+
+// A half-sine bump over [ from, to ], 0 outside it.
+function bump(
+  q, from, to
+) {
+  if ( q <= from || q >= to ) {
+    return 0;
+  }
+
+  return Math.sin( Math.PI * ( q - from ) / ( to - from ) );
+}
+
+/**
+ * The material's SQUEEZE through a handover: a multiplier on every radius
+ * that dips to 1 − `amount` while the points travel (the first 60 % of the
+ * handover, deepest at 0.3), then, if asked, pops past 1 by `overshoot` as
+ * they land (deepest at 0.8) before settling. 1 for the whole hold (q = 0)
+ * and at q = 1, so the loop closes.
+ */
+export function squeezeAt(
+  q, amount = 0, overshoot = 0
+) {
+  if ( q <= 0 || q >= 1 ) {
+    return 1;
+  }
+
+  return Math.max(
+    0.05,
+    1 - amount * bump(
+      q,
+      0,
+      0.6
+    ) + overshoot * bump(
+      q,
+      0.6,
+      1
+    )
+  );
+}
+
+/**
  * How much each point is under a set of cursors, 0..1 (the strongest wins):
  * `falloff` shapes the well from its centre (1) to its rim (0).
  *
@@ -655,6 +772,49 @@ export function cursorField(
 }
 
 /**
+ * Pointer groups (utils/interaction `getPointerGroups`) dropped onto the
+ * sheet's plane through the camera the shader traces, as sheet coordinates
+ * ( u across, v down, 0..1 ): a finger lands under the point it covers on
+ * screen at any tilt. `basis` is a cameraRig basis; `screenRay` / `hitPlaneY`
+ * are its exact inverse, passed in so this stays a pure function.
+ *
+ * @returns {Array<{ u: number, v: number }>}
+ */
+export function sheetCursors(
+  groups, basis, width, height, aspect, {
+    screenRay,
+    hitPlaneY
+  }
+) {
+  const cursors = [];
+
+  for ( const group of groups ) {
+    for ( const point of group.points ) {
+      const hit = hitPlaneY(
+        basis,
+        screenRay(
+          basis,
+          point.x,
+          point.y,
+          width,
+          height
+        ),
+        0
+      );
+
+      if ( hit ) {
+        cursors.push( {
+          u: ( hit[ 0 ] + aspect ) / ( 2 * aspect ),
+          v: ( 1 - hit[ 2 ] ) / 2
+        } );
+      }
+    }
+  }
+
+  return cursors;
+}
+
+/**
  * The links: one byte per owned direction per cell (E, S, SE, SW), 0 for no
  * link, else 1 + weight. A link's weight is min( hA, hB ) — the lower of its
  * two ends, so a link from a raised point down to the sheet stays a thin
@@ -662,7 +822,10 @@ export function cursorField(
  * link between two raised points exists only if `inkAt( u, v )` says its
  * midpoint is on the ink. That single test is what keeps the counter of an
  * "o" or the eye of an "e" open, whatever the neighbourhood. A link longer
- * than `maxLength` cells (drift, cursor) is dropped entirely.
+ * than `maxLength` cells (drift, cursor) is dropped entirely, and so is one
+ * climbing more than `maxRise` in height (the hairline skirt a plateau hangs
+ * down to the sheet — kept by default, as v2 does, dropped where the rings or
+ * the strips are the subject).
  *
  * @param {object} grid
  * @param {Float32Array} heights   normalised, HEIGHT_MIN..HEIGHT_MAX
@@ -672,6 +835,7 @@ export function cursorField(
  * @param {number|string} opts.reach   4 or 8
  * @param {string} opts.rule           "ink" | "endpoints"
  * @param {number} [opts.maxLength=1.8] cells
+ * @param {number} [opts.maxRise=Infinity] height units, |hA − hB| above it drops the link
  * @param {Function} [opts.inkAt]      ( u, v ) → 0 | 1, required for "ink"
  * @param {Uint8Array} out             count * 4 bytes
  */
@@ -680,6 +844,7 @@ export function linkWeights(
     reach = 8,
     rule = "ink",
     maxLength = 1.8,
+    maxRise = Infinity,
     inkAt = null
   }, out
 ) {
@@ -718,6 +883,10 @@ export function linkWeights(
       const lz = LINK_DIRS[ d ][ 1 ] + offZ[ m ] - offZ[ n ];
 
       if ( lx * lx + lz * lz > maxLen2 ) {
+        continue;
+      }
+
+      if ( Math.abs( heights[ n ] - heights[ m ] ) > maxRise ) {
         continue;
       }
 

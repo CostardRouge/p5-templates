@@ -12,6 +12,10 @@ import animation from "@/p5/utils/animation.js";
 import {
   cross
 } from "@/p5/sketches/flowers/_cross.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 const PALETTES = {
   rainbow: colors.rainbow,
@@ -23,7 +27,7 @@ const PALETTES = {
   black: colors.black
 };
 
-const resolvePalette = ( name ) => PALETTES[ name ] ?? colors.rainbow;
+const resolvePalette = ( name ) => PALETTES[ name ] ?? colors.palette( name );
 
 const easingFunctions = Object.entries( easing );
 
@@ -33,9 +37,14 @@ sketch.draw( () => {
   const p = getP5();
 
   p.clear();
-  p.background( ...( options.sketch.backgroundColor ?? [
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    options.sketch.backgroundColor,
+    {
+      fallback: [
+        0
+      ]
+    }
+  ) );
 
   const t = animation.angle * ( options.sketch.timeScale ?? 1 );
 

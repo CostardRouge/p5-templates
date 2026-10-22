@@ -10,6 +10,16 @@ import {
   computeFieldRange,
   easingId
 } from "@/p5/utils/noiseFieldGpu.js";
+import {
+  PALETTE_RAINBOW_GLSL
+} from "@/p5/utils/paletteGlsl.js";
+import {
+  shaderPalette
+} from "@/p5/utils/palettes.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GPU port of "noise grid v8 — pulse easing" (instanced).
@@ -30,6 +40,8 @@ const VERTEX = `
   uniform float uMin;
   uniform float uHueRange;
   uniform float uHueOffset;
+
+  ${ PALETTE_RAINBOW_GLSL }
   uniform float uOpacityFactor;
   uniform float uWeightMin;
   uniform float uWeightMax;
@@ -62,7 +74,7 @@ const VERTEX = `
     params = vec4(radius, 0.0, 0.0, 0.0);
 
     float hueIndex = remap(angle, uMin, TAU, -uHueRange, uHueRange);
-    color = paletteRainbow(uHueOffset, hueIndex, uOpacityFactor);
+    color = paletteRainbowRamp(uHueOffset, hueIndex, uOpacityFactor);
   }
 `;
 
@@ -89,9 +101,17 @@ sketch.draw( () => {
   const p = getP5();
 
   p.clear();
-  p.background( ...( options.sketch.backgroundColor ?? [
-    0
-  ] ) );
+  const background = resolveBackground(
+    options.sketch.backgroundColor,
+    {
+      fallback: [
+        0
+      ],
+      palette: options.sketch.colors?.palette
+    }
+  );
+
+  paintBackground( background );
 
   const t = animation.angle;
 
@@ -156,17 +176,18 @@ sketch.draw( () => {
     }
   } );
 
+  const palette = shaderPalette( options.sketch.colors );
+
   field.render( {
+    textures: palette.textures,
     seed,
     octaves: detailLod,
     falloff: bass,
     columns,
     rows,
-    background: options.sketch.backgroundColor ?? [
-      0,
-      0,
-      0
-    ],
+    background,
+    // A gradient lies on the 2D canvas below: composite the dots over it.
+    alphaOver: !!background.spec,
     uniforms: {
       uAngleCycles: angleCycles,
       uYTimeMult: yTimeMult,
@@ -174,6 +195,7 @@ sketch.draw( () => {
       uT: t,
       uMin: range.min,
       uHueRange: hueRange,
+      uPaletteOn: palette.uniforms.uPaletteOn,
       uHueOffset: hueOffset,
       uOpacityFactor: opacityFactor,
       uWeightMin: weightMin,

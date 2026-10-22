@@ -6,7 +6,8 @@ export default function makeDefaultSlide( {
   name,
   sketch,
   size,
-  animation
+  animation,
+  interactive
 }: {
   name: string;
   sketch: any; // sschhhhh
@@ -14,11 +15,13 @@ export default function makeDefaultSlide( {
     height: number };
   animation?: { framerate: number;
     duration: number };
+  interactive?: Record<string, unknown>;
 } ): SlideOption {
   return SlideSchema.parse( {
     name,
     sketch,
     size,
-    animation
+    animation,
+    interactive
   } );
 }

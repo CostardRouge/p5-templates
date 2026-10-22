@@ -13,6 +13,10 @@ import mappers from "@/p5/utils/mappers.js";
 import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 const sketchState = sketch.state( () => ( {
   photoGraphics: null,
@@ -164,7 +168,7 @@ function handlePointerSelect( screenPoint ) {
 sketch.setup( () => {
   const p = getP5();
 
-  p.background( ...options.sketch.backgroundColor );
+  paintBackground( resolveBackground( options.sketch.backgroundColor ) );
   sketchState.photoGraphics = graphics.createAutoResizableGraphics(
     p.width,
     p.height
@@ -217,7 +221,7 @@ sketch.draw( () => {
   const p = getP5();
 
   p.clear();
-  p.background( ...options.sketch.backgroundColor );
+  paintBackground( resolveBackground( options.sketch.backgroundColor ) );
 
   const items = getItems();
 

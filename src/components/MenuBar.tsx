@@ -6,6 +6,8 @@ import {
 import clsx from "clsx";
 import {
   Bell,
+  BookOpen,
+  Bot,
   BellOff,
   Check,
   ExternalLink,
@@ -14,6 +16,7 @@ import {
   Home,
   ImageIcon,
   ImagePlus,
+  Images,
   Menu as MenuIcon,
   Monitor,
   Moon,
@@ -24,6 +27,7 @@ import {
   Sun,
   Video
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import {
   usePathname, useSearchParams
@@ -33,7 +37,7 @@ import {
 } from "next-themes";
 import type React from "react";
 import {
-  useCallback, useEffect, useState
+  useCallback, useEffect, useState, useSyncExternalStore
 } from "react";
 import {
   createPortal
@@ -55,7 +59,13 @@ import {
 import {
   useDevActions
 } from "@/hooks/useDevActions";
+import {
+  connectBridge, disconnectBridge, getBridgeStatus, subscribeBridge, type BridgeStatus
+} from "@/lib/agent/studioBridge";
 import sleep from "@/utils/sleep";
+
+// The agent setup guide only compiles when it is first opened.
+const AgentGuideDialog = dynamic( () => import( "@/components/AgentGuideDialog" ) );
 
 type MenuBarProps = {
   showRecordings?: boolean;
@@ -147,6 +157,21 @@ function Divider() {
 
 const itemClass = "flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors disabled:opacity-50";
 
+const OFF_BRIDGE: BridgeStatus = {
+  state: "off"
+};
+
+function bridgeLabel( bridge: BridgeStatus ): string {
+  switch ( bridge.state ) {
+    case "connected":
+      return "Agent connected — disconnect";
+    case "connecting":
+      return "Connecting an agent…";
+    default:
+      return "Connect an agent";
+  }
+}
+
 function MenuBar( {
   showRecordings = false,
   hasMissingThumbnails = false,
@@ -161,6 +186,11 @@ function MenuBar( {
   const [
     mounted,
     setMounted
+  ] = useState( false );
+
+  const [
+    agentGuideOpen,
+    setAgentGuideOpen
   ] = useState( false );
 
   const [
@@ -342,6 +372,14 @@ function MenuBar( {
     devActionsVisible, devActionsAvailable, toggleDevActions
   } = useDevActions();
 
+  // The agent relay (MCP level 1). Shown whenever it is on: a tab an agent
+  // can write to must never look like one it cannot.
+  const bridge = useSyncExternalStore(
+    subscribeBridge,
+    getBridgeStatus,
+    () => OFF_BRIDGE
+  );
+
   if ( searchParams.get( "capturing" ) === "" ) {
     return null;
   }
@@ -356,6 +394,13 @@ function MenuBar( {
       href: "/sketches",
       label: "Sketches",
       Icon: Paintbrush
+    },
+    // The browser-side archive of kept pieces: no server behind it, so it is
+    // there on every deployment, unlike /recordings below.
+    {
+      href: "/gallery",
+      label: "Gallery",
+      Icon: Images
     }
   ];
 
@@ -431,6 +476,12 @@ function MenuBar( {
           <span
             aria-hidden
             className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-red-500 border-2 border-background animate-pulse-soft"
+          />
+        )}
+        {bridge.state === "connected" && (
+          <span
+            title="An agent is connected to this tab"
+            className="absolute -bottom-1 -right-1 h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-background"
           />
         )}
       </MenuButton>
@@ -623,6 +674,58 @@ function MenuBar( {
           </>
         )}
 
+        {/* Connect this tab to a Sketchbook studio relay running on this
+            machine, so an agent (Claude, any MCP client) can drive the studio
+            — scripts/mcp/studioRelay.ts, served at /mcp/sketchbook-studio-mcp.mjs. */}
+        <MenuItem>
+          {( {
+            focus
+          } ) => (
+            <button
+              type="button"
+              onClick={ () => bridge.state === "connected" || bridge.state === "connecting"
+                ? disconnectBridge()
+                : connectBridge() }
+              className={ clsx(
+                itemClass,
+                focus && "bg-hover"
+              ) }
+            >
+              <Bot className="h-4 w-4 text-foreground/70" />
+              <span className="flex-1 text-left">
+                {bridgeLabel( bridge )}
+              </span>
+              {bridge.state === "connected" && (
+                <Check className="h-4 w-4 text-emerald-500" />
+              )}
+            </button>
+          )}
+        </MenuItem>
+        {bridge.state === "error" && (
+          <p className="px-3 pb-2 text-xs text-foreground/60">
+            {bridge.message}
+          </p>
+        )}
+        {/* How to install the relay in Claude Desktop / Claude Code and what to
+            ask — the step the connect item above cannot explain. */}
+        <MenuItem>
+          {( {
+            focus
+          } ) => (
+            <button
+              type="button"
+              onClick={ () => setAgentGuideOpen( true ) }
+              className={ clsx(
+                itemClass,
+                focus && "bg-hover"
+              ) }
+            >
+              <BookOpen className="h-4 w-4 text-foreground/70" />
+              <span className="flex-1 text-left">Agent setup guide</span>
+            </button>
+          )}
+        </MenuItem>
+
         {/* The studio's dev affordances — the pending badge, the Debug section,
             the inspector's save-defaults / thumbnail / preview trio and the
             export dialog's preview recorder — are hidden by default so the app
@@ -711,17 +814,32 @@ function MenuBar( {
     </Menu>
   );
 
+  const agentGuide = agentGuideOpen && (
+    <AgentGuideDialog
+      open
+      onClose={ () => setAgentGuideOpen( false ) }
+    />
+  );
+
   if ( renderInline && slot?.slotEl ) {
-    return createPortal(
-      menuNode,
-      slot.slotEl
+    return (
+      <>
+        {createPortal(
+          menuNode,
+          slot.slotEl
+        )}
+        {agentGuide}
+      </>
     );
   }
 
   return (
-    <div className="fixed top-2 left-2 md:top-4 md:left-4 z-[70] md:z-50">
-      {menuNode}
-    </div>
+    <>
+      <div className="fixed top-2 left-2 md:top-4 md:left-4 z-[70] md:z-50">
+        {menuNode}
+      </div>
+      {agentGuide}
+    </>
   );
 }
 

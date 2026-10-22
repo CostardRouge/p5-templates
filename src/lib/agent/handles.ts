@@ -1,0 +1,237 @@
+/**
+ * What the studio commands may touch, handed in by the sketch page
+ * (`useStudioCommands`) — each one a funnel a control already uses:
+ * react-hook-form's `setValue` for every field (the form is the source of
+ * truth: it reaches the engine, the undo history and saving; a write straight
+ * into the option store would reach the engine only), the slide handlers of
+ * `useSlideManagement`, the transport's play/pause, the progression bridge's
+ * seek, the snapshot button's capture, the content rail's item factory.
+ *
+ * Plain functions, so the commands are tested without React or a canvas.
+ */
+import type {
+  ImageResult
+} from "../../../scripts/mcp/registry.ts";
+import type {
+  ExportArtifact, ExportItemState
+} from "../export/runExportBatch";
+import type {
+  ExportVariant, ExportVariantPreset
+} from "../export/variants";
+import type {
+  CatalogueEntry
+} from "./commands/navigationCommands";
+import type {
+  GalleryStore
+} from "../gallery/store";
+import type {
+  SheetFrame
+} from "./imageResult";
+
+export interface StudioHandles {
+  /** `<engine>/<category>/<name>`. */
+  sketchId: string;
+  engineId: string;
+  /** The form's value at a dotted path, or the whole document. */
+  getValues: ( path?: string ) => unknown;
+  /** One field written as a control writes it (dirty, validated, history captured). */
+  setValue: ( path: string, value: unknown ) => void;
+  /** The sketch's controls and stock defaults (`options.ts`). */
+  formConfiguration: Record<string, unknown>;
+  formValues: Record<string, unknown>;
+  activeSlide: () => number | undefined;
+  slides: {
+    select: ( index: number ) => void;
+    add: () => void;
+    duplicate: ( index: number ) => void;
+    remove: ( index: number ) => void;
+    move: ( from: number, to: number ) => void;
+    rename: ( index: number, name: string ) => void;
+  };
+  history: {
+    undo: () => void;
+    redo: () => void;
+    canUndo: () => boolean;
+    canRedo: () => boolean;
+  };
+  playback: {
+    isPlaying: () => boolean;
+    play: () => void;
+    pause: () => void;
+    /** Loop position 0..1, as the progression bar scrubs. */
+    seek: ( progress: number ) => void;
+    progress: () => number | null;
+  };
+  /** The engine's clock (`__sketchCapture.timing()`), when it has one. */
+  timing: () => { frameRate: number;
+    duration: number;
+    totalFrames: number } | null;
+  /** The current frame as a PNG, the snapshot button's own capture. */
+  snapshot: () => Promise<Blob | null>;
+  /** A picture for the agent: scaled to `maxEdge`, re-encoded. */
+  imageResult: ( blob: Blob, maxEdge: number, format: "png" | "jpeg", note: string ) => Promise<ImageResult>;
+  /** Open an item in the content inspector (null closes it). */
+  selectPath: ( path: string | null ) => void;
+  /** A content item of `kind` with every default, `seed` over them (`makeDefaultItem`). */
+  makeItem: ( kind: string, seed: Record<string, unknown> ) => Record<string, unknown>;
+  /**
+   * A sketch layer's seed — `{ sketch, settings }` with that sketch's own
+   * defaults — as the layer picker builds it; throws when it cannot be a layer.
+   */
+  sketchLayerSeed: ( path: string ) => Promise<Record<string, unknown>>;
+  /**
+   * The HUD quick-add: a widget bound to the sketch control at
+   * `registeredName` (e.g. `sketch.render.hueSpeed`), into that control's own
+   * scope. Answers the new item's path and the kinds the control allows.
+   */
+  addHudForControl: ( registeredName: string, kind: string | undefined ) => { path: string | null;
+    kinds: string[] };
+  /**
+   * Where the item at `path` (`content.N` / `slides.S.content.N`) was last
+   * DRAWN, as fractions of the canvas — the rectangle its renderer reports for
+   * on-canvas grabbing. Null when nothing reported it (another engine, an item
+   * on a slide not on screen, not drawn yet).
+   */
+  itemBounds: ( path: string ) => Promise<{ x: number;
+    y: number;
+    w: number;
+    h: number } | null>;
+  /**
+   * The Export dialog's model: its variant list (`variantStore`, the same one
+   * the dialog edits, per sketch) and the runner it starts (`runExportBatch`).
+   */
+  exports: {
+    /** True, or why this browser cannot export (no WebCodecs…). */
+    supported: () => true | string;
+    presets: ReadonlyArray<ExportVariantPreset>;
+    list: () => ExportVariant[];
+    /** Append a variant from a preset to the dialog's list; answers it. */
+    add: ( presetKey: string ) => ExportVariant;
+    /** A variant from a preset that joins no list (a one-off run). */
+    make: ( presetKey: string ) => ExportVariant;
+    patch: ( id: string, patch: Partial<ExportVariant> ) => void;
+    remove: ( id: string ) => void;
+    /** The framerate a capture may not exceed on the active slide. */
+    nativeFramerate: () => number;
+    run: (
+      variants: ExportVariant[],
+      onArtifacts: ( variantId: string, artifacts: ExportArtifact[], bundleFileName: string ) => void,
+      onProgress: ( items: ExportItemState[] ) => void,
+      signal: AbortSignal
+    ) => Promise<ExportItemState[]>;
+  };
+  /**
+   * Register `file` as the asset picker does (`useAssetDrop().addAssets`: a
+   * blob under a unique scoped path) and list it in the form's `assets` of
+   * that slide or the root; answers the path.
+   */
+  addAsset: ( file: File, kind: "images" | "videos" | "audios" | "json", slide: number | undefined ) => Promise<string>;
+  /** The gallery, and moving this tab to another sketch. */
+  navigation: {
+    catalogue: () => CatalogueEntry[];
+    /** Client-side navigation to `href`, as a gallery link does. */
+    open: ( href: string ) => void;
+    /** The sketch whose commands are registered now. */
+    currentSketch: () => string;
+  };
+  /** The app's own schema verdict on a document (`validateOptionsDocument`). */
+  validateDocument: ( document: unknown ) => { issues: { path: string;
+    message: string }[];
+  normalized: Record<string, unknown> | null };
+  /** Randomize every control under `basePath`, as the dice button does. */
+  randomize: ( basePath: string ) => void;
+  /** Write a file through the relay; null when no relay is connected. */
+  saveFile: ( blob: Blob, name: string, folder?: string ) => Promise<{ path: string;
+    bytes: number }>;
+  relayConnected: () => boolean;
+  /** The browser's gallery of kept pieces (`src/lib/gallery/`, the /gallery page). */
+  gallery: {
+    store: GalleryStore;
+    /** The frame on screen as the gallery's ~240 px JPEG (the Keep button's capture). */
+    thumbnail: () => Promise<Blob | null>;
+    /** Apply a whole document to THIS sketch's form, the import button's way; a refusal names the first bad path. */
+    importDocument: ( options: unknown ) => { ok: true } | { ok: false;
+      reason: string };
+    /** Hand a document to the sketch page that mounts next (the listing's sessionStorage handoff). */
+    stageImport: ( options: unknown ) => boolean;
+    /** True while a handed-over document has not been consumed yet. */
+    importPending: () => boolean;
+  };
+  /** Several frames tiled on one picture, each labelled (`framesToContactSheet`). */
+  contactSheet: ( frames: SheetFrame[], maxEdge: number, format: "png" | "jpeg", note: string ) => Promise<ImageResult>;
+  /**
+   * Run `fn` as ONE undo step named `label`: what the history holds pending
+   * is committed first (the person's own edit stays its own step), nothing is
+   * captured while `fn` runs, and everything it wrote is captured as one
+   * entry when it ends — even when it throws. Nests: only the outermost
+   * transaction captures.
+   */
+  transaction: <T>( label: string, fn: () => Promise<T> ) => Promise<T>;
+  /**
+   * The binding affordance's model (`BindingAffordance/`): which controls a
+   * binding can drive, the editor's defaults for one, the sources its picker
+   * offers, and its one write path (`bindingWrites.ts`).
+   */
+  bindings: {
+    /** True, or why bindings cannot be edited in this build (the feature flag). */
+    enabled: () => true | string;
+    /** The binding kind a control component takes (`bindingKindFor`), null when not bindable. */
+    kindFor: ( component: string ) => string | null;
+    /** The `interactive` scope paired with a slide's (or the root's) sketch scope. */
+    scope: ( slide: number | undefined ) => string;
+    /** The picker's sources for a kind: channels (with their projections) and generators. */
+    sources: ( kind: string ) => { source: string;
+      project?: string;
+      label: string }[];
+    /**
+     * A binding on `target` with the editor's defaults (`makeDefaultBinding`),
+     * switched to `source` / `project` as the picker would (a generator gets
+     * its block seeded).
+     */
+    makeDefault: ( target: string, slide: number | undefined, source?: string, project?: string ) => Record<string, unknown>;
+    /** The block a generator source needs on `binding` when it has none yet (`switchCategory`'s seed). */
+    generatorSeed: ( source: string, binding: Record<string, unknown> ) => Record<string, unknown>;
+    /** Store the scope's list as the affordance does; `enableSource` switches that input on. */
+    write: ( slide: number | undefined, list: Record<string, unknown>[], enableSource?: string ) => Promise<void>;
+  };
+}
+
+/** The sketch-parameter scope a slide edits: its own block, or the root's. */
+export function sketchBase( slide: number | undefined ): string {
+  return slide === undefined ? "sketch" : `slides.${ slide }.sketch`;
+}
+
+function isPlainObject( value: unknown ): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray( value );
+}
+
+/**
+ * A nested delta as the leaf writes a form makes: one `[path, value]` per
+ * scalar, an array written whole (the option store treats arrays as leaves).
+ */
+export function leafWrites(
+  base: string, delta: Record<string, unknown>
+): [ string, unknown ][] {
+  const out: [ string, unknown ][] = [];
+
+  for ( const [
+    key,
+    value
+  ] of Object.entries( delta ) ) {
+    const path = base ? `${ base }.${ key }` : key;
+
+    if ( isPlainObject( value ) && Object.keys( value ).length ) {
+      out.push( ...leafWrites(
+        path,
+        value
+      ) );
+    } else {
+      out.push( [
+        path,
+        value
+      ] );
+    }
+  }
+
+  return out;
+}

@@ -10,6 +10,7 @@ import {
   HudSparklineItemSchema,
   HudSwatchItemSchema,
   HudVectorItemSchema,
+  HudVector3dItemSchema,
   ImageItemSchema,
   ImagesStackItemSchema,
   MetaItemSchema,
@@ -17,6 +18,7 @@ import {
   TextItemSchema,
   ContentItem,
   SketchLayerItemSchema,
+  SequenceItemSchema,
   QrCodeItemSchema,
   TitleItemSchema
 } from "@/types/sketch.types";
@@ -111,6 +113,11 @@ export default function makeDefaultItem(
         ...seed,
         type
       } );
+    case "hud-vector3d":
+      return HudVector3dItemSchema.parse( {
+        ...seed,
+        type
+      } );
     case "hud-bounding-box":
       return HudBoundingBoxItemSchema.parse( {
         ...seed,
@@ -126,6 +133,14 @@ export default function makeDefaultItem(
     // which is why the palette tile opens the picker instead of adding blind.
     case "sketch":
       return SketchLayerItemSchema.parse( {
+        ...seed,
+        type
+      } );
+    // The palette tile seeds `scenes` (a splash card cutting into the picked
+    // sketch) the way the sketch tile seeds its path: a reel with no scene
+    // draws nothing.
+    case "sequence":
+      return SequenceItemSchema.parse( {
         ...seed,
         type
       } );

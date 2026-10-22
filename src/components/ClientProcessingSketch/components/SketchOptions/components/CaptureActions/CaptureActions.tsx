@@ -42,7 +42,8 @@ import type {
 } from "../../hooks/useRecordingLifecycle";
 
 export type CaptureActionsRef = {
-  saveAsDraft: () => Promise<void>;
+  /** Background save; resolves false when it did not save (never alerts). */
+  saveAsDraft: () => Promise<boolean>;
   cloneAsDraft: () => Promise<void>;
   isRecording: boolean;
   isSaving: boolean;
@@ -199,7 +200,11 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
   const handleSubmit = async(
     status: JobStatusEnum = "queued",
     persistedJobId?: JobId,
-    skipRedirect = false
+    skipRedirect = false,
+    // Background autosave: a failure is logged and retried on the next tick,
+    // never raised as a blocking alert() from a timer (which repeated every
+    // 10 s for as long as the backend was down).
+    silent = false
   ): Promise<JobId | null> => {
     if ( status === "draft" ) {
       setSaving( true );
@@ -381,8 +386,9 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
         if ( status === "draft" ) {
           setSaving( false );
         }
-        // Optionally show error to user
-        alert( "Failed to save draft. Please try again." );
+        if ( !silent ) {
+          alert( "Failed to save draft. Please try again." );
+        }
 
         return null;
       }
@@ -394,8 +400,9 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
       if ( status === "draft" ) {
         setSaving( false );
       }
-      // Show error to user
-      alert( "An error occurred while saving. Please try again." );
+      if ( !silent ) {
+        alert( "An error occurred while saving. Please try again." );
+      }
 
       return null;
     }
@@ -459,11 +466,14 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
     forwardedRef ?? ref,
     () => ( {
       saveAsDraft: async() => {
-        await handleSubmit(
+        const savedJobId = await handleSubmit(
           "draft",
           persistedJob?.id,
-          true // skip redirect for auto-save
+          true, // skip redirect for auto-save
+          true // silent: never alert from the background
         );
+
+        return savedJobId !== null;
       },
       cloneAsDraft: handleCloneAndOpen,
       isSaving: saving,

@@ -3,6 +3,10 @@ import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
 import videos from "@/p5/utils/videos.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 let pool;
 let sampleBuffer;
@@ -27,11 +31,16 @@ sketch.draw( () => {
   const cfg = options.sketch ?? {};
 
   p.clear();
-  p.background( ...( cfg.backgroundColor ?? [
-    10,
-    10,
-    12
-  ] ) );
+  paintBackground( resolveBackground(
+    cfg.backgroundColor,
+    {
+      fallback: [
+        10,
+        10,
+        12
+      ]
+    }
+  ) );
 
   const items = ( pool?.list() ?? [] ).filter( ( v ) => v.ready );
 

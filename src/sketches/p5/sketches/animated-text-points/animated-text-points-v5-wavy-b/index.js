@@ -9,6 +9,10 @@ import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import string from "@/p5/utils/string.js";
 import gridMask from "@/p5/utils/gridMask.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 const drawCross = (
   p, position, size
@@ -38,11 +42,17 @@ sketch.draw( () => {
   const p = getP5();
 
   p.clear();
-  p.background( ...( options.sketch?.backgroundColor ?? [
-    0,
-    0,
-    0
-  ] ) );
+  paintBackground( resolveBackground(
+    options.sketch?.backgroundColor,
+    {
+      fallback: [
+        0,
+        0,
+        0
+      ],
+      palette: options.sketch?.color?.palette
+    }
+  ) );
   p.strokeWeight( options.sketch?.strokeWeight ?? 2 );
 
   const shape = options.sketch?.shape ?? {};
@@ -140,7 +150,7 @@ sketch.draw( () => {
   const wobbleRowMultiplier = wobble.rowMultiplier ?? 4;
 
   const palette = color.palette ?? "rainbow";
-  const colorFunction = colors?.[ palette ] ?? colors.rainbow;
+  const colorFunction = colors.palette( palette );
   const hueOffsetSpeed = color.hueOffsetSpeed ?? 1;
 
   const field = gridMask.field( {

@@ -384,6 +384,67 @@
     animation: pulse-soft 2s ease-in-out infinite;
 }
 
+/* A field driven by an interaction binding (docs/memory/interaction-bindings.md):
+   one iridescent ramp, drifting, on the bar's fill, its ring and the diamond
+   glyph. The ramp starts and ends on the same hue and is tiled at twice the
+   element's width, so sliding it by one tile (background-position 200%) loops
+   without a seam. Reduced motion freezes it through the global rule below. */
+:root {
+    --binding-iridescent: linear-gradient(90deg,
+            hsl(0 85% 62%),
+            hsl(45 90% 58%),
+            hsl(130 65% 52%),
+            hsl(190 85% 56%),
+            hsl(255 80% 66%),
+            hsl(320 80% 64%),
+            hsl(360 85% 62%));
+}
+
+@keyframes binding-iridescent-drift {
+    from {
+        background-position: 0% 0;
+    }
+    to {
+        background-position: 200% 0;
+    }
+}
+
+@keyframes binding-ring-drift {
+    from {
+        background-position: 0 0, 0% 0;
+    }
+    to {
+        background-position: 0 0, 200% 0;
+    }
+}
+
+.binding-iridescent {
+    background-image: var(--binding-iridescent);
+    background-size: 200% 100%;
+    animation: binding-iridescent-drift 8s linear infinite;
+}
+
+/* Declared after the utilities so it wins over a bar's `border-theme` and
+   `bg-background`: the ring is the ramp painted on the border box under an
+   opaque background-coloured padding box. */
+.binding-live-ring {
+    border-color: transparent;
+    /* Longhands, not the `background` shorthand: a shorthand holding a var()
+       serializes its longhands as empty, which breaks any tool that copies the
+       rule's cssText. */
+    background-image:
+        linear-gradient(hsl(var(--background)), hsl(var(--background))),
+        var(--binding-iridescent);
+    background-origin: padding-box, border-box;
+    background-clip: padding-box, border-box;
+    background-size: 100% 100%, 200% 100%;
+    animation: binding-ring-drift 8s linear infinite;
+}
+
+.binding-diamond {
+    clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+}
+
 /* View Transitions for engine tab switching */
 @keyframes vt-fade-out {
     to { opacity: 0; }

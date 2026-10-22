@@ -9,6 +9,10 @@ import sketch, {
 import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
+import {
+  paintBackground,
+  resolveBackground
+} from "@/p5/utils/background.js";
 
 const canvases = sketch.state( () => ( {} ) );
 
@@ -23,7 +27,7 @@ sketch.setup( () => {
   canvases.blurredLayer.pixelDensity( options.sketch.backgroundPixelDensity || 0.055 );
   canvases.blurredLayer.drawingContext.filter = "blur(2px)";
 
-  p.background( ...options.sketch.colors.background );
+  paintBackground( resolveBackground( options.sketch.colors.background ) );
 } );
 
 sketch.draw( (
@@ -32,8 +36,11 @@ sketch.draw( (
   const p = getP5();
 
   p.clear();
-  p.background( ...options.sketch.colors.background );
-  canvases.blurredLayer.background( ...options.sketch.colors.background );
+  paintBackground( resolveBackground( options.sketch.colors.background ) );
+  paintBackground(
+    resolveBackground( options.sketch.colors.background ),
+    canvases.blurredLayer
+  );
 
   const images = cache.get( "images" );
   const imageObjectAtIndex = mappers.circularIndex(
@@ -98,7 +105,7 @@ sketch.draw( (
           0,
           255
         ),
-        fill: p.color( ...options.sketch.colors.background ),
+        fill: p.color( ...resolveBackground( options.sketch.colors.background ) ),
         // fill: p.color(0, 0, 0, 255),
         // stroke: p.color(...options.sketch.colors.background),
         font: string.fonts.martian
@@ -191,7 +198,7 @@ sketch.draw( (
     {
       size: 24,
       stroke: p.color( ...options.sketch.colors.text ),
-      fill: p.color( ...options.sketch.colors.background ),
+      fill: p.color( ...resolveBackground( options.sketch.colors.background ) ),
       font: string.fonts.martian,
       textAlign: [
         p.CENTER
