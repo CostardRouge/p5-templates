@@ -150,13 +150,13 @@ function SketchPickerBody( {
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+      className="fixed inset-0 z-100 flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
       aria-label="Choose a sketch"
     >
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/50 backdrop-blur-xs"
         onClick={ onClose }
       />
 
@@ -177,7 +177,7 @@ function SketchPickerBody( {
               placeholder="Filter by name or category"
               className={ clsx(
                 "w-full rounded-lg border border-theme bg-hover/30 py-1.5 pl-7 pr-2 text-xs text-foreground",
-                "focus:outline-none focus:ring-1 focus:ring-focus"
+                "focus:outline-hidden focus:ring-1 focus:ring-focus"
               ) }
             />
           </div>
@@ -226,7 +226,7 @@ function SketchPickerBody( {
                       : choice.path }
                     className={ clsx(
                       "group flex flex-col overflow-hidden rounded-lg border text-left transition",
-                      "focus:outline-none focus:ring-1 focus:ring-focus",
+                      "focus:outline-hidden focus:ring-1 focus:ring-focus",
                       choice.unavailable
                         ? "cursor-not-allowed border-theme opacity-40"
                         : "hover:border-foreground/30",
@@ -241,7 +241,7 @@ function SketchPickerBody( {
                       loading="lazy"
                       decoding="async"
                       className={ clsx(
-                        "aspect-[4/5] w-full bg-hover object-cover",
+                        "aspect-4/5 w-full bg-hover object-cover",
                         choice.unavailable && "grayscale"
                       ) }
                     />

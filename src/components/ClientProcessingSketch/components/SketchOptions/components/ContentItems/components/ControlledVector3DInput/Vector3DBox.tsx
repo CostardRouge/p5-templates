@@ -63,7 +63,7 @@ function isTriple( value: BindingValue | undefined ): value is Vector3DValue {
 
 /** The 2D pad's frame, so the two controls read as one family. */
 const FRAME_CLASS =
-  "relative touch-none select-none overflow-hidden rounded-lg border border-theme bg-background/50 focus:outline-none focus:ring-1 focus:ring-theme";
+  "relative touch-none select-none overflow-hidden rounded-lg border border-theme bg-background/50 focus:outline-hidden focus:ring-1 focus:ring-theme";
 
 /** Tiny corner caption naming an axis, as on the 2D pad. */
 const AXIS_LABEL_CLASS =
@@ -732,13 +732,13 @@ export default function Vector3DBox( {
           <span
             ref={ liveDotRef }
             aria-hidden="true"
-            className="binding-iridescent pointer-events-none absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border border-background shadow"
+            className="binding-iridescent pointer-events-none absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border border-background shadow-sm"
             style={ {
               left: `${ tip.x }%`,
               top: `${ tip.y }%`
             } }
           />
-          <span className="pointer-events-none absolute bottom-0.5 left-0.5 rounded-sm bg-background/70 px-0.5 font-mono text-[9px] leading-tight tabular-nums text-foreground">
+          <span className="pointer-events-none absolute bottom-0.5 left-0.5 rounded-xs bg-background/70 px-0.5 font-mono text-[9px] leading-tight tabular-nums text-foreground">
             {( [
               "x",
               "y",

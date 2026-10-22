@@ -420,7 +420,7 @@ export default function SketchesList( {
               placeholder="Search sketches..."
               value={ search }
               onChange={ ( e ) => setSearch( e.target.value ) }
-              className={ `pl-9 py-2 sm:pl-11 sm:py-2.5 rounded-lg sm:rounded-xl w-full bg-background border border-border hover:border-foreground/30 focus:border-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/10 transition-all text-xs sm:text-sm placeholder:text-foreground/40 ${
+              className={ `pl-9 py-2 sm:pl-11 sm:py-2.5 rounded-lg sm:rounded-xl w-full bg-background border border-border hover:border-foreground/30 focus:border-foreground/50 focus:outline-hidden focus:ring-2 focus:ring-foreground/10 transition-all text-xs sm:text-sm placeholder:text-foreground/40 ${
                 search
                   ? "pr-9 sm:pr-11"
                   : "pr-3 sm:pr-4"
@@ -440,7 +440,7 @@ export default function SketchesList( {
           </div>
 
           {/* View Toggle */}
-          <div className="flex items-center bg-background border border-border rounded-lg sm:rounded-xl overflow-hidden flex-shrink-0">
+          <div className="flex items-center bg-background border border-border rounded-lg sm:rounded-xl overflow-hidden shrink-0">
             <button
               onClick={ () => setView( "grid" ) }
               className={ `px-2.5 py-2 sm:px-3 sm:py-2.5 transition-all duration-200 ${
@@ -497,7 +497,7 @@ export default function SketchesList( {
             {/* All engines tab */}
             <button
               onClick={ () => handleEngineClick( "all" ) }
-              className={ `flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 flex-shrink-0 whitespace-nowrap ${
+              className={ `flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 shrink-0 whitespace-nowrap ${
                 currentEngine === "all"
                   ? "bg-foreground text-background"
                   : "bg-background border border-border text-foreground/60 hover:text-foreground hover:border-foreground/30 hover:bg-hover/50"
@@ -525,7 +525,7 @@ export default function SketchesList( {
                 <button
                   key={ engineId }
                   onClick={ () => handleEngineClick( engineId ) }
-                  className={ `flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 flex-shrink-0 whitespace-nowrap ${
+                  className={ `flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 shrink-0 whitespace-nowrap ${
                     isActive
                       ? "bg-foreground text-background"
                       : "bg-background border border-border text-foreground/60 hover:text-foreground hover:border-foreground/30 hover:bg-hover/50"
@@ -558,7 +558,7 @@ export default function SketchesList( {
             onClick={ handleImportClick }
             disabled={ importing }
             title="Import a previously exported options.json"
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 flex-shrink-0 whitespace-nowrap bg-background border border-border text-foreground/60 hover:text-foreground hover:border-foreground/30 hover:bg-hover/50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 shrink-0 whitespace-nowrap bg-background border border-border text-foreground/60 hover:text-foreground hover:border-foreground/30 hover:bg-hover/50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <FileUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             <span>
@@ -846,7 +846,7 @@ function CategorySection( {
             aria-expanded={ expanded }
             aria-label={ expanded ? `Collapse ${ title }` : `Show all ${ title } sketches` }
             title={ expanded ? "Collapse" : "Show all" }
-            className="flex-shrink-0 grid place-items-center w-5 h-5 rounded-md border border-border text-foreground/50 hover:text-foreground hover:border-foreground/30 hover:bg-hover/50 transition-colors"
+            className="shrink-0 grid place-items-center w-5 h-5 rounded-md border border-border text-foreground/50 hover:text-foreground hover:border-foreground/30 hover:bg-hover/50 transition-colors"
           >
             <ChevronDown
               className={ `w-3 h-3 transition-transform duration-300 ease-out ${
@@ -925,7 +925,7 @@ function SketchCard( {
         }` }
       >
         { hiddenFromGallery ? (
-          <span className="absolute top-2 right-2 z-20 font-mono text-[9px] uppercase tracking-[0.18em] bg-foreground text-background px-1.5 py-0.5 rounded-sm pointer-events-none">
+          <span className="absolute top-2 right-2 z-20 font-mono text-[9px] uppercase tracking-[0.18em] bg-foreground text-background px-1.5 py-0.5 rounded-xs pointer-events-none">
             hidden
           </span>
         ) : null }
@@ -941,7 +941,7 @@ function SketchCard( {
           {/*    className="absolute top-2 left-2 sm:top-3 sm:left-3 z-10"*/}
           {/*    title="Has a magic form"*/}
           {/*  >*/}
-          {/*    <div className="bg-background/90 backdrop-blur-sm rounded-lg border border-border shadow-lg p-1 sm:p-1.5">*/}
+          {/*    <div className="bg-background/90 backdrop-blur-xs rounded-lg border border-border shadow-lg p-1 sm:p-1.5">*/}
           {/*      <FileSliders className="w-3 h-3 sm:w-4 sm:h-4 text-foreground" />*/}
           {/*    </div>*/}
           {/*  </div>*/}
@@ -998,7 +998,7 @@ function SketchCard( {
       }` }
     >
       <div
-        className="w-12 sm:w-16 aspect-[4/5] flex-shrink-0 relative rounded-lg sm:rounded-xl overflow-hidden border border-border"
+        className="w-12 sm:w-16 aspect-4/5 shrink-0 relative rounded-lg sm:rounded-xl overflow-hidden border border-border"
       >
         { preview ? (
           <AnimatedPreview
@@ -1019,26 +1019,26 @@ function SketchCard( {
         ) }
       </div>
 
-      <div className="flex-grow min-w-0 flex items-center gap-2">
+      <div className="grow min-w-0 flex items-center gap-2">
         <p className="text-xs sm:text-sm font-semibold text-foreground truncate">
           { name }
         </p>
         { hiddenFromGallery ? (
-          <span className="font-mono text-[9px] uppercase tracking-[0.18em] bg-foreground text-background px-1.5 py-0.5 rounded-sm flex-shrink-0">
+          <span className="font-mono text-[9px] uppercase tracking-[0.18em] bg-foreground text-background px-1.5 py-0.5 rounded-xs shrink-0">
             hidden
           </span>
         ) : null }
       </div>
 
       {/* { hasSketchForm && (*/}
-      {/*  <div className="flex-shrink-0" title="Has a magic form">*/}
+      {/*  <div className="shrink-0" title="Has a magic form">*/}
       {/*    <div className="bg-hover/50 rounded-lg border border-border p-1 sm:p-1.5">*/}
       {/*      <FileSliders className="w-3 h-3 sm:w-4 sm:h-4 text-foreground" />*/}
       {/*    </div>*/}
       {/*  </div>*/}
       {/* ) }*/}
 
-      <div className="flex-shrink-0 text-foreground/40 group-hover:text-foreground/60 transition-colors">
+      <div className="shrink-0 text-foreground/40 group-hover:text-foreground/60 transition-colors">
         <span className="text-xs sm:text-sm">→</span>
       </div>
     </Link>

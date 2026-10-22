@@ -219,7 +219,7 @@ const ZoomControls = ( {
         onClick={ onReset }
         onMouseEnter={ closeMenu }
         disabled={ disabled }
-        className={ `${ buttonClassName } min-w-[3.5rem]` }
+        className={ `${ buttonClassName } min-w-14` }
         title="Zoom to 100% (actual size)"
         aria-label="Zoom to 100% (actual size)"
       >
@@ -263,7 +263,7 @@ const ZoomControls = ( {
     // and the menu closes before the pointer can reach it.
     <div
       role="menu"
-      className="absolute right-0 top-full z-[60] min-w-[15rem] overflow-hidden rounded-xl border border-border bg-background/95 backdrop-blur-xl shadow-lg"
+      className="absolute right-0 top-full z-60 min-w-60 overflow-hidden rounded-xl border border-border bg-background/95 backdrop-blur-xl shadow-lg"
     >
       {/* Named cells of the matrix. */}
       {PRESETS

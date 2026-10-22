@@ -75,7 +75,7 @@ function currentChoiceValue( variant: ExportVariant ): string {
 }
 
 export const SELECT_CLASS =
-  "w-full cursor-pointer appearance-none rounded-md border border-transparent bg-transparent px-1 py-1 text-[11px] text-foreground transition-colors hover:border-theme focus:border-theme focus:outline-none disabled:opacity-50";
+  "w-full cursor-pointer appearance-none rounded-md border border-transparent bg-transparent px-1 py-1 text-[11px] text-foreground transition-colors hover:border-theme focus:border-theme focus:outline-hidden disabled:opacity-50";
 
 /** A muted em dash: this column does not apply to this variant. */
 export function NotApplicable() {
@@ -113,7 +113,7 @@ export function VariantName( {
         name: event.target.value
       } ) }
       className={ clsx(
-        "w-full rounded-md border border-transparent bg-transparent px-1 py-0.5 font-medium text-foreground transition-colors hover:border-theme focus:border-theme focus:outline-none disabled:opacity-60",
+        "w-full rounded-md border border-transparent bg-transparent px-1 py-0.5 font-medium text-foreground transition-colors hover:border-theme focus:border-theme focus:outline-hidden disabled:opacity-60",
         className ?? "text-[11.5px]"
       ) }
     />

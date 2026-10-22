@@ -461,7 +461,7 @@ function SlideTitleControls( {
   };
 
   return (
-    <div className="mt-1 rounded-lg border border-theme bg-foreground/[0.03] p-1">
+    <div className="mt-1 rounded-lg border border-theme bg-foreground/3 p-1">
       <label className="flex cursor-pointer items-center justify-between gap-2 px-1 py-1.5 md:py-1 select-none text-foreground">
         <span className="truncate">Slide title</span>
         <span className="relative inline-flex shrink-0 items-center">
@@ -472,7 +472,7 @@ function SlideTitleControls( {
             className="peer sr-only"
           />
           <span className="h-6 w-10 md:h-5 md:w-9 rounded-full border border-theme bg-foreground/10 transition-colors peer-checked:bg-foreground peer-focus-visible:ring-2 peer-focus-visible:ring-focus/50" />
-          <span className="pointer-events-none absolute left-0.5 top-1/2 h-5 w-5 md:h-4 md:w-4 -translate-y-1/2 rounded-full border border-theme bg-background shadow transition-transform peer-checked:translate-x-4" />
+          <span className="pointer-events-none absolute left-0.5 top-1/2 h-5 w-5 md:h-4 md:w-4 -translate-y-1/2 rounded-full border border-theme bg-background shadow-sm transition-transform peer-checked:translate-x-4" />
         </span>
       </label>
 
@@ -692,7 +692,7 @@ function SlideTransitionSoundControls( {
   };
 
   return (
-    <div className="mt-1 rounded-lg border border-theme bg-foreground/[0.03] p-1">
+    <div className="mt-1 rounded-lg border border-theme bg-foreground/3 p-1">
       <label className="flex cursor-pointer items-center justify-between gap-2 px-1 py-1.5 md:py-1 select-none text-foreground">
         <span className="truncate">Transition sound</span>
         <span className="relative inline-flex shrink-0 items-center">
@@ -703,7 +703,7 @@ function SlideTransitionSoundControls( {
             className="peer sr-only"
           />
           <span className="h-6 w-10 md:h-5 md:w-9 rounded-full border border-theme bg-foreground/10 transition-colors peer-checked:bg-foreground peer-focus-visible:ring-2 peer-focus-visible:ring-focus/50" />
-          <span className="pointer-events-none absolute left-0.5 top-1/2 h-5 w-5 md:h-4 md:w-4 -translate-y-1/2 rounded-full border border-theme bg-background shadow transition-transform peer-checked:translate-x-4" />
+          <span className="pointer-events-none absolute left-0.5 top-1/2 h-5 w-5 md:h-4 md:w-4 -translate-y-1/2 rounded-full border border-theme bg-background shadow-sm transition-transform peer-checked:translate-x-4" />
         </span>
       </label>
 
@@ -882,7 +882,7 @@ export default function SlideTransitionSettings( {
             className="peer sr-only"
           />
           <span className="h-6 w-10 md:h-5 md:w-9 rounded-full border border-theme bg-foreground/10 transition-colors peer-checked:bg-foreground peer-focus-visible:ring-2 peer-focus-visible:ring-focus/50" />
-          <span className="pointer-events-none absolute left-0.5 top-1/2 h-5 w-5 md:h-4 md:w-4 -translate-y-1/2 rounded-full border border-theme bg-background shadow transition-transform peer-checked:translate-x-4" />
+          <span className="pointer-events-none absolute left-0.5 top-1/2 h-5 w-5 md:h-4 md:w-4 -translate-y-1/2 rounded-full border border-theme bg-background shadow-sm transition-transform peer-checked:translate-x-4" />
         </span>
       </label>
 

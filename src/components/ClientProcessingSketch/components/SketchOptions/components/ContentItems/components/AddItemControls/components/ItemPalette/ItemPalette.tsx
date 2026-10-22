@@ -39,7 +39,7 @@ function PaletteGrid( {
             type="button"
             onClick={ () => onAdd( kind ) }
             className={ clsx(
-              "group flex min-h-[3.25rem] flex-col items-center justify-center gap-1",
+              "group flex min-h-13 flex-col items-center justify-center gap-1",
               "rounded-lg border border-theme bg-background px-1 py-1.5 text-center",
               "transition hover:bg-hover hover:border-foreground/20 active:scale-[0.98]"
             ) }

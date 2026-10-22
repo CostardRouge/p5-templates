@@ -235,7 +235,7 @@ export default function RecordingsPage() {
 
         {/* Loading State */}
         {isLoading && (
-          <div className="overflow-hidden rounded-xl sm:rounded-2xl border border-border bg-background shadow-sm">
+          <div className="overflow-hidden rounded-xl sm:rounded-2xl border border-border bg-background shadow-xs">
             <div className="text-center py-8 sm:py-16">
               <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-hover/50 mb-3 sm:mb-4 animate-pulse">
                 <Video className="w-6 h-6 sm:w-8 sm:h-8 text-foreground/40" />

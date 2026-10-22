@@ -175,7 +175,7 @@ export default function MobileStudioDrawer( {
     // trap. Scrolling stays on the collapsible below.
     <div
       ref={ rootRef }
-      className="absolute left-2 right-2 z-[60] flex flex-col gap-2"
+      className="absolute left-2 right-2 z-60 flex flex-col gap-2"
       style={ {
         bottom: `calc(var(${ STUDIO_TRANSPORT_HEIGHT_VAR }, 0px) + 0.5rem)`
       } }

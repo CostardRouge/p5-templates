@@ -117,7 +117,7 @@ export default function GalleryCard( {
         onClick={ () => onOpen( entry ) }
         title={ `Open ${ title } in the studio` }
         aria-label={ `Open ${ title } in the studio` }
-        className="relative block w-full overflow-hidden bg-hover/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus"
+        className="relative block w-full overflow-hidden bg-hover/40 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus"
         style={ {
           aspectRatio: `${ entry.width } / ${ entry.height }`
         } }
@@ -168,7 +168,7 @@ export default function GalleryCard( {
                   setEditing( false );
                 }
               } }
-              className="w-full rounded-md border border-border bg-background px-1.5 py-0.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-focus"
+              className="w-full rounded-md border border-border bg-background px-1.5 py-0.5 text-sm text-foreground focus:outline-hidden focus:ring-1 focus:ring-focus"
             />
           ) : (
             <p

@@ -122,7 +122,7 @@ export default function ExportSizeSelect( {
             width: Number( event.target.value ) || 1,
             height: size.height
           } ) }
-          className="w-14 rounded-md border border-theme bg-background px-1.5 py-1 text-center font-mono text-[11px] tabular-nums text-foreground focus:outline-none focus:ring-1 focus:ring-focus disabled:opacity-50"
+          className="w-14 rounded-md border border-theme bg-background px-1.5 py-1 text-center font-mono text-[11px] tabular-nums text-foreground focus:outline-hidden focus:ring-1 focus:ring-focus disabled:opacity-50"
         />
         <span className="text-[10px] text-label">×</span>
         <input
@@ -136,7 +136,7 @@ export default function ExportSizeSelect( {
             width: size.width,
             height: Number( event.target.value ) || 1
           } ) }
-          className="w-14 rounded-md border border-theme bg-background px-1.5 py-1 text-center font-mono text-[11px] tabular-nums text-foreground focus:outline-none focus:ring-1 focus:ring-focus disabled:opacity-50"
+          className="w-14 rounded-md border border-theme bg-background px-1.5 py-1 text-center font-mono text-[11px] tabular-nums text-foreground focus:outline-hidden focus:ring-1 focus:ring-focus disabled:opacity-50"
         />
         <button
           type="button"
@@ -188,7 +188,7 @@ export default function ExportSizeSelect( {
           // change should still carry the variant with it.
           onChange( next === nativeValue ? null : parseFormat( next ) );
         } }
-        className="w-full cursor-pointer appearance-none rounded-md border border-transparent bg-transparent py-1 pl-1 pr-5 font-mono text-[11px] tabular-nums text-foreground transition-colors hover:border-theme focus:border-theme focus:outline-none disabled:opacity-50"
+        className="w-full cursor-pointer appearance-none rounded-md border border-transparent bg-transparent py-1 pl-1 pr-5 font-mono text-[11px] tabular-nums text-foreground transition-colors hover:border-theme focus:border-theme focus:outline-hidden disabled:opacity-50"
       >
         {mixedSizes && (
           <optgroup label="Sketch's own — slides differ">

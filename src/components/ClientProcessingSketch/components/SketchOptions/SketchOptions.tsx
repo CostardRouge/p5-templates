@@ -972,7 +972,7 @@ export default function SketchOptions( {
 
             {/* Recording and export, for all three layouts: a centred dialog on
                 desktop, the whole screen on mobile — where it replaces the
-                Export drawer tab. Rendered last so its z-[70] surface really is
+                Export drawer tab. Rendered last so its z-70 surface really is
                 on top, and unconditionally so `captureActionsRef` (the autosave
                 handle) exists whatever the viewport. */}
             <CaptureDialog

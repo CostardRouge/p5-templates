@@ -145,7 +145,7 @@ export default function CaptureDialog( {
   return (
     <div
       className={ clsx(
-        "absolute inset-0 z-[70] flex justify-center",
+        "absolute inset-0 z-70 flex justify-center",
         fullScreen ? "items-stretch" : "items-center p-4",
         !open && "pointer-events-none"
       ) }
@@ -163,7 +163,7 @@ export default function CaptureDialog( {
       {!fullScreen && (
         <div
           className={ clsx(
-            "absolute inset-0 bg-background/60 backdrop-blur-sm transition-opacity",
+            "absolute inset-0 bg-background/60 backdrop-blur-xs transition-opacity",
             open ? "opacity-100" : "opacity-0"
           ) }
           onClick={ requestClose }

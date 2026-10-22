@@ -68,7 +68,7 @@ const LINK_GRID =
   "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1";
 
 const LINK_CLASS =
-  "block rounded px-1 py-0.5 text-sm text-foreground/80 hover:text-foreground hover:bg-hover/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40 transition-colors";
+  "block rounded-sm px-1 py-0.5 text-sm text-foreground/80 hover:text-foreground hover:bg-hover/60 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-foreground/40 transition-colors";
 
 type CategoryGroup = {
   /** `null` for sketches that sit directly under their engine. */

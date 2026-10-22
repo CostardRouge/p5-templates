@@ -29,7 +29,7 @@ export default function ChannelMeter( {
         className={ `relative inline-block h-8 w-8 rounded-md border border-theme bg-background overflow-hidden ${ className }` }
       >
         <span
-          className="absolute h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-foreground shadow"
+          className="absolute h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-foreground shadow-sm"
           style={ {
             left: `calc(var(${ base }-x, 0.5) * 100%)`,
             top: `calc(var(${ base }-y, 0.5) * 100%)`

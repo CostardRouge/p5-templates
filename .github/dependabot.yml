@@ -52,11 +52,6 @@ updates:
       # the alias that follows 7.
       - dependency-name: 'typescript'
         update-types: ['version-update:semver-major']
-      # Tailwind 4 needs a migration, not a bump: its PostCSS plugin moved to
-      # `@tailwindcss/postcss` (postcss.config.mjs), the config file and the
-      # `@tailwind` directives change, and `next build` fails on 3's setup.
-      - dependency-name: 'tailwindcss'
-        update-types: ['version-update:semver-major']
       # `playwright` moves only with the Playwright image of the Dockerfile
       # (scripts/__tests__/dockerfile.test.ts holds the two together), and a
       # Dependabot pull request can carry one side only: both are raised by

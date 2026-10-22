@@ -295,13 +295,13 @@ export default function SketchShareDialog() {
 
   const dialog = open ? createPortal(
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+      className="fixed inset-0 z-100 flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
       aria-label="Share and embed sketch"
     >
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/50 backdrop-blur-xs"
         onClick={ () => setOpen( false ) }
       />
 
@@ -341,7 +341,7 @@ export default function SketchShareDialog() {
                 onChange={ ( event ) => setSizeChoice( event.target.value ) }
                 className={ clsx(
                   "w-full cursor-pointer rounded-xl border border-border bg-hover/30 px-2.5 py-2 text-sm text-foreground",
-                  "focus:outline-none focus:ring-1 focus:ring-focus"
+                  "focus:outline-hidden focus:ring-1 focus:ring-focus"
                 ) }
               >
                 <option value={ SIZE_CHOICE_EDITOR }>
@@ -518,7 +518,7 @@ export default function SketchShareDialog() {
           />
 
           <p className="text-xs text-foreground/50">
-            <code className="rounded bg-hover/50 px-1">allow=&quot;camera; microphone; gyroscope; accelerometer&quot;</code>{" "}
+            <code className="rounded-sm bg-hover/50 px-1">allow=&quot;camera; microphone; gyroscope; accelerometer&quot;</code>{" "}
             lets interactive (camera/mic/motion) sketches work inside the frame — keep it for those, drop it otherwise.
           </p>
         </div>
@@ -610,7 +610,7 @@ function ShareField( {
           onFocus={ ( event ) => event.currentTarget.select() }
           className={ clsx(
             "w-full resize-none rounded-xl border border-border bg-hover/30 p-2.5 font-mono text-xs text-foreground",
-            "focus:outline-none focus:ring-1 focus:ring-focus"
+            "focus:outline-hidden focus:ring-1 focus:ring-focus"
           ) }
         />
       ) : (
@@ -621,7 +621,7 @@ function ShareField( {
           onFocus={ ( event ) => event.currentTarget.select() }
           className={ clsx(
             "w-full rounded-xl border border-border bg-hover/30 px-2.5 py-2 font-mono text-xs text-foreground",
-            "focus:outline-none focus:ring-1 focus:ring-focus"
+            "focus:outline-hidden focus:ring-1 focus:ring-focus"
           ) }
         />
       )}

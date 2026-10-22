@@ -25,7 +25,7 @@ type ApplyToAllSlidesButtonProps = {
  */
 export default function ApplyToAllSlidesButton( {
   basePath,
-  className = "text-foreground hover:bg-theme/20 rounded transition-colors"
+  className = "text-foreground hover:bg-theme/20 rounded-sm transition-colors"
 }: ApplyToAllSlidesButtonProps ) {
   const {
     getValues,

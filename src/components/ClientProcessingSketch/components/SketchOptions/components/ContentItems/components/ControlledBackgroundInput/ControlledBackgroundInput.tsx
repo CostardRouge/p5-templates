@@ -126,7 +126,7 @@ function Segmented<T extends string>( {
             aria-checked={ selected }
             onClick={ () => onChange( option.value ) }
             className={ clsx(
-              "h-10 md:h-7 min-w-0 truncate whitespace-nowrap rounded-lg border px-2 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-focus",
+              "h-10 md:h-7 min-w-0 truncate whitespace-nowrap rounded-lg border px-2 transition-colors focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-focus",
               selected
                 ? "border-foreground/40 bg-foreground/10 text-foreground"
                 : "border-theme text-label hover:bg-hover hover:text-foreground"

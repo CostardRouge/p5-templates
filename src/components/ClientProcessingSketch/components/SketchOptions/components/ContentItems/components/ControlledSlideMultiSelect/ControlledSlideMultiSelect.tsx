@@ -96,7 +96,7 @@ export default function ControlledSlideMultiSelect( {
             return (
               <label
                 key={ id }
-                className="flex min-h-[2.5rem] md:min-h-0 cursor-pointer items-center justify-between gap-2 px-2.5 py-1.5 md:py-1 select-none transition-colors hover:bg-hover/50"
+                className="flex min-h-10 md:min-h-0 cursor-pointer items-center justify-between gap-2 px-2.5 py-1.5 md:py-1 select-none transition-colors hover:bg-hover/50"
               >
                 <span className="min-w-0 truncate">
                   {slide.name || indexToLetters( slide.index )}

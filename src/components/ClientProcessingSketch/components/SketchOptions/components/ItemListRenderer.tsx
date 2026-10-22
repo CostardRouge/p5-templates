@@ -422,7 +422,7 @@ export default function ItemListRenderer( {
           // section rather than a visually distinct component.
           <div
             className={ clsx(
-              "cursor-pointer select-none flex items-center justify-between w-full gap-2 min-h-[2.5rem] md:min-h-0",
+              "cursor-pointer select-none flex items-center justify-between w-full gap-2 min-h-10 md:min-h-0",
               isBand
                 ? clsx(
                   "py-2 md:py-1.5",

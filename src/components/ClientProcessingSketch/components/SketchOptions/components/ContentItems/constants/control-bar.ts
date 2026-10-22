@@ -20,7 +20,7 @@ export const CONTROL_VALUE_BUTTON_CLASS =
 
 /** Numeric input that temporarily replaces a bar while editing its value. */
 export const CONTROL_EDIT_INPUT_CLASS =
-  "w-full h-10 md:h-7 px-2.5 border border-theme rounded-lg bg-background text-foreground text-center font-mono text-base md:text-xs focus:outline-none focus:ring-1 focus:ring-focus";
+  "w-full h-10 md:h-7 px-2.5 border border-theme rounded-lg bg-background text-foreground text-center font-mono text-base md:text-xs focus:outline-hidden focus:ring-1 focus:ring-focus";
 
 /** Chevron displayed in select-like controls. */
 export const CONTROL_CHEVRON_CLASS =
@@ -28,7 +28,7 @@ export const CONTROL_CHEVRON_CLASS =
 
 /** Borderless input filling the free segment of a control bar. */
 export const CONTROL_BAR_INPUT_CLASS =
-  "h-full min-w-0 flex-1 bg-transparent px-2.5 text-base md:text-xs text-foreground placeholder:text-label/70 focus:outline-none";
+  "h-full min-w-0 flex-1 bg-transparent px-2.5 text-base md:text-xs text-foreground placeholder:text-label/70 focus:outline-hidden";
 
 /**
  * Card chrome for multi-line controls (textarea, json, multi-select): same
@@ -43,4 +43,4 @@ export const CONTROL_CARD_HEADER_CLASS =
 
 /** Borderless textarea body inside a control card. */
 export const CONTROL_CARD_TEXTAREA_CLASS =
-  "block w-full resize-y bg-transparent px-2.5 py-2 md:px-1.5 md:py-1 text-base md:text-xs text-foreground placeholder:text-label/70 focus:outline-none";
+  "block w-full resize-y bg-transparent px-2.5 py-2 md:px-1.5 md:py-1 text-base md:text-xs text-foreground placeholder:text-label/70 focus:outline-hidden";

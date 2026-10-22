@@ -344,7 +344,7 @@ const CollapsibleItem = ( {
       <div
         className={ clsx(
           headerContainerClassName,
-          "outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-focus"
+          "outline-hidden focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-focus"
         ) }
         role="button"
         tabIndex={ 0 }
