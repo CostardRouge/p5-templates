@@ -200,7 +200,7 @@ export default function VideoPreviewModal( {
 
   const modalContent = (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4 md:p-8 animate-in fade-in duration-200"
+      className="fixed inset-0 z-9999 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4 md:p-8 animate-in fade-in duration-200"
       onClick={ onClose }
     >
       <div
@@ -208,7 +208,7 @@ export default function VideoPreviewModal( {
         onClick={ ( e ) => e.stopPropagation() }
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 sm:px-6 sm:py-5 bg-background border-b border-border flex-shrink-0">
+        <div className="flex items-center justify-between px-4 py-3 sm:px-6 sm:py-5 bg-background border-b border-border shrink-0">
           <div className="min-w-0 flex-1 pr-2">
             <h2 className="text-base sm:text-xl font-bold text-foreground truncate">
               Recording Preview
@@ -227,7 +227,7 @@ export default function VideoPreviewModal( {
           </div>
 
           {/* Action buttons */}
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-2 shrink-0">
             {media &&
               !loading &&
               !media.isZipArchive &&
@@ -366,11 +366,11 @@ export default function VideoPreviewModal( {
                       ) => (
                         <div
                           key={ index }
-                          className={ `flex flex-col gap-2 sm:gap-3 md:gap-4 ${ media.videos.length === 1 ? "w-full max-w-5xl mx-auto" : "flex-shrink-0 w-[85vw] sm:w-[80vw] md:w-[650px] lg:w-[750px]" }` }
+                          className={ `flex flex-col gap-2 sm:gap-3 md:gap-4 ${ media.videos.length === 1 ? "w-full max-w-5xl mx-auto" : "shrink-0 w-[85vw] sm:w-[80vw] md:w-[650px] lg:w-[750px]" }` }
                         >
                           {/* Slide header */}
                           {media.videos.length > 1 && (
-                            <div className="flex items-center justify-between flex-shrink-0">
+                            <div className="flex items-center justify-between shrink-0">
                               <h3 className="text-sm sm:text-base font-semibold text-foreground">
                                 Slide {index + 1}
                               </h3>
@@ -381,7 +381,7 @@ export default function VideoPreviewModal( {
                           )}
 
                           {/* Video container */}
-                          <div className="border border-border rounded-xl sm:rounded-2xl overflow-hidden flex items-center justify-center bg-black shadow-lg aspect-video flex-shrink-0">
+                          <div className="border border-border rounded-xl sm:rounded-2xl overflow-hidden flex items-center justify-center bg-black shadow-lg aspect-video shrink-0">
                             <video
                               ref={ ( el ) => {
                                 if ( el ) {
@@ -408,7 +408,7 @@ export default function VideoPreviewModal( {
                           </div>
 
                           {/* Video info and download */}
-                          <div className="flex flex-col gap-2 flex-shrink-0 min-h-[72px] sm:min-h-[80px]">
+                          <div className="flex flex-col gap-2 shrink-0 min-h-[72px] sm:min-h-[80px]">
                             {/* Video metadata */}
                             {videoMetadata.get( index ) && (
                               <div className="flex items-center justify-center gap-3 sm:gap-4 text-xs text-foreground/60">
@@ -456,7 +456,7 @@ export default function VideoPreviewModal( {
 
                   {/* Scroll indicator for multiple videos */}
                   {media.videos.length > 1 && (
-                    <div className="text-center py-2 bg-hover/30 rounded-xl border border-border flex-shrink-0">
+                    <div className="text-center py-2 bg-hover/30 rounded-xl border border-border shrink-0">
                       <p className="text-xs sm:text-sm text-foreground/60 font-medium">
                         ← Scroll horizontally to view all {media.videos.length}{" "}
                         slides →

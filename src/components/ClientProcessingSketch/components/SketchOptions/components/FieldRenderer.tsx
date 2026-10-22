@@ -538,7 +538,7 @@ export default function FieldRenderer( {
                 return (
                   <label
                     key={ value }
-                    className="flex min-h-[2.5rem] md:min-h-0 cursor-pointer items-center justify-between gap-2 px-2.5 py-1.5 md:py-1 select-none transition-colors hover:bg-hover/50"
+                    className="flex min-h-10 md:min-h-0 cursor-pointer items-center justify-between gap-2 px-2.5 py-1.5 md:py-1 select-none transition-colors hover:bg-hover/50"
                   >
                     <span className="min-w-0 truncate">{option.label}</span>
                     <input
@@ -630,7 +630,7 @@ export default function FieldRenderer( {
             header={ ( expanded ) => (
               <div
                 className={ clsx(
-                  "cursor-pointer select-none flex items-center justify-between w-full gap-2 min-h-[2.5rem] md:min-h-0",
+                  "cursor-pointer select-none flex items-center justify-between w-full gap-2 min-h-10 md:min-h-0",
                   isBand
                     ? clsx(
                       "py-2 md:py-1.5",
@@ -980,7 +980,7 @@ export default function FieldRenderer( {
 
   if ( config.component === "checkbox" ) {
     return withInactive( <div className="text-sm md:text-xs">
-      <div className="flex min-h-[2.5rem] md:min-h-0 items-center justify-between gap-2 py-1 md:py-0.5">
+      <div className="flex min-h-10 md:min-h-0 items-center justify-between gap-2 py-1 md:py-0.5">
         {config.label && !hideLabel && (
           <label
             htmlFor={ registeredName }
@@ -1050,7 +1050,7 @@ export default function FieldRenderer( {
   return withInactive( <div
     className={ clsx(
       "text-sm md:text-xs",
-      learn.armed && "rounded-md outline outline-1 outline-focus outline-offset-2"
+      learn.armed && "rounded-md outline-solid outline-1 outline-focus outline-offset-2"
     ) }
     onPointerDownCapture={ handleSecondaryButtonCapture }
     onMouseDownCapture={ handleSecondaryButtonCapture }

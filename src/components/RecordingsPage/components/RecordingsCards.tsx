@@ -40,7 +40,7 @@ export default function RecordingsCards( {
 }: RecordingsCardsProps ) {
   if ( jobs.length === 0 ) {
     return (
-      <div className="col-span-full overflow-hidden rounded-xl sm:rounded-2xl border border-border bg-background shadow-sm">
+      <div className="col-span-full overflow-hidden rounded-xl sm:rounded-2xl border border-border bg-background shadow-xs">
         <RecordingsEmptyState hasFilters={ hasFilters } />
       </div>
     );

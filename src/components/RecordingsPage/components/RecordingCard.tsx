@@ -68,7 +68,7 @@ export default function RecordingCard( {
             aria-label={ `Select ${ job.sketch }` }
             checked={ isSelected }
             onChange={ onToggleSelection }
-            className="w-5 h-5 rounded border-2 border-white shadow-lg text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer bg-white/90 backdrop-blur-sm"
+            className="w-5 h-5 rounded-sm border-2 border-white shadow-lg text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer bg-white/90 backdrop-blur-xs"
             onClick={ ( e ) => e.stopPropagation() }
           />
         </div>
@@ -91,7 +91,7 @@ export default function RecordingCard( {
           <StatusBadge
             status={ job.status }
             reason={ job.error }
-            className="shadow-lg backdrop-blur-sm"
+            className="shadow-lg backdrop-blur-xs"
           />
         </div>
 

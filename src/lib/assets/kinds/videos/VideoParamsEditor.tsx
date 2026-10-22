@@ -102,7 +102,7 @@ export default function VideoParamsEditor( {
               loopMode: e.target.value as VideoLoopMode
             } )
           }
-          className="w-full p-1 border border-theme rounded bg-background text-foreground"
+          className="w-full p-1 border border-theme rounded-sm bg-background text-foreground"
         >
           <option value="loop">loop</option>
           <option value="clamp">clamp</option>
@@ -170,7 +170,7 @@ export default function VideoParamsEditor( {
               fit: e.target.value as VideoFit
             } )
           }
-          className="w-full p-1 border border-theme rounded bg-background text-foreground"
+          className="w-full p-1 border border-theme rounded-sm bg-background text-foreground"
         >
           <option value="stretch">stretch (fill box)</option>
           <option value="contain">contain (fit inside)</option>

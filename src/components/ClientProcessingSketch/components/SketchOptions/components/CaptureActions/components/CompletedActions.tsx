@@ -46,7 +46,7 @@ export default function CompletedActions( {
         onClick={ onPreview }
         disabled={ downloading || deleting || cloning }
       >
-        <Eye className="h-4 w-4 flex-shrink-0" />
+        <Eye className="h-4 w-4 shrink-0" />
         <span className="truncate">Preview</span>
       </button>
 
@@ -56,9 +56,9 @@ export default function CompletedActions( {
         disabled={ downloading || deleting || cloning }
       >
         {downloading ? (
-          <Loader className="h-4 w-4 animate-spin flex-shrink-0" />
+          <Loader className="h-4 w-4 animate-spin shrink-0" />
         ) : (
-          <Download className="h-4 w-4 flex-shrink-0" />
+          <Download className="h-4 w-4 shrink-0" />
         )}
         <span className="truncate">
           {downloading
@@ -73,9 +73,9 @@ export default function CompletedActions( {
         disabled={ downloading || deleting || cloning }
       >
         {cloning ? (
-          <Loader className="h-4 w-4 animate-spin flex-shrink-0" />
+          <Loader className="h-4 w-4 animate-spin shrink-0" />
         ) : (
-          <Copy className="h-4 w-4 flex-shrink-0" />
+          <Copy className="h-4 w-4 shrink-0" />
         )}
         <span className="truncate">{cloning ? "Cloning..." : "Clone"}</span>
       </button>
@@ -86,9 +86,9 @@ export default function CompletedActions( {
         disabled={ downloading || deleting || cloning }
       >
         {deleting ? (
-          <Loader className="h-4 w-4 animate-spin flex-shrink-0" />
+          <Loader className="h-4 w-4 animate-spin shrink-0" />
         ) : (
-          <Trash2 className="h-4 w-4 flex-shrink-0" />
+          <Trash2 className="h-4 w-4 shrink-0" />
         )}
         <span className="truncate">{deleting ? "Deleting..." : "Delete"}</span>
       </button>

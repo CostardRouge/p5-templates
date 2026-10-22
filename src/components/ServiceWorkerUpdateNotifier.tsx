@@ -88,7 +88,7 @@ export default function ServiceWorkerUpdateNotifier() {
       <div className="glass border border-border rounded-lg shadow-md shadow-active/5 flex items-center gap-3 max-w-md px-4 py-3">
         <RefreshCw
           className={ clsx(
-            "w-5 h-5 flex-shrink-0 text-foreground",
+            "w-5 h-5 shrink-0 text-foreground",
             {
               "animate-spin": updating
             }
@@ -113,7 +113,7 @@ export default function ServiceWorkerUpdateNotifier() {
 
         <button
           onClick={ handleDismiss }
-          className="p-1 hover:bg-hover rounded transition-colors text-foreground"
+          className="p-1 hover:bg-hover rounded-sm transition-colors text-foreground"
           aria-label="Dismiss"
         >
           <X className="w-4 h-4" />

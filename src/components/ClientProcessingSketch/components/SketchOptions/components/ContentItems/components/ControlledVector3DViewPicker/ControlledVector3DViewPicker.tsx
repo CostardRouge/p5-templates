@@ -337,7 +337,7 @@ export default function ControlledVector3DViewPicker( {
               title={ view.label }
               onClick={ () => select( view.id ) }
               className={ clsx(
-                "flex min-w-0 flex-col items-center gap-1 rounded-md border p-1 text-[10px] leading-tight transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-focus",
+                "flex min-w-0 flex-col items-center gap-1 rounded-md border p-1 text-[10px] leading-tight transition-colors focus:outline-hidden focus-visible:ring-1 focus-visible:ring-focus",
                 checked
                   ? "border-focus text-foreground ring-1 ring-focus"
                   : "border-theme text-label hover:text-foreground"
@@ -348,7 +348,7 @@ export default function ControlledVector3DViewPicker( {
                   canvases.current[ index ] = element;
                 } }
                 aria-hidden="true"
-                className="block aspect-square w-full rounded-sm"
+                className="block aspect-square w-full rounded-xs"
               />
               <span className="w-full truncate text-center">{view.label}</span>
             </button>

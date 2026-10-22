@@ -11,7 +11,7 @@
  * expressed.
  *
  * So the target is now `document.documentElement` (the root layout is already
- * `h-[100svh]`), and what used to be baked into two presets is three flags any
+ * `h-svh`), and what used to be baked into two presets is three flags any
  * combination of which is legal:
  *
  * - `fullscreen`    — the browser Fullscreen API. Desktop-only in practice:

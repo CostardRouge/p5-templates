@@ -65,7 +65,7 @@ export default function RecordingRow( {
           aria-label={ `Select ${ job.sketch }` }
           checked={ isSelected }
           onChange={ onToggleSelection }
-          className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded border-border text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
+          className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-sm border-border text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
           onClick={ ( e ) => e.stopPropagation() }
         />
       </td>

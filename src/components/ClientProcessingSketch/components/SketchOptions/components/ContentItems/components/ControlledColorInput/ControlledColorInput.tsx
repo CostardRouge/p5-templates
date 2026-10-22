@@ -212,7 +212,7 @@ export default function ControlledColorInput( {
       onBlur={ field.onBlur }
       { ...handlers }
       className={ clsx(
-        "group touch-pan-y select-none cursor-ew-resize outline-none focus-visible:ring-1 focus-visible:ring-focus",
+        "group touch-pan-y select-none cursor-ew-resize outline-hidden focus-visible:ring-1 focus-visible:ring-focus",
         CONTROL_BAR_CLASS,
         live && "binding-live-ring"
       ) }
@@ -257,7 +257,7 @@ export default function ControlledColorInput( {
               stays visible even at alpha 0). Driven, it is the base colour —
               the one being edited — while the fill shows the live one. */}
           <span
-            className="pointer-events-auto relative h-6 w-6 md:h-4 md:w-4 shrink-0 cursor-pointer overflow-hidden rounded-md border border-theme shadow-sm"
+            className="pointer-events-auto relative h-6 w-6 md:h-4 md:w-4 shrink-0 cursor-pointer overflow-hidden rounded-md border border-theme shadow-xs"
             style={ {
               backgroundColor: hex
             } }
@@ -276,7 +276,7 @@ export default function ControlledColorInput( {
           {label && (
             <span
               className={ clsx(
-                "truncate rounded bg-background/70 px-1 backdrop-blur-sm",
+                "truncate rounded-sm bg-background/70 px-1 backdrop-blur-xs",
                 isModified ? "font-medium text-foreground" : "text-label"
               ) }
             >
@@ -293,7 +293,7 @@ export default function ControlledColorInput( {
               title="Reset to saved value"
               onClick={ onReset }
               onPointerDown={ ( e ) => e.stopPropagation() }
-              className={ `${ CONTROL_RESET_BUTTON_CLASS } bg-background/70 backdrop-blur-sm` }
+              className={ `${ CONTROL_RESET_BUTTON_CLASS } bg-background/70 backdrop-blur-xs` }
             >
               <RotateCcw className="h-3.5 w-3.5 md:h-3 md:w-3" />
             </button>
@@ -304,7 +304,7 @@ export default function ControlledColorInput( {
               target={ live.target }
               fallback={ hex }
               hex
-              className="rounded bg-background/70 px-1 font-mono tabular-nums text-foreground backdrop-blur-sm"
+              className="rounded-sm bg-background/70 px-1 font-mono tabular-nums text-foreground backdrop-blur-xs"
             />
           )}
 
@@ -315,8 +315,8 @@ export default function ControlledColorInput( {
             onPointerDown={ ( e ) => e.stopPropagation() }
             className={ clsx(
               CONTROL_VALUE_BUTTON_CLASS,
-              "bg-background/70 backdrop-blur-sm",
-              live && "!text-label hover:!text-foreground"
+              "bg-background/70 backdrop-blur-xs",
+              live && "text-label! hover:text-foreground!"
             ) }
           >
             {alphaPercent}%

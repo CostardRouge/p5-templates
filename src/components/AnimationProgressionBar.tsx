@@ -574,7 +574,7 @@ export default function AnimationProgressionBar( {
         onKeyDown={ handleKeyDown }
       >
         <div
-          className="absolute inset-y-0 left-0 bg-gradient-to-r from-progress-start to-progress-end"
+          className="absolute inset-y-0 left-0 bg-linear-to-r from-progress-start to-progress-end"
           style={ {
             width: `${ progression * 100 }%`
           } }

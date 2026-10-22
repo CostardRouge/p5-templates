@@ -115,7 +115,7 @@ export default function LayerRow( {
       <button
         type="button"
         onClick={ onSelect }
-        className="flex min-h-[2.25rem] min-w-0 flex-1 items-center gap-2 py-1 text-left md:min-h-0"
+        className="flex min-h-9 min-w-0 flex-1 items-center gap-2 py-1 text-left md:min-h-0"
       >
         {Icon && (
           <Icon

@@ -164,7 +164,7 @@ export default function FieldContextMenu( {
     <>
       {/* Full-screen catcher closes the menu on any outside interaction. */}
       <div
-        className="fixed inset-0 z-[80]"
+        className="fixed inset-0 z-80"
         onClick={ onClose }
         onContextMenu={ ( event ) => {
           event.preventDefault();
@@ -172,7 +172,7 @@ export default function FieldContextMenu( {
         } }
       />
       <div
-        className="fixed z-[81] min-w-52 overflow-hidden rounded-xl border border-border bg-background/95 backdrop-blur-xl shadow-xl py-1"
+        className="fixed z-81 min-w-52 overflow-hidden rounded-xl border border-border bg-background/95 backdrop-blur-xl shadow-xl py-1"
         style={ {
           top: position.y,
           left: position.x

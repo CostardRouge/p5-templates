@@ -59,7 +59,7 @@ export default function RandomizeFieldButton( {
           }
         );
       } }
-      className={ className ?? "grid h-7 w-7 shrink-0 place-items-center rounded-md border border-theme text-label/60 outline-none transition-colors hover:bg-hover hover:text-foreground focus-visible:ring-1 focus-visible:ring-focus" }
+      className={ className ?? "grid h-7 w-7 shrink-0 place-items-center rounded-md border border-theme text-label/60 outline-hidden transition-colors hover:bg-hover hover:text-foreground focus-visible:ring-1 focus-visible:ring-focus" }
     >
       <Shuffle className="h-3.5 w-3.5" />
     </button>

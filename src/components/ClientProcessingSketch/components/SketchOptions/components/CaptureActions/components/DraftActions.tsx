@@ -41,9 +41,9 @@ export default function DraftActions( {
           disabled={ isAnyActionLoading }
         >
           {saving ? (
-            <Loader className="h-4 w-4 animate-spin flex-shrink-0" />
+            <Loader className="h-4 w-4 animate-spin shrink-0" />
           ) : (
-            <Save className="h-4 w-4 flex-shrink-0" />
+            <Save className="h-4 w-4 shrink-0" />
           )}
           <span className="truncate">{saving ? "Saving..." : "Save"}</span>
         </button>
@@ -54,9 +54,9 @@ export default function DraftActions( {
           disabled={ isBlockingActionLoading }
         >
           {isLoading && !saving ? (
-            <Loader className="h-4 w-4 animate-spin flex-shrink-0" />
+            <Loader className="h-4 w-4 animate-spin shrink-0" />
           ) : (
-            <Clapperboard className="h-4 w-4 flex-shrink-0" />
+            <Clapperboard className="h-4 w-4 shrink-0" />
           )}
           <span className="truncate">
             {isLoading && !saving ? "Starting..." : "Start"}
@@ -70,9 +70,9 @@ export default function DraftActions( {
         disabled={ isAnyActionLoading }
       >
         {deleting ? (
-          <Loader className="h-4 w-4 animate-spin flex-shrink-0" />
+          <Loader className="h-4 w-4 animate-spin shrink-0" />
         ) : (
-          <Trash2 className="h-4 w-4 flex-shrink-0" />
+          <Trash2 className="h-4 w-4 shrink-0" />
         )}
         <span className="truncate">
           {deleting ? "Deleting..." : "Delete Draft"}

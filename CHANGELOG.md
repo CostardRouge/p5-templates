@@ -9,6 +9,12 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
 
 ## [Unreleased]
 
+### Changed
+
+- On wider screens, paragraphs now keep the same relaxed line spacing as on a phone, and the home page's headline
+  sits as tightly as designed.
+- On touch screens, a tapped button or link no longer stays highlighted as if the pointer were still over it.
+
 ## [1.2.0] - 2026-10-22 — Ophiuride
 
 ### Added

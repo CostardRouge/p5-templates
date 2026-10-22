@@ -32,9 +32,9 @@ export default function FailedActions( {
         disabled={ isAnyActionLoading }
       >
         {saving ? (
-          <Loader className="h-4 w-4 animate-spin flex-shrink-0" />
+          <Loader className="h-4 w-4 animate-spin shrink-0" />
         ) : (
-          <Archive className="h-4 w-4 flex-shrink-0" />
+          <Archive className="h-4 w-4 shrink-0" />
         )}
         <span className="truncate">
           {saving ? "Saving..." : "Save as Draft"}
@@ -48,9 +48,9 @@ export default function FailedActions( {
           disabled={ isAnyActionLoading }
         >
           {retrying ? (
-            <Loader className="h-4 w-4 animate-spin flex-shrink-0" />
+            <Loader className="h-4 w-4 animate-spin shrink-0" />
           ) : (
-            <RotateCcw className="h-4 w-4 flex-shrink-0" />
+            <RotateCcw className="h-4 w-4 shrink-0" />
           )}
           <span className="truncate">{retrying ? "Retrying..." : "Retry"}</span>
         </button>
@@ -61,9 +61,9 @@ export default function FailedActions( {
           disabled={ isAnyActionLoading }
         >
           {deleting ? (
-            <Loader className="h-4 w-4 animate-spin flex-shrink-0" />
+            <Loader className="h-4 w-4 animate-spin shrink-0" />
           ) : (
-            <Trash2 className="h-4 w-4 flex-shrink-0" />
+            <Trash2 className="h-4 w-4 shrink-0" />
           )}
           <span className="truncate">
             {deleting ? "Deleting..." : "Delete"}

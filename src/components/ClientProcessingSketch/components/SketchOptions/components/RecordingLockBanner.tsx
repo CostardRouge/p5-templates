@@ -31,7 +31,7 @@ export default function RecordingLockBanner( {
   return (
     <div className="flex flex-col gap-2 px-2 py-2 border border-amber-500/40 bg-amber-500/10 backdrop-blur-xl rounded-2xl shadow-lg">
       <div className="flex items-start gap-2">
-        <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0 text-amber-500" />
+        <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0 text-amber-500" />
         <div className="flex flex-col min-w-0">
           <span className="text-xs font-semibold leading-tight text-foreground">
             {title}
@@ -48,9 +48,9 @@ export default function RecordingLockBanner( {
         className="rounded-xl px-2 py-2.5 border border-amber-500/40 text-foreground bg-amber-500/20 hover:bg-amber-500/30 text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all inline-flex items-center justify-center gap-1.5"
       >
         {cloning ? (
-          <Loader className="h-4 w-4 animate-spin flex-shrink-0" />
+          <Loader className="h-4 w-4 animate-spin shrink-0" />
         ) : (
-          <Copy className="h-4 w-4 flex-shrink-0" />
+          <Copy className="h-4 w-4 shrink-0" />
         )}
         <span>{cloning ? "Cloning..." : "Clone to save changes"}</span>
       </button>

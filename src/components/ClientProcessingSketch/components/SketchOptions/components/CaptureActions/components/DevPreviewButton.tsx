@@ -128,7 +128,7 @@ export default function DevPreviewButton( {
           value={ mode }
           onChange={ ( event ) => setMode( event.target.value as RecordingMode ) }
           aria-label="Preview recording mode"
-          className="min-w-0 flex-1 rounded-lg border border-theme bg-background px-2 py-1.5 text-[11px] text-foreground focus:outline-none"
+          className="min-w-0 flex-1 rounded-lg border border-theme bg-background px-2 py-1.5 text-[11px] text-foreground focus:outline-hidden"
         >
           {capabilities.supportsDeterministicCapture && (
             <option value="async-loop">DEV preview: async</option>

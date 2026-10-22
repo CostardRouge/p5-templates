@@ -134,7 +134,7 @@ function Badge( {
   children
 }: { children: ReactNode } ) {
   return (
-    <span className="rounded border border-border bg-foreground/5 px-1.5 py-0.5 text-[11px] text-label">
+    <span className="rounded-sm border border-border bg-foreground/5 px-1.5 py-0.5 text-[11px] text-label">
       { children }
     </span>
   );
@@ -459,7 +459,7 @@ export default function OpenGraphDiagnostics( {
             value={ input }
             onChange={ ( e ) => setInput( e.target.value ) }
             placeholder="/ or /sketches/p5/photo-balloons or a full URL"
-            className="flex-1 bg-transparent px-3 py-2 font-mono text-sm outline-none placeholder:text-label/60"
+            className="flex-1 bg-transparent px-3 py-2 font-mono text-sm outline-hidden placeholder:text-label/60"
             spellCheck={ false }
             autoCapitalize="off"
             autoCorrect="off"

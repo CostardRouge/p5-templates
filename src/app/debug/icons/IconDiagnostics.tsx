@@ -139,7 +139,7 @@ function Badge( {
   children
 }: { children: ReactNode } ) {
   return (
-    <span className="rounded border border-border bg-foreground/5 px-1.5 py-0.5 text-[11px] text-label">
+    <span className="rounded-sm border border-border bg-foreground/5 px-1.5 py-0.5 text-[11px] text-label">
       { children }
     </span>
   );
@@ -288,7 +288,7 @@ function ColorChip( {
     <span className="inline-flex items-center gap-1.5">
       <span className="text-label">{ label }</span>
       <span
-        className="h-3.5 w-3.5 rounded border border-border"
+        className="h-3.5 w-3.5 rounded-sm border border-border"
         style={ {
           backgroundColor: value || "transparent"
         } }

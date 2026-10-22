@@ -303,7 +303,7 @@ export default function Vector2DPad( {
   // value like -0.75 — and at a 0.01 step they were unusable anyway. Stepping
   // still works through the arrow keys, on the input and on the pad alike.
   const numberInputClassName =
-    "w-full min-w-0 text-center text-xs font-mono tabular-nums px-1 py-0.5 rounded border border-theme/30 bg-theme/20 focus:outline-none focus:ring-1 focus:ring-theme [appearance:textfield] [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none";
+    "w-full min-w-0 text-center text-xs font-mono tabular-nums px-1 py-0.5 rounded-sm border border-theme/30 bg-theme/20 focus:outline-hidden focus:ring-1 focus:ring-theme [appearance:textfield] [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none";
 
   return (
     // 140px, not the 100px this used to be: two fields sharing that width left
@@ -348,14 +348,14 @@ export default function Vector2DPad( {
         onPointerMove={ handlePointerMove }
         onKeyDown={ handleKeyDown }
         className={ clsx(
-          "relative aspect-square w-full cursor-crosshair touch-none select-none overflow-hidden rounded-lg border border-theme bg-background/50 focus:outline-none focus:ring-1 focus:ring-theme",
+          "relative aspect-square w-full cursor-crosshair touch-none select-none overflow-hidden rounded-lg border border-theme bg-background/50 focus:outline-hidden focus:ring-1 focus:ring-theme",
           live && "binding-live-ring"
         ) }
       >
         {areaBox && (
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute rounded-sm border border-dashed border-foreground/30 bg-foreground/5"
+            className="pointer-events-none absolute rounded-xs border border-dashed border-foreground/30 bg-foreground/5"
             style={ {
               left: `${ areaBox.left }%`,
               top: `${ areaBox.top }%`,
@@ -416,7 +416,7 @@ export default function Vector2DPad( {
 
         <span
           className={ clsx(
-            "pointer-events-none absolute h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full shadow",
+            "pointer-events-none absolute h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full shadow-sm",
             live
               ? "border border-foreground bg-background"
               : "border border-background bg-foreground"
@@ -431,13 +431,13 @@ export default function Vector2DPad( {
           <>
             <span
               aria-hidden="true"
-              className="binding-iridescent pointer-events-none absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border border-background shadow"
+              className="binding-iridescent pointer-events-none absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border border-background shadow-sm"
               style={ {
                 left: `calc(${ liveX } * 100%)`,
                 top: `calc(${ liveY } * 100%)`
               } }
             />
-            <span className="pointer-events-none absolute bottom-0.5 left-0.5 rounded-sm bg-background/70 px-0.5 font-mono text-[9px] leading-tight tabular-nums text-foreground">
+            <span className="pointer-events-none absolute bottom-0.5 left-0.5 rounded-xs bg-background/70 px-0.5 font-mono text-[9px] leading-tight tabular-nums text-foreground">
               <LiveBindingValue
                 target={ live.target }
                 axis="x"

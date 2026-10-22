@@ -246,7 +246,7 @@ export default function VideoLayoutPreview( {
       ref={ boxRef }
       // `--cap` is the most height the box may take; it shrinks on small
       // screens so the preview never crowds out the scrollable settings.
-      className="relative mx-auto overflow-hidden border border-theme bg-foreground/[0.06] [--cap:34vh] sm:[--cap:48vh] md:[--cap:72vh]"
+      className="relative mx-auto overflow-hidden border border-theme bg-foreground/6 [--cap:34vh] sm:[--cap:48vh] md:[--cap:72vh]"
       // Cap the width at `cap × ratio` so the box always fits for any
       // orientation (portrait reels, square, landscape) while keeping the
       // exact canvas aspect ratio — pure CSS, no JS measuring.

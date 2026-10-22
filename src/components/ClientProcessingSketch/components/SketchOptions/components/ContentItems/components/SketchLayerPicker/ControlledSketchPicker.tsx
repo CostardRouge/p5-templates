@@ -129,10 +129,10 @@ export default function ControlledSketchPicker( {
           <img
             src={ choice.thumbnail }
             alt=""
-            className="h-10 w-8 shrink-0 rounded bg-hover object-cover"
+            className="h-10 w-8 shrink-0 rounded-sm bg-hover object-cover"
           />
         ) : (
-          <span className="flex h-10 w-8 shrink-0 items-center justify-center rounded bg-hover text-label">
+          <span className="flex h-10 w-8 shrink-0 items-center justify-center rounded-sm bg-hover text-label">
             <Blocks className="h-4 w-4" strokeWidth={ 1.75 } />
           </span>
         )}

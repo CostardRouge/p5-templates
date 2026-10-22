@@ -171,14 +171,14 @@ export default function ActionsMenu( {
       <Menu as="div" className="relative inline-block text-left">
         <MenuButton
           aria-label="Recording actions"
-          className="p-2 bg-background/90 backdrop-blur-sm hover:bg-hover rounded-lg border border-border shadow-lg transition-colors inline-flex items-center justify-center"
+          className="p-2 bg-background/90 backdrop-blur-xs hover:bg-hover rounded-lg border border-border shadow-lg transition-colors inline-flex items-center justify-center"
         >
           <MenuIcon className="h-4 w-4 text-foreground" />
         </MenuButton>
 
         <MenuItems
           anchor="bottom end"
-          className="z-50 w-64 border border-border rounded-xl bg-background shadow-xl overflow-hidden mt-2 focus:outline-none [--anchor-gap:0.5rem] [--anchor-padding:0.5rem]"
+          className="z-50 w-64 border border-border rounded-xl bg-background shadow-xl overflow-hidden mt-2 focus:outline-hidden [--anchor-gap:0.5rem] [--anchor-padding:0.5rem]"
         >
           {/* Preview Section */}
           {job.status === "completed" && job.videoUrls && (

@@ -95,7 +95,7 @@ const LINK_CLASS =
   "underline underline-offset-2 hover:text-foreground transition-colors";
 
 const P_CLASS =
-  "max-w-[70ch] text-sm sm:text-base text-label leading-relaxed [text-wrap:pretty]";
+  "max-w-[70ch] text-sm sm:text-base text-label leading-relaxed text-pretty";
 
 /** The tracker's host, for the measurement section; null when a malformed
  * override makes it unreadable (the layout's connection hints do the same). */
