@@ -4350,7 +4350,7 @@
     "category": "lcd",
     "hasSketchForm": true,
     "hasThumbnail": true,
-    "hasPreview": false,
+    "hasPreview": true,
     "hiddenFromHome": false,
     "hiddenFromGallery": false,
     "asyncDraw": false,
