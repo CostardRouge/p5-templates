@@ -1,0 +1,13 @@
+App(
+    appid="lcd_sketch",
+    name="LCD Sketch",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="lcd_sketch_main",
+    requires=["gui"],
+    stack_size=2 * 1024,
+    fap_version="1.0",
+    fap_icon="lcd_sketch.png",
+    fap_category="Media",
+    fap_author="Sketchbook",
+    fap_description="The Sketchbook lcd-v1-flipper-zero animation, running on the device: a menu, a frequency analyzer, a raw capture, a card read, a typed message and a dithered plasma.",
+)

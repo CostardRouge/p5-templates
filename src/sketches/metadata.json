@@ -4345,6 +4345,19 @@
     "ctime": "2026-09-23T22:47:08.578Z"
   },
   {
+    "name": "lcd-v1-flipper-zero",
+    "engine": "p5",
+    "category": "lcd",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "asyncDraw": false,
+    "mtime": "2026-09-23T22:48:43.775Z",
+    "ctime": "2026-09-23T22:47:04.607Z"
+  },
+  {
     "name": "sculpt-v8-letter-dashes",
     "engine": "p5",
     "category": "sculpt",
