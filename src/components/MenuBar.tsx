@@ -68,7 +68,6 @@ import sleep from "@/utils/sleep";
 const AgentGuideDialog = dynamic( () => import( "@/components/AgentGuideDialog" ) );
 
 type MenuBarProps = {
-  showRecordings?: boolean;
   hasMissingThumbnails?: boolean;
   hasMissingPreviews?: boolean;
 };
@@ -173,7 +172,6 @@ function bridgeLabel( bridge: BridgeStatus ): string {
 }
 
 function MenuBar( {
-  showRecordings = false,
   hasMissingThumbnails = false,
   hasMissingPreviews = false
 }: MenuBarProps ) {
@@ -186,6 +184,15 @@ function MenuBar( {
   const [
     mounted,
     setMounted
+  ] = useState( false );
+
+  // `BACKEND_RECORDING` (server env) can't be reflected as a build-time
+  // constant or a static layout prop without baking last build's value into
+  // the prerendered shell, so it's fetched from a force-dynamic route at
+  // runtime instead.
+  const [
+    showRecordings,
+    setShowRecordings
   ] = useState( false );
 
   const [
@@ -231,6 +238,26 @@ function MenuBar( {
   useEffect(
     () => {
       setMounted( true );
+    },
+    []
+  );
+
+  useEffect(
+    () => {
+      let cancelled = false;
+
+      fetch( "/api/config" )
+        .then( ( res ) => res.json() )
+        .then( ( data ) => {
+          if ( !cancelled ) {
+            setShowRecordings( Boolean( data.backendRecording ) );
+          }
+        } )
+        .catch( () => {} );
+
+      return () => {
+        cancelled = true;
+      };
     },
     []
   );
