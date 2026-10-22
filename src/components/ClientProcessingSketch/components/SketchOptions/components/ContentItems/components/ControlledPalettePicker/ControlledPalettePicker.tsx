@@ -331,7 +331,7 @@ export default function ControlledPalettePicker( {
                 />
                 {/* The base yields its room first: the live palette is the
                     news, and its swatch already sits beside it. */}
-                <span className="min-w-0 shrink-[99] truncate text-label">· {selected?.label ?? current ?? "—"}</span>
+                <span className="min-w-0 shrink-99 truncate text-label">· {selected?.label ?? current ?? "—"}</span>
               </span>
             ) : (
               <span className="min-w-0 flex-1 truncate">{selected?.label ?? current ?? "—"}</span>

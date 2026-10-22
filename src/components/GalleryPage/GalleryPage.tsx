@@ -43,7 +43,7 @@ const GRID_CLASS =
   "grid grid-cols-2 items-start gap-2 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6";
 
 const INPUT_CLASS =
-  "h-9 rounded-lg border border-border bg-background px-3 text-sm text-foreground placeholder:text-foreground/40 focus:outline-none focus:ring-1 focus:ring-focus";
+  "h-9 rounded-lg border border-border bg-background px-3 text-sm text-foreground placeholder:text-foreground/40 focus:outline-hidden focus:ring-1 focus:ring-focus";
 
 /**
  * The gallery: every piece kept in THIS browser (`src/lib/gallery/`), newest

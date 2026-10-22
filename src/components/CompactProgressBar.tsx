@@ -159,7 +159,7 @@ export default function CompactProgressBar( {
           <span className="text-green-500 font-semibold">100%</span>
         </div>
         <div className="h-2 bg-hover rounded-full overflow-hidden">
-          <div className="h-full bg-gradient-to-r from-green-500 to-green-600 w-full" />
+          <div className="h-full bg-linear-to-r from-green-500 to-green-600 w-full" />
         </div>
       </div>
     );
@@ -193,17 +193,17 @@ export default function CompactProgressBar( {
       } ) => (
         <>
           <PopoverButton
-            className="w-full text-left hover:opacity-80 transition-opacity focus:outline-none"
+            className="w-full text-left hover:opacity-80 transition-opacity focus:outline-hidden"
             onClick={ ( e: React.MouseEvent ) => e.stopPropagation() }
           >
             <div className="flex items-center justify-between text-xs mb-1 min-w-0">
               <div className="flex items-center gap-2 min-w-0 flex-1">
                 {( steps.find( ( s ) => s.status === "active" ) || recordingSteps ) && (
-                  <Loader2 className="w-3 h-3 text-blue-500 animate-spin flex-shrink-0" />
+                  <Loader2 className="w-3 h-3 text-blue-500 animate-spin shrink-0" />
                 )}
                 <span className="text-foreground/70 truncate">{compactStepLabel}</span>
               </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="flex items-center gap-2 shrink-0">
                 {isMultiSlide && currentSlideIndex !== undefined && slideOptions && (
                   <span className="text-[10px] font-mono text-foreground/40">
                     {currentSlideIndex + 1}/{slideOptions.length}
@@ -227,7 +227,7 @@ export default function CompactProgressBar( {
 
             <div className="h-2 bg-hover rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-300 ease-out relative"
+                className="h-full bg-linear-to-r from-blue-500 to-blue-600 transition-all duration-300 ease-out relative"
                 style={ {
                   width: `${ progress }%`
                 } }
@@ -383,7 +383,7 @@ function SlideRow( {
               {slide.name}
             </span>
             {slide.status !== "pending" && (
-              <span className={ `text-[10px] font-semibold flex-shrink-0 ${
+              <span className={ `text-[10px] font-semibold shrink-0 ${
                 slide.status === "completed" ? "text-green-500" : "text-blue-500"
               }` }>
                 {slide.status === "completed" ? "100" : slide.aggregate}%
@@ -405,7 +405,7 @@ function SlideRow( {
         </div>
 
         <ChevronDown
-          className={ `w-3 h-3 text-foreground/40 flex-shrink-0 transition-transform ${ isExpanded ? "rotate-180" : "" }` }
+          className={ `w-3 h-3 text-foreground/40 shrink-0 transition-transform ${ isExpanded ? "rotate-180" : "" }` }
         />
       </button>
 
@@ -436,7 +436,7 @@ function SharedStepRow( {
           ? "bg-blue-500/10 border border-blue-500/30"
           : "bg-hover/50"
     }` }>
-      <div className="w-5 h-5 flex-shrink-0">
+      <div className="w-5 h-5 shrink-0">
         {isDone ? (
           <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
             <Check className="w-3 h-3 text-white" />
@@ -477,7 +477,7 @@ function SubStepRow( {
   return (
     <div>
       <div className="flex items-center gap-2">
-        <div className={ `w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+        <div className={ `w-1.5 h-1.5 rounded-full shrink-0 ${
           isDone ? "bg-green-500" : isActive ? "bg-blue-400 animate-pulse" : "bg-border"
         }` } />
         <span className={ `text-[11px] flex-1 ${
@@ -486,7 +486,7 @@ function SubStepRow( {
           {step.label}
         </span>
         {( isActive || isDone ) && (
-          <span className={ `text-[10px] flex-shrink-0 font-medium ${
+          <span className={ `text-[10px] shrink-0 font-medium ${
             isDone ? "text-green-500" : "text-blue-500"
           }` }>
             {isDone ? "100" : Math.round( step.percentage )}%
@@ -534,7 +534,7 @@ function RecordingStepList( {
                   : "bg-hover/50"
             }` }
           >
-            <div className="flex-shrink-0 mt-0.5">
+            <div className="shrink-0 mt-0.5">
               {isDone ? (
                 <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
                   <Check className="w-3 h-3 text-white" />
@@ -556,7 +556,7 @@ function RecordingStepList( {
                   {step.label}
                 </span>
                 {( isActive || isDone ) && (
-                  <span className={ `text-[10px] font-semibold flex-shrink-0 ${
+                  <span className={ `text-[10px] font-semibold shrink-0 ${
                     isDone ? "text-green-500" : "text-blue-500"
                   }` }>
                     {isDone ? "100" : Math.round( step.percentage )}%
@@ -606,7 +606,7 @@ function FlatStepList( {
                 : "bg-hover/50"
           }` }
         >
-          <div className="flex-shrink-0 mt-0.5">
+          <div className="shrink-0 mt-0.5">
             {step.status === "completed" && (
               <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
                 <Check className="w-3 h-3 text-white" />
@@ -678,20 +678,20 @@ function StatusIcon( {
 } ) {
   if ( status === "completed" ) {
     return (
-      <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+      <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center shrink-0">
         <Check className="w-3 h-3 text-white" />
       </div>
     );
   }
   if ( status === "active" ) {
     return (
-      <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
+      <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center shrink-0">
         <Loader2 className="w-3 h-3 text-white animate-spin" />
       </div>
     );
   }
   return (
-    <div className="w-5 h-5 rounded-full bg-hover flex items-center justify-center flex-shrink-0">
+    <div className="w-5 h-5 rounded-full bg-hover flex items-center justify-center shrink-0">
       <span className="text-[10px] text-label font-medium">
         {index + 1}
       </span>

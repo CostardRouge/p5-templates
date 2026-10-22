@@ -49,7 +49,7 @@ RUN npm pkg delete scripts.prepare \
  && npm ci
 
 # Copy configuration files.
-COPY next.config.ts tsconfig.json tailwind.config.ts postcss.config.mjs ./
+COPY next.config.ts tsconfig.json postcss.config.mjs ./
 
 # Copy application code.
 COPY src ./src

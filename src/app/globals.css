@@ -1,6 +1,220 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  /* Tailwind 3's sans stack: 4.3's own starts at -apple-system / Roboto,
+     which changes the face on Linux and Android. */
+  --font-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-border: hsl(var(--border));
+  --color-theme: hsl(var(--border));
+  --color-hover: hsl(var(--hover));
+  --color-active: hsl(var(--active));
+  --color-focus: hsl(var(--focus));
+  --color-label: hsl(var(--label));
+  --color-progress-start: hsl(var(--progress-start));
+  --color-progress-end: hsl(var(--progress-end));
+
+  --animate-pulse-soft: pulse-soft 1.5s ease-in-out infinite;
+  --animate-slideInFromTop: slideInFromTop 0.5s ease-out;
+  --animate-highlightFade: highlightFade 1s ease-out;
+  --animate-select-pulse: select-pulse 0.6s ease-in-out 2;
+  --animate-gradient-shift: gradient-shift 8s ease-in-out infinite;
+  --animate-phase-sweep: phase-sweep 1.2s ease-in-out infinite;
+  --animate-marquee: marquee 30s linear infinite;
+  --animate-marquee-slow: marquee 60s linear infinite;
+  --animate-marquee-reverse: marquee-reverse 40s linear infinite;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-blob: blob 14s ease-in-out infinite;
+  --animate-reveal-up: reveal-up 0.8s ease-out both;
+  --animate-marquee-hover: marquee-hover var(--marquee-duration, 6s) ease-in-out
+    infinite;
+  --animate-drift: drift 8s ease-in-out infinite;
+  --animate-drift-reverse: drift-reverse 9s ease-in-out infinite;
+  --animate-slider-pulse: slider-pulse 3.2s cubic-bezier(0.65, 0, 0.35, 1)
+    infinite;
+  --animate-scan-line: scan-line 4s linear infinite;
+
+  @keyframes cycle-align {
+    0% {
+      text-align: left;
+    }
+    25% {
+      text-align: center;
+    }
+    50% {
+      text-align: right;
+    }
+    75% {
+      text-align: center;
+    }
+    100% {
+      text-align: left;
+    }
+  }
+  @keyframes pulse-soft {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.6;
+    }
+  }
+  @keyframes slideInFromTop {
+    0% {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes highlightFade {
+    0% {
+      background-color: hsl(var(--focus) / 0.2);
+    }
+    100% {
+      background-color: transparent;
+    }
+  }
+  /* macOS menu-bar-style attention pulse: an inset accent ring that swells
+     and fades a couple of times. Inset so it never gets clipped by the
+     options panel's overflow, and it doesn't disturb layout. */
+  @keyframes select-pulse {
+    0%,
+    100% {
+      box-shadow: inset 0 0 0 0 hsl(var(--focus) / 0);
+    }
+    50% {
+      box-shadow: inset 0 0 0 2px hsl(var(--focus) / 0.9);
+    }
+  }
+  @keyframes gradient-shift {
+    0%,
+    100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+  /* An export phase that reports no number (the encoder emits one event
+     and then blocks) sweeps its segment instead of faking a percentage. */
+  @keyframes phase-sweep {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(300%);
+    }
+  }
+  @keyframes marquee {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+  @keyframes marquee-reverse {
+    0% {
+      transform: translateX(-50%);
+    }
+    100% {
+      transform: translateX(0);
+    }
+  }
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0) rotate(0deg);
+    }
+    50% {
+      transform: translateY(-20px) rotate(3deg);
+    }
+  }
+  @keyframes blob {
+    0%,
+    100% {
+      transform: translate(0, 0) scale(1);
+    }
+    33% {
+      transform: translate(30px, -50px) scale(1.1);
+    }
+    66% {
+      transform: translate(-20px, 20px) scale(0.9);
+    }
+  }
+  @keyframes reveal-up {
+    0% {
+      opacity: 0;
+      transform: translateY(40px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes marquee-hover {
+    0%,
+    10% {
+      transform: translateX(0);
+    }
+    45%,
+    55% {
+      transform: translateX(var(--marquee-dx, 0));
+    }
+    90%,
+    100% {
+      transform: translateX(0);
+    }
+  }
+  @keyframes drift {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0) rotate(-1.2deg);
+    }
+    50% {
+      transform: translate3d(-6px, -12px, 0) rotate(-2.4deg);
+    }
+  }
+  @keyframes drift-reverse {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0) rotate(3deg);
+    }
+    50% {
+      transform: translate3d(8px, 6px, 0) rotate(4.5deg);
+    }
+  }
+  @keyframes slider-pulse {
+    0%,
+    100% {
+      width: var(--slider-from, 30%);
+    }
+    50% {
+      width: var(--slider-to, 60%);
+    }
+  }
+  @keyframes scan-line {
+    0% {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+    10%,
+    90% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+  }
+}
 
 /* Tokens (HSL triplets) */
 :root {
@@ -89,6 +303,19 @@
         border-color: hsl(var(--border));
     }
 
+    /* Two Tailwind 3 preflight defaults that 4 dropped, kept so nothing
+       changes under the migration: a pointer on buttons (4 leaves the
+       platform's arrow) and a fixed grey placeholder (4 fades currentcolor). */
+    button:not(:disabled),
+    [role="button"]:not(:disabled) {
+        cursor: pointer;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+        color: var(--color-gray-400);
+    }
+
     /* Remaining native range inputs (e.g. the color picker's alpha slider)
        follow the monochrome theme instead of the platform's accent blue. */
     input[type="range"] {
@@ -100,7 +327,7 @@
    p5 paints into a <canvas>, DOM/CSS engines (GSAP/HTML) into a stage div. */
 .sketch-canvas-container canvas:hover,
 .sketch-canvas-container .sketch-surface:hover {
-    @apply outline;
+    @apply outline-solid;
     @apply outline-theme;
 }
 

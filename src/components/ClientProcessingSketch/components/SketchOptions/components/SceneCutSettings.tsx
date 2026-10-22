@@ -126,7 +126,7 @@ export default function SceneCutSettings( {
             className="peer sr-only"
           />
           <span className="h-6 w-10 md:h-5 md:w-9 rounded-full border border-theme bg-foreground/10 transition-colors peer-checked:bg-foreground peer-focus-visible:ring-2 peer-focus-visible:ring-focus/50" />
-          <span className="pointer-events-none absolute left-0.5 top-1/2 h-5 w-5 md:h-4 md:w-4 -translate-y-1/2 rounded-full border border-theme bg-background shadow transition-transform peer-checked:translate-x-4" />
+          <span className="pointer-events-none absolute left-0.5 top-1/2 h-5 w-5 md:h-4 md:w-4 -translate-y-1/2 rounded-full border border-theme bg-background shadow-sm transition-transform peer-checked:translate-x-4" />
         </span>
       </label>
 
@@ -171,7 +171,7 @@ export default function SceneCutSettings( {
               <button
                 type="button"
                 onClick={ handleDetach }
-                className="self-start px-1 py-0.5 text-[0.7rem] text-label underline underline-offset-2 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50 rounded"
+                className="self-start px-1 py-0.5 text-[0.7rem] text-label underline underline-offset-2 hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-focus/50 rounded-sm"
               >
                 Detach: edit Out on its own
               </button>

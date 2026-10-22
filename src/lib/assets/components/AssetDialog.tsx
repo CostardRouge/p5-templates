@@ -73,12 +73,12 @@ export default function AssetDialog<P>( {
     sizeWidth && sizeHeight ? sizeWidth / sizeHeight : undefined;
 
   return (
-    <Dialog open={ open } onClose={ onClose } className="relative z-[9999]">
+    <Dialog open={ open } onClose={ onClose } className="relative z-9999">
       <DialogBackdrop className="fixed inset-0 bg-black/80 backdrop-blur-md" />
 
       <div className="fixed inset-0 flex items-center justify-center p-3 sm:p-4 md:p-8">
         <DialogPanel className="w-full md:w-[92vw] lg:w-[88vw] xl:w-[80vw] max-w-[1400px] max-h-[calc(100vh-1.5rem)] sm:max-h-[calc(100vh-2rem)] md:max-h-[95vh] bg-background border border-theme rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col">
-          <header className="flex items-center justify-between gap-2 px-4 py-3 sm:px-6 sm:py-4 border-b border-theme flex-shrink-0">
+          <header className="flex items-center justify-between gap-2 px-4 py-3 sm:px-6 sm:py-4 border-b border-theme shrink-0">
             <DialogTitle
               className="text-sm sm:text-base font-bold text-foreground truncate"
               title={ instance.path }
@@ -88,7 +88,7 @@ export default function AssetDialog<P>( {
             <button
               type="button"
               onClick={ onClose }
-              className="flex-shrink-0 p-2 rounded-xl text-foreground/70 hover:text-foreground hover:bg-hover transition-colors"
+              className="shrink-0 p-2 rounded-xl text-foreground/70 hover:text-foreground hover:bg-hover transition-colors"
               aria-label="Close"
             >
               <X className="h-5 w-5" />
@@ -108,7 +108,7 @@ export default function AssetDialog<P>( {
                 aspect-video wrapper. No rounded corners — the real canvas has
                 none. On mobile the pane keeps its (capped) intrinsic height
                 so it never crowds out the scrollable options below. */}
-            <div className="flex flex-shrink-0 items-center justify-center p-3 sm:p-4 md:p-6 md:flex-1 md:min-w-0 md:min-h-0">
+            <div className="flex shrink-0 items-center justify-center p-3 sm:p-4 md:p-6 md:flex-1 md:min-w-0 md:min-h-0">
               {LayoutPreview ? (
                 <LayoutPreview
                   url={ url }

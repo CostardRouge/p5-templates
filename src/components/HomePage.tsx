@@ -396,13 +396,13 @@ export default function HomePage( {
             <span>open source</span>
           </p>
 
-          <h1 className="font-black text-4xl sm:text-6xl lg:text-7xl tracking-[-0.04em] leading-[0.95] [text-wrap:balance]">
+          <h1 className="font-black text-4xl sm:text-6xl lg:text-7xl tracking-[-0.04em] leading-[0.95] text-balance">
             a studio for{ " " }
             <span className="italic font-extralight">creative-coding</span>{ " " }
             visuals<span className="text-fuchsia-500">.</span>
           </h1>
 
-          <p className="mt-5 sm:mt-6 max-w-[60ch] text-sm sm:text-base text-label leading-relaxed [text-wrap:pretty]">
+          <p className="mt-5 sm:mt-6 max-w-[60ch] text-sm sm:text-base text-label leading-relaxed text-pretty">
             Customizable sketches built on{ " " }
             <span className="text-foreground font-medium">p5.js</span>,{ " " }
             <span className="text-foreground font-medium">gsap</span> and{ " " }
@@ -422,7 +422,7 @@ export default function HomePage( {
                 onChange={ ( e ) => setQuery( e.target.value ) }
                 placeholder={ `Search ${ sketches.length } sketches...` }
                 autoComplete="off"
-                className={ `pl-11 py-3 rounded-xl w-full bg-background border border-border hover:border-foreground/30 focus:border-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/10 transition-all text-sm placeholder:text-foreground/40 ${
+                className={ `pl-11 py-3 rounded-xl w-full bg-background border border-border hover:border-foreground/30 focus:border-foreground/50 focus:outline-hidden focus:ring-2 focus:ring-foreground/10 transition-all text-sm placeholder:text-foreground/40 ${
                   query ? "pr-11" : "pr-4"
                 }` }
               />
@@ -441,7 +441,7 @@ export default function HomePage( {
 
             <Link
               href="/sketches"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-foreground text-background px-5 py-3 text-sm font-semibold hover:scale-[1.02] active:scale-[0.98] transition-transform flex-shrink-0"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-foreground text-background px-5 py-3 text-sm font-semibold hover:scale-[1.02] active:scale-[0.98] transition-transform shrink-0"
             >
               <span>Open the library</span>
               <ArrowUpRight className="w-4 h-4" />
@@ -462,7 +462,7 @@ export default function HomePage( {
             >
               <Link
                 href={ libraryHref }
-                className="inline-flex items-center gap-1.5 text-xs sm:text-sm text-label hover:text-foreground transition-colors flex-shrink-0"
+                className="inline-flex items-center gap-1.5 text-xs sm:text-sm text-label hover:text-foreground transition-colors shrink-0"
               >
                 <span>Open in library</span>
                 <ArrowUpRight className="w-3.5 h-3.5" />
@@ -525,7 +525,7 @@ export default function HomePage( {
                 <SectionHeader label="/latest" title="Recently added">
                   <Link
                     href="/sketches"
-                    className="inline-flex items-center gap-1.5 text-xs sm:text-sm text-label hover:text-foreground transition-colors flex-shrink-0"
+                    className="inline-flex items-center gap-1.5 text-xs sm:text-sm text-label hover:text-foreground transition-colors shrink-0"
                   >
                     <span>View all { sketches.length }</span>
                     <ArrowUpRight className="w-3.5 h-3.5" />
@@ -553,7 +553,7 @@ export default function HomePage( {
                   <button
                     type="button"
                     onClick={ reroll }
-                    className="group inline-flex items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-xs sm:text-sm font-medium text-foreground/70 hover:text-foreground hover:border-foreground/30 hover:bg-hover/50 transition-colors flex-shrink-0"
+                    className="group inline-flex items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-xs sm:text-sm font-medium text-foreground/70 hover:text-foreground hover:border-foreground/30 hover:bg-hover/50 transition-colors shrink-0"
                   >
                     <Shuffle className="w-3.5 h-3.5 transition-transform duration-500 group-hover:rotate-180" />
                     <span>Shuffle</span>
@@ -600,7 +600,7 @@ export default function HomePage( {
                     { feature.href ? (
                       <a
                         href={ feature.href }
-                        className="block p-5 rounded-xl sm:rounded-2xl hover:bg-hover/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40 transition-colors"
+                        className="block p-5 rounded-xl sm:rounded-2xl hover:bg-hover/40 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-foreground/40 transition-colors"
                       >
                         { body }
                       </a>

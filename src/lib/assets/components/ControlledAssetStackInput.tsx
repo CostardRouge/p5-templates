@@ -279,7 +279,7 @@ function SortableThumb<P>( {
             } }
             onPointerDown={ ( e ) => e.stopPropagation() }
             aria-label="Open settings"
-            className="flex h-7 flex-shrink-0 items-center justify-center gap-1.5 border-t border-theme bg-background text-xs font-medium text-foreground hover:bg-hover"
+            className="flex h-7 shrink-0 items-center justify-center gap-1.5 border-t border-theme bg-background text-xs font-medium text-foreground hover:bg-hover"
           >
             <Settings2 className="h-3.5 w-3.5" />
             Settings

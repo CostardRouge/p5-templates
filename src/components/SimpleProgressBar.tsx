@@ -30,10 +30,10 @@ export default function SimpleProgressBar( {
 
       <div className="w-full bg-hover/50 rounded-full h-2 overflow-hidden">
         {isIndeterminate ? (
-          <div className="h-full bg-gradient-to-r from-blue-500 via-blue-400 to-blue-500 animate-pulse w-full opacity-60" />
+          <div className="h-full bg-linear-to-r from-blue-500 via-blue-400 to-blue-500 animate-pulse w-full opacity-60" />
         ) : (
           <div
-            className="h-full bg-gradient-to-r from-blue-500 to-blue-400 transition-all duration-300 ease-out rounded-full"
+            className="h-full bg-linear-to-r from-blue-500 to-blue-400 transition-all duration-300 ease-out rounded-full"
             style={ {
               width: `${ progress }%`
             } }

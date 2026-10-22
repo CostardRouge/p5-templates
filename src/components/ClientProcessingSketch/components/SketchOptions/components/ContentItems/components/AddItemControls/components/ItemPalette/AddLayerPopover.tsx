@@ -161,14 +161,14 @@ export default function AddLayerPopover( {
           onClick={ onOpen }
           aria-label={ ariaLabel }
           title={ ariaLabel }
-          className="rounded-md p-2 md:p-1 text-label transition-colors hover:bg-hover hover:text-foreground data-[open]:text-foreground"
+          className="rounded-md p-2 md:p-1 text-label transition-colors hover:bg-hover hover:text-foreground data-open:text-foreground"
         >
           <Plus className="h-4 w-4 md:h-3.5 md:w-3.5" />
         </PopoverButton>
 
         <PopoverPanel
           anchor="bottom end"
-          className="z-[60] w-64 max-w-[calc(100vw-1rem)] rounded-xl border border-theme bg-background p-2 text-xs shadow-xl [--anchor-gap:0.4rem] [--anchor-padding:0.5rem]"
+          className="z-60 w-64 max-w-[calc(100vw-1rem)] rounded-xl border border-theme bg-background p-2 text-xs shadow-xl [--anchor-gap:0.4rem] [--anchor-padding:0.5rem]"
         >
           {( {
             close

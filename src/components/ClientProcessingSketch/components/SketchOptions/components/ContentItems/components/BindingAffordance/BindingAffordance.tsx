@@ -801,7 +801,7 @@ export default function BindingAffordance( {
           }
         } }
         className={ clsx(
-          "relative grid place-items-center rounded-md border transition-colors outline-none focus-visible:ring-1 focus-visible:ring-focus",
+          "relative grid place-items-center rounded-md border transition-colors outline-hidden focus-visible:ring-1 focus-visible:ring-focus",
           matchBar ? "h-10 w-10 md:h-7 md:w-7" : "h-7 w-7",
           playing
             ? "border-focus/60 text-focus hover:bg-hover"
@@ -817,7 +817,7 @@ export default function BindingAffordance( {
 
       <PopoverPanel
         anchor="bottom end"
-        className="z-[60] w-72 max-w-[calc(100vw-1rem)] max-h-[70vh] overflow-y-auto rounded-xl border border-theme bg-background p-3 text-xs shadow-xl [--anchor-gap:0.4rem] [--anchor-padding:0.5rem]"
+        className="z-60 w-72 max-w-[calc(100vw-1rem)] max-h-[70vh] overflow-y-auto rounded-xl border border-theme bg-background p-3 text-xs shadow-xl [--anchor-gap:0.4rem] [--anchor-padding:0.5rem]"
       >
         {( {
           close
@@ -862,7 +862,7 @@ export default function BindingAffordance( {
                     entry.binding.enabled === false && "opacity-50"
                   ) }
                 >
-                  <span className="max-w-[6rem] truncate">
+                  <span className="max-w-24 truncate">
                     {bindingSourceLabel( entry.binding )}
                   </span>
                   {entry.binding.solo && (

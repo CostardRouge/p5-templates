@@ -117,12 +117,12 @@ function FeatureBlock( {
 
       <h3
         id={ headingId }
-        className="text-lg sm:text-2xl font-black tracking-tight [text-wrap:balance]"
+        className="text-lg sm:text-2xl font-black tracking-tight text-balance"
       >
         { feature.title }
       </h3>
 
-      <p className="mt-3 text-sm sm:text-base text-label leading-relaxed [text-wrap:pretty]">
+      <p className="mt-3 text-sm sm:text-base text-label leading-relaxed text-pretty">
         { feature.summary }
       </p>
 
@@ -130,7 +130,7 @@ function FeatureBlock( {
         { feature.points.map( ( point ) => (
           <li
             key={ point }
-            className="text-xs sm:text-sm text-label leading-relaxed [text-wrap:pretty]"
+            className="text-xs sm:text-sm text-label leading-relaxed text-pretty"
           >
             { point }
           </li>
@@ -215,7 +215,7 @@ export default function StudioFeatures() {
         >
           Inside the studio
         </h2>
-        <p className="mt-3 max-w-[68ch] text-sm sm:text-base text-label leading-relaxed [text-wrap:pretty]">
+        <p className="mt-3 max-w-[68ch] text-sm sm:text-base text-label leading-relaxed text-pretty">
           Open any sketch and you get the same editor: a form generated from the
           sketch&rsquo;s own parameters, a layer stack for everything drawn over
           it, a deck of variants, and an export queue. Nothing below is a mockup
@@ -231,7 +231,7 @@ export default function StudioFeatures() {
             <li key={ feature.id }>
               <a
                 href={ `#${ feature.id }` }
-                className="inline-flex items-center rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-label hover:text-foreground hover:border-foreground/30 hover:bg-hover/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40 transition-colors"
+                className="inline-flex items-center rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-label hover:text-foreground hover:border-foreground/30 hover:bg-hover/50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-foreground/40 transition-colors"
               >
                 { feature.eyebrow }
               </a>

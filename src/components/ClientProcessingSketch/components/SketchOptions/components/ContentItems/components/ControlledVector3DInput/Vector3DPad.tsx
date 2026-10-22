@@ -217,7 +217,7 @@ function AxisNumberField( {
       <input
         type="number"
         aria-label={ ariaLabel }
-        className="w-full min-w-0 rounded border border-theme/30 bg-theme/20 py-0.5 pl-3.5 pr-1 text-center font-mono text-xs tabular-nums focus:outline-none focus:ring-1 focus:ring-theme [appearance:textfield] [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none"
+        className="w-full min-w-0 rounded-sm border border-theme/30 bg-theme/20 py-0.5 pl-3.5 pr-1 text-center font-mono text-xs tabular-nums focus:outline-hidden focus:ring-1 focus:ring-theme [appearance:textfield] [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none"
         value={ value }
         min={ range.min }
         max={ range.max }

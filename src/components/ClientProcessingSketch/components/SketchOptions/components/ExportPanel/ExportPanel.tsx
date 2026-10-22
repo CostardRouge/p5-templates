@@ -603,11 +603,11 @@ export default function ExportPanel( {
 
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-background to-transparent opacity-0 transition-opacity motion-reduce:transition-none peer-data-[more=both]:opacity-100 peer-data-[more=left]:opacity-100"
+          className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-linear-to-r from-background to-transparent opacity-0 transition-opacity motion-reduce:transition-none peer-data-[more=both]:opacity-100 peer-data-[more=left]:opacity-100"
         />
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-background to-transparent opacity-0 transition-opacity motion-reduce:transition-none peer-data-[more=both]:opacity-100 peer-data-[more=right]:opacity-100"
+          className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-linear-to-l from-background to-transparent opacity-0 transition-opacity motion-reduce:transition-none peer-data-[more=both]:opacity-100 peer-data-[more=right]:opacity-100"
         />
       </div>
 
@@ -626,7 +626,7 @@ export default function ExportPanel( {
           </MenuButton>
           <MenuItems
             anchor="bottom start"
-            className="z-[110] w-56 rounded-xl border border-theme bg-background p-1 shadow-lg focus:outline-none"
+            className="z-110 w-56 rounded-xl border border-theme bg-background p-1 shadow-lg focus:outline-hidden"
           >
             {VARIANT_PRESETS.map( ( preset ) => (
               <MenuItem key={ preset.key }>
@@ -636,7 +636,7 @@ export default function ExportPanel( {
                     sketchKey,
                     preset
                   ) }
-                  className="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-left text-xs text-foreground data-[focus]:bg-hover"
+                  className="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-left text-xs text-foreground data-focus:bg-hover"
                 >
                   <span className="truncate">{preset.label}</span>
                   {preset.size && (

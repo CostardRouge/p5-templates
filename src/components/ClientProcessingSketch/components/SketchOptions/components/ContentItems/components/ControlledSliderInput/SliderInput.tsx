@@ -164,7 +164,7 @@ export default function SliderInput( {
       onBlur={ onBlur }
       { ...handlers }
       className={ clsx(
-        "group touch-pan-y select-none cursor-ew-resize outline-none focus-visible:ring-1 focus-visible:ring-focus",
+        "group touch-pan-y select-none cursor-ew-resize outline-hidden focus-visible:ring-1 focus-visible:ring-focus",
         CONTROL_BAR_CLASS,
         liveFill && "binding-live-ring"
       ) }
@@ -253,7 +253,7 @@ export default function SliderInput( {
             onPointerDown={ ( e ) => e.stopPropagation() }
             className={ clsx(
               CONTROL_VALUE_BUTTON_CLASS,
-              liveFill && "!text-label hover:!text-foreground"
+              liveFill && "text-label! hover:text-foreground!"
             ) }
           >
             {value.toFixed( decimals )}

@@ -109,11 +109,11 @@ export default function SlideThumbnail( {
           "relative w-full overflow-hidden rounded-lg transition-all",
           {
             // "primary" was never a defined Tailwind color (no --primary token
-            // in globals.css / tailwind.config.ts) — the active ring silently
+            // in globals.css or its @theme) — the active ring silently
             // rendered as nothing. "focus" is the token globals.css itself
             // documents as the ring/outline color.
-            "outline outline-2 outline-offset-1 outline-focus": isActive,
-            "outline outline-2 outline-offset-1 outline-transparent hover:outline-theme":
+            "outline-solid outline-2 outline-offset-1 outline-focus": isActive,
+            "outline-solid outline-2 outline-offset-1 outline-transparent hover:outline-theme":
               !isActive
           }
         ) }
@@ -196,7 +196,7 @@ export default function SlideThumbnail( {
             onTouchStart={ ( e ) => e.stopPropagation() }
             onDragStart={ ( e ) => e.preventDefault() }
             onClick={ ( e ) => e.stopPropagation() }
-            className="absolute top-1 left-1 right-1 z-10 text-xs bg-background border border-theme rounded-md px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-focus cursor-text"
+            className="absolute top-1 left-1 right-1 z-10 text-xs bg-background border border-theme rounded-md px-1.5 py-0.5 focus:outline-hidden focus:ring-1 focus:ring-focus cursor-text"
             autoFocus
           />
         ) : (
@@ -218,11 +218,11 @@ export default function SlideThumbnail( {
             pinned on the artwork. Always visible on touch (no hover state to
             reveal it), fades in on desktop hover/focus like the old corner
             icons did. */}
-        <div className="absolute inset-x-0 bottom-0 flex justify-center pb-1.5 pt-6 bg-gradient-to-t from-black/45 to-transparent opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity">
+        <div className="absolute inset-x-0 bottom-0 flex justify-center pb-1.5 pt-6 bg-linear-to-t from-black/45 to-transparent opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity">
           {/* rounded-lg, not a pill: the block echoes the tile's own radius so
               it reads as part of the thumbnail rather than a badge dropped on
               it. Buttons are rounded-md so they nest inside it correctly. */}
-          <div className="glass flex gap-0.5 rounded-lg p-0.5 shadow-sm">
+          <div className="glass flex gap-0.5 rounded-lg p-0.5 shadow-xs">
             <button
               type="button"
               onClick={ ( e ) => {

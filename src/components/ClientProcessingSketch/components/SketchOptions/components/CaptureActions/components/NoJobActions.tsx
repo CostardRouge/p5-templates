@@ -30,7 +30,7 @@ export default function NoJobActions( {
         disabled={ isAnyActionLoading }
       >
         {saving ? (
-          <Loader className="h-4 w-4 animate-spin flex-shrink-0" />
+          <Loader className="h-4 w-4 animate-spin shrink-0" />
         ) : (
           <Archive className="h-4 w-4 flex-shrink-" />
         )}
@@ -43,9 +43,9 @@ export default function NoJobActions( {
         disabled={ isBlockingActionLoading }
       >
         {isLoading && !saving ? (
-          <Loader className="h-4 w-4 animate-spin flex-shrink-0" />
+          <Loader className="h-4 w-4 animate-spin shrink-0" />
         ) : (
-          <Clapperboard className="h-4 w-4 flex-shrink-0" />
+          <Clapperboard className="h-4 w-4 shrink-0" />
         )}
         {isLoading && !saving ? "Starting..." : "Start"}
       </button>

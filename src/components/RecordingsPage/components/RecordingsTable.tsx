@@ -45,7 +45,7 @@ export default function RecordingsTable( {
   const someSelected = jobs.some( ( j ) => selectedIds.has( j.id ) ) && !allSelected;
 
   return (
-    <div className="overflow-hidden rounded-xl sm:rounded-2xl border border-border bg-background shadow-sm">
+    <div className="overflow-hidden rounded-xl sm:rounded-2xl border border-border bg-background shadow-xs">
       <div className="overflow-x-auto">
         <table className="min-w-full">
           <thead>
@@ -61,7 +61,7 @@ export default function RecordingsTable( {
                     }
                   } }
                   onChange={ onSelectAll }
-                  className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded border-border text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
+                  className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-sm border-border text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                 />
               </th>
               <th className="text-left text-[10px] sm:text-xs font-semibold text-foreground/70 uppercase tracking-wider px-2 py-2 sm:px-4 sm:py-4">

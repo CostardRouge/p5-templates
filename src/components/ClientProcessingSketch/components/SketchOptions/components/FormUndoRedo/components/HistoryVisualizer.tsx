@@ -39,14 +39,14 @@ export default function HistoryVisualizer( {
         <h3 className="font-semibold text-foreground">History Debug</h3>
         <button
           onClick={ clear }
-          className="px-2 py-0.5 text-xs rounded bg-red-500/20 hover:bg-red-500/30 text-red-400"
+          className="px-2 py-0.5 text-xs rounded-sm bg-red-500/20 hover:bg-red-500/30 text-red-400"
         >
           Clear
         </button>
       </div>
 
       {showMetrics && (
-        <div className="grid grid-cols-2 gap-2 p-2 bg-muted/50 rounded text-muted-foreground">
+        <div className="grid grid-cols-2 gap-2 p-2 bg-muted/50 rounded-sm text-muted-foreground">
           <div>
             <div className="text-[10px] opacity-70">Total Entries</div>
             <div className="font-mono">{metrics.historySize}</div>
@@ -89,7 +89,7 @@ export default function HistoryVisualizer( {
                   item.index,
                   "past"
                 ) }
-                className="w-full text-left p-1.5 rounded hover:bg-muted/50 transition-colors group"
+                className="w-full text-left p-1.5 rounded-sm hover:bg-muted/50 transition-colors group"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
@@ -134,7 +134,7 @@ export default function HistoryVisualizer( {
                   item.index,
                   "future"
                 ) }
-                className="w-full text-left p-1.5 rounded hover:bg-muted/50 transition-colors group"
+                className="w-full text-left p-1.5 rounded-sm hover:bg-muted/50 transition-colors group"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">

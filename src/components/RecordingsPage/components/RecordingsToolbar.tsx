@@ -58,7 +58,7 @@ export default function RecordingsToolbar( {
             placeholder="Search..."
             value={ search }
             onChange={ ( e ) => onSearchChange( e.target.value ) }
-            className="px-4 py-2.5 rounded-xl w-full bg-background border border-border hover:border-foreground/30 focus:border-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/10 transition-all text-sm placeholder:text-foreground/40"
+            className="px-4 py-2.5 rounded-xl w-full bg-background border border-border hover:border-foreground/30 focus:border-foreground/50 focus:outline-hidden focus:ring-2 focus:ring-foreground/10 transition-all text-sm placeholder:text-foreground/40"
           />
         </div>
 
@@ -67,7 +67,7 @@ export default function RecordingsToolbar( {
           aria-label="Filter by status"
           value={ statusFilter }
           onChange={ ( e ) => onStatusFilterChange( e.target.value ) }
-          className="px-4 py-2.5 rounded-xl bg-background border border-border hover:border-foreground/30 focus:border-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/10 transition-all text-sm font-medium cursor-pointer flex-shrink-0"
+          className="px-4 py-2.5 rounded-xl bg-background border border-border hover:border-foreground/30 focus:border-foreground/50 focus:outline-hidden focus:ring-2 focus:ring-foreground/10 transition-all text-sm font-medium cursor-pointer shrink-0"
         >
           <option value="all">All Status</option>
           <option value="draft">Draft</option>
@@ -82,7 +82,7 @@ export default function RecordingsToolbar( {
         <SortControls sortConfig={ sortConfig } onSortChange={ onSortChange } />
 
         {/* View Toggle */}
-        <div className="flex items-center bg-background border border-border rounded-xl overflow-hidden flex-shrink-0">
+        <div className="flex items-center bg-background border border-border rounded-xl overflow-hidden shrink-0">
           <button
             onClick={ () => onViewChange( "cards" ) }
             className={ `px-3 py-2.5 transition-all duration-200 ${
@@ -121,7 +121,7 @@ export default function RecordingsToolbar( {
             placeholder="Search..."
             value={ search }
             onChange={ ( e ) => onSearchChange( e.target.value ) }
-            className="px-3 py-2 rounded-lg w-full bg-background border border-border hover:border-foreground/30 focus:border-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/10 transition-all text-xs placeholder:text-foreground/40"
+            className="px-3 py-2 rounded-lg w-full bg-background border border-border hover:border-foreground/30 focus:border-foreground/50 focus:outline-hidden focus:ring-2 focus:ring-foreground/10 transition-all text-xs placeholder:text-foreground/40"
           />
         </div>
 
@@ -134,7 +134,7 @@ export default function RecordingsToolbar( {
               aria-label="Filter by status"
               value={ statusFilter }
               onChange={ ( e ) => onStatusFilterChange( e.target.value ) }
-              className="px-2.5 py-2 rounded-lg bg-background border border-border hover:border-foreground/30 focus:border-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/10 transition-all text-xs font-medium cursor-pointer flex-shrink-0 min-w-0"
+              className="px-2.5 py-2 rounded-lg bg-background border border-border hover:border-foreground/30 focus:border-foreground/50 focus:outline-hidden focus:ring-2 focus:ring-foreground/10 transition-all text-xs font-medium cursor-pointer shrink-0 min-w-0"
             >
               <option value="all">All Status</option>
               <option value="draft">Draft</option>
@@ -150,7 +150,7 @@ export default function RecordingsToolbar( {
           </div>
 
           {/* Right: View Toggle */}
-          <div className="flex items-center bg-background border border-border rounded-lg overflow-hidden flex-shrink-0">
+          <div className="flex items-center bg-background border border-border rounded-lg overflow-hidden shrink-0">
             <button
               onClick={ () => onViewChange( "cards" ) }
               className={ `px-2.5 py-2 transition-all duration-200 ${

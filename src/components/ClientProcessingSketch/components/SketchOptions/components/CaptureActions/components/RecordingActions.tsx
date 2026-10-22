@@ -85,9 +85,9 @@ export default function RecordingActions( {
           disabled={ cloning }
         >
           {cloning ? (
-            <Loader className="h-4 w-4 animate-spin flex-shrink-0" />
+            <Loader className="h-4 w-4 animate-spin shrink-0" />
           ) : (
-            <Copy className="h-4 w-4 flex-shrink-0" />
+            <Copy className="h-4 w-4 shrink-0" />
           )}
           <span>{cloning ? "Cloning..." : "Clone as Draft"}</span>
         </button>
@@ -98,9 +98,9 @@ export default function RecordingActions( {
           disabled={ cancelling }
         >
           {cancelling ? (
-            <Loader className="h-4 w-4 animate-spin flex-shrink-0" />
+            <Loader className="h-4 w-4 animate-spin shrink-0" />
           ) : (
-            <X className="h-4 w-4 flex-shrink-0" />
+            <X className="h-4 w-4 shrink-0" />
           )}
           <span>{cancelling ? "Cancelling..." : "Cancel Recording"}</span>
         </button>

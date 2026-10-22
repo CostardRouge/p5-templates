@@ -29,7 +29,7 @@ type RandomizeSettingsButtonProps = {
 export default function RandomizeSettingsButton( {
   config,
   basePath,
-  className = "text-foreground hover:bg-theme/20 rounded transition-colors"
+  className = "text-foreground hover:bg-theme/20 rounded-sm transition-colors"
 }: RandomizeSettingsButtonProps ) {
   const {
     getValues, setValue

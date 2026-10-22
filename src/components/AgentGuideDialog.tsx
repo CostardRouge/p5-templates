@@ -89,7 +89,7 @@ function CodeBlock( {
         aria-label={ label }
         className={ clsx(
           "m-0 select-all whitespace-pre-wrap rounded-lg border border-theme bg-hover py-2.5 pl-3 pr-20 text-foreground",
-          prose ? "break-words font-sans text-sm leading-snug" : "break-all font-mono text-xs leading-relaxed"
+          prose ? "wrap-break-word font-sans text-sm leading-snug" : "break-all font-mono text-xs leading-relaxed"
         ) }
       >
         {code}
@@ -119,7 +119,7 @@ function Hint( {
 function Code( {
   children
 }: { children: React.ReactNode } ) {
-  return <code className="rounded bg-hover px-1 font-mono text-xs text-foreground">{children}</code>;
+  return <code className="rounded-sm bg-hover px-1 font-mono text-xs text-foreground">{children}</code>;
 }
 
 /** One numbered step; `done` ticks it off from what the page can see. */
@@ -256,14 +256,14 @@ export default function AgentGuideDialog( {
     <Dialog
       open={ open }
       onClose={ onClose }
-      className="relative z-[80]"
+      className="relative z-80"
     >
       <div
-        className="fixed inset-0 bg-background/60 backdrop-blur-sm"
+        className="fixed inset-0 bg-background/60 backdrop-blur-xs"
         aria-hidden="true"
       />
       <div className="fixed inset-0 flex items-end justify-center sm:items-center sm:p-4">
-        <DialogPanel className="glass flex max-h-[100dvh] w-full max-w-2xl flex-col overflow-hidden border border-theme shadow-lg sm:max-h-[90vh] sm:rounded-2xl">
+        <DialogPanel className="glass flex max-h-dvh w-full max-w-2xl flex-col overflow-hidden border border-theme shadow-lg sm:max-h-[90vh] sm:rounded-2xl">
           <div className="flex items-center gap-2 border-b border-theme px-4 py-2.5">
             <Bot className="h-4 w-4 shrink-0 text-foreground" />
             <DialogTitle className="m-0 text-sm font-medium text-foreground">
@@ -418,7 +418,7 @@ export default function AgentGuideDialog( {
                       placeholder="/Users/you/Downloads/sketchbook-studio-mcp.mjs"
                       aria-label="Where you saved the file"
                       spellCheck={ false }
-                      className="w-full rounded-lg border border-theme bg-background px-3 py-2 font-mono text-base text-foreground focus:outline-none sm:text-xs"
+                      className="w-full rounded-lg border border-theme bg-background px-3 py-2 font-mono text-base text-foreground focus:outline-hidden sm:text-xs"
                     />
                     <CodeBlock
                       label="the MCP settings block"

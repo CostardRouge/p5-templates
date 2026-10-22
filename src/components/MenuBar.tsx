@@ -68,7 +68,6 @@ import sleep from "@/utils/sleep";
 const AgentGuideDialog = dynamic( () => import( "@/components/AgentGuideDialog" ) );
 
 type MenuBarProps = {
-  showRecordings?: boolean;
   hasMissingThumbnails?: boolean;
   hasMissingPreviews?: boolean;
 };
@@ -173,7 +172,6 @@ function bridgeLabel( bridge: BridgeStatus ): string {
 }
 
 function MenuBar( {
-  showRecordings = false,
   hasMissingThumbnails = false,
   hasMissingPreviews = false
 }: MenuBarProps ) {
@@ -186,6 +184,15 @@ function MenuBar( {
   const [
     mounted,
     setMounted
+  ] = useState( false );
+
+  // `BACKEND_RECORDING` (server env) can't be reflected as a build-time
+  // constant or a static layout prop without baking last build's value into
+  // the prerendered shell, so it's fetched from a force-dynamic route at
+  // runtime instead.
+  const [
+    showRecordings,
+    setShowRecordings
   ] = useState( false );
 
   const [
@@ -231,6 +238,26 @@ function MenuBar( {
   useEffect(
     () => {
       setMounted( true );
+    },
+    []
+  );
+
+  useEffect(
+    () => {
+      let cancelled = false;
+
+      fetch( "/api/config" )
+        .then( ( res ) => res.json() )
+        .then( ( data ) => {
+          if ( !cancelled ) {
+            setShowRecordings( Boolean( data.backendRecording ) );
+          }
+        } )
+        .catch( () => {} );
+
+      return () => {
+        cancelled = true;
+      };
     },
     []
   );
@@ -488,7 +515,7 @@ function MenuBar( {
 
       <MenuItems
         anchor="bottom start"
-        className="z-[70] w-60 border border-border rounded-xl bg-background/95 backdrop-blur-xl shadow-xl overflow-hidden focus:outline-none [--anchor-gap:0.5rem]"
+        className="z-70 w-60 border border-border rounded-xl bg-background/95 backdrop-blur-xl shadow-xl overflow-hidden focus:outline-hidden [--anchor-gap:0.5rem]"
       >
         <SectionLabel>Navigate</SectionLabel>
         {navLinks.map( ( {
@@ -835,7 +862,7 @@ function MenuBar( {
 
   return (
     <>
-      <div className="fixed top-2 left-2 md:top-4 md:left-4 z-[70] md:z-50">
+      <div className="fixed top-2 left-2 md:top-4 md:left-4 z-70 md:z-50">
         {menuNode}
       </div>
       {agentGuide}

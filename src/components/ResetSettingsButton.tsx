@@ -16,7 +16,7 @@ type ResetSettingsButtonProps = {
 
 export default function ResetSettingsButton( {
   basePath,
-  className = "text-foreground hover:bg-theme/20 rounded transition-colors"
+  className = "text-foreground hover:bg-theme/20 rounded-sm transition-colors"
 }: ResetSettingsButtonProps ) {
   const [
     {
