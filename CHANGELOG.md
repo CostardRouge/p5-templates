@@ -9,6 +9,8 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-10-22 — Ophiuride
+
 ### Added
 
 - `/llms.txt`: the site described for language models — what Sketchbook is, its pages, the sections of the studio
