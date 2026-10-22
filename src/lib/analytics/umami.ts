@@ -11,10 +11,11 @@
 /** Tracker URL. Served from the portfolio's one Umami host,
  * `insight.steevepommier.com` (COMMON-PROJECT-SPEC N5, the maintainer's
  * decision of 2026-10-19) — third-party to p5.steeve.website, so a blocker's
- * third-party-domain rule can cut it; `insight.steeve.website/insight` is the
- * same instance on a sibling of this domain and stays the first-party
- * fallback through NEXT_PUBLIC_UMAMI_SRC. The path is `/insight` rather than
- * Umami's default `/script.js`, which appears in filter lists. */
+ * third-party-domain rule can cut it; one host across the portfolio was chosen
+ * over that. The first-party alias that was the default before that date is
+ * history, recorded in docs/analytics.md; NEXT_PUBLIC_UMAMI_SRC is the one way
+ * to point a build elsewhere. The path is `/insight` rather than Umami's
+ * default `/script.js`, which appears in filter lists. */
 export const UMAMI_SRC =
   process.env.NEXT_PUBLIC_UMAMI_SRC || "https://insight.steevepommier.com/insight";
 

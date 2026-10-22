@@ -40,10 +40,13 @@ default would silently ship every image with analytics off.
   chosen over that.
 - The path is `/insight`, not Umami's default `/script.js`, which appears in
   filter lists.
-- `insight.steeve.website/insight` is the same instance on a sibling of this
-  site's domain — first-party, which is why it was the default until
-  2026-10-19. It still works (CORS is permissive) and is the fallback if the
-  third-party host is ever cut, via `NEXT_PUBLIC_UMAMI_SRC`.
+- History, not configuration: until 2026-10-19 the default was
+  `insight.steeve.website/insight`, the same instance on a sibling of this
+  site's domain (first-party, which is why it had been chosen). N5 retired it
+  as the portfolio's host; no code, config or build variable in this repo names
+  it any more, and the live page has loaded `insight.steevepommier.com` since
+  the 1.1.0 image (checked 2026-10-22). Pointing a build back at it would be a
+  deliberate `NEXT_PUBLIC_UMAMI_SRC` override, against N5.
 - Neither `docker-build.yml` nor the deployed stack passes a Umami variable
   (checked in the `homelab` snapshot of 2026-10-16), so the Dockerfile's `ARG`
   default is what production ships; a stack variable would override it.
