@@ -209,6 +209,7 @@ next starts with M or later).
 
 ## Other rules
 
+- **Node stays on 24, on purpose** — a written exception to the portfolio's Node 26 (C14; `portfolio.json` in `second-brain`, 2026-10-24). The Docker base is Playwright's image, which installs Node 24: with CI and `@types/node` on 26, a Node-26-only API would pass the gate and crash in the container. Move to 26 only with the first Playwright release whose image ships it — `playwright`, the three `FROM` tags, `.nvmrc` and `@types/node` in one pull request (`docs/memory/tooling.md`).
 - Never rewrite history (`rebase -i`, `commit --amend`, `reset --hard`, `push --force`, `filter-repo`) without an explicit request.
 - Do not modify `.git/config`, the hooks or branch settings.
 - **Sketches live in `src/sketches/<engine>/`** — `p5`, `gsap`, `threejs`, `html`. Not `src/templates/`, not `src/p5-sketches`: both names appear in older docs and in this file's own history, and neither has existed since the "Standardize on sketch" rename (4946ea6). Path aliases: `@/*` → `src/*`, `@/p5/*` → `src/sketches/p5/*`, same shape for `@/gsap/*`, `@/threejs/*`, `@/html/*`, `@/public/*` → `public/*`. Prefer them over deep relative imports. See `docs/memory/sketches.md` before adding or editing a sketch.
