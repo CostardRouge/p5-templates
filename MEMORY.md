@@ -125,6 +125,8 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 
 ## Open items (dated; remove when done)
 
+- 2026-10-24 — **Node 26 waits on Playwright**: the repo stays on Node 24 by a written exception (CLAUDE.md, Other rules) because the Playwright base image installs Node 24. Close it when a Playwright release ships 26: `playwright`, the three `FROM` tags, `.nvmrc` and `@types/node` together (`tooling.md`).
+
 - 2026-10-19 — Open in the sequence item and the scene cut (`transitions.md`): nothing measured on a phone or with a WEBGL embedded scene; the cut sound not heard live; the slide 0 ↔ 1 boundary carries neither `cut` nor `transition`; no overlay scene kind (a lower-third over a scene is a text item on the slide); whether the maintainer wants per-scene content (text, HUD) inside a scene, and a sequence driven by the studio MCP end to end, are his calls.
 - 2026-10-19 — **The icon's SVG sources are missing** (C11 asks for `icon.svg`, `icon-apple.svg`, `icon-maskable.svg`): the mark exists only as the hand-drawn 512 PNG, which `scripts/gen-icons.mjs` reads instead — a rendered 3D spike sphere with gradients, which no faithful SVG trace gives. Drawing a vector mark is the owner's call; the day one exists, point the script at it (`home-and-seo.md`, « The icon set »).
 - 2026-10-19 — **The site is English only**, every string inline in the components, where N4 of the standard asks a public page for English and French or an exception written in `CLAUDE.md`. Neither is decided: a French twin of the whole studio is the owner's call, and `CLAUDE.md` says so until then.
