@@ -4,7 +4,7 @@ Read before writing tests, changing Jest config, or working out what gates a mer
 
 ## What gates a merge
 
-2026-08-20 — `.github/workflows/ci.yml` runs four independent jobs on Node 24 — **lint, typecheck, test, build** — in parallel, each doing its own `npm ci` with `HUSKY: 0`. Markdown-only and `docs/**` changes are path-ignored, so a docs commit runs no CI at all. Concurrency cancels superseded PR runs but never cancels a `main` run (`github.head_ref` is empty there, so the group key falls back to the unique `run_id`) — every commit on `main` is validated end to end. **How to apply**: `npm run check` reproduces three of the four jobs locally; the fourth is `npm run build`. Run both before handing work back.
+2026-08-20 — `.github/workflows/ci.yml` runs four independent jobs on the Node of `.nvmrc` (26 since 2026-10-24) — **lint, typecheck, test, build** — in parallel, each doing its own `npm ci` with `HUSKY: 0`. Markdown-only and `docs/**` changes are path-ignored, so a docs commit runs no CI at all. Concurrency cancels superseded PR runs but never cancels a `main` run (`github.head_ref` is empty there, so the group key falls back to the unique `run_id`) — every commit on `main` is validated end to end. **How to apply**: `npm run check` reproduces three of the four jobs locally; the fourth is `npm run build`. Run both before handing work back.
 
 ## The build job is a test, not a packaging step
 
