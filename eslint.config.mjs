@@ -22,7 +22,11 @@ const eslintConfig = [
       // Compiled from scripts/mcp/studioRelay.ts by `npm run mcp:relay:write`
       // and drift-tested byte for byte: the pre-commit `eslint --fix` must not
       // reformat it (it did, on a merge that staged it).
-      "public/mcp/**"
+      "public/mcp/**",
+      // The portfolio's shared release script, copied byte for byte from
+      // second-brain (common-project-spec/shared/): the pre-commit
+      // `eslint --fix` reformatted it once, so it must stay out of reach.
+      ".github/release.mjs"
     ]
   },
   ...nextCoreWebVitals,
