@@ -52,7 +52,7 @@ CI and both Docker stages run Node 24 (the Playwright base image installs `node_
 
 2026-10-10 — The pre-commit hook runs `eslint --fix` on every staged `.js/.mjs/.ts` file, so a generated file that is drift-tested byte for byte breaks the moment a commit stages it — typically a merge of `main` that brings a regenerated copy. It happened to `public/mcp/sketchbook-studio-mcp.mjs` (compiled from `scripts/mcp/studioRelay.ts`, checked by `scripts/mcp/__tests__/studioRelay.test.ts`): the merge commit carried a restyled bundle and the drift test failed. **How to apply**: any committed build output goes in `eslint.config.mjs`'s `ignores` (`src/generated/**`, `public/assets/libraries/**`, `public/mcp/**`, `.github/release.mjs`); after a merge, `git diff origin/main HEAD -- <generated files>` must be empty.
 
-2026-10-24 — The same trap had restyled `.github/release.mjs`. **The shared workflows** (`.github/workflows/registry.yml`, `release.yml`, `.github/release.mjs`) are copied byte for byte from `second-brain/system/meta/common-project-spec/shared/`, never from another repo, and their `check` jobs run on `vars.CI_RUNNER || 'ubuntu-24.04'` (never set here: the repo is public).
+2026-10-24 (rev. 2026-10-25) — The same trap had restyled `.github/release.mjs`. **The shared workflows** (`.github/workflows/registry.yml`, `release.yml`, `.github/release.mjs`) are copied byte for byte from `second-brain/system/meta/common-project-spec/shared/`, never from another repo, and their `check` jobs run on `vars.CI_RUNNER || 'ubuntu-24.04'`; since 2026-10-25 (option C) `send` and `publish` follow it too in the private repos, while this public repo never sets it and every job stays hosted.
 
 ## The portfolio standard, adopted 2026-10-19
 
