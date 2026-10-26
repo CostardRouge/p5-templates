@@ -52,6 +52,12 @@ updates:
       # the alias that follows 7.
       - dependency-name: 'typescript'
         update-types: ['version-update:semver-major']
+      # ESLint 10 cannot install yet: `eslint-config-next` 16 pulls
+      # `eslint-plugin-react` 7.37.5, whose peer range stops at ^9.7, so
+      # `npm ci` fails with ERESOLVE (#415). Lift when a release of
+      # eslint-plugin-react accepts ^10 and eslint-config-next takes it.
+      - dependency-name: 'eslint'
+        update-types: ['version-update:semver-major']
       # `playwright` moves only with the Playwright image of the Dockerfile
       # (scripts/__tests__/dockerfile.test.ts holds the two together), and a
       # Dependabot pull request can carry one side only: both are raised by
