@@ -46,7 +46,7 @@
     "gif.js": "^0.2.0",
     "gsap": "^3.13.0",
     "immer": "^11.1.21",
-    "ioredis": "^5.11.1",
+    "ioredis": "^6.0.0",
     "libheif-js": "^1.23.5",
     "lucide-react": "^1.59.0",
     "mediabunny": "^1.61.6",
