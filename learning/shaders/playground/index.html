@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Shader Playground — p5-templates</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; background: #0e0f13; color: #d7dae0; }
+  #app { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr auto; height: 100%; gap: 1px; background: #23262e; }
+  #editorPane { grid-row: 1 / 3; display: flex; flex-direction: column; background: #14161b; }
+  #editorPane header, #viewPane header { padding: 8px 12px; font-size: 12px; letter-spacing: .04em; color: #8b94a3; background: #14161b; border-bottom: 1px solid #23262e; display: flex; justify-content: space-between; align-items: center; }
+  #code { flex: 1; width: 100%; border: 0; resize: none; padding: 12px; font: 13px/1.5 ui-monospace, monospace; color: #d7dae0; background: #14161b; tab-size: 2; outline: none; }
+  #viewPane { display: flex; flex-direction: column; background: #000; }
+  #canvasWrap { flex: 1; position: relative; }
+  canvas { width: 100%; height: 100%; display: block; }
+  #log { grid-column: 2; background: #14161b; border-top: 1px solid #23262e; padding: 8px 12px; font-size: 12px; min-height: 38px; max-height: 160px; overflow: auto; white-space: pre-wrap; color: #9fb0c3; }
+  #log.error { color: #ff8a8a; }
+  #log.ok { color: #7fd49a; }
+  .pill { font-size: 11px; color: #6b7280; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="editorPane">
+    <header>
+      <span>fragment shader — édite ici</span>
+      <span class="pill">recompile auto · Ctrl/Cmd+S pour forcer</span>
+    </header>
+    <textarea id="code" spellcheck="false"></textarea>
+  </div>
+  <div id="viewPane">
+    <header>
+      <span>rendu</span>
+      <span class="pill" id="fps"></span>
+    </header>
+    <div id="canvasWrap"><canvas id="gl"></canvas></div>
+  </div>
+  <div id="log"></div>
+</div>
+
+<script>
+// --- Vertex shader : identique à VERT_SRC de src/.../utils/noiseFieldGpu.js ---
+const VERT_SRC = `
+precision highp float;
+attribute vec2 aPos;   // quad plein écran en clip space (-1..1)
+varying vec2 vUv;      // 0..1 sur le quad
+void main() {
+  vUv = aPos * 0.5 + 0.5;
+  gl_Position = vec4(aPos, 0.0, 1.0);
+}`;
+
+// --- Fragment shader de départ : ton premier shader, le dégradé R/G ---
+const DEFAULT_FRAG = `precision highp float;
+
+varying vec2 vUv;           // position du pixel, 0..1
+uniform vec2  uResolution;  // taille du canvas en pixels
+uniform float uTime;        // secondes
+uniform vec2  uMouse;       // souris 0..1
+
+void main() {
+  // Chaque pixel répond : "quelle est MA couleur ?"
+  // vUv.x va de 0 (gauche) à 1 (droite)  -> canal rouge
+  // vUv.y va de 0 (bas)    à 1 (haut)     -> canal vert
+  vec3 col = vec3(vUv.x, vUv.y, 0.0);
+  gl_FragColor = vec4(col, 1.0);
+}`;
+
+const canvas = document.getElementById("gl");
+const gl = canvas.getContext("webgl");
+const codeEl = document.getElementById("code");
+const logEl = document.getElementById("log");
+const fpsEl = document.getElementById("fps");
+
+if (!gl) { logEl.textContent = "WebGL indisponible dans ce navigateur."; logEl.className = "error"; }
+
+// quad plein écran (2 triangles)
+const quad = new Float32Array([-1,-1, 1,-1, -1,1,  -1,1, 1,-1, 1,1]);
+const buf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+gl.bufferData(gl.ARRAY_BUFFER, quad, gl.STATIC_DRAW);
+
+function compile(type, src) {
+  const sh = gl.createShader(type);
+  gl.shaderSource(sh, src);
+  gl.compileShader(sh);
+  if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
+    const err = gl.getShaderInfoLog(sh);
+    gl.deleteShader(sh);
+    throw new Error(err);
+  }
+  return sh;
+}
+
+let program = null;
+let loc = {};
+
+function build(fragSrc) {
+  try {
+    const vs = compile(gl.VERTEX_SHADER, VERT_SRC);
+    const fs = compile(gl.FRAGMENT_SHADER, fragSrc);
+    const p = gl.createProgram();
+    gl.attachShader(p, vs); gl.attachShader(p, fs);
+    gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+    if (program) gl.deleteProgram(program);
+    program = p;
+    loc = {
+      aPos: gl.getAttribLocation(p, "aPos"),
+      uResolution: gl.getUniformLocation(p, "uResolution"),
+      uTime: gl.getUniformLocation(p, "uTime"),
+      uMouse: gl.getUniformLocation(p, "uMouse"),
+    };
+    logEl.textContent = "✓ compilé"; logEl.className = "ok";
+  } catch (e) {
+    logEl.textContent = String(e.message || e); logEl.className = "error";
+  }
+}
+
+let mouse = [0.5, 0.5];
+canvas.addEventListener("pointermove", (e) => {
+  const r = canvas.getBoundingClientRect();
+  mouse = [(e.clientX - r.left) / r.width, 1 - (e.clientY - r.top) / r.height];
+});
+
+function resize() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = canvas.clientWidth * dpr, h = canvas.clientHeight * dpr;
+  if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+}
+
+let frames = 0, lastFps = performance.now();
+const start = performance.now();
+function render(now) {
+  resize();
+  gl.viewport(0, 0, canvas.width, canvas.height);
+  if (program) {
+    gl.useProgram(program);
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.enableVertexAttribArray(loc.aPos);
+    gl.vertexAttribPointer(loc.aPos, 2, gl.FLOAT, false, 0, 0);
+    if (loc.uResolution) gl.uniform2f(loc.uResolution, canvas.width, canvas.height);
+    if (loc.uTime) gl.uniform1f(loc.uTime, (now - start) / 1000);
+    if (loc.uMouse) gl.uniform2f(loc.uMouse, mouse[0], mouse[1]);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+  }
+  frames++;
+  if (now - lastFps > 500) { fpsEl.textContent = Math.round(frames * 1000 / (now - lastFps)) + " fps"; frames = 0; lastFps = now; }
+  requestAnimationFrame(render);
+}
+
+// recompile auto (débounce léger) + Ctrl/Cmd+S
+let t = null;
+function scheduleBuild() { clearTimeout(t); t = setTimeout(() => build(codeEl.value), 250); }
+codeEl.addEventListener("input", scheduleBuild);
+codeEl.addEventListener("keydown", (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === "s") { e.preventDefault(); build(codeEl.value); }
+  if (e.key === "Tab") { e.preventDefault(); const s = codeEl.selectionStart; codeEl.value = codeEl.value.slice(0,s) + "  " + codeEl.value.slice(codeEl.selectionEnd); codeEl.selectionStart = codeEl.selectionEnd = s + 2; }
+});
+
+codeEl.value = DEFAULT_FRAG;
+build(DEFAULT_FRAG);
+requestAnimationFrame(render);
+</script>
+</body>
+</html>
