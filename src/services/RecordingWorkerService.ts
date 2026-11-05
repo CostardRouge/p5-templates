@@ -280,7 +280,9 @@ export class RecordingWorkerService {
   }
 
   public async resumeWorker(): Promise<void> {
-    this.worker.resume();
+    // BullMQ 6 made Worker#resume() asynchronous: awaited, a failure to
+    // resume reaches the caller instead of an unhandled rejection.
+    await this.worker.resume();
     console.log( "[Worker] Resumed" );
   }
 
