@@ -130,6 +130,22 @@ type FieldRendererProps = {
   leafPaddingClassName?: string;
 };
 
+// What `errors` holds at a field's path is a FieldError, a nested
+// FieldErrors (an object or array field whose children failed) or nothing,
+// and react-hook-form's `get` says so since 7.91 by returning `unknown`. The
+// message is read only where there is one, never assumed.
+function errorMessageOf( error: unknown ): string | undefined {
+  if ( typeof error !== "object" || error === null || !( "message" in error ) ) {
+    return undefined;
+  }
+
+  const {
+    message
+  } = error;
+
+  return message === undefined || message === null ? undefined : String( message );
+}
+
 export default function FieldRenderer( {
   fieldBasePath,
   fieldName,
@@ -152,10 +168,11 @@ export default function FieldRenderer( {
     ? `${ fieldBasePath }.${ fieldName }`
     : fieldBasePath;
 
-  const error = get(
+  const error: unknown = get(
     errors,
     registeredName
   );
+  const errorMessage = errorMessageOf( error );
 
   // Capture the value the field was loaded with once on mount via a ref. We
   // clone it so a later in-place mutation of the form value can't drift our
@@ -1031,8 +1048,8 @@ export default function FieldRenderer( {
         </span>
       </div>
 
-      {error && (
-        <p className="text-red-500 mt-1">{error.message?.toString()}</p>
+      {!!error && (
+        <p className="text-red-500 mt-1">{errorMessage}</p>
       )}
     </div> );
   }
@@ -1214,8 +1231,8 @@ export default function FieldRenderer( {
     )}
 
     {/* Display validation errors */}
-    {error && (
-      <p className="text-red-500 mt-1">{error.message?.toString()}</p>
+    {!!error && (
+      <p className="text-red-500 mt-1">{errorMessage}</p>
     )}
   </div> );
 }

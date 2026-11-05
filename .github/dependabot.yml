@@ -36,7 +36,15 @@ updates:
       jest:
         patterns: ['jest', 'jest-*', '@jest/*', '@types/jest', 'ts-jest']
         update-types: [major]
-      # Every minor and patch, production and development together:
+      # The tools that ARE the gate (linter, formatter, type checker) get a
+      # pull request of their own: their minors add rules and reformat files
+      # with nothing that ships touched (Biome 2.6 turned four repos red on
+      # 2026-11-01), so they never hold the month's runtime updates back.
+      tooling:
+        patterns: ['typescript', 'typescript7', 'eslint', 'eslint-*', '@stylistic/*']
+        exclude-patterns: ['eslint-config-next']
+        update-types: [minor, patch]
+      # Every other minor and patch, production and development together:
       # one pull request a month.
       minor-and-patch:
         update-types: [minor, patch]
@@ -63,6 +71,12 @@ updates:
       # Dependabot pull request can carry one side only: both are raised by
       # hand, in one commit (docs/memory/deployment.md).
       - dependency-name: 'playwright'
+      # p5 2 is a rewrite of the API the sketches are written against
+      # (`p5/lib/p5.js` is gone, #433), and the sketches are the owner's art:
+      # moving them to p5 2 is his call, sketch by sketch, never a bot's.
+      # Lift the day he decides to migrate.
+      - dependency-name: 'p5'
+        update-types: ['version-update:semver-major']
 
   - package-ecosystem: github-actions
     directory: /
