@@ -1,7 +1,7 @@
 "use client";
 
 import React, {
-  useCallback, useEffect, useState
+  useCallback, useEffect, useRef, useState
 } from "react";
 import dynamic from "next/dynamic";
 import clsx from "clsx";
@@ -113,6 +113,8 @@ export default function CaptureDialog( {
     ]
   );
 
+  const dialogRef = useRef<HTMLDivElement | null>( null );
+
   const hasFooterActions =
     capture.backendRecording ||
       ( devActionsVisible && capture.browserRecordingSupported );
@@ -135,9 +137,20 @@ export default function CaptureDialog( {
       }
 
       const handleKeyDown = ( event: KeyboardEvent ) => {
-        if ( event.key === "Escape" ) {
-          requestClose();
+        if ( event.key !== "Escape" ) {
+          return;
         }
+
+        // An Escape meant for a dialog opened OVER this one (Publishing,
+        // from the Post band's "accounts") closes that one only — it used to
+        // close Export too, and with it a finished, unsaved export.
+        const owner = event.target instanceof Element ? event.target.closest( "[role=\"dialog\"]" ) : null;
+
+        if ( owner && owner !== dialogRef.current ) {
+          return;
+        }
+
+        requestClose();
       };
 
       document.addEventListener(
@@ -185,6 +198,7 @@ export default function CaptureDialog( {
       )}
 
       <div
+        ref={ dialogRef }
         role="dialog"
         aria-modal={ open }
         aria-label="Export"
