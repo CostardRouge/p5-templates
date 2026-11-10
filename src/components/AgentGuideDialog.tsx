@@ -39,7 +39,8 @@ const OFF: BridgeStatus = {
 const PROMPTS = [
   "Open the voronoi-v1-cells sketch in Sketchbook, tell me what I can adjust, and show me a snapshot.",
   "Give this sketch a sunset palette, put the title “Hello” in the top third, add a HUD gauge for the hue speed, and show me the result.",
-  "Make three slides from this sketch with different palettes, then export each one as a square 1080 × 1080 video."
+  "Make three slides from this sketch with different palettes, then export each one as a square 1080 × 1080 video.",
+  "Write a caption for this sketch’s Reel, show it to me, and once I say yes, schedule it on my next free slot."
 ];
 
 function readClient(): Client {
@@ -475,7 +476,9 @@ export default function AgentGuideDialog( {
                   <p className="m-0">
                     Everything the studio’s controls do: the sketch’s parameters, canvas size and clock, slides, text,
                     images and HUD widgets, moving items, playback, snapshots it can look at, and exports — and open
-                    another sketch from the gallery. Values outside a control’s range are refused, never bent.
+                    another sketch from the gallery. Values outside a control’s range are refused, never bent. With
+                    your Postiz connected (Menu › Publishing), it can also schedule an export — only with a caption
+                    you approved.
                   </p>
                 </Faq>
                 <Faq q="Where do exported files go?">

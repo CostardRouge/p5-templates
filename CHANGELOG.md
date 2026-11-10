@@ -29,6 +29,8 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
   your rhythm, another slot, a time of yours, now or a draft — and a caption filled with the sketch's title,
   description, tags and link. One press renders it and sends it; Publish now shows the file first. Pictures go out as
   JPEG, and a post scheduled by mistake can be taken back.
+- Claude can publish for you too: with your Postiz connected, it can set up the post, write a caption for you to
+  read, and schedule it once you say it suits you — never a caption you did not approve.
 
 ### Changed
 
