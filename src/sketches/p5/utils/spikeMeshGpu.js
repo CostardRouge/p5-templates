@@ -39,6 +39,10 @@ import {
 //     same surface noise, the same lengths as the CPU original), then puts the
 //     vertex on the surface of revolution: hemispherical base cap, the
 //     stroke-weight / depth-easing profile, hemispherical tip cap;
+//   - a sketch may also define `spikeShape` to leave the round, straight
+//     spike: the cross-section's wide axis, how flat it is, how far the
+//     centreline curls over its length, a pinched foot and a cupped section —
+//     which is what turns a spike into a petal or a blade;
 //   - normals come from finite differences of that same surface function, so a
 //     sketch supplies a POSITION and gets lighting for free — the body does
 //     the same with `bodyPoint(t, angle)`, a parametric surface drawn once;
@@ -87,8 +91,16 @@ const VERT_MAIN = `
   // far end of the base cap (inside the body), 1 the far end of the tip cap.
   // Between the caps, lp runs 1 (base) → 0 (tip) exactly as the originals'
   // layerProgression does, so the same easings give the same silhouette.
-  vec2 spikeProfile(float t, float len, float radiusMul) {
+  vec2 spikeProfile(float t, float len, float radiusMul, float pinch) {
     float rBase = max(uRadiusMax * 0.5 * radiusMul, 0.0);
+
+    // A pinched base: the foot narrows to (1 - pinch) of its radius and opens
+    // back over the first 45% of the length, so the widest point moves up the
+    // spike — a petal or a blade instead of a thorn.
+    if (pinch > 0.0) {
+      rBase *= 1.0 - pinch;
+    }
+
     float rTip  = max(uRadiusMin * 0.5 * radiusMul, 0.0);
     float cb = uCapFrac;
 
@@ -106,14 +118,36 @@ const VERT_MAIN = `
     float axial = mapEase(lp, 0.0, 1.0, len, 0.0, uLengthEaseId);
     float r = mapEase(lp, 0.0, 1.0, uRadiusMin, uRadiusMax, uRadiusEaseId) * 0.5 * radiusMul;
 
+    if (pinch > 0.0) {
+      r *= mix(1.0 - pinch, 1.0, smoothstep(0.0, 0.45, 1.0 - lp));
+    }
+
     return vec2(axial, max(r, 0.0));
   }
 
-  vec3 spikePoint(vec3 base, vec3 dir, vec3 u, vec3 v, float len, float radiusMul, float t, float a) {
-    vec2 pr = spikeProfile(clamp(t, 0.0, 1.0), len, radiusMul);
+  // form = (flatten, curl, pinch, cup) — see spikeShape() in the header
+  // comment. With (1, 0, 0, 0) this is the plain surface of revolution, to
+  // the bit: v1–v3 were pixel-diffed across the change that added it.
+  vec3 spikePoint(vec3 base, vec3 dir, vec3 u, vec3 v, float len, float radiusMul, float t, float a, vec4 form) {
+    vec2 pr = spikeProfile(clamp(t, 0.0, 1.0), len, radiusMul, form.z);
     float ang = a * TAU;
+    vec3 centre = base + dir * pr.x;
+    vec3 across = v;
 
-    return base + dir * pr.x + (u * cos(ang) + v * sin(ang)) * pr.y;
+    // The centreline bends along a circular arc in the (dir, v) plane, by
+    // form.y radians over the spike's length; the cross-section turns with it.
+    if (abs(form.y) > 1e-4) {
+      float span  = max(len, 1e-4);
+      float theta = form.y * pr.x / span;
+      float arc   = span / form.y;
+
+      centre = base + dir * (arc * sin(theta)) + v * (arc * (1.0 - cos(theta)));
+      across = v * cos(theta) - dir * sin(theta);
+    }
+
+    float ca = cos(ang);
+
+    return centre + (u * ca + across * (sin(ang) * form.x + form.w * ca * ca)) * pr.y;
   }
 
   void main() {
@@ -168,15 +202,18 @@ const VERT_MAIN = `
       );
       dir = normalize(dir);
 
-      vec3 helper = abs(dir.y) < 0.9 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
-      vec3 u = normalize(cross(dir, helper));
+      vec3 u;
+      vec4 form;
+
+      spikeShape(aCell.x, aCell.y, dir, u, form);
+
       vec3 v = cross(dir, u);
 
-      pos  = spikePoint(base, dir, u, v, len, radiusMul, t, a);
-      dPdt = spikePoint(base, dir, u, v, len, radiusMul, tn + uDeltaT, a)
-           - spikePoint(base, dir, u, v, len, radiusMul, tn - uDeltaT, a);
-      dPda = spikePoint(base, dir, u, v, len, radiusMul, tn, a + uDeltaA)
-           - spikePoint(base, dir, u, v, len, radiusMul, tn, a - uDeltaA);
+      pos  = spikePoint(base, dir, u, v, len, radiusMul, t, a, form);
+      dPdt = spikePoint(base, dir, u, v, len, radiusMul, tn + uDeltaT, a, form)
+           - spikePoint(base, dir, u, v, len, radiusMul, tn - uDeltaT, a, form);
+      dPda = spikePoint(base, dir, u, v, len, radiusMul, tn, a + uDeltaA, form)
+           - spikePoint(base, dir, u, v, len, radiusMul, tn, a - uDeltaA, form);
     }
 
     vec3 n = cross(dPdt, dPda);
@@ -201,6 +238,17 @@ const VERT_MAIN = `
 const DEFAULT_BODY_GLSL = `
   vec4 bodyPoint(float t, float a) {
     return vec4(0.0);
+  }
+`;
+
+// A round, straight spike unless the sketch shapes it: the cross-section's
+// first axis is picked from the world's up (or x, for a near-vertical spike).
+const DEFAULT_SHAPE_GLSL = `
+  void spikeShape(float col, float row, vec3 dir, out vec3 side, out vec4 form) {
+    vec3 helper = abs(dir.y) < 0.9 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
+
+    side = normalize(cross(dir, helper));
+    form = vec4(1.0, 0.0, 0.0, 0.0);
   }
 `;
 
@@ -321,7 +369,14 @@ function clampInt(
  *   `void computeSpike( float col, float row, out vec3 base, out vec3 dir,
  *   out float len, out float radiusMul, out float extra, out float visible )`
  *   plus its own uniforms. The peaks stdlib (perlinNoise, mapEase,
- *   applyEasing…) is injected before it.
+ *   applyEasing…) is injected before it. It may also define
+ *   `void spikeShape( float col, float row, vec3 dir, out vec3 side, out vec4 form )`:
+ *   `side` is the unit vector, perpendicular to `dir`, the cross-section's
+ *   first axis lies along; `form` is ( flatten, curl, pinch, cup ) — the second
+ *   axis's radius × the first's (1 = round), the bend of the centreline over
+ *   the spike's length in radians (towards `cross( dir, side )` when positive),
+ *   how much the foot narrows (0..1), and how far the section's edges lift
+ *   towards `cross( dir, side )`, × its radius. Default: round and straight.
  * @param {string} [sources.bodyBody] GLSL defining
  *   `vec4 bodyPoint( float t, float a )` — a parametric surface (xyz) and the
  *   `extra` channel (w) for the material, drawn once beneath the spikes. It
@@ -367,6 +422,7 @@ export default function createSpikeMeshRenderer( {
   // A sketch may define its bodyPoint() next to computeSpike() in one GLSL
   // block rather than as a separate `bodyBody`; either way counts as a body.
   const hasBody = Boolean( bodyBody ) || /vec4\s+bodyPoint\s*\(/.test( spikeBody );
+  const hasShape = /void\s+spikeShape\s*\(/.test( spikeBody );
 
   let state = null;
 
@@ -425,6 +481,7 @@ export default function createSpikeMeshRenderer( {
       + VERT_HEADER
       + spikeBody
       + ( bodyBody ?? ( hasBody ? "" : DEFAULT_BODY_GLSL ) )
+      + ( hasShape ? "" : DEFAULT_SHAPE_GLSL )
       + VERT_MAIN;
     const fragSrc = FRAG_HEADER + ( shade?.glsl ?? shadeBody ) + FRAG_MAIN;
 

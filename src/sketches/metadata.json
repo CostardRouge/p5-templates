@@ -4449,5 +4449,94 @@
     ],
     "mtime": "2026-10-09T04:14:01.043Z",
     "ctime": "2026-10-09T04:13:33.743Z"
+  },
+  {
+    "name": "iridescent-v5-spiral-bloom",
+    "engine": "p5",
+    "category": "iridescent",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "asyncDraw": false,
+    "description": "A flower seen from above, its some two hundred flat, cupped petals packed on a golden-angle spiral like a dahlia or a sunflower head — short and upright at the heart, long and laid back at the rim. It closes and reopens in a wave running from the centre outwards while the spiral arms wind and unwind, and the iridescent ramp is staggered along the spiral so the hue itself draws the arms.",
+    "tags": [
+      "3d",
+      "mesh",
+      "iridescent",
+      "geometry",
+      "pulse",
+      "orbit",
+      "colourful"
+    ],
+    "mtime": "2026-11-10T00:53:36.045Z",
+    "ctime": "2026-11-10T00:51:07.869Z"
+  },
+  {
+    "name": "materials-v1-flame",
+    "engine": "p5",
+    "category": "materials",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "asyncDraw": false,
+    "description": "A single tall flame on a near-black ground: a white-hot core inside orange tongues that curl upwards and tear off at the tip, a blue foot, a soft halo and sparks drifting up, all turning slowly like a small fire whirl in a seamless loop. Fire colours by default; a palette picker turns the same flame into other colours.",
+    "tags": [
+      "3d",
+      "raymarched",
+      "shader",
+      "noise",
+      "drift",
+      "pulse"
+    ],
+    "mtime": "2026-11-10T01:17:44.246Z",
+    "ctime": "2026-11-10T01:17:44.174Z"
+  },
+  {
+    "name": "iridescent-v6-peaks-knot",
+    "engine": "p5",
+    "category": "iridescent",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "asyncDraw": false,
+    "description": "A trefoil knot bristling with fine needles — a thin tube winding through itself, covered in rows of spikes of uneven length like a sea creature or a thorny vine — turning slowly on a pale blue-grey ground while the needles travel along the knot and roll around it. Surfaces are coloured by the iridescent ramp, which shifts with the viewing angle.",
+    "tags": [
+      "3d",
+      "mesh",
+      "iridescent",
+      "geometry",
+      "orbit",
+      "colourful"
+    ],
+    "mtime": "2026-11-10T08:07:08.070Z",
+    "ctime": "2026-11-10T08:04:35.529Z"
+  },
+  {
+    "name": "iridescent-v7-peaks-shell",
+    "engine": "p5",
+    "category": "iridescent",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "asyncDraw": false,
+    "description": "A spiny seashell — a spiral tube that widens turn after turn from a fine apex to an open mouth, its outer side armed with needles gathered into three combs like a murex, hair-thin at the top and long at the bottom — turning slowly on a pale blue-grey ground while the spines sway in a wave. Surfaces are coloured by the iridescent ramp, which shifts with the viewing angle.",
+    "tags": [
+      "3d",
+      "mesh",
+      "iridescent",
+      "geometry",
+      "orbit",
+      "colourful"
+    ],
+    "mtime": "2026-11-10T14:11:06.266Z",
+    "ctime": "2026-11-10T14:11:06.242Z"
   }
 ]
