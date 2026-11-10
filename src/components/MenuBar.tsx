@@ -66,6 +66,9 @@ import {
 import {
   onOpenPublishing, usePostiz
 } from "@/lib/postiz/usePostiz";
+import {
+  useMenuCovered
+} from "@/lib/menuCover";
 import sleep from "@/utils/sleep";
 
 // The agent setup guide only compiles when it is first opened.
@@ -210,6 +213,7 @@ function MenuBar( {
     setPublishingOpen
   ] = useState( false );
   const postiz = usePostiz();
+  const menuCovered = useMenuCovered();
 
   // Export's "accounts" link (and anything else) opens Publishing through here.
   useEffect(
@@ -919,7 +923,17 @@ function MenuBar( {
 
   return (
     <>
-      <div className="fixed top-2 left-2 md:top-4 md:left-4 z-70 md:z-50">
+      {/* Hidden — never unmounted — while a full-screen surface covers it (the
+          phone's Export dialog): it sat over that dialog's title, and this
+          component also owns the dialogs the Export dialog opens. */}
+      <div
+        className={ clsx(
+          "fixed top-2 left-2 md:top-4 md:left-4 z-70 md:z-50",
+          menuCovered && "invisible"
+        ) }
+        aria-hidden={ menuCovered || undefined }
+        inert={ menuCovered }
+      >
         {menuNode}
       </div>
       {agentGuide}

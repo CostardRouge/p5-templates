@@ -18,6 +18,9 @@ import type {
 import {
   useDevActions
 } from "@/hooks/useDevActions";
+import {
+  coverMenu
+} from "@/lib/menuCover";
 
 // Same chunking rationale as SketchOptions: the recording subtree (mediabunny
 // + gif.js encoders, the action buttons, VideoPreviewModal) only compiles when
@@ -113,6 +116,17 @@ export default function CaptureDialog( {
   const hasFooterActions =
     capture.backendRecording ||
       ( devActionsVisible && capture.browserRecordingSupported );
+
+  // Full screen, this dialog owns the whole surface: the global menu button
+  // (fixed top-left, in the root layout) would sit over its title, so it steps
+  // away while the dialog is open.
+  useEffect(
+    () => open && fullScreen ? coverMenu() : undefined,
+    [
+      open,
+      fullScreen
+    ]
+  );
 
   useEffect(
     () => {

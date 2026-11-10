@@ -38,6 +38,10 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
   sits as tightly as designed.
 - On touch screens, a tapped button or link no longer stays highlighted as if the pointer were still over it.
 
+### Fixed
+
+- On a phone, the menu button no longer covers the Export screen's title.
+
 ## [1.2.0] - 2026-10-22 — Ophiuride
 
 ### Added
