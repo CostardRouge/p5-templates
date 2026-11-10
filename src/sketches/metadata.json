@@ -4516,5 +4516,27 @@
     ],
     "mtime": "2026-11-10T08:07:08.070Z",
     "ctime": "2026-11-10T08:04:35.529Z"
+  },
+  {
+    "name": "iridescent-v7-peaks-shell",
+    "engine": "p5",
+    "category": "iridescent",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "asyncDraw": false,
+    "description": "A spiny seashell — a spiral tube that widens turn after turn from a fine apex to an open mouth, its outer side armed with needles gathered into three combs like a murex, hair-thin at the top and long at the bottom — turning slowly on a pale blue-grey ground while the spines sway in a wave. Surfaces are coloured by the iridescent ramp, which shifts with the viewing angle.",
+    "tags": [
+      "3d",
+      "mesh",
+      "iridescent",
+      "geometry",
+      "orbit",
+      "colourful"
+    ],
+    "mtime": "2026-11-10T14:11:06.266Z",
+    "ctime": "2026-11-10T14:11:06.242Z"
   }
 ]
