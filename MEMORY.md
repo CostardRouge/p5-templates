@@ -127,6 +127,7 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 
 ## Open items (dated; remove when done)
 
+- 2026-11-10 — **Publishing through his Postiz is built (lab 1, P1–P5), driven headless against a stub Postiz only, never his instance.** Before he uses it: his Postiz must list `https://p5.steeve.website` (and `http://localhost:3000`) in its CORS origins, as Atelier's had to. Left his: the gallery's Planned week strip (P6, lab 1 Q6 «later»), and seeing the Post band on his phone → `publishing.md`.
 - 2026-10-24 — **Node 26 waits on Playwright**: the repo stays on Node 24 by a written exception (CLAUDE.md, Other rules) because the Playwright base image installs Node 24. Close it when a Playwright release ships 26: `playwright`, the three `FROM` tags, `.nvmrc` and `@types/node` together (`tooling.md`).
 
 - 2026-10-19 — Open in the sequence item and the scene cut (`transitions.md`): nothing measured on a phone or with a WEBGL embedded scene; the cut sound not heard live; the slide 0 ↔ 1 boundary carries neither `cut` nor `transition`; no overlay scene kind (a lower-third over a scene is a text item on the slide); whether the maintainer wants per-scene content (text, HUD) inside a scene, and a sequence driven by the studio MCP end to end, are his calls.
