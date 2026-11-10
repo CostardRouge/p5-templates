@@ -65,6 +65,19 @@ type VariantTableRowProps = {
   onPatch: ( patch: Partial<ExportVariant> ) => void;
   onDuplicate: () => void;
   onRemove: () => void;
+  /**
+   * Export › Publish: this row as a candidate post — the pastille that picks
+   * THE variant that goes, and what Postiz would receive in place of the
+   * delivery choice (or a dash with the reason). Absent in Save mode, which
+   * then draws exactly as before.
+   */
+  publish?: {
+    chosen: boolean;
+    /** `Reel · mp4`, `Carousel · 4 jpg`; null when it cannot be posted. */
+    postsAs: string | null;
+    reason: string | null;
+    onChoose: () => void;
+  };
 };
 
 /**
@@ -100,7 +113,8 @@ export default function VariantTableRow( {
   onPreview,
   onPatch,
   onDuplicate,
-  onRemove
+  onRemove,
+  publish
 }: VariantTableRowProps ) {
   const fields = {
     variant,
@@ -122,11 +136,37 @@ export default function VariantTableRow( {
         // Taller on a phone, which gets this same table: 52px puts every cell's
         // control within a thumb's reach. Fixed either way — a row whose height
         // depends on what it is saying is a row that jumps mid-run.
-        "relative isolate h-[52px] items-center border-b border-theme bg-background last:border-b-0 md:h-[38px]"
+        "relative isolate h-[52px] items-center border-b border-theme bg-background last:border-b-0 md:h-[38px]",
+        // Publish renders only the chosen variant: the others step back,
+        // still editable.
+        publish && !publish.chosen && "[&>[role=cell]:not(:first-child)]:opacity-45"
       ) }
     >
-      <div role="cell" className={ CELL }>
-        <VariantName { ...fields } />
+      <div
+        role="cell"
+        className={ clsx(
+          CELL,
+          publish && "flex items-center gap-1.5"
+        ) }
+      >
+        {publish && (
+          <button
+            type="button"
+            role="radio"
+            aria-checked={ publish.chosen }
+            aria-label={ `Post ${ variant.name }` }
+            disabled={ running || !publish.postsAs }
+            title={ publish.reason ?? `Post ${ variant.name }` }
+            onClick={ publish.onChoose }
+            className={ clsx(
+              "grid h-4 w-4 shrink-0 place-items-center rounded-full border-[1.5px] transition-colors disabled:opacity-30 pointer-coarse:h-5 pointer-coarse:w-5",
+              publish.chosen ? "border-foreground" : "border-label hover:border-foreground"
+            ) }
+          >
+            {publish.chosen && <span className="h-2 w-2 rounded-full bg-foreground" />}
+          </button>
+        )}
+        <VariantName { ...fields } className={ publish && !publish.chosen ? "text-[11.5px] opacity-60" : undefined } />
       </div>
 
       <div role="cell" className={ CELL }>
@@ -205,6 +245,16 @@ export default function VariantTableRow( {
               )}
             </span>
           )
+        ) : publish ? (
+          <span
+            title={ publish.reason ?? undefined }
+            className={ clsx(
+              "px-1 font-mono tabular-nums",
+              publish.postsAs ? "text-foreground" : "text-label"
+            ) }
+          >
+            {publish.postsAs ?? "—"}
+          </span>
         ) : (
           <VariantDelivery { ...fields } slideSpan={ slideSpan } align="right" />
         )}

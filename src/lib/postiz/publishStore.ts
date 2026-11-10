@@ -41,7 +41,9 @@ export interface PostDraft {
 export type When =
   | { kind: "next" }
   | { kind: "at";
-    at: string }
+    at: string;
+    /** A time of the person's own (Another time…), not a slot of the rhythm. */
+    custom?: boolean }
   | { kind: "now" }
   | { kind: "draft" };
 
