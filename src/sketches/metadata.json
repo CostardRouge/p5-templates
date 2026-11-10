@@ -4472,5 +4472,28 @@
     ],
     "mtime": "2026-11-10T00:53:36.045Z",
     "ctime": "2026-11-10T00:51:07.869Z"
+  },
+  {
+    "name": "iridescent-v6-flame",
+    "engine": "p5",
+    "category": "iridescent",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "asyncDraw": false,
+    "description": "A single tall flame on a near-black ground: a white-hot core inside orange tongues that curl upwards and tear off at the tip, a blue foot, a soft halo and sparks drifting up, all turning slowly like a small fire whirl in a seamless loop. Fire colours by default; any palette of the category turns the same flame into its colours.",
+    "tags": [
+      "3d",
+      "raymarched",
+      "shader",
+      "noise",
+      "iridescent",
+      "drift",
+      "pulse"
+    ],
+    "mtime": "2026-11-10T01:17:44.246Z",
+    "ctime": "2026-11-10T01:17:44.174Z"
   }
 ]
