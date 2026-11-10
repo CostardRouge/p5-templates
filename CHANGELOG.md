@@ -14,7 +14,7 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
 - A new iridescent sketch, Spiral bloom: a flower whose flat, curled petals are packed on a golden-angle spiral, closing
   and reopening in a wave from the heart to the rim while its spiral arms wind and unwind. The divergence angle, the
   petals' shape and lean, the bloom and the palette are all in the form.
-- A new sketch, Flame: a realistic fire — a white-hot core in orange tongues that tear off at the tip, a blue foot,
+- A new category, Materials, opening with Flame: a realistic fire — a white-hot core in orange tongues that tear off at the tip, a blue foot,
   a halo and rising sparks — turning like a small fire whirl in a seamless loop. Its shape, turbulence, heat and
   sparks are in the form, a mirror option makes it symmetric, and any iridescent palette recolours it.
 - A new iridescent sketch, Peaks knot: a trefoil knot bristling with fine needles that travel along it and roll

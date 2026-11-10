@@ -10,22 +10,22 @@ import {
   resolveLook,
   materialRender,
   drawBackground
-} from "../_iridescence.js";
+} from "@/p5/sketches/iridescent/_iridescence.js";
 
 import {
   formValues as defaults
 } from "./options";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// iridescent-v6-flame
+// materials-v1-flame
 //
 // A flame as a VOLUME: every pixel marches a ray through a teardrop of hot gas
 // whose edge is eaten by 3D noise scrolling upwards, and adds up the light it
-// meets. Nothing here has a surface, so the category's material has no normal
-// to read — what the flame takes from it is the ramp alone, read by
-// TEMPERATURE (0 = the cold edge, 1 = the core): the custom look is a
-// black-body ramp on a near-black ground, and any palette of the category
-// turns the same fire into its colours. The light is summed and exposed like
+// meets. Its colour is a ramp read by TEMPERATURE (0 = the cold edge, 1 = the
+// core) — the iridescent category's ramp, borrowed with its palette picker
+// and nothing else of that material, a flame having no surface for the rest
+// to read: the custom look is a black-body ramp on a near-black ground, and
+// any palette turns the same fire into its colours. The light is summed and exposed like
 // film (1 - exp), which is what burns the thick core to white.
 //
 // The loop is exact by construction. The noise lattice is PERIODIC along the
@@ -103,7 +103,7 @@ const FRAGMENT = `
   uniform float uSparkBright;
   uniform float uSparkSpeed;
 
-  // ── The category's ramp ──
+  // ── The colour ramp (iridescent's) ──
   uniform sampler2D uRamp;
   uniform float uRampWidth;
   uniform float uBands;

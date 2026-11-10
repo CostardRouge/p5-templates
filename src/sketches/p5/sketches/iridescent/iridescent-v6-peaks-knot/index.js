@@ -21,7 +21,7 @@ import {
 } from "./options";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// iridescent-v7-peaks-knot
+// iridescent-v6-peaks-knot
 //
 // The peaks family on a shape it never had: a torus knot. The curve winds p
 // times around the axis and q times through the hole (2, 3 is the trefoil; q

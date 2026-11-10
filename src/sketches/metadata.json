@@ -4474,22 +4474,21 @@
     "ctime": "2026-11-10T00:51:07.869Z"
   },
   {
-    "name": "iridescent-v6-flame",
+    "name": "materials-v1-flame",
     "engine": "p5",
-    "category": "iridescent",
+    "category": "materials",
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
     "hiddenFromHome": false,
     "hiddenFromGallery": false,
     "asyncDraw": false,
-    "description": "A single tall flame on a near-black ground: a white-hot core inside orange tongues that curl upwards and tear off at the tip, a blue foot, a soft halo and sparks drifting up, all turning slowly like a small fire whirl in a seamless loop. Fire colours by default; any palette of the category turns the same flame into its colours.",
+    "description": "A single tall flame on a near-black ground: a white-hot core inside orange tongues that curl upwards and tear off at the tip, a blue foot, a soft halo and sparks drifting up, all turning slowly like a small fire whirl in a seamless loop. Fire colours by default; a palette picker turns the same flame into other colours.",
     "tags": [
       "3d",
       "raymarched",
       "shader",
       "noise",
-      "iridescent",
       "drift",
       "pulse"
     ],
@@ -4497,7 +4496,7 @@
     "ctime": "2026-11-10T01:17:44.174Z"
   },
   {
-    "name": "iridescent-v7-peaks-knot",
+    "name": "iridescent-v6-peaks-knot",
     "engine": "p5",
     "category": "iridescent",
     "hasSketchForm": true,
@@ -4515,7 +4514,7 @@
       "orbit",
       "colourful"
     ],
-    "mtime": "2026-11-10T08:04:35.597Z",
+    "mtime": "2026-11-10T08:07:08.070Z",
     "ctime": "2026-11-10T08:04:35.529Z"
   }
 ]

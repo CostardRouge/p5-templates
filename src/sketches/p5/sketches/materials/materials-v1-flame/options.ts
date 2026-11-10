@@ -3,7 +3,7 @@ import {
   materialFormConfiguration,
   backgroundFormValues,
   backgroundFormConfiguration
-} from "../_form.js";
+} from "@/p5/sketches/iridescent/_form.js";
 
 const material = materialFormConfiguration();
 const {
@@ -12,10 +12,10 @@ const {
   ...rampFields
 } = material.fields.ramp.fields;
 
-// A flame has no surface, so of the category's material it keeps the ramp
-// alone, read by temperature. The custom look is a black-body ramp (black →
-// ember red → orange → yellow → white) on a near-black ground; a palette
-// replaces both, as everywhere in the category.
+// The colour is the iridescent category's ramp block and palette picker,
+// borrowed from its import-free form module and read by temperature. The
+// custom look is a black-body ramp (black → ember red → orange → yellow) on
+// a near-black ground; a palette replaces both, as it does there.
 export const formValues = {
   flame: {
     size: 0.78,
