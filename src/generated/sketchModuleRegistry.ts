@@ -119,6 +119,7 @@ export const sketchModuleLoaders: Record<string, SketchModuleLoader> = {
   "p5:iridescent/iridescent-v2-peaks-cylinder": () => import( "@/p5/sketches/iridescent/iridescent-v2-peaks-cylinder/index.js" ),
   "p5:iridescent/iridescent-v3-peaks-tunnel": () => import( "@/p5/sketches/iridescent/iridescent-v3-peaks-tunnel/index.js" ),
   "p5:iridescent/iridescent-v4-orbit-pearls": () => import( "@/p5/sketches/iridescent/iridescent-v4-orbit-pearls/index.js" ),
+  "p5:iridescent/iridescent-v5-spiral-bloom": () => import( "@/p5/sketches/iridescent/iridescent-v5-spiral-bloom/index.js" ),
   "p5:kinetic/kinetic-grid-spheres": () => import( "@/p5/sketches/kinetic/kinetic-grid-spheres/index.js" ),
   "p5:kinetic/kinetic-letters": () => import( "@/p5/sketches/kinetic/kinetic-letters/index.js" ),
   "p5:kinetic/kinetic-plane": () => import( "@/p5/sketches/kinetic/kinetic-plane/index.js" ),
