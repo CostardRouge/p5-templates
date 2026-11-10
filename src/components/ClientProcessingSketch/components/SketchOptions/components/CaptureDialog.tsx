@@ -1,7 +1,7 @@
 "use client";
 
 import React, {
-  useCallback, useEffect, useState
+  useCallback, useEffect, useRef, useState
 } from "react";
 import dynamic from "next/dynamic";
 import clsx from "clsx";
@@ -18,6 +18,9 @@ import type {
 import {
   useDevActions
 } from "@/hooks/useDevActions";
+import {
+  coverMenu
+} from "@/lib/menuCover";
 
 // Same chunking rationale as SketchOptions: the recording subtree (mediabunny
 // + gif.js encoders, the action buttons, VideoPreviewModal) only compiles when
@@ -110,9 +113,22 @@ export default function CaptureDialog( {
     ]
   );
 
+  const dialogRef = useRef<HTMLDivElement | null>( null );
+
   const hasFooterActions =
     capture.backendRecording ||
       ( devActionsVisible && capture.browserRecordingSupported );
+
+  // Full screen, this dialog owns the whole surface: the global menu button
+  // (fixed top-left, in the root layout) would sit over its title, so it steps
+  // away while the dialog is open.
+  useEffect(
+    () => open && fullScreen ? coverMenu() : undefined,
+    [
+      open,
+      fullScreen
+    ]
+  );
 
   useEffect(
     () => {
@@ -121,9 +137,20 @@ export default function CaptureDialog( {
       }
 
       const handleKeyDown = ( event: KeyboardEvent ) => {
-        if ( event.key === "Escape" ) {
-          requestClose();
+        if ( event.key !== "Escape" ) {
+          return;
         }
+
+        // An Escape meant for a dialog opened OVER this one (Publishing,
+        // from the Post band's "accounts") closes that one only — it used to
+        // close Export too, and with it a finished, unsaved export.
+        const owner = event.target instanceof Element ? event.target.closest( "[role=\"dialog\"]" ) : null;
+
+        if ( owner && owner !== dialogRef.current ) {
+          return;
+        }
+
+        requestClose();
       };
 
       document.addEventListener(
@@ -171,6 +198,7 @@ export default function CaptureDialog( {
       )}
 
       <div
+        ref={ dialogRef }
         role="dialog"
         aria-modal={ open }
         aria-label="Export"

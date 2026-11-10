@@ -31,6 +31,21 @@ import {
   exportCommands
 } from "@/lib/agent/commands/exportCommands";
 import {
+  publishCommands
+} from "@/lib/agent/commands/publishCommands";
+import {
+  PostizClient
+} from "@/lib/postiz/client";
+import {
+  publishFacts
+} from "@/lib/postiz/facts";
+import {
+  postableFile
+} from "@/lib/postiz/send";
+import {
+  getPostiz
+} from "@/lib/postiz/store";
+import {
   sketchCommands
 } from "@/lib/agent/commands/sketchCommands";
 import {
@@ -64,7 +79,7 @@ import {
   addVariant, ensureVariants, getVariantSnapshot, patchVariant, removeVariant
 } from "@/lib/export/variantStore";
 import {
-  makeVariant, nativeFramerateFor, VARIANT_PRESETS
+  makeVariant, nativeFramerateFor, resolveSlideIndices, VARIANT_PRESETS
 } from "@/lib/export/variants";
 import {
   validateOptionsDocument
@@ -562,6 +577,34 @@ export default function StudioCommands( {
             } );
           }
         },
+        publish: {
+          key: () => variantKey,
+          connection: getPostiz,
+          client: () => {
+            const conn = getPostiz();
+
+            return conn ? new PostizClient(
+              conn.apiBase,
+              conn.apiKey
+            ) : null;
+          },
+          facts: () => publishFacts(
+            name,
+            now().state.engineId,
+            ( now().form.getValues() as { animation?: { duration?: number;
+              framerate?: number } } ).animation
+          ),
+          slideSpan: ( variant ) => {
+            const options = now().form.getValues() as SketchOption;
+
+            return resolveSlideIndices(
+              variant,
+              Array.isArray( options.slides ) ? options.slides.length : 0,
+              now().activeSlideIndex
+            ).length;
+          },
+          postable: postableFile
+        },
         addAsset: async(
           file, kind, slide
         ) => {
@@ -757,6 +800,7 @@ export default function StudioCommands( {
           ...contentCommands( handles ),
           ...slideCommands( handles ),
           ...exportCommands( handles ),
+          ...publishCommands( handles ),
           ...assetCommands( handles ),
           ...navigationCommands( handles ),
           ...galleryCommands( handles ),

@@ -22,6 +22,7 @@ import {
   Moon,
   Paintbrush,
   PanelsLeftRight,
+  Send,
   Wrench,
   Share2,
   Sun,
@@ -62,10 +63,18 @@ import {
 import {
   connectBridge, disconnectBridge, getBridgeStatus, subscribeBridge, type BridgeStatus
 } from "@/lib/agent/studioBridge";
+import {
+  onOpenPublishing, usePostiz
+} from "@/lib/postiz/usePostiz";
+import {
+  useMenuCovered
+} from "@/lib/menuCover";
 import sleep from "@/utils/sleep";
 
 // The agent setup guide only compiles when it is first opened.
 const AgentGuideDialog = dynamic( () => import( "@/components/AgentGuideDialog" ) );
+// Same for Publishing (the person's own Postiz), opened here or from Export.
+const PublishingDialog = dynamic( () => import( "@/components/PublishingDialog" ) );
 
 type MenuBarProps = {
   hasMissingThumbnails?: boolean;
@@ -199,6 +208,18 @@ function MenuBar( {
     agentGuideOpen,
     setAgentGuideOpen
   ] = useState( false );
+  const [
+    publishingOpen,
+    setPublishingOpen
+  ] = useState( false );
+  const postiz = usePostiz();
+  const menuCovered = useMenuCovered();
+
+  // Export's "accounts" link (and anything else) opens Publishing through here.
+  useEffect(
+    () => onOpenPublishing( () => setPublishingOpen( true ) ),
+    []
+  );
 
   const [
     generatingThumbnails,
@@ -701,6 +722,8 @@ function MenuBar( {
           </>
         )}
 
+        <Divider />
+        <SectionLabel>Connections</SectionLabel>
         {/* Connect this tab to a Sketchbook studio relay running on this
             machine, so an agent (Claude, any MCP client) can drive the studio
             — scripts/mcp/studioRelay.ts, served at /mcp/sketchbook-studio-mcp.mjs. */}
@@ -752,11 +775,39 @@ function MenuBar( {
             </button>
           )}
         </MenuItem>
+        {/* The person's own Postiz: publish or schedule an export from the
+            Export dialog — components/PublishingDialog.tsx. */}
+        <MenuItem>
+          {( {
+            focus
+          } ) => (
+            <button
+              type="button"
+              onClick={ () => setPublishingOpen( true ) }
+              className={ clsx(
+                itemClass,
+                focus && "bg-hover"
+              ) }
+            >
+              <Send className="h-4 w-4 text-foreground/70" />
+              <span className="flex-1 text-left">Publishing</span>
+              <span className="flex items-center gap-1.5 font-mono text-[10px] text-label">
+                {mounted && postiz ? (
+                  <>
+                    <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    {postiz.channels.length} account{postiz.channels.length === 1 ? "" : "s"}
+                  </>
+                ) : "set up"}
+              </span>
+            </button>
+          )}
+        </MenuItem>
 
         {/* The studio's dev affordances — the pending badge, the Debug section,
             the inspector's save-defaults / thumbnail / preview trio and the
             export dialog's preview recorder — are hidden by default so the app
             reads (and screenshots) as the shipped product. */}
+        {devActionsAvailable && <Divider />}
         {devActionsAvailable && (
           <MenuItem>
             {( {
@@ -841,11 +892,21 @@ function MenuBar( {
     </Menu>
   );
 
-  const agentGuide = agentGuideOpen && (
-    <AgentGuideDialog
-      open
-      onClose={ () => setAgentGuideOpen( false ) }
-    />
+  const agentGuide = (
+    <>
+      {agentGuideOpen && (
+        <AgentGuideDialog
+          open
+          onClose={ () => setAgentGuideOpen( false ) }
+        />
+      )}
+      {publishingOpen && (
+        <PublishingDialog
+          open
+          onClose={ () => setPublishingOpen( false ) }
+        />
+      )}
+    </>
   );
 
   if ( renderInline && slot?.slotEl ) {
@@ -862,7 +923,17 @@ function MenuBar( {
 
   return (
     <>
-      <div className="fixed top-2 left-2 md:top-4 md:left-4 z-70 md:z-50">
+      {/* Hidden — never unmounted — while a full-screen surface covers it (the
+          phone's Export dialog): it sat over that dialog's title, and this
+          component also owns the dialogs the Export dialog opens. */}
+      <div
+        className={ clsx(
+          "fixed top-2 left-2 md:top-4 md:left-4 z-70 md:z-50",
+          menuCovered && "invisible"
+        ) }
+        aria-hidden={ menuCovered || undefined }
+        inert={ menuCovered }
+      >
         {menuNode}
       </div>
       {agentGuide}

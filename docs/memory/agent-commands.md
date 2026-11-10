@@ -96,3 +96,7 @@ Claude Desktop and Claude Code each start their own `sketchbook-studio-mcp.mjs`,
 ## The setup guide is a dialog from the menu, not a page (2026-10-11)
 
 "Agent setup guide" in the menu opens `AgentGuideDialog` (lazy, headlessui `Dialog`): three steps over the live bridge state — add the relay to your AI app (Claude Desktop → the `.mcpb`; Claude Code → one curl + `claude mcp add` line built from `window.location.origin`; Other → an `mcpServers` block with a typed path), connect, ask (copyable prompts) — then a folded "Good to know". Same shape as Atelier's `#/agents` page. A dialog rather than a route because the menu is on every page while the commands exist only on a sketch page: the guide says so when connected elsewhere. On a self-hosted origin the commands carry `SKETCHBOOK_ORIGINS` (`-e` / `env`), and the Desktop tab says the extension cannot. **Trap**: headlessui's dialog root has no box (its panel is `fixed`), so Playwright calls `getByRole("dialog")` hidden — wait on the title text instead.
+
+## Publishing commands (2026-11-10)
+
+`publish.*` schedule an export on the person's own Postiz through the same post the Export dialog's Publish mode edits; an agent sends only a caption the person approved. Their rules live in `publishing.md`.

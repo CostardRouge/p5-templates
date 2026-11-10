@@ -21,12 +21,28 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
   around it as it turns. The knot's two winding numbers are in the form, from a plain ring to tighter knots.
 - A new iridescent sketch, Peaks shell: a spiny seashell whose spiral widens turn after turn, its needles gathered
   into combs and swaying in a wave. Turns, growth, ridges and the spines' lean are in the form.
+- Connect your own Postiz from Menu › Publishing: paste its address and an API key, tick the Instagram, TikTok
+  or YouTube accounts to propose, a collaborator and your weekly rhythm. The key stays in your browser; Sketchbook's
+  server never sees it.
+- Publish or schedule from the Export dialog: once Postiz is connected, switch the footer to Publish, pick the
+  variant that goes, the accounts, Instagram's kind (Reel, post, carousel or story), when — the next free slot of
+  your rhythm, another slot, a time of yours, now or a draft — and a caption filled with the sketch's title,
+  description, tags and link. One press renders it and sends it; Publish now shows the file first. Pictures go out as
+  JPEG, and a post scheduled by mistake can be taken back.
+- With two Instagram accounts, each post goes to the one you tick, to both (a post on each), or to one with the
+  other invited as collaborator — one post signed by both. Type your accounts' usernames once in Publishing.
+- Claude can publish for you too: with your Postiz connected, it can set up the post, write a caption for you to
+  read, and schedule it once you say it suits you — never a caption you did not approve.
 
 ### Changed
 
 - On wider screens, paragraphs now keep the same relaxed line spacing as on a phone, and the home page's headline
   sits as tightly as designed.
 - On touch screens, a tapped button or link no longer stays highlighted as if the pointer were still over it.
+
+### Fixed
+
+- On a phone, the menu button no longer covers the Export screen's title.
 
 ## [1.2.0] - 2026-10-22 — Ophiuride
 

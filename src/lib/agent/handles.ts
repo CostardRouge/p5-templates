@@ -27,6 +27,15 @@ import type {
 import type {
   SheetFrame
 } from "./imageResult";
+import type {
+  PostizClient
+} from "../postiz/client";
+import type {
+  CaptionFacts
+} from "../postiz/caption";
+import type {
+  PostizConnection
+} from "../postiz/store";
 
 export interface StudioHandles {
   /** `<engine>/<category>/<name>`. */
@@ -119,6 +128,20 @@ export interface StudioHandles {
       onProgress: ( items: ExportItemState[] ) => void,
       signal: AbortSignal
     ) => Promise<ExportItemState[]>;
+  };
+  /**
+   * Publishing (`docs/memory/publishing.md`): the Postiz this browser keeps,
+   * a client for it, and what the Post band reads of this sketch — the key of
+   * its post in `publishStore`, the caption's facts, the slides a variant
+   * covers, and a file made postable (a PNG as the JPEG Instagram takes).
+   */
+  publish: {
+    key: () => string;
+    connection: () => PostizConnection | null;
+    client: () => PostizClient | null;
+    facts: () => CaptionFacts;
+    slideSpan: ( variant: ExportVariant ) => number;
+    postable: ( file: File ) => Promise<File>;
   };
   /**
    * Register `file` as the asset picker does (`useAssetDrop().addAssets`: a

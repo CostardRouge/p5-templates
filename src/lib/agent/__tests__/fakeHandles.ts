@@ -289,6 +289,23 @@ export function fakeHandles(
 
       return path;
     },
+    // No Postiz unless a spec hands one in (publishCommands.test.ts).
+    publish: {
+      key: () => "p5/voronoi-v1-cells",
+      connection: () => null,
+      client: () => null,
+      facts: () => ( {
+        title: "Voronoi · Cells",
+        sketch: "voronoi-v1-cells",
+        description: "Drifting cells.",
+        tags: "#geometry",
+        engine: "p5.js",
+        seconds: "12",
+        link: "p5.steeve.website/sketches/p5/voronoi/voronoi-v1-cells"
+      } ),
+      slideSpan: () => 1,
+      postable: async( file ) => file
+    },
     exports: {
       supported: () => true,
       presets: [

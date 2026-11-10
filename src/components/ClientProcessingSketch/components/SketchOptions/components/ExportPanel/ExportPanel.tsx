@@ -1,10 +1,11 @@
 "use client";
 
+import clsx from "clsx";
 import React, {
   useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore
 } from "react";
 import {
-  Plus
+  ChevronUp, Plus
 } from "lucide-react";
 import {
   Menu, MenuButton, MenuItem, MenuItems
@@ -46,7 +47,42 @@ import {
 import {
   captureGalleryThumbnail
 } from "@/lib/gallery/thumbnail";
+import {
+  PostizClient, postizHome, type PostizPost
+} from "@/lib/postiz/client";
+import {
+  publishFacts
+} from "@/lib/postiz/facts";
+import {
+  planPost, plannedInstants, type PostPlan
+} from "@/lib/postiz/plan";
+import {
+  KIND_LABEL, postShape
+} from "@/lib/postiz/postShape";
+import {
+  DEFAULT_DRAFT,
+  addPublication,
+  dropPublication,
+  getDraft,
+  getWhen,
+  patchDraft,
+  setWhen,
+  subscribePublish,
+  type DeliverMode,
+  type Publication,
+  type When
+} from "@/lib/postiz/publishStore";
+import {
+  mimeOf, postableFile, sendPost
+} from "@/lib/postiz/send";
+import {
+  usePostiz
+} from "@/lib/postiz/usePostiz";
 import useSketch from "../../../SketchProvider/hooks/useSketch";
+import PostBand from "./components/PostBand";
+import {
+  PublishReview, PublishSent
+} from "./components/PublishScreens";
 import ExportPreview from "./components/ExportPreview";
 import VariantTableRow, {
   VARIANT_GRID
@@ -78,6 +114,44 @@ const FALLBACK_FORMATS: RecordingFormat[] = [
   "webm",
   "gif"
 ];
+
+/** How far ahead Postiz's planned posts are read, to mark the rhythm's slots taken. */
+const AHEAD_DAYS = 42;
+const NEXT: When = {
+  kind: "next"
+};
+
+/** An artifact as a typed File: the recorder may hand back an untyped blob, and Postiz needs the type. */
+function artifactFile( artifact: ExportArtifact ): File {
+  return new File(
+    [
+      artifact.blob
+    ],
+    artifact.fileName,
+    {
+      type: mimeOf(
+        artifact.fileName,
+        artifact.blob.type
+      )
+    }
+  );
+}
+
+/** What a publish run hands from the render to the send: the plan as it was pressed. */
+type PublishSnapshot = {
+  variant: ExportVariant;
+  plan: PostPlan;
+  target: Date | "now" | "draft";
+};
+
+/** Publish's screens, in the table's place like the preview. */
+type PublishView =
+  | { kind: "review";
+    files: File[];
+    snapshot: PublishSnapshot }
+  | { kind: "sent";
+    files: File[];
+    publication: Publication };
 
 const HEAD_CELL =
   "px-2.5 text-left text-[9.5px] font-semibold uppercase tracking-[0.09em] text-label";
@@ -176,6 +250,99 @@ export default function ExportPanel( {
   ] = useState<string | null>( null );
   const abortRef = useRef<AbortController | null>( null );
   const scrollRef = useRef<HTMLDivElement | null>( null );
+
+  // ---- Export › Publish (lab 1, docs/memory/publishing.md) ----
+  const postiz = usePostiz();
+  const canPublish = Boolean( postiz && postiz.channels.length > 0 );
+  const draft = useSyncExternalStore(
+    subscribePublish,
+    () => getDraft( sketchKey ),
+    () => DEFAULT_DRAFT
+  );
+  const when = useSyncExternalStore(
+    subscribePublish,
+    () => getWhen( sketchKey ),
+    () => NEXT
+  );
+  const publishMode = canPublish && draft.mode === "publish";
+  const [
+    planned,
+    setPlanned
+  ] = useState<PostizPost[] | null>( null );
+  const [
+    publishView,
+    setPublishView
+  ] = useState<PublishView | null>( null );
+  const [
+    sending,
+    setSending
+  ] = useState<string | null>( null );
+  const [
+    verbMenu,
+    setVerbMenu
+  ] = useState( false );
+  /** Set while a run renders for Publish: its files are not delivered, they are sent. */
+  const publishingRef = useRef( false );
+  const client = useMemo(
+    () => postiz ? new PostizClient(
+      postiz.apiBase,
+      postiz.apiKey
+    ) : null,
+    [
+      postiz
+    ]
+  );
+
+  // Postiz's coming posts, read once when Export opens (and after a send):
+  // they mark the rhythm's slots taken — Atelier's posts on the same Postiz too.
+  // Unreadable (offline, CORS): the slots are simply not marked.
+  const readPlanned = useCallback(
+    async(): Promise<PostizPost[]> => {
+      if ( !client ) {
+        return [];
+      }
+
+      const now = Date.now();
+
+      return client.posts(
+        new Date( now - 86400000 ),
+        new Date( now + AHEAD_DAYS * 86400000 )
+      ).catch( () => [] );
+    },
+    [
+      client
+    ]
+  );
+  const refreshPlanned = useCallback(
+    async() => setPlanned( await readPlanned() ),
+    [
+      readPlanned
+    ]
+  );
+
+  useEffect(
+    () => {
+      if ( !canPublish ) {
+        return;
+      }
+
+      let alive = true;
+
+      void readPlanned().then( ( posts ) => {
+        if ( alive ) {
+          setPlanned( posts );
+        }
+      } );
+
+      return () => {
+        alive = false;
+      };
+    },
+    [
+      canPublish,
+      readPlanned
+    ]
+  );
 
   /**
    * Publish how much of the table is off to the sides, as a `data-more`
@@ -288,6 +455,62 @@ export default function ExportPanel( {
     0
   );
 
+  const facts = useMemo(
+    () => publishFacts(
+      name,
+      engineId,
+      ( options as { animation?: { duration?: number;
+        framerate?: number } } ).animation
+    ),
+    [
+      name,
+      engineId,
+      options
+    ]
+  );
+  const taken = useMemo(
+    () => plannedInstants( planned ?? [] ),
+    [
+      planned
+    ]
+  );
+  const plan = postiz && canPublish
+    ? planPost( {
+      conn: postiz,
+      draft,
+      when,
+      variants: snapshot.variants.map( ( variant ) => ( {
+        variant,
+        slideSpan: slidesOf( variant ).length
+      } ) ),
+      facts,
+      planned: taken
+    } )
+    : null;
+
+  /** What a row would be posted as: its own shape, and the chosen kind on the chosen row. */
+  const postsAsFor = ( variant: ExportVariant ) => {
+    const shape = postShape(
+      variant,
+      slidesOf( variant ).length
+    );
+
+    if ( shape.files === null ) {
+      return {
+        postsAs: null,
+        reason: shape.reason
+      };
+    }
+
+    const kind = plan && plan.variant?.id === variant.id && plan.kind ? plan.kind : shape.kinds[ 0 ];
+    const files = `${ shape.files } ${ shape.media === "video" ? "mp4" : "jpg" }`;
+
+    return {
+      postsAs: plan?.instagram === false && plan.variant?.id === variant.id ? files : `${ KIND_LABEL[ kind ] } · ${ shape.files > 1 ? files : shape.media === "video" ? "mp4" : "jpg" }`,
+      reason: null
+    };
+  };
+
   /** Produced, but not yet anywhere the user can reach. */
   const unsaved = snapshot.variants
     .map( ( variant ) => ( {
@@ -344,6 +567,12 @@ export default function ExportPanel( {
       }
     } ) );
 
+    // A publish run's files are sent to Postiz, not saved: they stay in hand
+    // for the preview and a later Save, never downloaded on their own.
+    if ( publishingRef.current ) {
+      return;
+    }
+
     if ( deferredRef.current === null ) {
       deferredRef.current = shouldDeferDelivery( produced );
     }
@@ -361,6 +590,32 @@ export default function ExportPanel( {
       ],
       outcome
     ) );
+  };
+
+  /** Keep the exported piece in the gallery; a failure there never reads as an export failure. */
+  const keepExported = async() => {
+    if ( !engine ) {
+      return;
+    }
+
+    try {
+      await keepPiece(
+        getGalleryStore(),
+        {
+          engine: engineId,
+          category,
+          name,
+          options,
+          origin: "export",
+          thumbnail: await captureGalleryThumbnail( engine )
+        }
+      );
+    } catch( galleryError ) {
+      console.warn(
+        "[gallery] the export was not kept:",
+        galleryError
+      );
+    }
   };
 
   const handleExport = async() => {
@@ -400,24 +655,7 @@ export default function ExportPanel( {
       // failure (quota, a locked-down browser) must not read as an export
       // failure: the files are already delivered, so it only logs.
       if ( !controller.signal.aborted && results.every( ( item ) => item.status === "done" ) ) {
-        try {
-          await keepPiece(
-            getGalleryStore(),
-            {
-              engine: engineId,
-              category,
-              name,
-              options,
-              origin: "export",
-              thumbnail: await captureGalleryThumbnail( engine )
-            }
-          );
-        } catch( galleryError ) {
-          console.warn(
-            "[gallery] the export was not kept:",
-            galleryError
-          );
-        }
+        await keepExported();
       }
     } catch( caught ) {
       // A cancel is a normal outcome, not a failure worth shouting about —
@@ -466,6 +704,197 @@ export default function ExportPanel( {
     }
   };
 
+  /**
+   * Send rendered files to Postiz — the one path (`sendPost`) the Publish
+   * button and `publish.schedule` share. A PNG goes as the JPEG Instagram
+   * requires; the files in hand stay as rendered.
+   */
+  const sendToPostiz = async(
+    snap: PublishSnapshot, files: File[]
+  ) => {
+    if ( !client || !snap.plan.choices ) {
+      return;
+    }
+
+    const controller = new AbortController();
+
+    abortRef.current = controller;
+    setRunning( true );
+    setError( null );
+    setSending( "Preparing the files" );
+
+    try {
+      const postable: File[] = [];
+
+      for ( const file of files ) {
+        postable.push( await postableFile( file ) );
+      }
+
+      const publication = await sendPost( {
+        client,
+        channels: snap.plan.targets,
+        choices: snap.plan.choices,
+        caption: snap.plan.text,
+        files: postable,
+        at: snap.target,
+        variantName: snap.variant.name,
+        signal: controller.signal,
+        onFile: (
+          n, of
+        ) => setSending( `Sending ${ n } / ${ of } to Postiz` )
+      } );
+
+      addPublication(
+        sketchKey,
+        publication
+      );
+      setWhen(
+        sketchKey,
+        NEXT
+      );
+      // Sent is delivered: closing the dialog no longer warns about these files.
+      markSaved(
+        [
+          snap.variant.id
+        ],
+        "shared"
+      );
+      setPublishView( {
+        kind: "sent",
+        files: postable,
+        publication
+      } );
+      void refreshPlanned();
+    } catch( caught ) {
+      if ( !( caught instanceof DOMException && caught.name === "AbortError" ) ) {
+        setError( caught instanceof Error ? caught.message : String( caught ) );
+      }
+    } finally {
+      abortRef.current = null;
+      setRunning( false );
+      setSending( null );
+    }
+  };
+
+  /**
+   * Publish's verb: render THE chosen variant, then send it — at once for a
+   * schedule or a draft, after the review screen for Publish now (the one
+   * send that cannot be taken back). Pressing it approves the caption read.
+   */
+  const handlePublish = async( as?: "now" | "draft" ) => {
+    setVerbMenu( false );
+
+    // Now and Draft need no time, so a time-only refusal does not hold them back.
+    const timeOnly = plan?.blocked === "Choose when it goes out." || Boolean( plan?.blocked?.startsWith( "That time is past" ) );
+
+    if ( running || !engine || !plan || !plan.variant || !plan.choices || ( plan.blocked && !( as && timeOnly ) ) ) {
+      return;
+    }
+
+    const target = as ?? plan.at ?? "draft";
+    const snap: PublishSnapshot = {
+      variant: plan.variant,
+      plan,
+      target
+    };
+
+    patchDraft(
+      sketchKey,
+      {
+        approved: true,
+        variantId: plan.variant.id
+      }
+    );
+
+    const controller = new AbortController();
+    let produced: ExportArtifact[] = [];
+
+    abortRef.current = controller;
+    publishingRef.current = true;
+    setRunning( true );
+    setError( null );
+    setNotice( null );
+    setPreviewing( null );
+    setPublishView( null );
+    setOutputs( {} );
+    setSaved( {} );
+    deferredRef.current = null;
+
+    try {
+      const results = await runExportBatch( {
+        engine,
+        options,
+        sketchName: name,
+        activeSlideIndex,
+        variants: [
+          plan.variant
+        ],
+        signal: controller.signal,
+        onProgress: setItems,
+        onArtifacts: (
+          variantId, artifacts, bundleFileName
+        ) => {
+          produced = artifacts;
+          handleArtifacts(
+            variantId,
+            artifacts,
+            bundleFileName
+          );
+        }
+      } );
+      const failed = results.find( ( item ) => item.status !== "done" );
+
+      if ( failed || produced.length === 0 ) {
+        throw new Error( failed?.error ?? "The render produced no file." );
+      }
+
+      await keepExported();
+    } catch( caught ) {
+      if ( !( caught instanceof DOMException && caught.name === "AbortError" ) ) {
+        setError( caught instanceof Error ? caught.message : String( caught ) );
+      }
+
+      return;
+    } finally {
+      publishingRef.current = false;
+      abortRef.current = null;
+      setRunning( false );
+    }
+
+    const files = produced.map( artifactFile );
+
+    if ( target === "now" ) {
+      setPublishView( {
+        kind: "review",
+        files,
+        snapshot: snap
+      } );
+
+      return;
+    }
+
+    await sendToPostiz(
+      snap,
+      files
+    );
+  };
+
+  const takeBack = async( publication: Publication ) => {
+    if ( !client ) {
+      throw new Error( "Postiz is not connected." );
+    }
+
+    for ( const id of publication.postIds ) {
+      await client.deletePost( id );
+      dropPublication(
+        sketchKey,
+        id
+      );
+    }
+
+    void refreshPlanned();
+  };
+
   const stateFor = ( id: string ) => items.find( ( item ) => item.variantId === id );
 
   /**
@@ -490,6 +919,46 @@ export default function ExportPanel( {
   );
 
   const previewed = previewing ? outputs[ previewing ] : undefined;
+
+  // Publish's screens take the table's place too, as the preview does.
+  if ( publishView?.kind === "review" ) {
+    return (
+      <div className="flex min-h-0 flex-1 flex-col">
+        <PublishReview
+          files={ publishView.files }
+          caption={ publishView.snapshot.plan.text }
+          targets={ publishView.snapshot.plan.targets }
+          sending={ running }
+          onConfirm={ () => void sendToPostiz(
+            publishView.snapshot,
+            publishView.files
+          ) }
+          onBack={ () => setPublishView( null ) }
+        />
+        {( error || sending ) && (
+          <p className="m-0 border-t border-theme px-3 py-2 text-[10px] text-label" role="status">
+            {error ? <span className="text-red-500">{error}</span> : sending}
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  if ( publishView?.kind === "sent" && postiz ) {
+    return (
+      <div className="flex min-h-0 flex-1 flex-col">
+        <PublishSent
+          publication={ publishView.publication }
+          channels={ postiz.channels.filter( ( c ) => publishView.publication.channelIds.includes( c.id ) ) }
+          files={ publishView.files }
+          timeZone={ postiz.rhythm.timeZone }
+          postizUrl={ postizHome( postiz.apiBase ) }
+          onTakeBack={ () => takeBack( publishView.publication ) }
+          onBack={ () => setPublishView( null ) }
+        />
+      </div>
+    );
+  }
 
   // The preview takes over the list's region rather than opening a second
   // modal: on a phone the dialog already owns the whole screen, and stacking a
@@ -541,6 +1010,18 @@ export default function ExportPanel( {
       ? () => setPreviewing( variant.id )
       : undefined,
     removable: snapshot.variants.length > 1,
+    publish: publishMode && plan
+      ? {
+        chosen: plan.variant?.id === variant.id,
+        ...postsAsFor( variant ),
+        onChoose: () => patchDraft(
+          sketchKey,
+          {
+            variantId: variant.id
+          }
+        )
+      }
+      : undefined,
     onPatch: ( patch: Partial<ExportVariant> ) => patchVariant(
       sketchKey,
       variant.id,
@@ -558,11 +1039,15 @@ export default function ExportPanel( {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      {/* Opaque, unlike the dialog's glass chrome around it: a table of small
+      {/* In Publish, the table, its add row and the Post band scroll as one;
+          in Save this wrapper is `contents` and the layout is exactly as it
+          was. */}
+      <div className={ publishMode ? "flex min-h-0 flex-1 flex-col overflow-y-auto bg-background" : "contents" }>
+        {/* Opaque, unlike the dialog's glass chrome around it: a table of small
           mono values with a sketch showing through is unreadable, and this is
           the region you actually read. The glass stays on the title bar and
           the footer, where it still frames the dialog against the canvas. */}
-      {/* The one table, every viewport. A phone scrolls it sideways rather
+        {/* The one table, every viewport. A phone scrolls it sideways rather
           than folding it into cards: the six settings are the same on both,
           and the edge fades say when more of them are off to the side — which
           is the part a bare sideways scroll never admitted to.
@@ -571,84 +1056,105 @@ export default function ExportPanel( {
           an absolutely positioned child of a scroll container is placed
           against that container's UNSCROLLED origin, so it would slide away
           with the content it is meant to be marking. */}
-      <div className="relative flex min-h-0 flex-1">
-        <div
-          ref={ scrollRef }
-          data-more="none"
-          className="peer min-h-0 flex-1 overflow-auto bg-background"
-        >
-          <div role="table" aria-label="Export variants" className="min-w-[700px]">
-            <div
-              role="row"
-              className={ `${ VARIANT_GRID } sticky top-0 z-10 h-8 items-center border-b border-theme bg-background` }
-            >
-              <div role="columnheader" className={ HEAD_CELL }>Variant</div>
-              <div role="columnheader" className={ HEAD_CELL }>Size</div>
-              <div role="columnheader" className={ HEAD_CELL }>Output</div>
-              <div role="columnheader" className={ HEAD_CELL }>Rate</div>
-              <div role="columnheader" className={ HEAD_CELL }>Slides</div>
-              <div role="columnheader" className={ `${ HEAD_CELL } text-right` }>
-                Delivers
+        <div className={ publishMode ? "relative flex shrink-0" : "relative flex min-h-0 flex-1" }>
+          <div
+            ref={ scrollRef }
+            data-more="none"
+            className="peer min-h-0 flex-1 overflow-auto bg-background"
+          >
+            <div role="table" aria-label="Export variants" className="min-w-[700px]">
+              <div
+                role="row"
+                className={ `${ VARIANT_GRID } sticky top-0 z-10 h-8 items-center border-b border-theme bg-background` }
+              >
+                <div role="columnheader" className={ HEAD_CELL }>Variant</div>
+                <div role="columnheader" className={ HEAD_CELL }>Size</div>
+                <div role="columnheader" className={ HEAD_CELL }>Output</div>
+                <div role="columnheader" className={ HEAD_CELL }>Rate</div>
+                <div role="columnheader" className={ HEAD_CELL }>Slides</div>
+                <div role="columnheader" className={ `${ HEAD_CELL } text-right` }>
+                  {publishMode ? "Posts as" : "Delivers"}
+                </div>
+                <div role="columnheader" className="px-2">
+                  <span className="sr-only">Row actions</span>
+                </div>
               </div>
-              <div role="columnheader" className="px-2">
-                <span className="sr-only">Row actions</span>
-              </div>
-            </div>
 
-            {snapshot.variants.map( ( variant ) => (
-              <VariantTableRow key={ variant.id } { ...rowProps( variant ) } />
-            ) )}
+              {snapshot.variants.map( ( variant ) => (
+                <VariantTableRow key={ variant.id } { ...rowProps( variant ) } />
+              ) )}
+            </div>
           </div>
+
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-linear-to-r from-background to-transparent opacity-0 transition-opacity motion-reduce:transition-none peer-data-[more=both]:opacity-100 peer-data-[more=left]:opacity-100"
+          />
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-linear-to-l from-background to-transparent opacity-0 transition-opacity motion-reduce:transition-none peer-data-[more=both]:opacity-100 peer-data-[more=right]:opacity-100"
+          />
         </div>
 
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-linear-to-r from-background to-transparent opacity-0 transition-opacity motion-reduce:transition-none peer-data-[more=both]:opacity-100 peer-data-[more=left]:opacity-100"
-        />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-linear-to-l from-background to-transparent opacity-0 transition-opacity motion-reduce:transition-none peer-data-[more=both]:opacity-100 peer-data-[more=right]:opacity-100"
-        />
-      </div>
-
-      {/* Adding a variant starts from a preset, never a blank row: a new
+        {/* Adding a variant starts from a preset, never a blank row: a new
           variant needing four fields filled in before it does anything is not
           a starting point. Kept out of the scrolling region so it stays put
           while the table is scrolled sideways. */}
-      <div className="border-t border-dashed border-theme">
-        <Menu as="div" className="relative">
-          <MenuButton
+        <div className="border-t border-dashed border-theme">
+          <Menu as="div" className="relative">
+            <MenuButton
+              disabled={ running }
+              className="flex min-h-[44px] w-full items-center gap-1.5 px-2.5 py-2 text-left text-[11px] text-label transition-colors hover:bg-hover hover:text-foreground disabled:opacity-40 md:min-h-0"
+            >
+              <Plus className="h-3 w-3 shrink-0" />
+              Add a variant
+            </MenuButton>
+            <MenuItems
+              anchor="bottom start"
+              className="z-110 w-56 rounded-xl border border-theme bg-background p-1 shadow-lg focus:outline-hidden"
+            >
+              {VARIANT_PRESETS.map( ( preset ) => (
+                <MenuItem key={ preset.key }>
+                  <button
+                    type="button"
+                    onClick={ () => addVariant(
+                      sketchKey,
+                      preset
+                    ) }
+                    className="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-left text-xs text-foreground data-focus:bg-hover"
+                  >
+                    <span className="truncate">{preset.label}</span>
+                    {preset.size && (
+                      <span className="shrink-0 font-mono text-[10px] tabular-nums text-label">
+                        {preset.size.width}×{preset.size.height}
+                      </span>
+                    )}
+                  </button>
+                </MenuItem>
+              ) )}
+            </MenuItems>
+          </Menu>
+        </div>
+
+        {publishMode && postiz && plan && (
+          <PostBand
+            conn={ postiz }
+            plan={ plan }
+            draft={ draft }
+            when={ when }
+            taken={ taken }
+            facts={ facts }
             disabled={ running }
-            className="flex min-h-[44px] w-full items-center gap-1.5 px-2.5 py-2 text-left text-[11px] text-label transition-colors hover:bg-hover hover:text-foreground disabled:opacity-40 md:min-h-0"
-          >
-            <Plus className="h-3 w-3 shrink-0" />
-            Add a variant
-          </MenuButton>
-          <MenuItems
-            anchor="bottom start"
-            className="z-110 w-56 rounded-xl border border-theme bg-background p-1 shadow-lg focus:outline-hidden"
-          >
-            {VARIANT_PRESETS.map( ( preset ) => (
-              <MenuItem key={ preset.key }>
-                <button
-                  type="button"
-                  onClick={ () => addVariant(
-                    sketchKey,
-                    preset
-                  ) }
-                  className="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-left text-xs text-foreground data-focus:bg-hover"
-                >
-                  <span className="truncate">{preset.label}</span>
-                  {preset.size && (
-                    <span className="shrink-0 font-mono text-[10px] tabular-nums text-label">
-                      {preset.size.width}×{preset.size.height}
-                    </span>
-                  )}
-                </button>
-              </MenuItem>
-            ) )}
-          </MenuItems>
-        </Menu>
+            onPatch={ ( patch ) => patchDraft(
+              sketchKey,
+              patch
+            ) }
+            onWhen={ ( next ) => setWhen(
+              sketchKey,
+              next
+            ) }
+          />
+        )}
       </div>
 
       {/* The batch's own progress, along the footer's top edge: a row says how
@@ -665,21 +1171,79 @@ export default function ExportPanel( {
         />
       </div>
 
-      <div className="flex items-center gap-2 border-t border-theme px-3 py-2">
-        <span className="min-w-0 flex-1 truncate text-[10px] text-label">
+      <div className={ clsx(
+        "flex items-center gap-2 border-t border-theme px-3 py-2",
+        canPublish && "max-md:flex-wrap"
+      ) }
+      >
+        {canPublish && !running && (
+          <div
+            role="radiogroup"
+            aria-label="Deliver to"
+            className="grid shrink-0 grid-flow-col gap-0.5 rounded-lg border border-theme p-0.5"
+          >
+            {( [
+              [
+                "save",
+                "Save"
+              ],
+              [
+                "publish",
+                "Publish"
+              ]
+            ] as [DeliverMode, string][] ).map( ( [
+              id,
+              label
+            ] ) => (
+              <button
+                key={ id }
+                type="button"
+                role="radio"
+                aria-checked={ draft.mode === id }
+                onClick={ () => patchDraft(
+                  sketchKey,
+                  {
+                    mode: id
+                  }
+                ) }
+                className={ clsx(
+                  "rounded-md px-2.5 py-1 text-xs font-medium transition-colors pointer-coarse:min-h-9",
+                  draft.mode === id ? "bg-foreground text-background" : "text-label hover:bg-hover hover:text-foreground"
+                ) }
+              >
+                {label}
+              </button>
+            ) )}
+          </div>
+        )}
+        <span className={ clsx(
+          "min-w-0 flex-1 truncate text-[10px] text-label",
+          canPublish && "max-md:order-2 max-md:basis-full"
+        ) }
+        >
+          {publishMode && !error && !notice && ( sending || running ) && (
+            <span className="tabular-nums text-foreground/80">
+              {sending ?? `Rendering ${ plan?.variant?.name ?? "" } — then it goes to Postiz`}
+            </span>
+          )}
+          {publishMode && !error && !notice && !sending && !running && plan && (
+            plan.blocked
+              ? <span className="text-red-500">{plan.blocked}</span>
+              : `Renders ${ plan.variant?.name }, sends ${ plan.shape?.files ?? 0 } file${ plan.shape?.files === 1 ? "" : "s" } to ${ plan.targets.length } account${ plan.targets.length === 1 ? "" : "s" } · caption ${ draft.approved ? "approved" : "not approved yet" }`
+          )}
           {error && <span className="text-red-500">{error}</span>}
           {!error && notice && <span className="text-red-500">{notice}</span>}
-          {!error && !notice && running && (
+          {!publishMode && !error && !notice && running && (
             <span className="tabular-nums text-foreground/80">
               Variant {runningIndex + 1} of {snapshot.variants.length}
             </span>
           )}
-          {!error && !notice && !running && unsavedFileCount > 0 && (
+          {!publishMode && !error && !notice && !running && unsavedFileCount > 0 && (
             <span className="text-foreground/80">
               {unsavedFileCount} file{unsavedFileCount === 1 ? "" : "s"} ready · not saved yet
             </span>
           )}
-          {!error && !notice && !running && unsavedFileCount === 0 && (
+          {!publishMode && !error && !notice && !running && unsavedFileCount === 0 && (
             `${ snapshot.variants.length } variant${ snapshot.variants.length === 1 ? "" : "s" } · ${ fileCount } file${ fileCount === 1 ? "" : "s" }`
           )}
         </span>
@@ -696,6 +1260,70 @@ export default function ExportPanel( {
             />
             Stop
           </button>
+        ) : publishMode && plan ? (
+          <div className="relative flex shrink-0 max-md:order-3 max-md:basis-full">
+            <button
+              type="button"
+              onClick={ () => void handlePublish() }
+              disabled={ !engine || Boolean( plan.blocked ) }
+              className="min-w-0 flex-1 truncate rounded-l-lg border border-transparent bg-foreground px-3 py-1.5 text-xs font-medium text-background tabular-nums transition-opacity hover:opacity-85 disabled:opacity-40 max-md:min-h-11 max-md:text-sm"
+            >
+              {plan.verb}
+            </button>
+            <button
+              type="button"
+              aria-label="Other ways to send"
+              aria-haspopup="menu"
+              aria-expanded={ verbMenu }
+              disabled={ !engine }
+              onClick={ () => setVerbMenu( ( open ) => !open ) }
+              className="rounded-r-lg border border-transparent border-l-background/30 bg-foreground px-1.5 text-background transition-opacity hover:opacity-85 disabled:opacity-40"
+            >
+              <ChevronUp className="h-3.5 w-3.5" />
+            </button>
+            {verbMenu && (
+              <div
+                role="menu"
+                className="absolute bottom-[calc(100%+6px)] right-0 z-120 flex w-64 flex-col rounded-xl border border-theme bg-background p-1 shadow-lg"
+              >
+                {when.kind !== "next" && plan.free && (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={ () => {
+                      setWhen(
+                        sketchKey,
+                        NEXT
+                      );
+                      setVerbMenu( false );
+                    } }
+                    className="flex flex-col items-start rounded-lg px-2.5 py-2 text-left text-xs text-foreground hover:bg-hover"
+                  >
+                    The next free slot
+                    <span className="text-[11px] text-label">Back to your rhythm</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={ () => void handlePublish( "now" ) }
+                  className="flex flex-col items-start rounded-lg px-2.5 py-2 text-left text-xs text-foreground hover:bg-hover"
+                >
+                  Publish now…
+                  <span className="text-[11px] text-label">You see the file first — it cannot be taken back</span>
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={ () => void handlePublish( "draft" ) }
+                  className="flex flex-col items-start rounded-lg px-2.5 py-2 text-left text-xs text-foreground hover:bg-hover"
+                >
+                  Send as a draft
+                  <span className="text-[11px] text-label">Kept in Postiz, unsent, to finish there</span>
+                </button>
+              </div>
+            )}
+          </div>
         ) : (
           <>
             {/* Re-exporting stays reachable while files are held, but it is no

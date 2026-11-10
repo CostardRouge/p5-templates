@@ -17,7 +17,7 @@ import {
 const TITLE = "Legal notice and privacy";
 const DESCRIPTION =
   "Who publishes and hosts Sketchbook, what stays in your browser, what a recording handed to the server sends, and what the audience measurement counts.";
-const UPDATED = "19 October 2026";
+const UPDATED = "10 November 2026";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -68,6 +68,10 @@ const SECTIONS = [
   {
     id: "recordings",
     title: "Recordings handed to the server"
+  },
+  {
+    id: "postiz",
+    title: "Publishing to your Postiz"
   },
   {
     id: "measurement",
@@ -242,7 +246,8 @@ export default function LegalPage() {
             your browser’s storage (local storage and IndexedDB), on this device
             only. Opening the app also stores some of its files and thumbnails
             in the browser’s cache so pages load faster. None of this is sent
-            anywhere, except what you upload yourself (next section). To erase
+            anywhere, except what you hand over yourself: a recording
+            to the server, or a post to your own Postiz (the next two sections). To erase
             it, clear this site’s data in your browser’s settings.
           </p>
         </Section>
@@ -268,6 +273,27 @@ export default function LegalPage() {
             Microsoft, depending on the browser) and two keys; the server keeps
             them until you turn notifications off or the push service reports
             them gone, and sends nothing but the job’s status.
+          </p>
+        </Section>
+
+        <Section id="postiz" title="Publishing to your Postiz">
+          <p className={ P_CLASS }>
+            If you connect your own{ " " }
+            <a href="https://postiz.com" className={ LINK_CLASS }>
+              Postiz
+            </a>{ " " }
+            (Menu › Publishing), the address you type and the API key you paste
+            are kept in your browser’s storage, on this device only, until you
+            press Forget. Your browser then talks to that Postiz directly:
+            asking which accounts it publishes to when you open Publishing,
+            reading your coming posts when you open Export, and, only when you
+            press Schedule, Publish now or Send as a draft (or ask an agent you
+            connected to), uploading the exported files and the caption.
+          </p>
+          <p className={ P_CLASS }>
+            { SITE_NAME }’s server is never on that path: it never receives the
+            key, the files or the caption. What happens to them next is between
+            you, your Postiz and the networks it posts to.
           </p>
         </Section>
 
