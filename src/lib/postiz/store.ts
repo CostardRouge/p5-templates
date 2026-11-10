@@ -25,6 +25,12 @@ export interface PostizConnection {
   defaultChannelIds: string[];
   /** An Instagram handle proposed as collaborator (without @), or ''. */
   collaborator: string;
+  /**
+   * The Instagram username of each of HIS accounts, by account id, as typed in
+   * Publishing — Postiz lists an account by its display name and may not give
+   * the username a collaborator invite needs. Wins over the channel's own.
+   */
+  handles: Record<string, string>;
   rhythm: Rhythm;
   connectedAt: number;
 }
@@ -70,9 +76,57 @@ export function readConnection( raw: unknown ): PostizConnection | null {
         0,
         60
       ) : "",
+    handles: readHandles(
+      r.handles,
+      channels
+    ),
     rhythm: readRhythm( r.rhythm ),
     connectedAt: typeof r.connectedAt === "number" ? r.connectedAt : 0
   };
+}
+
+/** `@studio.loops ` → `studio.loops`; what Instagram's usernames allow, nothing else. Pure. */
+export function cleanHandle( raw: string ): string {
+  return raw.trim().replace(
+    /^@/,
+    ""
+  )
+    .replace(
+      /[^A-Za-z0-9._]/g,
+      ""
+    )
+    .slice(
+      0,
+      30
+    );
+}
+
+function readHandles(
+  raw: unknown, channels: readonly PostizChannel[]
+): Record<string, string> {
+  const out: Record<string, string> = {};
+
+  if ( raw && typeof raw === "object" ) {
+    for ( const [
+      id,
+      value
+    ] of Object.entries( raw as Record<string, unknown> ) ) {
+      const handle = typeof value === "string" ? cleanHandle( value ) : "";
+
+      if ( handle && channels.some( ( c ) => c.id === id ) ) {
+        out[ id ] = handle;
+      }
+    }
+  }
+
+  return out;
+}
+
+/** An account's Instagram username: the one he typed, else the one Postiz gave, else null. */
+export function handleOf(
+  conn: Pick<PostizConnection, "handles">, channel: PostizChannel
+): string | null {
+  return conn.handles[ channel.id ] || channel.handle || null;
 }
 
 export function getPostiz(): PostizConnection | null {

@@ -20,7 +20,7 @@ import {
   DEFAULT_RHYTHM, rhythmSlotLabel, type Rhythm, type RhythmSlot
 } from "@/lib/postiz/rhythm";
 import {
-  forgetPostiz, initialDefaults, putPostiz, updatePostiz
+  cleanHandle, forgetPostiz, initialDefaults, putPostiz, updatePostiz
 } from "@/lib/postiz/store";
 import {
   usePostiz
@@ -394,6 +394,7 @@ export default function PublishingDialog( {
         channels,
         defaultChannelIds: same ? conn.defaultChannelIds : initialDefaults( channels ),
         collaborator: same ? conn.collaborator : "",
+        handles: same ? conn.handles : {},
         rhythm: same ? conn.rhythm : DEFAULT_RHYTHM,
         connectedAt: Date.now()
       } );
@@ -413,6 +414,7 @@ export default function PublishingDialog( {
   const host = conn ? new URL( conn.apiBase ).host : null;
   const corsDone = ok || health === "refused";
   const defaults = new Set( conn?.defaultChannelIds ?? [] );
+  const instagramAccounts = ( conn?.channels ?? [] ).filter( ( c ) => !c.disabled && providerOf( c.identifier ) === "instagram" );
   const stateWord = {
     off: "Not connected",
     asking: "Asking…",
@@ -628,8 +630,39 @@ export default function PublishingDialog( {
                         ) )}
                       </div>
                     )}
+                    <Hint>Ticked here is only what a new post starts with: every post picks its own accounts in Export.</Hint>
+                    {instagramAccounts.length > 1 && (
+                      <div className="flex flex-col gap-1.5">
+                        <span className={ LEGEND }>Your Instagram usernames</span>
+                        <Hint>A post on one of your accounts can invite another as collaborator — one post, co-signed. Instagram needs each username for that.</Hint>
+                        <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
+                          {instagramAccounts.map( ( channel ) => (
+                            <li key={ channel.id } className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-center gap-2">
+                              <span className="truncate text-xs text-foreground">{channel.name}</span>
+                              <input
+                                id={ `postiz-handle-${ channel.id }` }
+                                className={ clsx(
+                                  INPUT,
+                                  "font-mono"
+                                ) }
+                                value={ conn.handles[ channel.id ] ?? channel.handle ?? "" }
+                                onChange={ ( event ) => updatePostiz( {
+                                  handles: {
+                                    ...conn.handles,
+                                    [ channel.id ]: cleanHandle( event.target.value )
+                                  }
+                                } ) }
+                                placeholder="username, without @"
+                                spellCheck={ false }
+                                aria-label={ `Instagram username of ${ channel.name }` }
+                              />
+                            </li>
+                          ) )}
+                        </ul>
+                      </div>
+                    )}
                     <label className="flex flex-col gap-1.5">
-                      <span className={ LEGEND }>A collaborator to propose</span>
+                      <span className={ LEGEND }>Another collaborator to propose</span>
                       <input
                         id="postiz-collaborator"
                         className={ INPUT }

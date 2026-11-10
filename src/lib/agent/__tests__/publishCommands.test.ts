@@ -32,20 +32,23 @@ const conn: PostizConnection = {
       name: "Steeve Pommier",
       identifier: "instagram",
       picture: null,
-      disabled: false
+      disabled: false,
+      handle: null
     },
     {
       id: "yt",
       name: "Sketchbook",
       identifier: "youtube",
       picture: null,
-      disabled: false
+      disabled: false,
+      handle: null
     }
   ],
   defaultChannelIds: [
     "ig"
   ],
   collaborator: "",
+  handles: {},
   rhythm: DEFAULT_RHYTHM,
   connectedAt: 0
 };
@@ -317,6 +320,39 @@ describe(
           deleted: [
             "p0"
           ]
+        } );
+      }
+    );
+
+    it(
+      "invite his other Instagram account to co-sign, never one the post goes to",
+      async() => {
+        const {
+          registry
+        } = setup();
+
+        await expect( registry.execute(
+          "publish.compose",
+          {
+            collaborators: [
+              "yt"
+            ]
+          }
+        ) ).rejects.toMatchObject( {
+          message: expect.stringMatching( /not one of his Instagram accounts/ )
+        } );
+        await expect( registry.execute(
+          "publish.compose",
+          {
+            accounts: [
+              "ig"
+            ],
+            collaborators: [
+              "ig"
+            ]
+          }
+        ) ).rejects.toMatchObject( {
+          message: expect.stringMatching( /cannot also be invited/ )
         } );
       }
     );

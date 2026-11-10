@@ -39,21 +39,24 @@ const conn: PostizConnection = {
       name: "Steeve Pommier",
       identifier: "instagram",
       picture: null,
-      disabled: false
+      disabled: false,
+      handle: null
     },
     {
       id: "tt",
       name: "sketchbook",
       identifier: "tiktok",
       picture: null,
-      disabled: false
+      disabled: false,
+      handle: null
     },
     {
       id: "yt",
       name: "Sketchbook",
       identifier: "youtube",
       picture: null,
-      disabled: false
+      disabled: false,
+      handle: null
     }
   ],
   defaultChannelIds: [
@@ -61,6 +64,7 @@ const conn: PostizConnection = {
     "yt"
   ],
   collaborator: "studio",
+  handles: {},
   rhythm: DEFAULT_RHYTHM,
   connectedAt: 0
 };
@@ -297,6 +301,123 @@ describe(
         ] ).map( ( d ) => d.toISOString() ) ).toEqual( [
           at
         ] );
+      }
+    );
+  }
+);
+
+describe(
+  "his other Instagram account as collaborator",
+  () => {
+    const two: PostizConnection = {
+      ...conn,
+      channels: [
+        {
+          id: "motion",
+          name: "Steeve Pommier",
+          identifier: "instagram",
+          picture: null,
+          disabled: false,
+          handle: "steeve.motion"
+        },
+        {
+          id: "photo",
+          name: "Steeve taking photos",
+          identifier: "instagram",
+          picture: null,
+          disabled: false,
+          handle: null
+        }
+      ],
+      defaultChannelIds: [
+        "motion"
+      ],
+      collaborator: "",
+      handles: {}
+    };
+    const base = {
+      when: {
+        kind: "next" as const
+      },
+      variants,
+      facts,
+      planned: [],
+      now
+    };
+
+    it(
+      "posts on one account alone by default, and offers the other to co-sign",
+      () => {
+        const plan = planPost( {
+          ...base,
+          conn: two,
+          draft: DEFAULT_DRAFT
+        } );
+
+        expect( plan.targets.map( ( c ) => c.id ) ).toEqual( [
+          "motion"
+        ] );
+        expect( plan.partners ).toEqual( [
+          {
+            channel: two.channels[ 1 ],
+            handle: null,
+            invited: false
+          }
+        ] );
+        expect( plan.collaborators ).toEqual( [] );
+      }
+    );
+
+    it(
+      "invites it once its username is known, into ONE post's settings",
+      () => {
+        const plan = planPost( {
+          ...base,
+          conn: {
+            ...two,
+            handles: {
+              photo: "steeve.photos"
+            }
+          },
+          draft: {
+            ...DEFAULT_DRAFT,
+            collabAccounts: [
+              "photo"
+            ]
+          }
+        } );
+
+        expect( plan.collaborators ).toEqual( [
+          "steeve.photos"
+        ] );
+        expect( plan.choices?.collaborators ).toEqual( [
+          "steeve.photos"
+        ] );
+        expect( plan.targets ).toHaveLength( 1 );
+      }
+    );
+
+    it(
+      "posts on each when both are ticked, and then offers no collaborator",
+      () => {
+        const plan = planPost( {
+          ...base,
+          conn: two,
+          draft: {
+            ...DEFAULT_DRAFT,
+            channelIds: [
+              "motion",
+              "photo"
+            ],
+            collabAccounts: [
+              "photo"
+            ]
+          }
+        } );
+
+        expect( plan.targets ).toHaveLength( 2 );
+        expect( plan.partners ).toEqual( [] );
+        expect( plan.collaborators ).toEqual( [] );
       }
     );
   }

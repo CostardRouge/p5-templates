@@ -18,12 +18,14 @@ const PROVIDER_GLYPH = {
 
 /** An account as a chip: ticked when Export proposes it; one Sketchbook cannot fill is shown, not offered. */
 export default function ChannelChip( {
-  channel, checked, onToggle, disabledReason
+  channel, checked, onToggle, disabledReason, note
 }: {
   channel: PostizChannel;
   checked: boolean;
   onToggle: () => void;
   disabledReason?: string | null;
+  /** The small mono word after the name; the network by default (`@username` as a collaborator). */
+  note?: string;
 } ) {
   const provider = providerOf( channel.identifier );
   const reason = disabledReason ?? ( channel.disabled ? "Disabled in your Postiz" : null );
@@ -45,7 +47,7 @@ export default function ChannelChip( {
         ? <img src={ channel.picture } alt="" className="h-6 w-6 shrink-0 rounded-full object-cover" />
         : <span aria-hidden="true" className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-hover font-mono text-[9px] font-semibold">{PROVIDER_GLYPH[ provider ]}</span>}
       <span className="truncate">{channel.name}</span>
-      <span className="shrink-0 font-mono text-[10px] text-label">{PROVIDER_LABEL[ provider ].toLowerCase()}</span>
+      <span className="shrink-0 font-mono text-[10px] text-label">{note ?? PROVIDER_LABEL[ provider ].toLowerCase()}</span>
       <span
         aria-hidden="true"
         className={ clsx(

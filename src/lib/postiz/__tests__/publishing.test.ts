@@ -44,21 +44,24 @@ const IG = {
   name: "Steeve Pommier",
   identifier: "instagram",
   picture: null,
-  disabled: false
+  disabled: false,
+  handle: null
 };
 const TT = {
   id: "tt",
   name: "sketchbook",
   identifier: "tiktok",
   picture: null,
-  disabled: false
+  disabled: false,
+  handle: null
 };
 const YT = {
   id: "yt",
   name: "Sketchbook",
   identifier: "youtube",
   picture: null,
-  disabled: false
+  disabled: false,
+  handle: null
 };
 
 describe(
@@ -388,6 +391,7 @@ describe(
             "gone"
           ],
           collaborator: "@studio",
+          handles: {},
           rhythm: DEFAULT_RHYTHM,
           connectedAt: 1
         } );

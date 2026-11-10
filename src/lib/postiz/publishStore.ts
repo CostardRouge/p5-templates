@@ -32,6 +32,12 @@ export interface PostDraft {
   graduate: "auto" | "manual";
   /** Propose the connection's collaborator. */
   collab: boolean;
+  /**
+   * His OTHER Instagram accounts invited as collaborators on this post, by
+   * account id — one post co-authored by both, instead of a post on each.
+   * Never an account the post goes to.
+   */
+  collabAccounts: string[];
   tiktokPrivacy: TikTokPrivacy;
   /** null is the sketch's title. */
   youtubeTitle: string | null;
@@ -70,6 +76,7 @@ export const DEFAULT_DRAFT: PostDraft = {
   trial: false,
   graduate: "auto",
   collab: true,
+  collabAccounts: [],
   tiktokPrivacy: "PUBLIC_TO_EVERYONE",
   youtubeTitle: null,
   youtubeVisibility: "public"
@@ -136,6 +143,9 @@ export function readDraft( raw: unknown ): PostDraft {
       "auto"
     ),
     collab: r.collab !== false,
+    collabAccounts: Array.isArray( r.collabAccounts ) ? [
+      ...new Set( r.collabAccounts.filter( ( id ): id is string => typeof id === "string" ) )
+    ] : [],
     tiktokPrivacy: pick(
       r.tiktokPrivacy,
       [

@@ -43,6 +43,8 @@ export interface PostizChannel {
   identifier: string;
   picture: string | null;
   disabled: boolean;
+  /** The account's username on its network (Postiz's `profile`), when Postiz says it — what a collaborator invite needs. */
+  handle: string | null;
 }
 
 /** A file Postiz holds, ready to go on a post. */
@@ -368,7 +370,11 @@ export function readChannels( raw: unknown ): PostizChannel[] {
         name: str( r.name ) ?? id,
         identifier: str( r.identifier ) ?? str( r.providerIdentifier ) ?? str( r.platform ) ?? "instagram",
         picture: str( r.picture ),
-        disabled: r.disabled === true
+        disabled: r.disabled === true,
+        handle: ( str( r.profile ) ?? str( r.username ) ?? "" ).replace(
+          /^@/,
+          ""
+        ) || null
       }
     ];
   } );

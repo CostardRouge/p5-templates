@@ -171,7 +171,8 @@ export default function PostBand( {
   const shape = plan.shape;
   const summary = [
     plan.kind && plan.instagram ? KIND_LABEL[ plan.kind ] : plan.shape?.media === "image" ? "Pictures" : "Video",
-    plan.targets.length ? plan.targets.map( ( c ) => c.name ).join( ", " ) : "no account",
+    ( plan.targets.length ? plan.targets.map( ( c ) => c.name ).join( ", " ) : "no account" ) +
+      ( plan.collaborators.length ? ` with ${ plan.collaborators.map( ( h ) => `@${ h }` ).join( ", " ) }` : "" ),
     plan.whenWords,
     `caption ${ draft.approved ? "approved" : "not approved yet" }`
   ].join( " · " );
@@ -181,11 +182,32 @@ export default function PostBand( {
       ...ticked
     ];
 
+    // An account the post goes to is no longer invited as its collaborator.
     onPatch( {
       channelIds: ticked.has( id ) ? current.filter( ( x ) => x !== id ) : [
         ...current,
         id
-      ]
+      ],
+      ...( ticked.has( id ) ? {} : {
+        collabAccounts: draft.collabAccounts.filter( ( x ) => x !== id )
+      } )
+    } );
+  };
+
+  /** Invite (or not) one of his own Instagram accounts — it then stops being a place the post goes to. */
+  const invite = ( id: string ) => {
+    const invited = draft.collabAccounts.includes( id );
+
+    onPatch( {
+      collabAccounts: invited ? draft.collabAccounts.filter( ( x ) => x !== id ) : [
+        ...draft.collabAccounts,
+        id
+      ],
+      ...( invited ? {} : {
+        channelIds: [
+          ...ticked
+        ].filter( ( x ) => x !== id )
+      } )
     } );
   };
 
@@ -310,15 +332,40 @@ export default function PostBand( {
                 )}
               </div>
             )}
-            {plan.instagram && plan.kind !== "story" && conn.collaborator && (
-              <Toggle
-                checked={ draft.collab }
-                onChange={ ( collab ) => onPatch( {
-                  collab
-                } ) }
-              >
-                @{conn.collaborator} as collaborator
-              </Toggle>
+            {plan.instagram && plan.kind !== "story" && ( plan.partners.length > 0 || conn.collaborator ) && (
+              <div className="flex flex-col gap-1.5">
+                <span className={ LEGEND }>With · Instagram collaborators</span>
+                {plan.partners.length > 0 && (
+                  <div role="group" aria-label="Your accounts as collaborators" className="flex flex-wrap gap-1.5">
+                    {plan.partners.map( ( partner ) => (
+                      <ChannelChip
+                        key={ partner.channel.id }
+                        channel={ partner.channel }
+                        checked={ partner.invited }
+                        note={ partner.handle ? `@${ partner.handle }` : "username?" }
+                        disabledReason={ partner.handle ? null : "Type its Instagram username in Publishing (accounts) to invite it" }
+                        onToggle={ () => invite( partner.channel.id ) }
+                      />
+                    ) )}
+                  </div>
+                )}
+                {conn.collaborator && (
+                  <Toggle
+                    checked={ draft.collab }
+                    onChange={ ( collab ) => onPatch( {
+                      collab
+                    } ) }
+                  >
+                    @{conn.collaborator} as collaborator
+                  </Toggle>
+                )}
+                <p className="m-0 text-[11px] leading-snug text-label">
+                  {plan.collaborators.length
+                    ? `One post on ${ plan.targets.filter( ( c ) => providerOf( c.identifier ) === "instagram" ).map( ( c ) => c.name )
+                      .join( " and " ) }, co-signed by ${ plan.collaborators.map( ( h ) => `@${ h }` ).join( ", " ) } once the invite is accepted in Instagram.`
+                    : "Invite your other account to co-sign ONE post — or tick both in To for a post on each."}
+                </p>
+              </div>
             )}
 
             {tickedTargets.includes( "tiktok" ) && (

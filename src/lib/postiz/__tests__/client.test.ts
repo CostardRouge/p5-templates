@@ -202,6 +202,7 @@ describe(
             identifier: "instagram",
             picture: "p",
             disabled: false,
+            profile: "@steeve.pommier",
             extra: 1
           },
           {
@@ -213,7 +214,8 @@ describe(
             name: "Steeve",
             identifier: "instagram",
             picture: "p",
-            disabled: false
+            disabled: false,
+            handle: "steeve.pommier"
           }
         ] );
         const posts = readPosts( {

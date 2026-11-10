@@ -142,6 +142,13 @@ function describePlan(
       } : {} )
     } ) ),
     goesTo: plan.targets.map( ( c ) => c.name ),
+    collaborators: plan.collaborators.map( ( h ) => `@${ h }` ),
+    canInvite: plan.partners.map( ( p ) => ( {
+      id: p.channel.id,
+      name: p.channel.name,
+      username: p.handle,
+      invited: p.invited
+    } ) ),
     when: plan.whenWords,
     verb: plan.verb,
     nextFreeSlot: plan.free ? slotLabel(
@@ -288,6 +295,11 @@ export function publishCommands( h: StudioHandles ): CommandSpec[] {
           description: "next (the next free slot of the rhythm), now, draft (kept in Postiz, unsent), or an ISO date-time with its zone",
           optional: true
         },
+        collaborators: {
+          type: "strings",
+          description: "His OTHER Instagram accounts (ids) invited to co-sign ONE post on the account it goes to — instead of a post on each; replaces the invited ones. publish.status lists them under canInvite.",
+          optional: true
+        },
         trial: {
           type: "boolean",
           description: "Instagram trial Reel: non-followers first",
@@ -358,6 +370,31 @@ export function publishCommands( h: StudioHandles ): CommandSpec[] {
 
         if ( params.kind !== undefined ) {
           patch.kind = params.kind as PostKind;
+        }
+
+        if ( params.collaborators !== undefined ) {
+          const ids = params.collaborators as string[];
+          const wrong = ids.filter( ( id ) => !conn.channels.some( ( c ) => c.id === id && providerOf( c.identifier ) === "instagram" ) );
+
+          if ( wrong.length ) {
+            throw new CommandError(
+              "invalid",
+              `${ wrong.join( ", " ) } is not one of his Instagram accounts — publish.status lists them`
+            );
+          }
+
+          const going = patch.channelIds ?? getDraft( key ).channelIds ?? conn.defaultChannelIds;
+
+          if ( params.accounts !== undefined && ids.some( ( id ) => going.includes( id ) ) ) {
+            throw new CommandError(
+              "invalid",
+              "an account the post goes to cannot also be invited as its collaborator"
+            );
+          }
+
+          patch.collabAccounts = ids;
+          // An invited account is no longer one the post goes to.
+          patch.channelIds = going.filter( ( id ) => !ids.includes( id ) );
         }
 
         if ( params.trial !== undefined ) {

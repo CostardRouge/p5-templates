@@ -23,8 +23,8 @@ import type {
 import {
   nextFreeSlot, rhythmWarnings, slotLabel
 } from "./rhythm";
-import type {
-  PostizConnection
+import {
+  handleOf, type PostizConnection
 } from "./store";
 import type {
   ExportVariant
@@ -65,6 +65,16 @@ export interface PostPlan {
     reason: string | null }[];
   /** The ticked accounts that can take it — where it goes. */
   targets: PostizChannel[];
+  /**
+   * His OTHER Instagram accounts, as collaborators this post may invite (one
+   * post co-authored, instead of a post on each): offered only when the post
+   * goes to an Instagram account, never one it goes to.
+   */
+  partners: { channel: PostizChannel;
+    handle: string | null;
+    invited: boolean }[];
+  /** The Instagram usernames invited, the typed collaborator included. */
+  collaborators: string[];
   kind: PostKind | null;
   /** An Instagram account is among the targets: the kind and its options matter. */
   instagram: boolean;
@@ -131,6 +141,31 @@ export function planPost( {
   } );
   const targets = accounts.filter( ( a ) => a.ticked && !a.reason ).map( ( a ) => a.channel );
   const instagram = targets.some( ( c ) => providerOf( c.identifier ) === "instagram" );
+  const targetIds = new Set( targets.map( ( c ) => c.id ) );
+  const partners = instagram
+    ? conn.channels
+      .filter( ( c ) => !c.disabled && !targetIds.has( c.id ) && providerOf( c.identifier ) === "instagram" )
+      .map( ( channel ) => {
+        const handle = handleOf(
+          conn,
+          channel
+        );
+
+        return {
+          channel,
+          handle,
+          invited: Boolean( handle ) && draft.collabAccounts.includes( channel.id )
+        };
+      } )
+    : [];
+  const collaborators = [
+    ...new Set( [
+      ...partners.filter( ( p ) => p.invited ).map( ( p ) => p.handle as string ),
+      ...( draft.collab && conn.collaborator ? [
+        conn.collaborator
+      ] : [] )
+    ] )
+  ];
   const kind = shape ? fitKind(
     draft.kind,
     shape
@@ -178,9 +213,7 @@ export function planPost( {
     kind,
     trial: kind === "reel" && draft.trial,
     graduate: draft.graduate,
-    collaborators: draft.collab && conn.collaborator ? [
-      conn.collaborator
-    ] : [],
+    collaborators,
     tiktokPrivacy: draft.tiktokPrivacy,
     youtubeTitle: draft.youtubeTitle ?? facts.title,
     youtubeVisibility: draft.youtubeVisibility
@@ -199,6 +232,8 @@ export function planPost( {
     blocked = "Choose when it goes out.";
   } else if ( text.length > limit ) {
     blocked = `The caption is ${ text.length.toLocaleString( "en-GB" ) } characters — ${ limit.toLocaleString( "en-GB" ) } at most here.`;
+  } else if ( instagram && kind !== "story" && collaborators.length > 3 ) {
+    blocked = `Instagram invites 3 collaborators at most — ${ collaborators.length } are ticked.`;
   } else if ( youtube && ( choices?.youtubeTitle ?? "" ).trim().length < 2 ) {
     blocked = "YouTube needs a title.";
   }
@@ -208,6 +243,8 @@ export function planPost( {
     shape,
     accounts,
     targets,
+    partners,
+    collaborators: kind === "story" ? [] : collaborators,
     kind,
     instagram,
     at,
