@@ -21,6 +21,9 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
   around it as it turns. The knot's two winding numbers are in the form, from a plain ring to tighter knots.
 - A new iridescent sketch, Peaks shell: a spiny seashell whose spiral widens turn after turn, its needles gathered
   into combs and swaying in a wave. Turns, growth, ridges and the spines' lean are in the form.
+- Connect your own Postiz from Menu › Publishing: paste its address and an API key, tick the Instagram, TikTok
+  or YouTube accounts to propose, a collaborator and your weekly rhythm. The key stays in your browser; Sketchbook's
+  server never sees it.
 
 ### Changed
 
