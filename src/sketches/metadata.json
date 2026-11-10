@@ -4495,5 +4495,27 @@
     ],
     "mtime": "2026-11-10T01:17:44.246Z",
     "ctime": "2026-11-10T01:17:44.174Z"
+  },
+  {
+    "name": "iridescent-v7-peaks-knot",
+    "engine": "p5",
+    "category": "iridescent",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "asyncDraw": false,
+    "description": "A trefoil knot bristling with fine needles — a thin tube winding through itself, covered in rows of spikes of uneven length like a sea creature or a thorny vine — turning slowly on a pale blue-grey ground while the needles travel along the knot and roll around it. Surfaces are coloured by the iridescent ramp, which shifts with the viewing angle.",
+    "tags": [
+      "3d",
+      "mesh",
+      "iridescent",
+      "geometry",
+      "orbit",
+      "colourful"
+    ],
+    "mtime": "2026-11-10T08:04:35.597Z",
+    "ctime": "2026-11-10T08:04:35.529Z"
   }
 ]

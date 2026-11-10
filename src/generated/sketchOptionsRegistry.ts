@@ -139,6 +139,7 @@ export const sketchFormLoaders: Record<string, SketchModuleLoader> = {
   "p5:iridescent/iridescent-v4-orbit-pearls": () => import( "@/p5/sketches/iridescent/iridescent-v4-orbit-pearls/options" ),
   "p5:iridescent/iridescent-v5-spiral-bloom": () => import( "@/p5/sketches/iridescent/iridescent-v5-spiral-bloom/options" ),
   "p5:iridescent/iridescent-v6-flame": () => import( "@/p5/sketches/iridescent/iridescent-v6-flame/options" ),
+  "p5:iridescent/iridescent-v7-peaks-knot": () => import( "@/p5/sketches/iridescent/iridescent-v7-peaks-knot/options" ),
   "p5:kinetic/kinetic-grid-spheres": () => import( "@/p5/sketches/kinetic/kinetic-grid-spheres/options" ),
   "p5:kinetic/kinetic-letters": () => import( "@/p5/sketches/kinetic/kinetic-letters/options" ),
   "p5:kinetic/kinetic-plane": () => import( "@/p5/sketches/kinetic/kinetic-plane/options" ),
