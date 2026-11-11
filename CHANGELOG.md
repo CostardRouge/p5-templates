@@ -23,6 +23,9 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
   into combs and swaying in a wave. Turns, growth, ridges and the spines' lean are in the form.
 - A second Materials sketch, Water: open sea at golden hour, a choppy swell rolling to a warm horizon with the low
   sun's path of glitter across it, in a seamless loop. Waves, camera, sun, sky and water colours are in the form.
+- A third Materials sketch, Caustics: a tiled swimming pool seen from above, its floor wobbling under the ripples
+  and crossed by the bright, shifting net of light the water casts, with faint colour fringes and the odd sparkle.
+  Ripples, light, tiles and water colour are in the form.
 - Connect your own Postiz from Menu › Publishing: paste its address and an API key, tick the Instagram, TikTok
   or YouTube accounts to propose, a collaborator and your weekly rhythm. The key stays in your browser; Sketchbook's
   server never sees it.

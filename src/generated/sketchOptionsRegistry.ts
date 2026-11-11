@@ -155,6 +155,7 @@ export const sketchFormLoaders: Record<string, SketchModuleLoader> = {
   "p5:mask-v1": () => import( "@/p5/sketches/mask-v1/options" ),
   "p5:materials/materials-v1-flame": () => import( "@/p5/sketches/materials/materials-v1-flame/options" ),
   "p5:materials/materials-v2-water": () => import( "@/p5/sketches/materials/materials-v2-water/options" ),
+  "p5:materials/materials-v3-caustics": () => import( "@/p5/sketches/materials/materials-v3-caustics/options" ),
   "p5:metaballs/metaballs-v1-field": () => import( "@/p5/sketches/metaballs/metaballs-v1-field/options" ),
   "p5:metaballs/metaballs-v2-marching-squares": () => import( "@/p5/sketches/metaballs/metaballs-v2-marching-squares/options" ),
   "p5:metaballs/metaballs-v3-blobs": () => import( "@/p5/sketches/metaballs/metaballs-v3-blobs/options" ),

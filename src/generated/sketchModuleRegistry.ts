@@ -137,6 +137,7 @@ export const sketchModuleLoaders: Record<string, SketchModuleLoader> = {
   "p5:mask-v1": () => import( "@/p5/sketches/mask-v1/index.js" ),
   "p5:materials/materials-v1-flame": () => import( "@/p5/sketches/materials/materials-v1-flame/index.js" ),
   "p5:materials/materials-v2-water": () => import( "@/p5/sketches/materials/materials-v2-water/index.js" ),
+  "p5:materials/materials-v3-caustics": () => import( "@/p5/sketches/materials/materials-v3-caustics/index.js" ),
   "p5:metaballs/metaballs-v1-field": () => import( "@/p5/sketches/metaballs/metaballs-v1-field/index.js" ),
   "p5:metaballs/metaballs-v2-marching-squares": () => import( "@/p5/sketches/metaballs/metaballs-v2-marching-squares/index.js" ),
   "p5:metaballs/metaballs-v3-blobs": () => import( "@/p5/sketches/metaballs/metaballs-v3-blobs/index.js" ),
