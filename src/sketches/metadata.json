@@ -4538,5 +4538,26 @@
     ],
     "mtime": "2026-11-10T14:11:06.266Z",
     "ctime": "2026-11-10T14:11:06.242Z"
+  },
+  {
+    "name": "materials-v2-water",
+    "engine": "p5",
+    "category": "materials",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "asyncDraw": false,
+    "description": "Open sea at golden hour, seen from just above the waves: a choppy swell rolling towards a warm horizon under a deep blue sky, the low sun laying a path of glitter across the water, the camera rising and swaying gently as on a boat. A calm, endless, seamless loop.",
+    "tags": [
+      "3d",
+      "raymarched",
+      "shader",
+      "drift",
+      "gradient"
+    ],
+    "mtime": "2026-11-11T00:26:29.203Z",
+    "ctime": "2026-11-11T00:26:03.555Z"
   }
 ]
