@@ -33,7 +33,7 @@
 export type PostKind = "reel" | "post" | "carousel" | "story";
 export type PostState = "queue" | "published" | "error" | "draft";
 /** The networks Sketchbook knows how to fill a post for; any other account is listed and left unticked. */
-export type Provider = "instagram" | "tiktok" | "youtube" | "other";
+export type Provider = "instagram" | "tiktok" | "youtube" | "threads" | "x" | "bluesky" | "other";
 
 /** An account Postiz publishes to. */
 export interface PostizChannel {
@@ -94,6 +94,18 @@ export function providerOf( identifier: string ): Provider {
     return "youtube";
   }
 
+  if ( identifier === "x" ) {
+    return "x";
+  }
+
+  if ( identifier === "threads" ) {
+    return "threads";
+  }
+
+  if ( identifier === "bluesky" ) {
+    return "bluesky";
+  }
+
   return "other";
 }
 
@@ -101,14 +113,27 @@ export const PROVIDER_LABEL: Record<Provider, string> = {
   instagram: "Instagram",
   tiktok: "TikTok",
   youtube: "YouTube",
+  threads: "Threads",
+  x: "X",
+  bluesky: "Bluesky",
   other: "Other"
 };
+
+/** The networks whose posts are short: they take the SHORT caption. */
+export const SHORT_PROVIDERS: ReadonlySet<Provider> = new Set( [
+  "threads",
+  "x",
+  "bluesky"
+] );
 
 /** The longest caption each network takes (Postiz's own schemas). */
 export const CAPTION_LIMIT: Record<Provider, number> = {
   instagram: 2200,
   tiktok: 2000,
   youtube: 5000,
+  threads: 500,
+  x: 280,
+  bluesky: 300,
   other: 2000
 };
 
@@ -211,12 +236,22 @@ export function channelProblem(
     return "TikTok takes one video, or pictures.";
   }
 
+  if ( ( provider === "x" || provider === "bluesky" ) && ( videos > 1 || ( videos === 1 && media.length > 1 ) || media.length > 4 ) ) {
+    return `${ PROVIDER_LABEL[ provider ] } takes one video, or 4 pictures at most.`;
+  }
+
+  if ( provider === "threads" && ( ( videos > 0 && media.length > 1 ) || media.length > MAX_CAROUSEL_ITEMS ) ) {
+    return `Threads takes one video, or ${ MAX_CAROUSEL_ITEMS } pictures at most.`;
+  }
+
   if ( provider === "other" ) {
-    return "Sketchbook posts to Instagram, TikTok and YouTube.";
+    return OTHER_PROVIDER;
   }
 
   return null;
 }
+
+export const OTHER_PROVIDER = "Sketchbook posts to Instagram, TikTok, YouTube, Threads, X and Bluesky.";
 
 export type TikTokPrivacy = "PUBLIC_TO_EVERYONE" | "MUTUAL_FOLLOW_FRIENDS" | "FOLLOWER_OF_CREATOR" | "SELF_ONLY";
 export type YouTubeVisibility = "public" | "unlisted" | "private";
@@ -295,23 +330,41 @@ export function channelSettings(
       100
     );
     settings.type = choices.youtubeVisibility ?? "public";
+  } else if ( provider === "x" ) {
+    Object.assign(
+      settings,
+      {
+        post_type: "post",
+        who_can_reply_post: "everyone",
+        made_with_ai: false
+      }
+    );
   }
 
   return settings;
 }
 
-export interface PostRequest {
-  channels: readonly Pick<PostizChannel, "id" | "identifier">[];
+/** One account's entry of a post: its own files, its own words, its own settings. */
+export interface PostEntry {
+  channel: Pick<PostizChannel, "id" | "identifier">;
   choices: PostChoices;
   caption: string;
   media: readonly PostizMedia[];
   /** Whether the media is a video — TikTok's settings differ for pictures. */
   video: boolean;
+}
+
+export interface PostRequest {
+  /**
+   * One per account: the same send may carry a 9:16 Reel to Instagram and a
+   * square picture to Threads and X — Postiz keeps each entry's own files.
+   */
+  entries: readonly PostEntry[];
   /** When it goes out; `'now'`, or `'draft'` to leave it in Postiz unsent. */
   at: Date | "now" | "draft";
 }
 
-/** The body of `POST /posts`: one entry per account, the same caption and files on each. */
+/** The body of `POST /posts`: one entry per account, each with its files, caption and settings. */
 export function postBody(
   req: PostRequest, now: Date = new Date()
 ): Record<string, unknown> {
@@ -320,23 +373,23 @@ export function postBody(
     date: ( req.at instanceof Date ? req.at : now ).toISOString(),
     shortLink: false,
     tags: [],
-    posts: req.channels.map( ( channel ) => ( {
+    posts: req.entries.map( ( entry ) => ( {
       integration: {
-        id: channel.id
+        id: entry.channel.id
       },
       value: [
         {
-          content: req.caption,
-          image: req.media.map( ( m ) => ( {
+          content: entry.caption,
+          image: entry.media.map( ( m ) => ( {
             id: m.id,
             path: m.path
           } ) )
         }
       ],
       settings: channelSettings(
-        channel,
-        req.choices,
-        req.video
+        entry.channel,
+        entry.choices,
+        entry.video
       )
     } ) )
   };

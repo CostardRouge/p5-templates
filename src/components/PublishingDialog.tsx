@@ -14,7 +14,7 @@ import {
 
 import ChannelChip from "@/components/ChannelChip";
 import {
-  PostizClient, findApi, providerOf
+  OTHER_PROVIDER, PostizClient, findApi, providerOf
 } from "@/lib/postiz/client";
 import {
   DEFAULT_RHYTHM, rhythmSlotLabel, type Rhythm, type RhythmSlot
@@ -395,6 +395,7 @@ export default function PublishingDialog( {
         defaultChannelIds: same ? conn.defaultChannelIds : initialDefaults( channels ),
         collaborator: same ? conn.collaborator : "",
         handles: same ? conn.handles : {},
+        usual: same ? conn.usual : {},
         rhythm: same ? conn.rhythm : DEFAULT_RHYTHM,
         connectedAt: Date.now()
       } );
@@ -465,7 +466,7 @@ export default function PublishingDialog( {
 
           <div className="flex flex-col gap-6 overflow-y-auto px-4 pb-6 pt-4 sm:px-6">
             <p className="m-0 text-sm leading-relaxed text-foreground/80">
-              Your own Postiz publishes to Instagram, TikTok or YouTube for you. Sketchbook renders an export, sends it
+              Your own Postiz publishes to Instagram, TikTok, YouTube, Threads, X or Bluesky for you. Sketchbook renders an export, sends it
               there and schedules it — from the Export dialog, or through Claude.
             </p>
 
@@ -617,7 +618,7 @@ export default function PublishingDialog( {
                             key={ channel.id }
                             channel={ channel }
                             checked={ defaults.has( channel.id ) }
-                            disabledReason={ providerOf( channel.identifier ) === "other" ? "Sketchbook posts to Instagram, TikTok and YouTube" : null }
+                            disabledReason={ providerOf( channel.identifier ) === "other" ? OTHER_PROVIDER : null }
                             onToggle={ () => updatePostiz( {
                               defaultChannelIds: defaults.has( channel.id )
                                 ? conn.defaultChannelIds.filter( ( id ) => id !== channel.id )
@@ -711,7 +712,7 @@ export default function PublishingDialog( {
                 <Faq q="Which exports can it post?">
                   <p className="m-0">
                     mp4 videos and png pictures — sent as JPEG, which Instagram requires; your download stays png. Not GIF
-                    nor WebM. A file is at most 95 MB, a picture 10 MB, a carousel 10 files.
+                    nor WebM. A file is at most 95 MB, a picture 10 MB, a carousel 10 files; X and Bluesky take 4 pictures or one video. Each account can take its own variant: Export remembers which format it usually gets.
                   </p>
                 </Faq>
                 <Faq q="How do I remove it?">

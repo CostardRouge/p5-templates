@@ -28,7 +28,7 @@ import {
   addPublication, dropPublication, getDraft, getPublications, patchDraft, readDraft, resetPublishStore
 } from "../publishStore";
 import {
-  jpegName, mimeOf, sendPost, sendProblem
+  jpegName, mimeOf, routesProblem, sendRoutes
 } from "../send";
 
 const json = (
@@ -88,25 +88,27 @@ describe(
       "gives every account its entry, with the settings its network requires",
       () => {
         const body = postBody( {
-          channels: [
+          entries: [
             IG,
             TT,
             YT
-          ],
-          choices: {
-            kind: "reel",
-            tiktokPrivacy: "SELF_ONLY",
-            youtubeTitle: "  Iridescent · Peaks shell ",
-            youtubeVisibility: "unlisted"
-          },
-          caption: "A shell",
-          media: [
-            {
-              id: "m",
-              path: "https://p/u/a.mp4"
-            }
-          ],
-          video: true,
+          ].map( ( channel ) => ( {
+            channel,
+            choices: {
+              kind: "reel",
+              tiktokPrivacy: "SELF_ONLY",
+              youtubeTitle: "  Iridescent · Peaks shell ",
+              youtubeVisibility: "unlisted"
+            },
+            caption: "A shell",
+            media: [
+              {
+                id: "m",
+                path: "https://p/u/a.mp4"
+              }
+            ],
+            video: true
+          } ) ),
           at: new Date( "2026-11-15T09:00:00Z" )
         } );
         const posts = body.posts as { integration: { id: string };
@@ -392,6 +394,7 @@ describe(
           ],
           collaborator: "@studio",
           handles: {},
+          usual: {},
           rhythm: DEFAULT_RHYTHM,
           connectedAt: 1
         } );
@@ -531,74 +534,113 @@ describe(
     );
 
     it(
-      "refuses before a byte leaves",
+      "refuses before a byte leaves, account by account",
       () => {
         const mp4 = {
           type: "video/mp4",
           size: 1000,
           name: "a.mp4"
         };
+        const jpg = {
+          type: "image/jpeg",
+          size: 1000,
+          name: "a.jpg"
+        };
+        const route = (
+          channel: typeof IG, id: string, kind: "reel" | "post" | null
+        ) => ( {
+          channel,
+          provider: providerOf( channel.identifier ),
+          kind,
+          variant: {
+            id
+          } as never
+        } );
+        const files = new Map( [
+          [
+            "reel",
+            [
+              mp4
+            ]
+          ],
+          [
+            "square",
+            [
+              jpg
+            ]
+          ]
+        ] );
 
-        expect( sendProblem(
+        expect( routesProblem(
           [],
-          "reel",
-          [
-            mp4
-          ]
+          files
         ) ).toMatch( /Tick an account/ );
-        expect( sendProblem(
+        expect( routesProblem(
           [
-            IG
+            route(
+              IG,
+              "square",
+              "reel"
+            )
           ],
-          "reel",
+          files
+        ) ).toMatch( /Steeve Pommier: A Reel is one video/ );
+        expect( routesProblem(
           [
-            {
-              ...mp4,
-              type: "image/jpeg"
-            }
-          ]
-        ) ).toMatch( /Reel is one video/ );
-        expect( sendProblem(
-          [
-            YT
+            route(
+              YT,
+              "square",
+              null
+            )
           ],
-          "carousel",
-          [
-            mp4,
-            mp4
-          ]
+          files
         ) ).toMatch( /^Sketchbook: YouTube takes one video/ );
-        expect( sendProblem(
+        expect( routesProblem(
           [
-            IG,
-            TT
+            route(
+              IG,
+              "reel",
+              "reel"
+            ),
+            route(
+              TT,
+              "square",
+              null
+            )
           ],
-          "reel",
-          [
-            {
-              ...mp4,
-              size: 200 * 1024 * 1024
-            }
-          ]
-        ) ).toMatch( /95 MB/ );
-        expect( sendProblem(
-          [
-            IG,
-            TT,
-            YT
-          ],
-          "reel",
-          [
-            mp4
-          ]
+          files
         ) ).toBeNull();
+        expect( routesProblem(
+          [
+            route(
+              IG,
+              "reel",
+              "reel"
+            )
+          ],
+          new Map( [
+            [
+              "reel",
+              [
+                {
+                  ...mp4,
+                  size: 200 * 1024 * 1024
+                }
+              ]
+            ]
+          ] )
+        ) ).toMatch( /95 MB/ );
       }
     );
 
     it(
-      "uploads each file then makes ONE post for every account",
+      "uploads each variant once, one post with each account's files and words, and the story beside it",
       async() => {
         const seen: string[] = [];
+        const bodies: { posts: { integration: { id: string };
+          value: { content: string;
+            image: { id: string }[] }[];
+          settings: Record<string, unknown> }[] }[] = [];
         const client = new PostizClient(
           "https://p/api/public/v1",
           "KEY",
@@ -620,19 +662,21 @@ describe(
               );
             }
 
-            const body = JSON.parse( String( init?.body ) ) as { posts: unknown[] };
+            const body = JSON.parse( String( init?.body ) );
+
+            bodies.push( body );
 
             return json(
               200,
               body.posts.map( (
-                _, i
+                _: unknown, i: number
               ) => ( {
-                postId: `post${ i }`
+                postId: `post${ bodies.length }-${ i }`
               } ) )
             );
           }
         );
-        const file = new File(
+        const reel = new File(
           [
             "x"
           ],
@@ -641,43 +685,130 @@ describe(
             type: "video/mp4"
           }
         );
-        const files: number[] = [];
-        const publication = await sendPost( {
-          client,
-          channels: [
-            IG,
-            TT
+        const square = new File(
+          [
+            "y"
           ],
+          "b.jpg",
+          {
+            type: "image/jpeg"
+          }
+        );
+        const route = (
+          channel: typeof IG, variant: string, kind: "reel" | null, story = false
+        ) => ( {
+          channel,
+          provider: providerOf( channel.identifier ),
+          variant: {
+            id: variant,
+            name: variant === "reel" ? "Instagram Reel" : "Square still"
+          } as never,
+          shape: {
+            files: 1,
+            media: variant === "reel" ? "video" : "image",
+            kinds: [],
+            reason: null
+          } as never,
+          format: "",
+          source: "first" as const,
+          kind,
+          story,
+          short: providerOf( channel.identifier ) === "x",
           choices: {
-            kind: "reel"
-          },
-          caption: "Hi",
-          files: [
-            file
+            kind: kind ?? ( "post" as const )
+          }
+        } );
+        const X = {
+          ...IG,
+          id: "x",
+          name: "Steeve on X",
+          identifier: "x"
+        };
+        const files: number[] = [];
+        const publication = await sendRoutes( {
+          client,
+          routes: [
+            route(
+              IG,
+              "reel",
+              "reel",
+              true
+            ),
+            route(
+              X,
+              "square",
+              null
+            )
           ],
+          files: new Map( [
+            [
+              "reel",
+              [
+                reel
+              ]
+            ],
+            [
+              "square",
+              [
+                square
+              ]
+            ]
+          ] ),
+          caption: "The long one",
+          shortCaption: "Short",
           at: new Date( "2026-11-15T09:00:00Z" ),
-          variantName: "Instagram Reel",
           onFile: ( n ) => files.push( n )
         } );
 
         expect( seen ).toEqual( [
           "POST /upload",
+          "POST /upload",
+          "POST /posts",
           "POST /posts"
         ] );
         expect( files ).toEqual( [
-          1
+          1,
+          2
         ] );
+        expect( bodies[ 0 ].posts.map( ( p ) => [
+          p.integration.id,
+          p.value[ 0 ].content,
+          p.value[ 0 ].image[ 0 ].id
+        ] ) ).toEqual( [
+          [
+            "ig",
+            "The long one",
+            "m1"
+          ],
+          [
+            "x",
+            "Short",
+            "m2"
+          ]
+        ] );
+        expect( bodies[ 0 ].posts[ 1 ].settings ).toEqual( {
+          __type: "x",
+          post_type: "post",
+          who_can_reply_post: "everyone",
+          made_with_ai: false
+        } );
+        expect( bodies[ 1 ].posts ).toHaveLength( 1 );
+        expect( bodies[ 1 ].posts[ 0 ].settings ).toMatchObject( {
+          post_type: "story"
+        } );
         expect( publication ).toMatchObject( {
           postIds: [
-            "post0",
-            "post1"
+            "post1-0",
+            "post1-1",
+            "post2-0"
           ],
           channelIds: [
             "ig",
-            "tt"
+            "x"
           ],
-          target: "schedule",
-          at: "2026-11-15T09:00:00.000Z"
+          variantName: "Instagram Reel + Square still",
+          files: 2,
+          target: "schedule"
         } );
       }
     );

@@ -49,6 +49,7 @@ const conn: PostizConnection = {
   ],
   collaborator: "",
   handles: {},
+  usual: {},
   rhythm: DEFAULT_RHYTHM,
   connectedAt: 0
 };
@@ -215,17 +216,38 @@ describe(
             ],
             when: "draft"
           }
-        ) as { kind: string;
-          goesTo: string[];
-          accounts: { id: string;
-            refused?: string }[];
-          verb: string };
+        ) as { accounts: { id: string;
+          refused?: string;
+          sends?: { instagramKind?: string;
+            variant: string } }[];
+        verb: string };
+        const ig = post.accounts.find( ( a ) => a.id === "ig" );
 
-        expect( post.kind ).toBe( "Story" );
-        expect( post.goesTo ).toEqual( [
-          "Steeve Pommier"
-        ] );
+        expect( ig?.sends ).toMatchObject( {
+          instagramKind: "Story",
+          variant: still.id
+        } );
         expect( post.accounts.find( ( a ) => a.id === "yt" )?.refused ).toMatch( /one video/ );
+        await expect( registry.execute(
+          "publish.compose",
+          {
+            routes: {
+              ig: "nope"
+            }
+          }
+        ) ).rejects.toMatchObject( {
+          message: expect.stringMatching( /no variant "nope"/ )
+        } );
+        await expect( registry.execute(
+          "publish.compose",
+          {
+            kinds: {
+              yt: "reel"
+            }
+          }
+        ) ).rejects.toMatchObject( {
+          message: expect.stringMatching( /not one of his Instagram accounts/ )
+        } );
         expect( post.verb ).toBe( "Send as a draft" );
       }
     );

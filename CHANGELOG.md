@@ -31,6 +31,9 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
   JPEG, and a post scheduled by mistake can be taken back.
 - With two Instagram accounts, each post goes to the one you tick, to both (a post on each), or to one with the
   other invited as collaborator — one post signed by both. Type your accounts' usernames once in Publishing.
+- Each account takes its own variant: the 9:16 Reel (and a story beside it) to Instagram, a square or 4:5 picture to
+  Threads, X and Bluesky — rendered once each, sent in one go. Export remembers which format each account usually
+  takes, so your next sketch routes itself. Threads, X and Bluesky get a short caption of their own.
 - Claude can publish for you too: with your Postiz connected, it can set up the post, write a caption for you to
   read, and schedule it once you say it suits you — never a caption you did not approve.
 

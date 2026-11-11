@@ -9,7 +9,7 @@
  */
 
 import {
-  MAX_CAROUSEL_ITEMS, type PostKind, type Provider
+  MAX_CAROUSEL_ITEMS, OTHER_PROVIDER, PROVIDER_LABEL, type PostKind, type Provider
 } from "./client";
 import type {
   ExportVariant
@@ -130,11 +130,82 @@ export function providerFits(
     return "TikTok takes one video, or pictures.";
   }
 
+  if ( ( provider === "x" || provider === "bluesky" ) && ( shape.media === "video" ? shape.files !== 1 : shape.files > 4 ) ) {
+    return `${ PROVIDER_LABEL[ provider ] } takes one video, or 4 pictures at most.`;
+  }
+
+  if ( provider === "threads" && shape.media === "video" && shape.files !== 1 ) {
+    return "Threads takes one video, or pictures.";
+  }
+
   if ( provider === "other" ) {
-    return "Sketchbook posts to Instagram, TikTok and YouTube.";
+    return OTHER_PROVIDER;
   }
 
   return null;
+}
+
+/** `9:16`, `4:5`, `1:1`, `16:9`… or `1200×900` — a size as people name it. Pure. */
+export function aspectName( size: { width: number;
+  height: number } ): string {
+  const r = size.width / size.height;
+  const named: [number, string][] = [
+    [
+      9 / 16,
+      "9:16"
+    ],
+    [
+      4 / 5,
+      "4:5"
+    ],
+    [
+      3 / 4,
+      "3:4"
+    ],
+    [
+      2 / 3,
+      "2:3"
+    ],
+    [
+      1,
+      "1:1"
+    ],
+    [
+      5 / 4,
+      "5:4"
+    ],
+    [
+      4 / 3,
+      "4:3"
+    ],
+    [
+      3 / 2,
+      "3:2"
+    ],
+    [
+      16 / 9,
+      "16:9"
+    ]
+  ];
+  const hit = named.find( ( [
+    ratio
+  ] ) => Math.abs( r - ratio ) < 0.015 );
+
+  return hit ? hit[ 1 ] : `${ size.width }×${ size.height }`;
+}
+
+/**
+ * What an account usually takes, as a FORMAT rather than a variant id (ids are
+ * per sketch): `video 9:16`, `picture 1:1`, `pictures 4:5`. Remembered per
+ * account so a new sketch's export picks the same kind of variant for it.
+ */
+export function variantFormat(
+  shape: PostShape, size: { width: number;
+    height: number }
+): string {
+  const what = shape.media === "video" ? "video" : ( shape.files ?? 1 ) > 1 ? "pictures" : "picture";
+
+  return `${ what } ${ aspectName( size ) }`;
 }
 
 /** The kind kept when the variant changes: the one asked if it still fits, else the shape's first. */

@@ -76,7 +76,8 @@ type VariantTableRowProps = {
     /** `Reel · mp4`, `Carousel · 4 jpg`; null when it cannot be posted. */
     postsAs: string | null;
     reason: string | null;
-    onChoose: () => void;
+    /** Absent since each account picks its own variant (2026-11-11): no pastille then. */
+    onChoose?: () => void;
   };
 };
 
@@ -146,10 +147,10 @@ export default function VariantTableRow( {
         role="cell"
         className={ clsx(
           CELL,
-          publish && "flex items-center gap-1.5"
+          publish?.onChoose && "flex items-center gap-1.5"
         ) }
       >
-        {publish && (
+        {publish?.onChoose && (
           <button
             type="button"
             role="radio"

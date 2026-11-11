@@ -141,7 +141,12 @@ export interface StudioHandles {
     client: () => PostizClient | null;
     facts: () => CaptionFacts;
     slideSpan: ( variant: ExportVariant ) => number;
+    /** The size a variant renders at (the sketch's own when it follows it). */
+    variantSize: ( variant: ExportVariant ) => { width: number;
+      height: number };
     postable: ( file: File ) => Promise<File>;
+    /** Keep each account's format (`video 9:16`) as what it usually takes. */
+    remember: ( formats: Record<string, string> ) => void;
   };
   /**
    * Register `file` as the asset picker does (`useAssetDrop().addAssets`: a
