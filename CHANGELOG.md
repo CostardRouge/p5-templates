@@ -11,6 +11,14 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
 
 ### Added
 
+- A fourth Materials sketch, Sand: a sea of dunes under a low sun, their crests cutting lit slopes from shaded
+  faces, with veils of sand streaming over them, plumes spilling off the crests and ripples creeping in the wind.
+  Dunes, wind, sun, sky, sand colour and camera are in the form.
+
+## [1.3.0] - 2026-11-11 — Parabola
+
+### Added
+
 - A new iridescent sketch, Spiral bloom: a flower whose flat, curled petals are packed on a golden-angle spiral, closing
   and reopening in a wave from the heart to the rim while its spiral arms wind and unwind. The divergence angle, the
   petals' shape and lean, the bloom and the palette are all in the form.
@@ -26,9 +34,6 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
 - A third Materials sketch, Caustics: a tiled swimming pool seen from above, its floor wobbling under the ripples
   and crossed by the bright, shifting net of light the water casts, with faint colour fringes and the odd sparkle.
   Ripples, light, tiles and water colour are in the form.
-- A fourth Materials sketch, Sand: a sea of dunes under a low sun, their crests cutting lit slopes from shaded
-  faces, with veils of sand streaming over them, plumes spilling off the crests and ripples creeping in the wind.
-  Dunes, wind, sun, sky, sand colour and camera are in the form.
 - Connect your own Postiz from Menu › Publishing: paste its address and an API key, tick the Instagram, TikTok
   or YouTube accounts to propose, a collaborator and your weekly rhythm. The key stays in your browser; Sketchbook's
   server never sees it.
