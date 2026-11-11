@@ -22,6 +22,12 @@ type Props = {
  *   - name      → /sketches/<engineId>/<category?>/<name>
  *
  * The category segment is skipped when the sketch has no category.
+ *
+ * The links navigate in the SAME tab, like every internal link. They used to
+ * open a new tab, and on a phone this breadcrumb is the sketch page's only way
+ * back to the library: the new tab started with no history, so the browser's
+ * Back closed it instead of returning to the list or the home page. A new tab
+ * is still one long-press / middle-click away.
  */
 export default function SketchBreadcrumb( {
   engineId,
@@ -38,7 +44,6 @@ export default function SketchBreadcrumb( {
     <p className="truncate">
       <Link
         href={ `/sketches/${ engineId }` }
-        target="_blank"
       >
         {engineLabel}
       </Link>
@@ -48,7 +53,6 @@ export default function SketchBreadcrumb( {
           <span className="text-xs">{" · "}</span>
           <Link
             href={ `/sketches/${ engineId }?category=${ encodeURIComponent( category ) }` }
-            target="_blank"
           >
             {category}
           </Link>
@@ -58,7 +62,6 @@ export default function SketchBreadcrumb( {
       <span className="text-xs">{" · "}</span>
       <Link
         href={ sketchHref }
-        target="_blank"
       >
         {name}
       </Link>
