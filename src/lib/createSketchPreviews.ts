@@ -186,9 +186,10 @@ async function createSketchPreviews( options: CreateSketchPreviewsOptions = {} )
         ).catch( () => {} );
       }
     }
-  } catch( err ) {
-    console.error( err );
   } finally {
+    // No catch here: a failure must reach the caller. The dev routes turn it
+    // into a 500 with the message; swallowing it once made them answer
+    // `{ ok: true }` having written nothing.
     await state.browser?.close();
   }
 }

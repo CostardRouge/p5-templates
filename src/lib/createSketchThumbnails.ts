@@ -145,9 +145,10 @@ async function createSketchThumbnails( options: CreateSketchThumbnailsOptions = 
 
       console.log( `💾 ${ name } webp thumbnails generated (1x + 2x)` );
     }
-  } catch( error ) {
-    console.error( error );
   } finally {
+    // No catch here: a failure must reach the caller. The dev routes turn it
+    // into a 500 with the message; swallowing it once made them answer
+    // `{ ok: true }` having written nothing.
     await recordingState?.browser?.close();
   }
 }

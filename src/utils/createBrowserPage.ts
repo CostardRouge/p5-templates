@@ -1,6 +1,24 @@
 import {
   chromium
 } from "playwright";
+import fs from "node:fs/promises";
+
+// `PW_CHROMIUM` wins; otherwise the cloud containers' pre-installed browser
+// when it is there; otherwise Playwright's own (`npx playwright install
+// chromium` on a workstation, the base image's in Docker). Same rule as
+// `scripts/mcp/frameRenderer.ts` and `scripts/bench-sketch.mjs`.
+const BUNDLED_CHROMIUM = "/opt/pw-browsers/chromium";
+
+async function chromiumPath(): Promise<string | undefined> {
+  if ( process.env.PW_CHROMIUM ) {
+    return process.env.PW_CHROMIUM;
+  }
+
+  return fs.access( BUNDLED_CHROMIUM ).then(
+    () => BUNDLED_CHROMIUM,
+    () => undefined
+  );
+}
 
 async function createBrowserPage( {
   headless = true,
@@ -10,6 +28,7 @@ async function createBrowserPage( {
   const browser = await chromium.launch( {
     headless,
     timeout,
+    executablePath: await chromiumPath(),
     // Software-WebGL flags: the container has no GPU passthrough, and
     // Chromium no longer falls back to SwiftShader automatically for
     // security reasons, so a WebGL context (Three.js templates) would
