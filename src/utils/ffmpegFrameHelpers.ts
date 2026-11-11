@@ -79,14 +79,9 @@ export async function writeConcatList(
     lines.push( `duration ${ secondsPerFrame }` );
   }
 
-  // Repeat last entry so ffmpeg honours its duration
-  const lastAbsolutePath = path.resolve(
-    framesDirectoryPath,
-    sortedFrameFileNames[ sortedFrameFileNames.length - 1 ]
-  );
-
-  lines.push( `file ${ escapePathForFfmpegConcat( lastAbsolutePath ) }` );
-
+  // No repeated last entry: the old concat-demuxer trick for honouring the
+  // last `duration` adds a frame on current FFmpeg (6.1 and 9.0 alike):
+  // 180 frames became 181 frames / 9.05 s, a doubled frame at the loop seam.
   const listFilePath = path.resolve(
     framesDirectoryPath,
     listFileName
