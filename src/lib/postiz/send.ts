@@ -10,12 +10,14 @@
 import {
   channelProblem,
   postProblem,
-  providerOf,
   uploadProblem,
-  type PostChoices,
-  type PostizChannel,
-  type PostizClient
+  type PostEntry,
+  type PostizClient,
+  type PostizMedia
 } from "./client";
+import type {
+  PostRoute
+} from "./plan";
 import type {
   Publication
 } from "./publishStore";
@@ -103,61 +105,62 @@ export async function postableFile( file: File ): Promise<File> {
   }
 }
 
-export interface SendPost {
+export interface SendRoutes {
   client: PostizClient;
-  channels: readonly PostizChannel[];
-  choices: PostChoices;
+  /** Where it goes: one account, one variant (`planPost`). */
+  routes: readonly PostRoute[];
+  /** Each variant's files, already postable (`postableFile`), by variant id. */
+  files: ReadonlyMap<string, readonly File[]>;
+  /** The long caption's words (Instagram, TikTok, YouTube). */
   caption: string;
-  /** The export's files, already JPEG where they need to be (`postableFile`). */
-  files: readonly File[];
+  /** The short caption's words (Threads, X, Bluesky). */
+  shortCaption: string;
   at: Date | "now" | "draft";
-  variantName: string;
   signal?: AbortSignal;
   /** Before each file leaves: its place, of how many. */
   onFile?: ( n: number, of: number ) => void;
 }
 
-/** Why these files cannot go to these accounts as chosen, or null. Pure. */
-export function sendProblem(
-  channels: readonly Pick<PostizChannel, "identifier" | "name">[],
-  kind: PostChoices[ "kind" ],
-  files: readonly { type: string;
+/** Why these routes cannot go with these files, or null — said before a byte leaves. Pure. */
+export function routesProblem(
+  routes: readonly Pick<PostRoute, "channel" | "provider" | "kind" | "variant">[],
+  files: ReadonlyMap<string, readonly { type: string;
     size: number;
-    name: string }[]
+    name: string }[]>
 ): string | null {
-  if ( !channels.length ) {
+  if ( !routes.length ) {
     return "Tick an account to post to.";
   }
 
-  if ( channels.some( ( c ) => providerOf( c.identifier ) === "instagram" ) ) {
-    const problem = postProblem(
-      kind,
-      files
+  for ( const route of routes ) {
+    const own = files.get( route.variant.id ) ?? [];
+    const problem = ( route.kind ? postProblem(
+      route.kind,
+      own
+    ) : null ) ?? channelProblem(
+      route.provider,
+      own
     );
 
     if ( problem ) {
-      return problem;
+      return `${ route.channel.name }: ${ problem }`;
     }
   }
 
-  for ( const channel of channels ) {
-    const problem = channelProblem(
-      providerOf( channel.identifier ),
-      files
-    );
-
-    if ( problem ) {
-      return `${ channel.name }: ${ problem }`;
-    }
-  }
-
-  return files.map( uploadProblem ).find( Boolean ) ?? null;
+  return [
+    ...files.values()
+  ].flat().map( uploadProblem )
+    .find( Boolean ) ?? null;
 }
 
-export async function sendPost( s: SendPost ): Promise<Publication> {
-  const problem = sendProblem(
-    s.channels,
-    s.choices.kind,
+/**
+ * The one send: each variant's files uploaded ONCE, then one `POST /posts`
+ * with an entry per account (its own files and words); an Instagram account
+ * that also takes the file as a story gets it in a second request beside it.
+ */
+export async function sendRoutes( s: SendRoutes ): Promise<Publication> {
+  const problem = routesProblem(
+    s.routes,
     s.files
   );
 
@@ -165,29 +168,58 @@ export async function sendPost( s: SendPost ): Promise<Publication> {
     throw new Error( problem );
   }
 
-  const media = [];
+  const used = [
+    ...new Set( s.routes.map( ( r ) => r.variant.id ) )
+  ];
+  const total = used.reduce(
+    (
+      n, id
+    ) => n + ( s.files.get( id )?.length ?? 0 ),
+    0
+  );
+  const media = new Map<string, PostizMedia[]>();
+  let n = 0;
 
-  for ( const [
-    i,
-    file
-  ] of s.files.entries() ) {
-    s.onFile?.(
-      i + 1,
-      s.files.length
+  for ( const id of used ) {
+    const uploaded: PostizMedia[] = [];
+
+    for ( const file of s.files.get( id ) ?? [] ) {
+      n += 1;
+      s.onFile?.(
+        n,
+        total
+      );
+      uploaded.push( await s.client.upload(
+        file,
+        s.signal
+      ) );
+    }
+    media.set(
+      id,
+      uploaded
     );
-    media.push( await s.client.upload(
-      file,
-      s.signal
-    ) );
   }
+
+  const entry = (
+    route: PostRoute, story: boolean
+  ): PostEntry => ( {
+    channel: route.channel,
+    choices: story ? {
+      ...route.choices,
+      kind: "story",
+      collaborators: []
+    } : route.choices,
+    caption: route.short ? s.shortCaption : s.caption,
+    media: media.get( route.variant.id ) ?? [],
+    video: ( s.files.get( route.variant.id ) ?? [] ).some( ( f ) => f.type.startsWith( "video/" ) )
+  } );
 
   const ids = await s.client.createPost(
     {
-      channels: s.channels,
-      choices: s.choices,
-      caption: s.caption,
-      media,
-      video: s.files.some( ( f ) => f.type.startsWith( "video/" ) ),
+      entries: s.routes.map( ( r ) => entry(
+        r,
+        false
+      ) ),
       at: s.at
     },
     s.signal
@@ -197,12 +229,31 @@ export async function sendPost( s: SendPost ): Promise<Publication> {
     throw new Error( "Postiz took the post but gave no id back — look in Postiz before sending it again." );
   }
 
+  const stories = s.routes.filter( ( r ) => r.story );
+
+  if ( stories.length ) {
+    ids.push( ...await s.client.createPost(
+      {
+        entries: stories.map( ( r ) => entry(
+          r,
+          true
+        ) ),
+        at: s.at
+      },
+      s.signal
+    ) );
+  }
+
+  const variantNames = [
+    ...new Set( s.routes.map( ( r ) => r.variant.name ) )
+  ];
+
   return {
     postIds: ids,
-    channelIds: s.channels.map( ( c ) => c.id ),
-    kind: s.choices.kind,
-    variantName: s.variantName,
-    files: s.files.length,
+    channelIds: s.routes.map( ( r ) => r.channel.id ),
+    kind: s.routes.find( ( r ) => r.kind )?.kind ?? "post",
+    variantName: variantNames.join( " + " ),
+    files: total,
     at: s.at instanceof Date ? s.at.toISOString() : s.at === "now" ? new Date().toISOString() : null,
     target: s.at === "now" ? "now" : s.at === "draft" ? "draft" : "schedule",
     sentAt: Date.now()

@@ -6,15 +6,18 @@ import {
 } from "lucide-react";
 
 import {
-  PROVIDER_LABEL, providerOf, type PostizChannel
+  PROVIDER_LABEL, providerOf, type PostizChannel, type Provider
 } from "@/lib/postiz/client";
 
-const PROVIDER_GLYPH = {
+export const PROVIDER_GLYPH: Record<Provider, string> = {
   instagram: "IG",
   tiktok: "TT",
   youtube: "YT",
+  threads: "TH",
+  x: "X",
+  bluesky: "BS",
   other: "··"
-} as const;
+};
 
 /** An account as a chip: ticked when Export proposes it; one Sketchbook cannot fill is shown, not offered. */
 export default function ChannelChip( {

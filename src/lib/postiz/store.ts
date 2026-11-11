@@ -31,6 +31,12 @@ export interface PostizConnection {
    * the username a collaborator invite needs. Wins over the channel's own.
    */
   handles: Record<string, string>;
+  /**
+   * The format each account usually takes (`video 9:16`, `picture 1:1`),
+   * remembered when he picks a variant for it — so another sketch's export
+   * gives Instagram its Reel and Threads its square picture by itself.
+   */
+  usual: Record<string, string>;
   rhythm: Rhythm;
   connectedAt: number;
 }
@@ -80,6 +86,10 @@ export function readConnection( raw: unknown ): PostizConnection | null {
       r.handles,
       channels
     ),
+    usual: readUsual(
+      r.usual,
+      channels
+    ),
     rhythm: readRhythm( r.rhythm ),
     connectedAt: typeof r.connectedAt === "number" ? r.connectedAt : 0
   };
@@ -115,6 +125,25 @@ function readHandles(
 
       if ( handle && channels.some( ( c ) => c.id === id ) ) {
         out[ id ] = handle;
+      }
+    }
+  }
+
+  return out;
+}
+
+function readUsual(
+  raw: unknown, channels: readonly PostizChannel[]
+): Record<string, string> {
+  const out: Record<string, string> = {};
+
+  if ( raw && typeof raw === "object" ) {
+    for ( const [
+      id,
+      value
+    ] of Object.entries( raw as Record<string, unknown> ) ) {
+      if ( typeof value === "string" && value.length <= 40 && channels.some( ( c ) => c.id === id ) ) {
+        out[ id ] = value;
       }
     }
   }

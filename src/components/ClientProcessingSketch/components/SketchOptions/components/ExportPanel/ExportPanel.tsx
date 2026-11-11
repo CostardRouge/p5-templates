@@ -34,10 +34,14 @@ import {
   nativeFramerateFor,
   nativeSizeFor,
   resolveSlideIndices,
+  resolveRunSize,
   slugify,
   VARIANT_PRESETS,
   type ExportVariant
 } from "@/lib/export/variants";
+import {
+  PROVIDER_GLYPH
+} from "@/components/ChannelChip";
 import {
   keepPiece
 } from "@/lib/gallery/keep";
@@ -54,11 +58,14 @@ import {
   publishFacts
 } from "@/lib/postiz/facts";
 import {
-  planPost, plannedInstants, type PostPlan
+  planPost, plannedInstants, routeWords, type PostPlan
 } from "@/lib/postiz/plan";
 import {
-  KIND_LABEL, postShape
+  postShape
 } from "@/lib/postiz/postShape";
+import {
+  updatePostiz
+} from "@/lib/postiz/store";
 import {
   DEFAULT_DRAFT,
   addPublication,
@@ -73,7 +80,7 @@ import {
   type When
 } from "@/lib/postiz/publishStore";
 import {
-  mimeOf, postableFile, sendPost
+  mimeOf, postableFile, sendRoutes
 } from "@/lib/postiz/send";
 import {
   usePostiz
@@ -139,7 +146,6 @@ function artifactFile( artifact: ExportArtifact ): File {
 
 /** What a publish run hands from the render to the send: the plan as it was pressed. */
 type PublishSnapshot = {
-  variant: ExportVariant;
   plan: PostPlan;
   target: Date | "now" | "draft";
 };
@@ -147,7 +153,8 @@ type PublishSnapshot = {
 /** Publish's screens, in the table's place like the preview. */
 type PublishView =
   | { kind: "review";
-    files: File[];
+    /** Each variant's files, by variant id. */
+    files: Map<string, File[]>;
     snapshot: PublishSnapshot }
   | { kind: "sent";
     files: File[];
@@ -481,14 +488,25 @@ export default function ExportPanel( {
       when,
       variants: snapshot.variants.map( ( variant ) => ( {
         variant,
-        slideSpan: slidesOf( variant ).length
+        slideSpan: slidesOf( variant ).length,
+        size: variant.size ?? resolveRunSize(
+          variant,
+          options,
+          slidesOf( variant )
+        ) ?? nativeSizeFor(
+          options,
+          activeSlideIndex
+        )
       } ) ),
       facts,
       planned: taken
     } )
     : null;
 
-  /** What a row would be posted as: its own shape, and the chosen kind on the chosen row. */
+  /**
+   * What a row sends, and to whom: `Reel → IG`, `Picture → TH X BS`; a
+   * variant no account takes says so, one nothing can take says why.
+   */
   const postsAsFor = ( variant: ExportVariant ) => {
     const shape = postShape(
       variant,
@@ -497,17 +515,30 @@ export default function ExportPanel( {
 
     if ( shape.files === null ) {
       return {
+        chosen: false,
         postsAs: null,
         reason: shape.reason
       };
     }
 
-    const kind = plan && plan.variant?.id === variant.id && plan.kind ? plan.kind : shape.kinds[ 0 ];
-    const files = `${ shape.files } ${ shape.media === "video" ? "mp4" : "jpg" }`;
+    const routes = plan?.routes.filter( ( r ) => r.variant.id === variant.id ) ?? [];
+
+    if ( !routes.length ) {
+      return {
+        chosen: false,
+        postsAs: "not sent",
+        reason: "No account ticked takes this variant — pick it for one in the Post band"
+      };
+    }
+
+    const what = routeWords( routes[ 0 ] ).split( " · " )[ 0 ];
 
     return {
-      postsAs: plan?.instagram === false && plan.variant?.id === variant.id ? files : `${ KIND_LABEL[ kind ] } · ${ shape.files > 1 ? files : shape.media === "video" ? "mp4" : "jpg" }`,
-      reason: null
+      chosen: true,
+      postsAs: `${ what } → ${ [
+        ...new Set( routes.map( ( r ) => PROVIDER_GLYPH[ r.provider ] ) )
+      ].join( " " ) }`,
+      reason: routes.map( ( r ) => `${ r.channel.name }: ${ routeWords( r ) }` ).join( "\n" )
     };
   };
 
@@ -705,14 +736,15 @@ export default function ExportPanel( {
   };
 
   /**
-   * Send rendered files to Postiz — the one path (`sendPost`) the Publish
-   * button and `publish.schedule` share. A PNG goes as the JPEG Instagram
-   * requires; the files in hand stay as rendered.
+   * Send rendered files to Postiz — the one path (`sendRoutes`) the Publish
+   * button and `publish.schedule` share: each variant's files made postable
+   * (a PNG as the JPEG Instagram requires; the files in hand stay as
+   * rendered), uploaded once, one entry per account.
    */
   const sendToPostiz = async(
-    snap: PublishSnapshot, files: File[]
+    snap: PublishSnapshot, rendered: Map<string, File[]>
   ) => {
-    if ( !client || !snap.plan.choices ) {
+    if ( !client || !snap.plan.routes.length ) {
       return;
     }
 
@@ -724,20 +756,30 @@ export default function ExportPanel( {
     setSending( "Preparing the files" );
 
     try {
-      const postable: File[] = [];
+      const postable = new Map<string, File[]>();
 
-      for ( const file of files ) {
-        postable.push( await postableFile( file ) );
+      for ( const [
+        id,
+        files
+      ] of rendered ) {
+        const out: File[] = [];
+
+        for ( const file of files ) {
+          out.push( await postableFile( file ) );
+        }
+        postable.set(
+          id,
+          out
+        );
       }
 
-      const publication = await sendPost( {
+      const publication = await sendRoutes( {
         client,
-        channels: snap.plan.targets,
-        choices: snap.plan.choices,
-        caption: snap.plan.text,
+        routes: snap.plan.routes,
         files: postable,
+        caption: snap.plan.caption.text,
+        shortCaption: snap.plan.shortCaption.text,
         at: snap.target,
-        variantName: snap.variant.name,
         signal: controller.signal,
         onFile: (
           n, of
@@ -752,16 +794,24 @@ export default function ExportPanel( {
         sketchKey,
         NEXT
       );
+      // Each account's format becomes what it usually takes.
+      updatePostiz( {
+        usual: {
+          ...( postiz?.usual ?? {} ),
+          ...Object.fromEntries( snap.plan.routes.map( ( r ) => [
+            r.channel.id,
+            r.format
+          ] ) )
+        }
+      } );
       // Sent is delivered: closing the dialog no longer warns about these files.
       markSaved(
-        [
-          snap.variant.id
-        ],
+        snap.plan.variants.map( ( v ) => v.id ),
         "shared"
       );
       setPublishView( {
         kind: "sent",
-        files: postable,
+        files: postable.get( snap.plan.routes[ 0 ].variant.id ) ?? [],
         publication
       } );
       void refreshPlanned();
@@ -777,7 +827,7 @@ export default function ExportPanel( {
   };
 
   /**
-   * Publish's verb: render THE chosen variant, then send it — at once for a
+   * Publish's verb: render each variant the accounts take (once), then send — at once for a
    * schedule or a draft, after the review screen for Publish now (the one
    * send that cannot be taken back). Pressing it approves the caption read.
    */
@@ -787,13 +837,12 @@ export default function ExportPanel( {
     // Now and Draft need no time, so a time-only refusal does not hold them back.
     const timeOnly = plan?.blocked === "Choose when it goes out." || Boolean( plan?.blocked?.startsWith( "That time is past" ) );
 
-    if ( running || !engine || !plan || !plan.variant || !plan.choices || ( plan.blocked && !( as && timeOnly ) ) ) {
+    if ( running || !engine || !plan || !plan.routes.length || ( plan.blocked && !( as && timeOnly ) ) ) {
       return;
     }
 
     const target = as ?? plan.at ?? "draft";
     const snap: PublishSnapshot = {
-      variant: plan.variant,
       plan,
       target
     };
@@ -801,13 +850,12 @@ export default function ExportPanel( {
     patchDraft(
       sketchKey,
       {
-        approved: true,
-        variantId: plan.variant.id
+        approved: true
       }
     );
 
     const controller = new AbortController();
-    let produced: ExportArtifact[] = [];
+    const produced = new Map<string, File[]>();
 
     abortRef.current = controller;
     publishingRef.current = true;
@@ -826,15 +874,16 @@ export default function ExportPanel( {
         options,
         sketchName: name,
         activeSlideIndex,
-        variants: [
-          plan.variant
-        ],
+        variants: plan.variants,
         signal: controller.signal,
         onProgress: setItems,
         onArtifacts: (
           variantId, artifacts, bundleFileName
         ) => {
-          produced = artifacts;
+          produced.set(
+            variantId,
+            artifacts.map( artifactFile )
+          );
           handleArtifacts(
             variantId,
             artifacts,
@@ -844,7 +893,7 @@ export default function ExportPanel( {
       } );
       const failed = results.find( ( item ) => item.status !== "done" );
 
-      if ( failed || produced.length === 0 ) {
+      if ( failed || plan.variants.some( ( v ) => !produced.get( v.id )?.length ) ) {
         throw new Error( failed?.error ?? "The render produced no file." );
       }
 
@@ -861,12 +910,10 @@ export default function ExportPanel( {
       setRunning( false );
     }
 
-    const files = produced.map( artifactFile );
-
     if ( target === "now" ) {
       setPublishView( {
         kind: "review",
-        files,
+        files: produced,
         snapshot: snap
       } );
 
@@ -875,7 +922,7 @@ export default function ExportPanel( {
 
     await sendToPostiz(
       snap,
-      files
+      produced
     );
   };
 
@@ -925,8 +972,10 @@ export default function ExportPanel( {
     return (
       <div className="flex min-h-0 flex-1 flex-col">
         <PublishReview
-          files={ publishView.files }
-          caption={ publishView.snapshot.plan.text }
+          files={ [
+            ...publishView.files.values()
+          ].flat() }
+          caption={ publishView.snapshot.plan.caption.used ? publishView.snapshot.plan.caption.text : publishView.snapshot.plan.shortCaption.text }
           targets={ publishView.snapshot.plan.targets }
           sending={ running }
           onConfirm={ () => void sendToPostiz(
@@ -1010,18 +1059,7 @@ export default function ExportPanel( {
       ? () => setPreviewing( variant.id )
       : undefined,
     removable: snapshot.variants.length > 1,
-    publish: publishMode && plan
-      ? {
-        chosen: plan.variant?.id === variant.id,
-        ...postsAsFor( variant ),
-        onChoose: () => patchDraft(
-          sketchKey,
-          {
-            variantId: variant.id
-          }
-        )
-      }
-      : undefined,
+    publish: publishMode && plan ? postsAsFor( variant ) : undefined,
     onPatch: ( patch: Partial<ExportVariant> ) => patchVariant(
       sketchKey,
       variant.id,
@@ -1153,6 +1191,14 @@ export default function ExportPanel( {
               sketchKey,
               next
             ) }
+            onRemember={ (
+              accountId, format
+            ) => updatePostiz( {
+              usual: {
+                ...postiz.usual,
+                [ accountId ]: format
+              }
+            } ) }
           />
         )}
       </div>
@@ -1223,13 +1269,13 @@ export default function ExportPanel( {
         >
           {publishMode && !error && !notice && ( sending || running ) && (
             <span className="tabular-nums text-foreground/80">
-              {sending ?? `Rendering ${ plan?.variant?.name ?? "" } — then it goes to Postiz`}
+              {sending ?? `Rendering ${ plan?.variants.map( ( v ) => v.name ).join( " + " ) ?? "" } — then it goes to Postiz`}
             </span>
           )}
           {publishMode && !error && !notice && !sending && !running && plan && (
             plan.blocked
               ? <span className="text-red-500">{plan.blocked}</span>
-              : `Renders ${ plan.variant?.name }, sends ${ plan.shape?.files ?? 0 } file${ plan.shape?.files === 1 ? "" : "s" } to ${ plan.targets.length } account${ plan.targets.length === 1 ? "" : "s" } · caption ${ draft.approved ? "approved" : "not approved yet" }`
+              : `Renders ${ plan.variants.map( ( v ) => v.name ).join( " + " ) }, sends ${ plan.files } file${ plan.files === 1 ? "" : "s" } to ${ plan.targets.length } account${ plan.targets.length === 1 ? "" : "s" } · caption ${ draft.approved ? "approved" : "not approved yet" }`
           )}
           {error && <span className="text-red-500">{error}</span>}
           {!error && notice && <span className="text-red-500">{notice}</span>}

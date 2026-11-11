@@ -1,13 +1,14 @@
 /**
  * One reading of a post for the Export dialog and the `publish.*` commands:
- * which variant goes, to whom, as what, when, and why it cannot yet.
+ * for each account, the variant it takes, as what, with which words, when,
+ * and why it cannot go yet.
  */
 
 import {
-  planPost, plannedInstants
+  planPost, plannedInstants, routeWords, type VariantSpan
 } from "../plan";
 import {
-  DEFAULT_DRAFT
+  DEFAULT_DRAFT, type PostDraft
 } from "../publishStore";
 import {
   DEFAULT_RHYTHM, slotLabel, zonedInstant
@@ -30,41 +31,53 @@ const facts = {
   seconds: "12",
   link: "p5.steeve.website/sketches/p5/iridescent/iridescent-v7-peaks-shell"
 };
+const channel = (
+  id: string, identifier: string, name = id
+) => ( {
+  id,
+  name,
+  identifier,
+  picture: null,
+  disabled: false,
+  handle: null
+} );
 const conn: PostizConnection = {
   apiBase: "https://p/api/public/v1",
   apiKey: "K",
   channels: [
-    {
-      id: "ig",
-      name: "Steeve Pommier",
-      identifier: "instagram",
-      picture: null,
-      disabled: false,
-      handle: null
-    },
-    {
-      id: "tt",
-      name: "sketchbook",
-      identifier: "tiktok",
-      picture: null,
-      disabled: false,
-      handle: null
-    },
-    {
-      id: "yt",
-      name: "Sketchbook",
-      identifier: "youtube",
-      picture: null,
-      disabled: false,
-      handle: null
-    }
+    channel(
+      "ig",
+      "instagram",
+      "Steeve Pommier"
+    ),
+    channel(
+      "th",
+      "threads",
+      "costardrouge.jpg"
+    ),
+    channel(
+      "x",
+      "x",
+      "Steeve on X"
+    ),
+    channel(
+      "yt",
+      "youtube",
+      "Sketchbook"
+    ),
+    channel(
+      "li",
+      "linkedin"
+    )
   ],
   defaultChannelIds: [
     "ig",
-    "yt"
+    "th",
+    "x"
   ],
-  collaborator: "studio",
+  collaborator: "",
   handles: {},
+  usual: {},
   rhythm: DEFAULT_RHYTHM,
   connectedAt: 0
 };
@@ -83,7 +96,7 @@ const variant = (
   sizeStrategy: "smallest",
   ...patch
 } );
-const variants = [
+const variants: VariantSpan[] = [
   {
     variant: variant(
       "web",
@@ -91,28 +104,60 @@ const variants = [
         format: "webm"
       }
     ),
-    slideSpan: 1
+    slideSpan: 1,
+    size: {
+      width: 1080,
+      height: 1080
+    }
   },
   {
     variant: variant( "reel" ),
-    slideSpan: 1
+    slideSpan: 1,
+    size: {
+      width: 1080,
+      height: 1920
+    }
   },
   {
     variant: variant(
-      "still",
+      "square",
       {
         kind: "image"
       }
     ),
-    slideSpan: 1
+    slideSpan: 1,
+    size: {
+      width: 1080,
+      height: 1080
+    }
   }
 ];
+const plan = (
+  draft: Partial<PostDraft> = {}, extra: Partial<Parameters<typeof planPost>[ 0 ]> = {}
+) => planPost( {
+  conn,
+  draft: {
+    ...DEFAULT_DRAFT,
+    ...draft
+  },
+  when: {
+    kind: "next"
+  },
+  variants,
+  facts,
+  planned: [],
+  now,
+  ...extra
+} );
+const routeOf = (
+  p: ReturnType<typeof plan>, id: string
+) => p.routes.find( ( r ) => r.channel.id === id );
 
 describe(
-  "a post, as the Export dialog and an agent read it",
+  "a post, account by account",
   () => {
     it(
-      "takes the first postable variant, the default accounts, the next free slot",
+      "gives each ticked account the first variant it can take, on the next free slot",
       () => {
         const fridayTaken = zonedInstant(
           2026,
@@ -122,152 +167,297 @@ describe(
           0,
           tz
         );
-        const plan = planPost( {
-          conn,
-          draft: DEFAULT_DRAFT,
-          when: {
-            kind: "next"
-          },
-          variants,
-          facts,
-          planned: [
-            fridayTaken
-          ],
-          now
-        } );
+        const p = plan(
+          {},
+          {
+            planned: [
+              fridayTaken
+            ]
+          }
+        );
 
-        expect( plan.variant?.id ).toBe( "reel" );
-        expect( plan.targets.map( ( c ) => c.id ) ).toEqual( [
-          "ig",
-          "yt"
+        expect( p.routes.map( ( r ) => [
+          r.channel.id,
+          r.variant.id,
+          r.source
+        ] ) ).toEqual( [
+          [
+            "ig",
+            "reel",
+            "first"
+          ],
+          [
+            "th",
+            "reel",
+            "first"
+          ],
+          [
+            "x",
+            "reel",
+            "first"
+          ]
         ] );
-        expect( plan.kind ).toBe( "reel" );
+        expect( routeOf(
+          p,
+          "ig"
+        )?.kind ).toBe( "reel" );
+        expect( routeOf(
+          p,
+          "x"
+        )?.kind ).toBeNull();
         expect( slotLabel(
-          plan.at as Date,
+          p.at as Date,
           tz
         ) ).toBe( "Sun 15 Nov · 10:00" );
-        expect( plan.verb ).toBe( "Schedule · Sun 15 Nov · 10:00" );
-        expect( plan.choices ).toMatchObject( {
-          collaborators: [
-            "studio"
+        expect( p.verb ).toBe( "Schedule · Sun 15 Nov · 10:00" );
+        expect( p.accounts.find( ( a ) => a.channel.id === "li" )?.reason ).toMatch( /Instagram, TikTok, YouTube, Threads, X and Bluesky/ );
+        expect( p.blocked ).toBeNull();
+      }
+    );
+
+    it(
+      "routes the Reel to Instagram and the square picture to Threads and X, each rendered once",
+      () => {
+        const p = plan(
+          {
+            variantFor: {
+              th: "square"
+            }
+          },
+          {
+            conn: {
+              ...conn,
+              usual: {
+                x: "picture 1:1",
+                ig: "video 9:16"
+              }
+            }
+          }
+        );
+
+        expect( p.routes.map( ( r ) => [
+          r.channel.id,
+          r.variant.id,
+          r.source,
+          r.format
+        ] ) ).toEqual( [
+          [
+            "ig",
+            "reel",
+            "usual",
+            "video 9:16"
           ],
-          youtubeTitle: "Iridescent · Peaks shell"
-        } );
-        expect( plan.blocked ).toBeNull();
-      }
-    );
-
-    it(
-      "keeps YouTube out of a still, and says when nobody can take it",
-      () => {
-        const still = planPost( {
-          conn,
-          draft: {
-            ...DEFAULT_DRAFT,
-            variantId: "still",
-            kind: "reel"
-          },
-          when: {
-            kind: "draft"
-          },
-          variants,
-          facts,
-          planned: [],
-          now
-        } );
-
-        expect( still.kind ).toBe( "post" );
-        expect( still.targets.map( ( c ) => c.id ) ).toEqual( [
-          "ig"
+          [
+            "th",
+            "square",
+            "picked",
+            "picture 1:1"
+          ],
+          [
+            "x",
+            "square",
+            "usual",
+            "picture 1:1"
+          ]
         ] );
-        expect( still.accounts.find( ( a ) => a.channel.id === "yt" )?.reason ).toMatch( /one video/ );
-        expect( still.verb ).toBe( "Send as a draft" );
-
-        const nobody = planPost( {
-          conn,
-          draft: {
-            ...DEFAULT_DRAFT,
-            variantId: "still",
-            channelIds: [
-              "yt"
-            ]
-          },
-          when: {
-            kind: "next"
-          },
-          variants,
-          facts,
-          planned: [],
-          now
-        } );
-
-        expect( nobody.blocked ).toMatch( /tick another/ );
+        expect( p.variants.map( ( v ) => v.id ) ).toEqual( [
+          "reel",
+          "square"
+        ] );
+        expect( p.files ).toBe( 2 );
+        expect( routeWords( routeOf(
+          p,
+          "x"
+        )! ) ).toBe( "Picture · jpg" );
       }
     );
 
     it(
-      "refuses a past time, a caption too long for TikTok, a missing YouTube title",
+      "gives Instagram a story beside its post, and the short networks the short caption",
       () => {
-        const base = {
-          conn,
-          variants,
-          facts,
-          planned: [],
-          now
-        };
+        const p = plan( {
+          storyToo: [
+            "ig"
+          ],
+          shortCaption: "{title} {link}"
+        } );
 
-        expect( planPost( {
-          ...base,
-          draft: DEFAULT_DRAFT,
-          when: {
-            kind: "at",
-            at: "2026-11-01T10:00:00Z",
-            custom: true
+        expect( routeOf(
+          p,
+          "ig"
+        )?.story ).toBe( true );
+        expect( routeWords( routeOf(
+          p,
+          "ig"
+        )! ) ).toBe( "Reel + Story · mp4" );
+        expect( routeOf(
+          p,
+          "x"
+        )?.short ).toBe( true );
+        expect( p.caption ).toMatchObject( {
+          used: true,
+          limit: 2200
+        } );
+        expect( p.shortCaption ).toMatchObject( {
+          used: true,
+          limit: 280,
+          text: "Iridescent · Peaks shell p5.steeve.website/sketches/p5/iridescent/iridescent-v7-peaks-shell"
+        } );
+      }
+    );
+
+    it(
+      "refuses a short caption over X's 280, a past time, a missing YouTube title",
+      () => {
+        expect( plan( {
+          shortCaption: "x".repeat( 300 )
+        } ).blocked ).toMatch( /short caption is 300 characters — 280 at most for Threads, X/ );
+        expect( plan(
+          {},
+          {
+            when: {
+              kind: "at",
+              at: "2026-11-01T10:00:00Z",
+              custom: true
+            }
           }
-        } ).blocked ).toMatch( /past/ );
-        expect( planPost( {
-          ...base,
-          draft: {
-            ...DEFAULT_DRAFT,
-            channelIds: [
-              "ig",
-              "tt"
-            ],
-            caption: "x".repeat( 2100 )
-          },
-          when: {
-            kind: "now"
-          }
-        } ).blocked ).toMatch( /2,000 at most/ );
-        expect( planPost( {
-          ...base,
-          draft: {
-            ...DEFAULT_DRAFT,
-            youtubeTitle: " "
-          },
-          when: {
-            kind: "now"
-          }
+        ).blocked ).toMatch( /past/ );
+        expect( plan( {
+          channelIds: [
+            "yt"
+          ],
+          youtubeTitle: " "
         } ).blocked ).toMatch( /YouTube needs a title/ );
       }
     );
 
     it(
-      "says there is nothing to post when no variant can be",
+      "keeps YouTube out of a picture, and says when nothing can be posted",
       () => {
-        expect( planPost( {
-          conn,
-          draft: DEFAULT_DRAFT,
-          when: {
-            kind: "next"
-          },
-          variants: [
-            variants[ 0 ]
+        const p = plan( {
+          channelIds: [
+            "ig",
+            "yt"
           ],
-          facts,
-          planned: [],
-          now
-        } ).blocked ).toMatch( /No variant can be posted/ );
+          variantFor: {
+            yt: "square",
+            ig: "square"
+          },
+          kind: "reel"
+        } );
+
+        expect( routeOf(
+          p,
+          "ig"
+        )?.kind ).toBe( "post" );
+        expect( p.accounts.find( ( a ) => a.channel.id === "yt" )?.options.find( ( o ) => o.variant.id === "square" )?.reason ).toMatch( /one video/ );
+        expect( routeOf(
+          p,
+          "yt"
+        )?.variant.id ).toBe( "reel" );
+        expect( plan(
+          {},
+          {
+            variants: [
+              variants[ 0 ]
+            ]
+          }
+        ).blocked ).toMatch( /No variant can be posted/ );
+      }
+    );
+  }
+);
+
+describe(
+  "his other Instagram account as collaborator",
+  () => {
+    const two: PostizConnection = {
+      ...conn,
+      channels: [
+        {
+          ...channel(
+            "motion",
+            "instagram",
+            "Steeve Pommier"
+          ),
+          handle: "steeve.motion"
+        },
+        channel(
+          "photo",
+          "instagram",
+          "Steeve taking photos"
+        )
+      ],
+      defaultChannelIds: [
+        "motion"
+      ]
+    };
+
+    it(
+      "posts on one account alone by default, and offers the other to co-sign once its username is known",
+      () => {
+        const alone = plan(
+          {},
+          {
+            conn: two
+          }
+        );
+
+        expect( alone.targets.map( ( c ) => c.id ) ).toEqual( [
+          "motion"
+        ] );
+        expect( alone.partners[ 0 ] ).toMatchObject( {
+          handle: null,
+          invited: false
+        } );
+
+        const cosigned = plan(
+          {
+            collabAccounts: [
+              "photo"
+            ]
+          },
+          {
+            conn: {
+              ...two,
+              handles: {
+                photo: "steeve.photos"
+              }
+            }
+          }
+        );
+
+        expect( cosigned.collaborators ).toEqual( [
+          "steeve.photos"
+        ] );
+        expect( cosigned.routes[ 0 ].choices.collaborators ).toEqual( [
+          "steeve.photos"
+        ] );
+      }
+    );
+
+    it(
+      "posts on each when both are ticked, and then offers no collaborator",
+      () => {
+        const p = plan(
+          {
+            channelIds: [
+              "motion",
+              "photo"
+            ],
+            collabAccounts: [
+              "photo"
+            ]
+          },
+          {
+            conn: two
+          }
+        );
+
+        expect( p.targets ).toHaveLength( 1 );
+        expect( p.partners.map( ( x ) => x.channel.id ) ).toEqual( [
+          "photo"
+        ] );
       }
     );
   }
@@ -301,123 +491,6 @@ describe(
         ] ).map( ( d ) => d.toISOString() ) ).toEqual( [
           at
         ] );
-      }
-    );
-  }
-);
-
-describe(
-  "his other Instagram account as collaborator",
-  () => {
-    const two: PostizConnection = {
-      ...conn,
-      channels: [
-        {
-          id: "motion",
-          name: "Steeve Pommier",
-          identifier: "instagram",
-          picture: null,
-          disabled: false,
-          handle: "steeve.motion"
-        },
-        {
-          id: "photo",
-          name: "Steeve taking photos",
-          identifier: "instagram",
-          picture: null,
-          disabled: false,
-          handle: null
-        }
-      ],
-      defaultChannelIds: [
-        "motion"
-      ],
-      collaborator: "",
-      handles: {}
-    };
-    const base = {
-      when: {
-        kind: "next" as const
-      },
-      variants,
-      facts,
-      planned: [],
-      now
-    };
-
-    it(
-      "posts on one account alone by default, and offers the other to co-sign",
-      () => {
-        const plan = planPost( {
-          ...base,
-          conn: two,
-          draft: DEFAULT_DRAFT
-        } );
-
-        expect( plan.targets.map( ( c ) => c.id ) ).toEqual( [
-          "motion"
-        ] );
-        expect( plan.partners ).toEqual( [
-          {
-            channel: two.channels[ 1 ],
-            handle: null,
-            invited: false
-          }
-        ] );
-        expect( plan.collaborators ).toEqual( [] );
-      }
-    );
-
-    it(
-      "invites it once its username is known, into ONE post's settings",
-      () => {
-        const plan = planPost( {
-          ...base,
-          conn: {
-            ...two,
-            handles: {
-              photo: "steeve.photos"
-            }
-          },
-          draft: {
-            ...DEFAULT_DRAFT,
-            collabAccounts: [
-              "photo"
-            ]
-          }
-        } );
-
-        expect( plan.collaborators ).toEqual( [
-          "steeve.photos"
-        ] );
-        expect( plan.choices?.collaborators ).toEqual( [
-          "steeve.photos"
-        ] );
-        expect( plan.targets ).toHaveLength( 1 );
-      }
-    );
-
-    it(
-      "posts on each when both are ticked, and then offers no collaborator",
-      () => {
-        const plan = planPost( {
-          ...base,
-          conn: two,
-          draft: {
-            ...DEFAULT_DRAFT,
-            channelIds: [
-              "motion",
-              "photo"
-            ],
-            collabAccounts: [
-              "photo"
-            ]
-          }
-        } );
-
-        expect( plan.targets ).toHaveLength( 2 );
-        expect( plan.partners ).toEqual( [] );
-        expect( plan.collaborators ).toEqual( [] );
       }
     );
   }
