@@ -304,7 +304,12 @@ export function fakeHandles(
         link: "p5.steeve.website/sketches/p5/voronoi/voronoi-v1-cells"
       } ),
       slideSpan: () => 1,
-      postable: async( file ) => file
+      variantSize: ( variant ) => variant.size ?? {
+        width: 1080,
+        height: 1350
+      },
+      postable: async( file ) => file,
+      remember: () => undefined
     },
     exports: {
       supported: () => true,

@@ -14,7 +14,7 @@ import {
   PROVIDER_LABEL, providerOf, type PostKind, type PostizClient
 } from "../../postiz/client";
 import {
-  planPost, plannedInstants, type PostPlan
+  planPost, plannedInstants, routeWords, type PostPlan, type VariantSpan
 } from "../../postiz/plan";
 import {
   KIND_LABEL
@@ -34,7 +34,7 @@ import {
   rhythmGrid, slotLabel
 } from "../../postiz/rhythm";
 import {
-  mimeOf, sendPost
+  mimeOf, sendRoutes
 } from "../../postiz/send";
 import type {
   PostizConnection
@@ -77,6 +77,15 @@ function connection( h: StudioHandles ): {
   };
 }
 
+/** The dialog's variants, each with the slides it covers and the size it renders at. */
+function spans( h: StudioHandles ): VariantSpan[] {
+  return h.exports.list().map( ( variant ) => ( {
+    variant,
+    slideSpan: h.publish.slideSpan( variant ),
+    size: h.publish.variantSize( variant )
+  } ) );
+}
+
 async function readPlanned( client: PostizClient ) {
   const now = Date.now();
 
@@ -103,10 +112,7 @@ async function currentPlan( h: StudioHandles ): Promise<{ plan: PostPlan;
     conn,
     draft,
     when: getWhen( key ),
-    variants: h.exports.list().map( ( variant ) => ( {
-      variant,
-      slideSpan: h.publish.slideSpan( variant )
-    } ) ),
+    variants: spans( h ),
     facts: h.publish.facts(),
     planned: plannedInstants( await readPlanned( client ) )
   } );
@@ -119,29 +125,40 @@ async function currentPlan( h: StudioHandles ): Promise<{ plan: PostPlan;
   };
 }
 
-/** What an agent reads of a plan: the post as the Post band shows it. */
+/** What an agent reads of a plan: the post as the Post band shows it — account by account. */
 function describePlan(
   plan: PostPlan, draft: PostDraft, tz: string
 ) {
   return {
-    variant: plan.variant ? {
-      id: plan.variant.id,
-      name: plan.variant.name
-    } : null,
-    files: plan.shape?.files ?? null,
-    media: plan.shape?.media ?? null,
-    kind: plan.instagram && plan.kind ? KIND_LABEL[ plan.kind ] : null,
-    kinds: plan.shape?.kinds.map( ( k ) => KIND_LABEL[ k ] ) ?? [],
     accounts: plan.accounts.map( ( a ) => ( {
       id: a.channel.id,
       name: a.channel.name,
-      network: PROVIDER_LABEL[ providerOf( a.channel.identifier ) ],
+      network: PROVIDER_LABEL[ a.provider ],
       ticked: a.ticked,
       ...( a.reason ? {
         refused: a.reason
+      } : {} ),
+      ...( a.usual ? {
+        usually: a.usual
+      } : {} ),
+      takes: a.options.filter( ( o ) => !o.reason ).map( ( o ) => `${ o.variant.id } (${ o.variant.name }, ${ o.format })` ),
+      ...( a.route ? {
+        sends: {
+          variant: a.route.variant.id,
+          variantName: a.route.variant.name,
+          format: a.route.format,
+          as: routeWords( a.route ),
+          ...( a.route.kind ? {
+            instagramKind: KIND_LABEL[ a.route.kind ],
+            instagramKinds: a.route.shape.kinds.map( ( k ) => KIND_LABEL[ k ] )
+          } : {} ),
+          caption: a.route.short ? "short" : "long",
+          why: a.route.source
+        }
       } : {} )
     } ) ),
-    goesTo: plan.targets.map( ( c ) => c.name ),
+    renders: plan.variants.map( ( v ) => v.name ),
+    files: plan.files,
     collaborators: plan.collaborators.map( ( h ) => `@${ h }` ),
     canInvite: plan.partners.map( ( p ) => ( {
       id: p.channel.id,
@@ -156,8 +173,8 @@ function describePlan(
       tz
     ) : null,
     rhythmWarnings: plan.warnings,
-    caption: plan.text,
-    captionLength: `${ plan.text.length } / ${ plan.limit }`,
+    caption: plan.caption.used ? `${ plan.caption.text } (${ plan.caption.text.length } / ${ plan.caption.limit })` : null,
+    shortCaption: plan.shortCaption.used ? `${ plan.shortCaption.text } (${ plan.shortCaption.text.length } / ${ plan.shortCaption.limit })` : null,
     approved: draft.approved,
     blocked: plan.blocked
   };
@@ -255,15 +272,25 @@ export function publishCommands( h: StudioHandles ): CommandSpec[] {
           conn,
           draft,
           when: getWhen( h.publish.key() ),
-          variants: [],
+          variants: spans( h ),
           facts,
           planned: []
         } ) : null;
 
         return {
           facts,
-          template: plan?.template ?? draft.caption,
-          caption: plan?.text ?? null,
+          caption: plan ? {
+            template: plan.caption.template,
+            reads: plan.caption.text,
+            limit: plan.caption.limit,
+            usedBy: plan.caption.used ? "Instagram, TikTok, YouTube" : "no account ticked"
+          } : null,
+          shortCaption: plan ? {
+            template: plan.shortCaption.template,
+            reads: plan.shortCaption.text,
+            limit: plan.shortCaption.limit,
+            usedBy: plan.shortCaption.used ? "Threads, X, Bluesky" : "no account ticked"
+          } : null,
           approved: draft.approved
         };
       }
@@ -271,23 +298,38 @@ export function publishCommands( h: StudioHandles ): CommandSpec[] {
     {
       id: "publish.compose",
       title: "Set up the post",
-      description: "Choose, in the Export dialog's Post band, the variant that goes (export.variants lists them), the accounts (publish.status lists them, by id), Instagram's kind, when, and each network's options. Only what is given changes. Answers the post as it now stands.",
+      description: "Set up, in the Export dialog's Post band, where the post goes and as what: the accounts (publish.status lists them, by id), the VARIANT each account takes (routes: { accountId: variantId } — e.g. the 9:16 Reel to Instagram and a square picture to Threads and X; export.variants lists them), Instagram's kind per account, a story beside it, when, and each network's options. An account with no variant of its own takes its usual format, else the default variant. Only what is given changes. Answers the post account by account.",
       available: connected,
       params: {
-        variant: {
-          type: "string",
-          description: "Variant id",
-          optional: true
-        },
         accounts: {
           type: "strings",
           description: "Account ids to post to (replaces the ticked ones)",
           optional: true
         },
+        routes: {
+          type: "object",
+          description: "The variant each account takes: { accountId: variantId }; merged over the ones set",
+          optional: true
+        },
+        variant: {
+          type: "string",
+          description: "The default variant, for an account with none of its own and no usual format",
+          optional: true
+        },
+        kinds: {
+          type: "object",
+          description: "Instagram's kind per Instagram account: { accountId: reel | post | carousel | story }",
+          optional: true
+        },
         kind: {
           type: "string",
-          description: "Instagram's kind",
+          description: "Instagram's kind for every Instagram account without its own",
           enum: KINDS,
+          optional: true
+        },
+        stories: {
+          type: "strings",
+          description: "Instagram accounts (ids) that ALSO get the same single file as a story (replaces the list)",
           optional: true
         },
         when: {
@@ -341,23 +383,36 @@ export function publishCommands( h: StudioHandles ): CommandSpec[] {
           conn
         } = connection( h );
         const key = h.publish.key();
+        const current = getDraft( key );
+        const variants = h.exports.list();
         const patch: Partial<PostDraft> = {};
+        const account = ( id: string ) => conn.channels.find( ( c ) => c.id === id );
+        const instagramIds = (
+          ids: string[], what: string
+        ) => {
+          const wrong = ids.filter( ( id ) => providerOf( account( id )?.identifier ?? "" ) !== "instagram" );
+
+          if ( wrong.length ) {
+            throw new CommandError(
+              "invalid",
+              `${ wrong.join( ", " ) } is not one of his Instagram accounts — ${ what } are Instagram's`
+            );
+          }
+        };
 
         if ( params.variant !== undefined ) {
-          const variant = h.exports.list().find( ( v ) => v.id === params.variant );
-
-          if ( !variant ) {
+          if ( !variants.some( ( v ) => v.id === params.variant ) ) {
             throw new CommandError(
               "invalid",
               `no variant "${ params.variant }" — export.variants lists them`
             );
           }
-          patch.variantId = variant.id;
+          patch.variantId = String( params.variant );
         }
 
         if ( params.accounts !== undefined ) {
           const ids = params.accounts as string[];
-          const unknown = ids.filter( ( id ) => !conn.channels.some( ( c ) => c.id === id ) );
+          const unknown = ids.filter( ( id ) => !account( id ) );
 
           if ( unknown.length ) {
             throw new CommandError(
@@ -368,22 +423,79 @@ export function publishCommands( h: StudioHandles ): CommandSpec[] {
           patch.channelIds = ids;
         }
 
+        if ( params.routes !== undefined ) {
+          const routes = params.routes as Record<string, unknown>;
+          const variantFor = {
+            ...current.variantFor
+          };
+
+          for ( const [
+            id,
+            variantId
+          ] of Object.entries( routes ) ) {
+            if ( !account( id ) ) {
+              throw new CommandError(
+                "invalid",
+                `no account ${ id } — publish.status lists them`
+              );
+            }
+
+            if ( typeof variantId !== "string" || !variants.some( ( v ) => v.id === variantId ) ) {
+              throw new CommandError(
+                "invalid",
+                `no variant "${ String( variantId ) }" for ${ account( id )?.name } — export.variants lists them`
+              );
+            }
+            variantFor[ id ] = variantId;
+          }
+          patch.variantFor = variantFor;
+        }
+
         if ( params.kind !== undefined ) {
           patch.kind = params.kind as PostKind;
         }
 
-        if ( params.collaborators !== undefined ) {
-          const ids = params.collaborators as string[];
-          const wrong = ids.filter( ( id ) => !conn.channels.some( ( c ) => c.id === id && providerOf( c.identifier ) === "instagram" ) );
+        if ( params.kinds !== undefined ) {
+          const kinds = params.kinds as Record<string, unknown>;
 
-          if ( wrong.length ) {
+          instagramIds(
+            Object.keys( kinds ),
+            "kinds"
+          );
+
+          const bad = Object.entries( kinds ).find( ( [
+            , kind
+          ] ) => !KINDS.includes( kind as PostKind ) );
+
+          if ( bad ) {
             throw new CommandError(
               "invalid",
-              `${ wrong.join( ", " ) } is not one of his Instagram accounts — publish.status lists them`
+              `"${ String( bad[ 1 ] ) }" is not a kind — ${ KINDS.join( ", " ) }`
             );
           }
+          patch.kindFor = {
+            ...current.kindFor,
+            ...kinds as Record<string, PostKind>
+          };
+        }
 
-          const going = patch.channelIds ?? getDraft( key ).channelIds ?? conn.defaultChannelIds;
+        if ( params.stories !== undefined ) {
+          instagramIds(
+            params.stories as string[],
+            "stories"
+          );
+          patch.storyToo = params.stories as string[];
+        }
+
+        if ( params.collaborators !== undefined ) {
+          const ids = params.collaborators as string[];
+
+          instagramIds(
+            ids,
+            "collaborators"
+          );
+
+          const going = patch.channelIds ?? current.channelIds ?? conn.defaultChannelIds;
 
           if ( params.accounts !== undefined && ids.some( ( id ) => going.includes( id ) ) ) {
             throw new CommandError(
@@ -427,28 +539,53 @@ export function publishCommands( h: StudioHandles ): CommandSpec[] {
 
         const when = params.when === undefined ? null : readWhen( String( params.when ) );
 
-        // The kind must fit the variant it will carry: refused, never bent.
-        if ( patch.kind ) {
-          const draft = {
-            ...getDraft( key ),
-            ...patch
-          };
-          const plan = planPost( {
-            conn,
-            draft,
-            when: getWhen( key ),
-            variants: h.exports.list().map( ( variant ) => ( {
-              variant,
-              slideSpan: h.publish.slideSpan( variant )
-            } ) ),
-            facts: h.publish.facts(),
-            planned: []
-          } );
+        // What is asked must fit the variant each account carries: refused, never bent.
+        const next = {
+          ...current,
+          ...patch
+        };
+        const trial = planPost( {
+          conn,
+          draft: next,
+          when: getWhen( key ),
+          variants: spans( h ),
+          facts: h.publish.facts(),
+          planned: []
+        } );
 
-          if ( plan.kind !== patch.kind ) {
+        for ( const [
+          id,
+          variantId
+        ] of Object.entries( ( params.routes ?? {} ) as Record<string, string> ) ) {
+          const row = trial.accounts.find( ( a ) => a.channel.id === id );
+          const option = row?.options.find( ( o ) => o.variant.id === variantId );
+
+          if ( row?.reason || option?.reason ) {
             throw new CommandError(
               "invalid",
-              `${ plan.variant?.name ?? "this variant" } cannot be a ${ KIND_LABEL[ patch.kind ] } — it can be ${ plan.shape?.kinds.map( ( k ) => KIND_LABEL[ k ] ).join( ", " ) || "nothing" }`
+              `${ row?.channel.name }: ${ option?.reason ?? row?.reason }`
+            );
+          }
+        }
+
+        const askedKinds: [string, PostKind][] = [
+          ...Object.entries( ( params.kinds ?? {} ) as Record<string, PostKind> ),
+          ...( params.kind !== undefined ? trial.routes.filter( ( r ) => r.provider === "instagram" && !next.kindFor[ r.channel.id ] ).map( ( r ): [string, PostKind] => [
+            r.channel.id,
+            params.kind as PostKind
+          ] ) : [] )
+        ];
+
+        for ( const [
+          id,
+          kind
+        ] of askedKinds ) {
+          const route = trial.routes.find( ( r ) => r.channel.id === id );
+
+          if ( route && route.kind !== kind ) {
+            throw new CommandError(
+              "invalid",
+              `${ route.channel.name }: ${ route.variant.name } cannot be a ${ KIND_LABEL[ kind ] } — it can be ${ route.shape.kinds.map( ( k ) => KIND_LABEL[ k ] ).join( ", " ) || "nothing" }`
             );
           }
         }
@@ -481,25 +618,37 @@ export function publishCommands( h: StudioHandles ): CommandSpec[] {
     },
     {
       id: "publish.caption",
-      title: "Write the caption",
-      description: "Replace the caption TEMPLATE ({title}, {description}, {tags}, {engine}, {seconds}, {link}, {sketch} are filled when it is sent; omit template to go back to Sketchbook's own). New words are NOT approved: show the person the caption it reads as, and publish.approve only once they say it suits them.",
+      title: "Write the captions",
+      description: "Replace the caption TEMPLATES: `template` for Instagram, TikTok and YouTube (2,200 characters on Instagram), `short` for Threads (500), X (280) and Bluesky (300). {title}, {description}, {tags}, {engine}, {seconds}, {link}, {sketch} are filled when it is sent; give an empty string to go back to Sketchbook's own. New words are NOT approved: show the person the captions as they read, and publish.approve only once they say they suit them.",
       params: {
         template: {
           type: "string",
-          description: "The caption template; omit for Sketchbook's own",
+          description: "The long caption template; \"\" for Sketchbook's own",
+          optional: true
+        },
+        short: {
+          type: "string",
+          description: "The short caption template; \"\" for Sketchbook's own",
           optional: true
         }
       },
       run( params ) {
         const key = h.publish.key();
-        const template = params.template === undefined ? null : String( params.template );
+        const patch: Partial<PostDraft> = {
+          approved: false
+        };
+
+        if ( params.template !== undefined ) {
+          patch.caption = String( params.template ) || null;
+        }
+
+        if ( params.short !== undefined ) {
+          patch.shortCaption = String( params.short ) || null;
+        }
 
         patchDraft(
           key,
-          {
-            caption: template,
-            approved: false
-          }
+          patch
         );
 
         const conn = h.publish.connection();
@@ -507,22 +656,22 @@ export function publishCommands( h: StudioHandles ): CommandSpec[] {
           conn,
           draft: getDraft( key ),
           when: getWhen( key ),
-          variants: [],
+          variants: spans( h ),
           facts: h.publish.facts(),
           planned: []
         } ) : null;
 
         return {
-          template: plan?.template ?? template,
-          caption: plan?.text ?? null,
+          caption: plan?.caption.text ?? null,
+          shortCaption: plan?.shortCaption.text ?? null,
           approved: false
         };
       }
     },
     {
       id: "publish.approve",
-      title: "Approve the caption",
-      description: "Mark the caption as read and accepted. Call it ONLY when the person said, in this conversation, that the caption as it reads (publish.facts shows it) suits them — never on your own.",
+      title: "Approve the captions",
+      description: "Mark the captions as read and accepted. Call it ONLY when the person said, in this conversation, that the captions as they read (publish.facts shows them) suit them — never on your own.",
       run: () => {
         const draft = patchDraft(
           h.publish.key(),
@@ -539,7 +688,7 @@ export function publishCommands( h: StudioHandles ): CommandSpec[] {
     {
       id: "publish.schedule",
       title: "Render and send the post",
-      description: "Render the chosen variant and send it to Postiz as the post stands (publish.status shows it): scheduled, now, or as a draft. Refused until the caption is approved. Long videos take minutes — the tab must stay open and visible.",
+      description: "Render every variant the accounts take (each once) and send them to Postiz as the post stands (publish.status shows it): scheduled, now, or as a draft — one entry per account with its own files and caption. Refused until the captions are approved. Long videos take minutes — the tab must stay open and visible.",
       available: () => {
         const ok = connected();
 
@@ -563,11 +712,11 @@ export function publishCommands( h: StudioHandles ): CommandSpec[] {
         if ( !draft.approved ) {
           throw new CommandError(
             "unavailable",
-            "the caption is not approved — show the person the caption it reads as (publish.facts) and publish.approve once they say it suits them"
+            "the captions are not approved — show the person how they read (publish.facts) and publish.approve once they say they suit them"
           );
         }
 
-        if ( plan.blocked || !plan.variant || !plan.choices ) {
+        if ( plan.blocked || !plan.routes.length ) {
           throw new CommandError(
             "unavailable",
             plan.blocked ?? "nothing can be posted"
@@ -575,59 +724,69 @@ export function publishCommands( h: StudioHandles ): CommandSpec[] {
         }
 
         const target = plan.at ?? "draft";
-        const variant = plan.variant;
-        const produced: ExportArtifact[] = [];
+        const produced = new Map<string, File[]>();
         const controller = new AbortController();
 
         sending = true;
 
         try {
           const items = await h.exports.run(
-            [
-              variant
-            ],
+            plan.variants,
             (
-              _, artifacts
+              variantId, artifacts
             ) => {
-              produced.push( ...artifacts );
+              produced.set(
+                variantId,
+                artifacts.map( ( artifact ) => new File(
+                  [
+                    artifact.blob
+                  ],
+                  artifact.fileName,
+                  {
+                    type: mimeOf(
+                      artifact.fileName,
+                      artifact.blob.type
+                    )
+                  }
+                ) )
+              );
             },
             () => undefined,
             controller.signal
           );
           const failed = items.find( ( item ) => item.status !== "done" );
 
-          if ( failed || !produced.length ) {
+          if ( failed || plan.variants.some( ( v ) => !produced.get( v.id )?.length ) ) {
             throw new CommandError(
               "failed",
               `the render did not finish${ failed?.error ? `: ${ failed.error }` : "" }`
             );
           }
 
-          const files: File[] = [];
+          const files = new Map<string, File[]>();
 
-          for ( const artifact of produced ) {
-            files.push( await h.publish.postable( new File(
-              [
-                artifact.blob
-              ],
-              artifact.fileName,
-              {
-                type: mimeOf(
-                  artifact.fileName,
-                  artifact.blob.type
-                )
-              }
-            ) ) );
+          for ( const [
+            id,
+            list
+          ] of produced ) {
+            const out: File[] = [];
+
+            for ( const file of list ) {
+              out.push( await h.publish.postable( file ) );
+            }
+            files.set(
+              id,
+              out
+            );
           }
 
-          const publication = await sendPost( {
+          const publication = await sendRoutes( {
             client,
-            channels: plan.targets,
-            choices: plan.choices,
-            caption: plan.text,
+            routes: plan.routes,
             files,
-            at: target,
-            variantName: variant.name
+            caption: plan.caption.text,
+            shortCaption: plan.shortCaption.text,
+            at: target
           } );
 
           addPublication(
@@ -640,6 +799,10 @@ export function publishCommands( h: StudioHandles ): CommandSpec[] {
               kind: "next"
             }
           );
+          h.publish.remember( Object.fromEntries( plan.routes.map( ( r ) => [
+            r.channel.id,
+            r.format
+          ] ) ) );
 
           return {
             sent: publication.target,
@@ -647,9 +810,11 @@ export function publishCommands( h: StudioHandles ): CommandSpec[] {
               new Date( publication.at ),
               conn.rhythm.timeZone
             ) : null,
-            to: plan.targets.map( ( c ) => c.name ),
-            kind: KIND_LABEL[ publication.kind ],
-            files: files.map( ( f ) => `${ f.name } (${ ( f.size / 1024 / 1024 ).toFixed( 1 ) } MB)` ),
+            to: plan.routes.map( ( r ) => `${ r.channel.name } (${ PROVIDER_LABEL[ r.provider ] }): ${ r.variant.name }, ${ routeWords( r ) }` ),
+            files: [
+              ...files.values()
+            ].flat()
+              .map( ( f ) => `${ f.name } (${ ( f.size / 1024 / 1024 ).toFixed( 1 ) } MB)` ),
             postIds: publication.postIds
           };
         } finally {

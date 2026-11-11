@@ -43,7 +43,7 @@ import {
   postableFile
 } from "@/lib/postiz/send";
 import {
-  getPostiz
+  getPostiz, updatePostiz
 } from "@/lib/postiz/store";
 import {
   sketchCommands
@@ -79,7 +79,7 @@ import {
   addVariant, ensureVariants, getVariantSnapshot, patchVariant, removeVariant
 } from "@/lib/export/variantStore";
 import {
-  makeVariant, nativeFramerateFor, resolveSlideIndices, VARIANT_PRESETS
+  makeVariant, nativeFramerateFor, nativeSizeFor, resolveRunSize, resolveSlideIndices, VARIANT_PRESETS
 } from "@/lib/export/variants";
 import {
   validateOptionsDocument
@@ -603,7 +603,35 @@ export default function StudioCommands( {
               now().activeSlideIndex
             ).length;
           },
-          postable: postableFile
+          variantSize: ( variant ) => {
+            const options = now().form.getValues() as SketchOption;
+
+            return variant.size ?? resolveRunSize(
+              variant,
+              options,
+              resolveSlideIndices(
+                variant,
+                Array.isArray( options.slides ) ? options.slides.length : 0,
+                now().activeSlideIndex
+              )
+            ) ?? nativeSizeFor(
+              options,
+              now().activeSlideIndex
+            );
+          },
+          postable: postableFile,
+          remember: ( formats ) => {
+            const conn = getPostiz();
+
+            if ( conn ) {
+              updatePostiz( {
+                usual: {
+                  ...conn.usual,
+                  ...formats
+                }
+              } );
+            }
+          }
         },
         addAsset: async(
           file, kind, slide

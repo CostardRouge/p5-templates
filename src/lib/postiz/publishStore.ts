@@ -26,6 +26,14 @@ export interface PostDraft {
   channelIds: string[] | null;
   /** The caption TEMPLATE; null is Sketchbook's own. */
   caption: string | null;
+  /** The SHORT caption template, for Threads, X and Bluesky; null is Sketchbook's own. */
+  shortCaption: string | null;
+  /** The variant each account takes, by account id; an account absent follows its usual format. */
+  variantFor: Record<string, string>;
+  /** Instagram's kind per account; absent follows `kind`. */
+  kindFor: Record<string, PostKind>;
+  /** Instagram accounts that ALSO get the same file as a story. */
+  storyToo: string[];
   /** The person read these words: pressing Schedule, or saying so to Claude. Changing them takes it back. */
   approved: boolean;
   trial: boolean;
@@ -72,6 +80,10 @@ export const DEFAULT_DRAFT: PostDraft = {
   kind: null,
   channelIds: null,
   caption: null,
+  shortCaption: null,
+  variantFor: {},
+  kindFor: {},
+  storyToo: [],
   approved: false,
   trial: false,
   graduate: "auto",
@@ -132,6 +144,17 @@ export function readDraft( raw: unknown ): PostDraft {
       0,
       6000
     ) : null,
+    shortCaption: typeof r.shortCaption === "string" ? r.shortCaption.slice(
+      0,
+      2000
+    ) : null,
+    variantFor: stringRecord( r.variantFor ),
+    kindFor: Object.fromEntries( Object.entries( stringRecord( r.kindFor ) ).filter( ( [
+      , kind
+    ] ) => KINDS.includes( kind as PostKind ) ) ) as Record<string, PostKind>,
+    storyToo: Array.isArray( r.storyToo ) ? [
+      ...new Set( r.storyToo.filter( ( id ): id is string => typeof id === "string" ) )
+    ] : [],
     approved: r.approved === true,
     trial: r.trial === true,
     graduate: pick(
@@ -172,6 +195,23 @@ export function readDraft( raw: unknown ): PostDraft {
   };
 }
 
+function stringRecord( raw: unknown ): Record<string, string> {
+  const out: Record<string, string> = {};
+
+  if ( raw && typeof raw === "object" && !Array.isArray( raw ) ) {
+    for ( const [
+      key,
+      value
+    ] of Object.entries( raw as Record<string, unknown> ) ) {
+      if ( typeof value === "string" ) {
+        out[ key ] = value;
+      }
+    }
+  }
+
+  return out;
+}
+
 /** A patch applied to a draft: new words take the approval back unless the patch sets it. */
 export function patchedDraft(
   draft: PostDraft, patch: Partial<PostDraft>
@@ -181,7 +221,9 @@ export function patchedDraft(
     ...patch
   };
 
-  if ( "caption" in patch && patch.caption !== draft.caption && !( "approved" in patch ) ) {
+  const newWords = ( "caption" in patch && patch.caption !== draft.caption ) || ( "shortCaption" in patch && patch.shortCaption !== draft.shortCaption );
+
+  if ( newWords && !( "approved" in patch ) ) {
     next.approved = false;
   }
 

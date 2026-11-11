@@ -14,6 +14,30 @@ const json = (
   }
 );
 
+/** One account's post, as the specs before several accounts per send wrote it. */
+const one = ( r: {
+  choices: Parameters<typeof postBody>[ 0 ][ "entries" ][ number ][ "choices" ];
+  caption: string;
+  media: { id: string;
+    path: string }[];
+  video: boolean;
+  at: Date | "now" | "draft";
+} ) => postBody( {
+  entries: [
+    {
+      channel: {
+        id: "ch1",
+        identifier: "instagram"
+      },
+      choices: r.choices,
+      caption: r.caption,
+      media: r.media,
+      video: r.video
+    }
+  ],
+  at: r.at
+} );
+
 describe(
   "the Postiz client",
   () => {
@@ -34,12 +58,6 @@ describe(
     it(
       "builds a scheduled Reel, a trial, a carousel with a collaborator, a story",
       () => {
-        const channels = [
-          {
-            id: "ch1",
-            identifier: "instagram"
-          }
-        ];
         const media = [
           {
             id: "m1",
@@ -47,8 +65,7 @@ describe(
           }
         ];
         const at = new Date( "2026-11-17T08:00:00Z" );
-        const reel = postBody( {
-          channels,
+        const reel = one( {
           choices: {
             kind: "reel"
           },
@@ -84,8 +101,7 @@ describe(
             }
           ]
         } );
-        const trial = postBody( {
-          channels,
+        const trial = one( {
           choices: {
             kind: "reel",
             trial: true
@@ -100,8 +116,7 @@ describe(
           is_trial_reel: true,
           graduation_strategy: "SS_PERFORMANCE"
         } );
-        const carousel = postBody( {
-          channels,
+        const carousel = one( {
           choices: {
             kind: "carousel",
             collaborators: [
@@ -122,8 +137,7 @@ describe(
             }
           ]
         } );
-        const story = postBody( {
-          channels,
+        const story = one( {
           choices: {
             kind: "story",
             collaborators: [

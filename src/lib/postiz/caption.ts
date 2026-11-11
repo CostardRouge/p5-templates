@@ -42,6 +42,9 @@ export const CAPTION_TOKENS: ReadonlyArray<keyof CaptionFacts> = [
 /** Sketchbook's own caption (the lab's Q5, his pick: the long one). */
 export const DEFAULT_CAPTION = "{title}\n{description}\n\n{engine} · a {seconds} s loop · {link}\n{tags} #generativeart #creativecoding";
 
+/** Sketchbook's own SHORT caption, for Threads (500), X (280) and Bluesky (300). */
+export const DEFAULT_SHORT_CAPTION = "{title} — {engine}, a {seconds} s loop\n{link}\n{tags}";
+
 /** The template filled: each `{token}` its fact, an unknown one left as typed, blank runs folded. */
 export function fillCaption(
   template: string, facts: CaptionFacts
