@@ -17,6 +17,9 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
 - A fifth Materials sketch, Ice: a faceted block of clear ice turning in studio light, bending and breaking the
   lights through its facets, with a milky heart, bright fractures and white edges. One slider turns it into glass
   or diamond; its shape, flaws, lights and backdrop are in the form.
+- A sixth Materials sketch, Lava: a lake of lava at night, dark plates of crust drifting on the melt, split by
+  glowing cracks that widen and branch as waves of heat pass underneath, with sparks and heat shimmer. Plates,
+  heat, melt and crust colours, air and camera are in the form; a yellower melt and a greyer crust make it metal.
 
 ## [1.3.0] - 2026-11-11 — Parabola
 

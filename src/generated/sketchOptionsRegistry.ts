@@ -158,6 +158,7 @@ export const sketchFormLoaders: Record<string, SketchModuleLoader> = {
   "p5:materials/materials-v3-caustics": () => import( "@/p5/sketches/materials/materials-v3-caustics/options" ),
   "p5:materials/materials-v4-sand": () => import( "@/p5/sketches/materials/materials-v4-sand/options" ),
   "p5:materials/materials-v5-ice": () => import( "@/p5/sketches/materials/materials-v5-ice/options" ),
+  "p5:materials/materials-v6-lava": () => import( "@/p5/sketches/materials/materials-v6-lava/options" ),
   "p5:metaballs/metaballs-v1-field": () => import( "@/p5/sketches/metaballs/metaballs-v1-field/options" ),
   "p5:metaballs/metaballs-v2-marching-squares": () => import( "@/p5/sketches/metaballs/metaballs-v2-marching-squares/options" ),
   "p5:metaballs/metaballs-v3-blobs": () => import( "@/p5/sketches/metaballs/metaballs-v3-blobs/options" ),

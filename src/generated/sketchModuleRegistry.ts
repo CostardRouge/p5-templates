@@ -140,6 +140,7 @@ export const sketchModuleLoaders: Record<string, SketchModuleLoader> = {
   "p5:materials/materials-v3-caustics": () => import( "@/p5/sketches/materials/materials-v3-caustics/index.js" ),
   "p5:materials/materials-v4-sand": () => import( "@/p5/sketches/materials/materials-v4-sand/index.js" ),
   "p5:materials/materials-v5-ice": () => import( "@/p5/sketches/materials/materials-v5-ice/index.js" ),
+  "p5:materials/materials-v6-lava": () => import( "@/p5/sketches/materials/materials-v6-lava/index.js" ),
   "p5:metaballs/metaballs-v1-field": () => import( "@/p5/sketches/metaballs/metaballs-v1-field/index.js" ),
   "p5:metaballs/metaballs-v2-marching-squares": () => import( "@/p5/sketches/metaballs/metaballs-v2-marching-squares/index.js" ),
   "p5:metaballs/metaballs-v3-blobs": () => import( "@/p5/sketches/metaballs/metaballs-v3-blobs/index.js" ),

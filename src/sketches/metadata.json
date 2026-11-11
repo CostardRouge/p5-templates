@@ -4624,5 +4624,27 @@
     ],
     "mtime": "2026-11-11T20:15:34.076Z",
     "ctime": "2026-11-11T20:14:03.808Z"
+  },
+  {
+    "name": "materials-v6-lava",
+    "engine": "p5",
+    "category": "materials",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "asyncDraw": false,
+    "description": "A lake of lava at night, seen from just above it: dark plates of crust drifting on the melt, split by glowing orange cracks that widen, branch and close as waves of heat pass underneath, with sparks rising and the far shore lost in a red haze. Slow, heavy and incandescent, in a seamless loop.",
+    "tags": [
+      "3d",
+      "shader",
+      "noise",
+      "drift",
+      "pulse",
+      "neon"
+    ],
+    "mtime": "2026-11-11T21:52:33.192Z",
+    "ctime": "2026-11-11T21:52:33.123Z"
   }
 ]
