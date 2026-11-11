@@ -4603,5 +4603,26 @@
     ],
     "mtime": "2026-11-11T18:08:00.546Z",
     "ctime": "2026-11-11T18:08:00.458Z"
+  },
+  {
+    "name": "materials-v5-ice",
+    "engine": "p5",
+    "category": "materials",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "asyncDraw": false,
+    "description": "A faceted block of clear ice turning slowly against a dark blue backdrop: studio lights bent and broken through its facets, a milky heart of trapped air, bright fracture planes flashing as it turns, white edges and a blue that deepens with its thickness. Cold, sharp and glittering, in a seamless loop.",
+    "tags": [
+      "3d",
+      "shader",
+      "geometry",
+      "orbit",
+      "chrome"
+    ],
+    "mtime": "2026-11-11T20:15:34.076Z",
+    "ctime": "2026-11-11T20:14:03.808Z"
   }
 ]

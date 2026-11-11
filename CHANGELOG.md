@@ -14,6 +14,9 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
 - A fourth Materials sketch, Sand: a sea of dunes under a low sun, their crests cutting lit slopes from shaded
   faces, with veils of sand streaming over them, plumes spilling off the crests and ripples creeping in the wind.
   Dunes, wind, sun, sky, sand colour and camera are in the form.
+- A fifth Materials sketch, Ice: a faceted block of clear ice turning in studio light, bending and breaking the
+  lights through its facets, with a milky heart, bright fractures and white edges. One slider turns it into glass
+  or diamond; its shape, flaws, lights and backdrop are in the form.
 
 ## [1.3.0] - 2026-11-11 — Parabola
 
