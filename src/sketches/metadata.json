@@ -4581,5 +4581,27 @@
     ],
     "mtime": "2026-11-11T12:27:19.436Z",
     "ctime": "2026-11-11T12:27:19.340Z"
+  },
+  {
+    "name": "materials-v4-sand",
+    "engine": "p5",
+    "category": "materials",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "asyncDraw": false,
+    "description": "A sea of orange dunes under a low sun: long lit slopes, knife-edged crests and steep faces in violet shade receding to a hazy horizon, with veils of sand streaming over the slopes, plumes spilling off the crests and fine ripples creeping forward in the wind. Still, warm and slow, in a seamless loop.",
+    "tags": [
+      "3d",
+      "raymarched",
+      "shader",
+      "noise",
+      "drift",
+      "gradient"
+    ],
+    "mtime": "2026-11-11T18:08:00.546Z",
+    "ctime": "2026-11-11T18:08:00.458Z"
   }
 ]
