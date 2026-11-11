@@ -9,6 +9,12 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
 
 ## [Unreleased]
 
+### Added
+
+- A fourth Materials sketch, Sand: a sea of dunes under a low sun, their crests cutting lit slopes from shaded
+  faces, with veils of sand streaming over them, plumes spilling off the crests and ripples creeping in the wind.
+  Dunes, wind, sun, sky, sand colour and camera are in the form.
+
 ## [1.3.0] - 2026-11-11 — Parabola
 
 ### Added
