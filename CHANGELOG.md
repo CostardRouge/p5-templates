@@ -20,6 +20,9 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
 - A sixth Materials sketch, Lava: a lake of lava at night, dark plates of crust drifting on the melt, split by
   glowing cracks that widen and branch as waves of heat pass underneath, with sparks and heat shimmer. Plates,
   heat, melt and crust colours, air and camera are in the form; a yellower melt and a greyer crust make it metal.
+- A seventh Materials sketch, Smoke: a thread of pale smoke rising from an ember in the dark, a twisting ribbon
+  that breaks into soft billows, lit from the side so it has depth and shade. Plume, air, lamp and backdrop are in
+  the form.
 
 ## [1.3.0] - 2026-11-11 — Parabola
 
