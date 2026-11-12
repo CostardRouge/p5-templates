@@ -83,6 +83,9 @@ import {
   mimeOf, postableFile, sendRoutes
 } from "@/lib/postiz/send";
 import {
+  failedChannels, mergeResend, outcomeWindow, type AccountOutcome
+} from "@/lib/postiz/outcome";
+import {
   usePostiz
 } from "@/lib/postiz/usePostiz";
 import useSketch from "../../../SketchProvider/hooks/useSketch";
@@ -158,7 +161,10 @@ type PublishView =
     snapshot: PublishSnapshot }
   | { kind: "sent";
     files: File[];
-    publication: Publication };
+    publication: Publication;
+    /** What was sent, kept for *Send again*: the plan and each variant's postable files. */
+    snapshot: PublishSnapshot;
+    postable: Map<string, File[]> };
 
 const HEAD_CELL =
   "px-2.5 text-left text-[9.5px] font-semibold uppercase tracking-[0.09em] text-label";
@@ -812,7 +818,9 @@ export default function ExportPanel( {
       setPublishView( {
         kind: "sent",
         files: postable.get( snap.plan.routes[ 0 ].variant.id ) ?? [],
-        publication
+        publication,
+        snapshot: snap,
+        postable
       } );
       void refreshPlanned();
     } catch( caught ) {
@@ -942,6 +950,75 @@ export default function ExportPanel( {
     void refreshPlanned();
   };
 
+  /**
+   * The failed accounts sent the same files again: their routes from the
+   * snapshot (a story again only where the story failed), now unless the
+   * slot is still ahead; once Postiz took them, the failed posts are deleted
+   * there (nothing of theirs went out) and the screen follows the new ones.
+   */
+  const sendAgain = async(
+    view: Extract<PublishView, { kind: "sent" }>, failed: AccountOutcome[]
+  ) => {
+    if ( !client ) {
+      throw new Error( "Postiz is not connected." );
+    }
+
+    const routes = view.snapshot.plan.routes.flatMap( ( r ) => {
+      const mine = failed.filter( ( o ) => o.channelId === r.channel.id );
+
+      return mine.some( ( o ) => !o.story ) ? [
+        {
+          ...r,
+          story: r.story && mine.some( ( o ) => o.story )
+        }
+      ] : [];
+    } );
+
+    if ( !routes.length ) {
+      return;
+    }
+
+    const target = view.snapshot.target instanceof Date && view.snapshot.target.getTime() > Date.now() + 60_000
+      ? view.snapshot.target
+      : view.snapshot.target === "draft" ? "draft" : "now";
+    const resent = await sendRoutes( {
+      client,
+      routes,
+      files: view.postable,
+      caption: view.snapshot.plan.caption.text,
+      shortCaption: view.snapshot.plan.shortCaption.text,
+      at: target
+    } );
+
+    addPublication(
+      sketchKey,
+      resent
+    );
+
+    for ( const post of failed ) {
+      try {
+        await client.deletePost( post.postId );
+      } catch {
+        // Left in Postiz as an error; nothing of it went out.
+      }
+
+      dropPublication(
+        sketchKey,
+        post.postId
+      );
+    }
+
+    setPublishView( {
+      ...view,
+      publication: mergeResend(
+        view.publication,
+        failedChannels( failed ),
+        resent
+      )
+    } );
+    void refreshPlanned();
+  };
+
   const stateFor = ( id: string ) => items.find( ( item ) => item.variantId === id );
 
   /**
@@ -1002,6 +1079,27 @@ export default function ExportPanel( {
           files={ publishView.files }
           timeZone={ postiz.rhythm.timeZone }
           postizUrl={ postizHome( postiz.apiBase ) }
+          onCheck={ () => {
+            const span = outcomeWindow( publishView.publication );
+
+            return client ? client.posts(
+              span.from,
+              span.to
+            ) : Promise.reject( new Error( "Postiz is not connected." ) );
+          } }
+          onSendAgain={ client ? ( failed ) => sendAgain(
+            publishView,
+            failed
+          ) : null }
+          onChooseAgain={ ( channelIds ) => {
+            patchDraft(
+              sketchKey,
+              {
+                channelIds
+              }
+            );
+            setPublishView( null );
+          } }
           onTakeBack={ () => takeBack( publishView.publication ) }
           onBack={ () => setPublishView( null ) }
         />

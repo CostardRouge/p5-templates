@@ -26,6 +26,12 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
 
 ### Fixed
 
+- After publishing, the screen now shows what really happened on each account — published (with a link to the
+  post), queued or failed — instead of saying "publishing" for all of them. A failed account shows what Postiz said
+  and what to do about it, and can be sent the same files again, or taken back to the variants to pick another one.
+- Threads, X and Bluesky now get a picture variant by default when the export has one, even when a video was the
+  sketch's chosen variant; before, the first send handed them the video. A Bluesky "missing jobId" failure is
+  explained: Bluesky refused the video (usually an unverified email in Bluesky).
 - Browsing from one shader sketch to another no longer runs the browser out of WebGL contexts: each sketch now
   gives its graphics context back when you leave it, where before every visited sketch kept one until the page
   failed with an empty canvas. When a browser still refuses WebGL (no hardware acceleration, too many 3D tabs), the

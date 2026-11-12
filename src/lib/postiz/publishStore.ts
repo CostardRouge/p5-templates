@@ -61,9 +61,19 @@ export type When =
   | { kind: "now" }
   | { kind: "draft" };
 
+/** One account's post of a send, as Postiz numbered it. */
+export interface PublishedPost {
+  postId: string;
+  channelId: string;
+  /** The story sent beside an Instagram post. */
+  story: boolean;
+}
+
 export interface Publication {
   /** One per account, as Postiz made them. */
   postIds: string[];
+  /** Which post is which account's (since 2026-11-12; older ones have none). */
+  posts?: PublishedPost[];
   channelIds: string[];
   kind: PostKind;
   variantName: string;

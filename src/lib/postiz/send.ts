@@ -19,7 +19,7 @@ import type {
   PostRoute
 } from "./plan";
 import type {
-  Publication
+  Publication, PublishedPost
 } from "./publishStore";
 
 /** `loop-1080x1920.png` → `loop-1080x1920.jpg`. Pure. */
@@ -229,10 +229,18 @@ export async function sendRoutes( s: SendRoutes ): Promise<Publication> {
     throw new Error( "Postiz took the post but gave no id back — look in Postiz before sending it again." );
   }
 
+  // Postiz answers the ids in the entries' order: which post is which account's.
+  const posts: PublishedPost[] = ids.map( (
+    postId, i
+  ) => ( {
+    postId,
+    channelId: s.routes[ i ]?.channel.id ?? "",
+    story: false
+  } ) );
   const stories = s.routes.filter( ( r ) => r.story );
 
   if ( stories.length ) {
-    ids.push( ...await s.client.createPost(
+    const storyIds = await s.client.createPost(
       {
         entries: stories.map( ( r ) => entry(
           r,
@@ -241,7 +249,16 @@ export async function sendRoutes( s: SendRoutes ): Promise<Publication> {
         at: s.at
       },
       s.signal
-    ) );
+    );
+
+    ids.push( ...storyIds );
+    posts.push( ...storyIds.map( (
+      postId, i
+    ) => ( {
+      postId,
+      channelId: stories[ i ]?.channel.id ?? "",
+      story: true
+    } ) ) );
   }
 
   const variantNames = [
@@ -250,6 +267,7 @@ export async function sendRoutes( s: SendRoutes ): Promise<Publication> {
 
   return {
     postIds: ids,
+    posts,
     channelIds: s.routes.map( ( r ) => r.channel.id ),
     kind: s.routes.find( ( r ) => r.kind )?.kind ?? "post",
     variantName: variantNames.join( " + " ),
