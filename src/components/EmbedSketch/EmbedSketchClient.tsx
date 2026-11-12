@@ -20,6 +20,7 @@ import type {
 } from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/constants/field-config";
 import ScalableViewport from "@/components/ScalableViewport/ScalableViewport";
 import EmbedPoster from "@/components/EmbedSketch/EmbedPoster";
+import SketchFailureNotice from "@/components/SketchPage/SketchFailureNotice";
 import EmbedPlaybackToggle from "@/components/EmbedSketch/EmbedPlaybackToggle";
 import {
   deepMerge, structuredClone
@@ -86,6 +87,10 @@ export default function EmbedSketchClient( {
   const rootRef = useRef<HTMLDivElement | null>( null );
   const containerRef = useRef<HTMLDivElement | null>( null );
   const engineRef = useRef<SketchEngine | null>( null );
+  const [
+    failure,
+    setFailure
+  ] = useState<Error | null>( null );
   const [
     ready,
     setReady
@@ -320,6 +325,15 @@ export default function EmbedSketchClient( {
         handleReady
       );
 
+      // Same notice as the studio page: an embed that cannot get a WebGL
+      // context says so in its frame instead of staying blank.
+      const handleError = ( error: Error ) => setFailure( error );
+
+      instance.on(
+        "error",
+        handleError
+      );
+
       const initialOptions = fillSizeRef.current
         ? applyEmbedSize(
           mountOptions,
@@ -345,9 +359,14 @@ export default function EmbedSketchClient( {
           "ready",
           handleReady
         );
+        instance.off(
+          "error",
+          handleError
+        );
         instance.destroy();
         engineRef.current = null;
         setReady( false );
+        setFailure( null );
       };
     },
     [
@@ -428,6 +447,8 @@ export default function EmbedSketchClient( {
           >
             <div ref={ containerRef } className="sketch-canvas-container" />
           </ScalableViewport>
+
+          <SketchFailureNotice error={ failure } />
 
           {controls && controls.length > 0 && (
             <EmbedControlPanel

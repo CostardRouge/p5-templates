@@ -24,6 +24,13 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
   that breaks into soft billows, lit from the side so it has depth and shade. Plume, air, lamp and backdrop are in
   the form.
 
+### Fixed
+
+- Browsing from one shader sketch to another no longer runs the browser out of WebGL contexts: each sketch now
+  gives its graphics context back when you leave it, where before every visited sketch kept one until the page
+  failed with an empty canvas. When a browser still refuses WebGL (no hardware acceleration, too many 3D tabs), the
+  sketch says so on the page instead of staying blank and retrying every frame.
+
 ## [1.3.0] - 2026-11-11 — Parabola
 
 ### Added
