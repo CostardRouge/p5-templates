@@ -81,6 +81,8 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
 ### Fixed
 
 - On a phone, the menu button no longer covers the Export screen's title.
+- On a sketch, the engine, category and name links above the canvas open in the same tab instead of a new one,
+  so the browser's Back returns to the sketches and the home page instead of closing the site.
 
 ## [1.2.0] - 2026-10-22 — Ophiuride
 
