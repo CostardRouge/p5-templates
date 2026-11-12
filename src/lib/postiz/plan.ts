@@ -224,7 +224,14 @@ export function planPost( {
       const picked = fitting.find( ( v ) => v.variant.id === draft.variantFor[ channel.id ] );
       const byUsual = usual ? fitting.find( ( v ) => v.format === usual ) : undefined;
       const byMain = fitting.find( ( v ) => v.variant.id === draft.variantId );
-      const chosen = picked ?? byUsual ?? byMain ?? fitting[ 0 ];
+      // With nothing picked nor usual, the short networks take a picture and
+      // the others a video — his rule («sur Threads et Twitter, des images»);
+      // the first send of 2026-11-11 gave X, Threads and Bluesky the mp4.
+      const short = SHORT_PROVIDERS.has( provider );
+      const byNetwork = fitting.find( ( v ) => v.shape.media === ( short ? "image" : "video" ) );
+      // A default variant (`PostDraft.variantId`, kept from the one-variant
+      // days or set by an agent) yields to that rule on the short networks.
+      const chosen = picked ?? byUsual ?? ( short ? byNetwork : undefined ) ?? byMain ?? byNetwork ?? fitting[ 0 ];
       const source: PostRoute[ "source" ] = picked ? "picked" : byUsual ? "usual" : "first";
       const instagram = provider === "instagram";
       const kind = instagram ? fitKind(

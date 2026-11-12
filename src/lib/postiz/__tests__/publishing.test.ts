@@ -810,6 +810,24 @@ describe(
           files: 2,
           target: "schedule"
         } );
+        // Which post is which account's, for the Sent screen's states.
+        expect( publication.posts ).toEqual( [
+          {
+            postId: "post1-0",
+            channelId: "ig",
+            story: false
+          },
+          {
+            postId: "post1-1",
+            channelId: "x",
+            story: false
+          },
+          {
+            postId: "post2-0",
+            channelId: "ig",
+            story: true
+          }
+        ] );
       }
     );
   }

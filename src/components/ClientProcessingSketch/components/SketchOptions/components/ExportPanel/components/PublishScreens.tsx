@@ -1,14 +1,17 @@
 "use client";
 
 import React, {
-  useEffect, useRef, useState
+  useCallback, useEffect, useRef, useState
 } from "react";
 import {
-  ArrowLeft, Check, ExternalLink
+  ArrowLeft, Check, ExternalLink, RefreshCw, TriangleAlert
 } from "lucide-react";
 import {
-  PROVIDER_LABEL, providerOf, type PostizChannel
+  failureHint, PROVIDER_LABEL, providerOf, type PostizChannel, type PostizPost
 } from "@/lib/postiz/client";
+import {
+  failedChannels, readOutcomes, stillMoving, type AccountOutcome
+} from "@/lib/postiz/outcome";
 import {
   KIND_LABEL
 } from "@/lib/postiz/postShape";
@@ -144,19 +147,72 @@ export function PublishReview( {
   );
 }
 
+const STATE_WORD: Record<AccountOutcome[ "state" ], string> = {
+  queue: "queued",
+  published: "published",
+  error: "failed",
+  draft: "draft",
+  unknown: "sent"
+};
+
+/** How long a "now" send is watched before the screen leaves it to *Check again*. */
+const WATCH_MS = 5 * 60 * 1000;
+const WATCH_EVERY_MS = 20 * 1000;
+
+/** One failed post: Postiz's first sentence, what to do, and its whole words on demand. */
+function Failure( {
+  error
+}: {
+  error: string | null;
+} ) {
+  const [
+    raw,
+    setRaw
+  ] = useState( false );
+  const hint = failureHint( error );
+  const first = ( error ?? "Postiz could not publish it, and said nothing more." ).split( /(?<=\.)\s/ )[ 0 ];
+
+  return (
+    <span className="flex flex-col gap-1 text-[11px] leading-snug">
+      <span className="text-red-500">{first}</span>
+      {hint && <span className="text-foreground">{hint}</span>}
+      {error && error.trim() !== first.trim() && (
+        <button
+          type="button"
+          aria-expanded={ raw }
+          onClick={ () => setRaw( ( r ) => !r ) }
+          className="self-start border-0 bg-transparent p-0 font-mono text-[10px] text-label underline"
+        >
+          {raw ? "Hide what Postiz said" : "What Postiz said"}
+        </button>
+      )}
+      {raw && <span className="whitespace-pre-wrap break-words font-mono text-[10px] text-label">{error}</span>}
+    </span>
+  );
+}
+
 /**
  * What was sent, in the table's place (lab 1 §6): the vignette, when it goes
- * out, each account with its state, *Open in Postiz*, *Take back* (confirmed
- * in place, `DELETE /posts/:id`) for anything not yet out, and the way back.
+ * out, each account with its REAL state as Postiz lists it (watched for five
+ * minutes after a Publish now, *Check again* after), what a failure means and
+ * the two ways out of one — *Send again* (the same files, the failed accounts
+ * only) and *Choose again* (back to the variants with only them ticked, to
+ * give one a picture instead) —, *Open in Postiz*, *Take back* (confirmed in
+ * place, `DELETE /posts/:id`) for anything not yet out, and the way back.
  */
 export function PublishSent( {
-  publication, channels, files, timeZone, postizUrl, onTakeBack, onBack
+  publication, channels, files, timeZone, postizUrl, onCheck, onSendAgain, onChooseAgain, onTakeBack, onBack
 }: {
   publication: Publication;
   channels: PostizChannel[];
   files: File[];
   timeZone: string;
   postizUrl: string;
+  /** The posts Postiz lists around this send. */
+  onCheck: () => Promise<PostizPost[]>;
+  /** The same files again, to the failed posts' accounts only; null once the files are gone. */
+  onSendAgain: ( ( failed: AccountOutcome[] ) => Promise<void> ) | null;
+  onChooseAgain: ( channelIds: string[] ) => void;
   onTakeBack: () => Promise<void>;
   onBack: () => void;
 } ) {
@@ -176,21 +232,119 @@ export function PublishSent( {
     error,
     setError
   ] = useState<string | null>( null );
-  const title = publication.target === "now"
-    ? "Sent — publishing now"
-    : publication.target === "draft" ? "In Postiz as a draft" : "Scheduled";
-  const when = publication.target === "now"
-    ? "Your Postiz is publishing it; it is live in a minute or two."
-    : publication.target === "draft" || !publication.at
-      ? "Open it in Postiz to finish and send it."
-      : `${ slotLabel(
-        new Date( publication.at ),
-        timeZone
-      ) } · ${ timeZone.replace(
-        /_/g,
-        " "
-      ) }`;
-  const state = publication.target === "draft" ? "draft" : publication.target === "now" ? "publishing" : "queued";
+  const [
+    outcomes,
+    setOutcomes
+  ] = useState<AccountOutcome[] | null>( null );
+  const [
+    checking,
+    setChecking
+  ] = useState( false );
+  const [
+    resending,
+    setResending
+  ] = useState( false );
+  const checkRef = useRef( onCheck );
+
+  useEffect(
+    () => {
+      checkRef.current = onCheck;
+    },
+    [
+      onCheck
+    ]
+  );
+
+  const check = useCallback(
+    async() => {
+      setChecking( true );
+
+      try {
+        const found = readOutcomes(
+          publication,
+          await checkRef.current()
+        );
+
+        setOutcomes( found );
+        setError( null );
+
+        return found;
+      } catch( caught ) {
+        setError( caught instanceof Error ? caught.message : String( caught ) );
+
+        return null;
+      } finally {
+        setChecking( false );
+      }
+    },
+    [
+      publication
+    ]
+  );
+
+  // Looked once on arrival (and after a resend); a Publish now is watched
+  // until every account has an answer, five minutes at most.
+  useEffect(
+    () => {
+      let stop = false;
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const until = Date.now() + WATCH_MS;
+      const look = async() => {
+        const found = await check();
+
+        if ( !stop && publication.target === "now" && ( !found || stillMoving( found ) ) && Date.now() < until ) {
+          timer = setTimeout(
+            () => void look(),
+            WATCH_EVERY_MS
+          );
+        }
+      };
+
+      timer = setTimeout(
+        () => void look(),
+        publication.target === "now" ? 4000 : 0
+      );
+
+      return () => {
+        stop = true;
+        clearTimeout( timer );
+      };
+    },
+    [
+      check,
+      publication.target
+    ]
+  );
+
+  const failed = outcomes ? failedChannels( outcomes ) : [];
+  // Named by network (his accounts share one name); by name and network when a network repeats.
+  const failedNames = channels.filter( ( c ) => failed.includes( c.id ) ).map( (
+    c, i, all
+  ) => {
+    const net = PROVIDER_LABEL[ providerOf( c.identifier ) ];
+
+    return all.filter( ( o ) => providerOf( o.identifier ) === providerOf( c.identifier ) ).length > 1 ? `${ c.name } on ${ net }` : net;
+  } );
+  const wentOut = outcomes ? channels.filter( ( c ) => outcomes.some( ( o ) => o.channelId === c.id && !o.story && o.state === "published" ) ).length : 0;
+  const title = failed.length
+    ? `${ failed.length === channels.length ? "Not published" : "Sent, but not everywhere" }`
+    : publication.target === "now"
+      ? "Sent — publishing now"
+      : publication.target === "draft" ? "In Postiz as a draft" : "Scheduled";
+  const when = failed.length
+    ? `Out on ${ wentOut } of ${ channels.length } accounts${ wentOut < channels.length - failed.length ? " so far" : "" }.`
+    : publication.target === "now"
+      ? "Your Postiz is publishing it; it is live in a minute or two."
+      : publication.target === "draft" || !publication.at
+        ? "Open it in Postiz to finish and send it."
+        : `${ slotLabel(
+          new Date( publication.at ),
+          timeZone
+        ) } · ${ timeZone.replace(
+          /_/g,
+          " "
+        ) }`;
+  const fallback: AccountOutcome[ "state" ] = publication.target === "draft" ? "draft" : "unknown";
 
   const takeBack = async() => {
     setTaking( true );
@@ -204,6 +358,24 @@ export function PublishSent( {
       setError( caught instanceof Error ? caught.message : String( caught ) );
     } finally {
       setTaking( false );
+    }
+  };
+
+  const sendAgain = async() => {
+    if ( !onSendAgain ) {
+      return;
+    }
+
+    setResending( true );
+    setError( null );
+
+    try {
+      await onSendAgain( ( outcomes ?? [] ).filter( ( o ) => o.state === "error" && failed.includes( o.channelId ) ) );
+      setOutcomes( null );
+    } catch( caught ) {
+      setError( caught instanceof Error ? caught.message : String( caught ) );
+    } finally {
+      setResending( false );
     }
   };
 
@@ -221,24 +393,82 @@ export function PublishSent( {
         ) : (
           <>
             <h3 className="m-0 flex items-center gap-2 text-base font-semibold text-foreground">
-              <span className="grid h-6 w-6 place-items-center rounded-full border border-emerald-500/50 bg-emerald-500/10 text-emerald-500">
-                <Check className="h-3.5 w-3.5" />
-              </span>
+              {failed.length ? (
+                <span className="grid h-6 w-6 place-items-center rounded-full border border-red-500/50 bg-red-500/10 text-red-500">
+                  <TriangleAlert className="h-3.5 w-3.5" />
+                </span>
+              ) : (
+                <span className="grid h-6 w-6 place-items-center rounded-full border border-emerald-500/50 bg-emerald-500/10 text-emerald-500">
+                  <Check className="h-3.5 w-3.5" />
+                </span>
+              )}
               {title}
             </h3>
             <p className="m-0 text-sm tabular-nums text-foreground">{when}</p>
             <ul className="m-0 list-none rounded-lg border border-theme p-0">
-              {channels.map( ( channel ) => (
-                <li key={ channel.id } className="flex items-center gap-2 border-b border-theme px-3 py-2 text-xs last:border-b-0">
-                  <span className="min-w-0 flex-1 truncate text-foreground">{channel.name}</span>
-                  <span className="font-mono text-[10px] text-label">{PROVIDER_LABEL[ providerOf( channel.identifier ) ]}</span>
-                  <span className={ state === "draft" ? "font-mono text-[10px] text-label" : "font-mono text-[10px] text-emerald-500" }>{state}</span>
-                </li>
-              ) )}
+              {channels.map( ( channel ) => {
+                const mine = outcomes?.filter( ( o ) => o.channelId === channel.id ) ?? [];
+                const worst = mine.find( ( o ) => o.state === "error" ) ?? mine.find( ( o ) => o.state !== "published" ) ?? mine[ 0 ];
+                const state = worst?.state ?? fallback;
+                const live = mine.find( ( o ) => o.url )?.url;
+
+                return (
+                  <li key={ channel.id } className="flex flex-col gap-1.5 border-b border-theme px-3 py-2 text-xs last:border-b-0">
+                    <span className="flex items-center gap-2">
+                      <span className="min-w-0 flex-1 truncate text-foreground">{channel.name}</span>
+                      <span className="font-mono text-[10px] text-label">{PROVIDER_LABEL[ providerOf( channel.identifier ) ]}</span>
+                      {live ? (
+                        <a href={ live } target="_blank" rel="noreferrer" className="font-mono text-[10px] text-emerald-500 underline">published</a>
+                      ) : (
+                        <span className={ `font-mono text-[10px] ${ state === "error" ? "text-red-500" : state === "draft" || state === "unknown" ? "text-label" : "text-emerald-500" }` }>
+                          {state === "queue" && publication.target === "now" ? "publishing" : STATE_WORD[ state ]}
+                        </span>
+                      )}
+                    </span>
+                    {state === "error" && <Failure error={ worst?.error ?? null } />}
+                  </li>
+                );
+              } )}
             </ul>
-            <p className="m-0 font-mono text-[10px] text-label">
-              {publication.files} file{publication.files === 1 ? "" : "s"} from {publication.variantName} · caption approved
+            <p className="m-0 flex flex-wrap items-center gap-x-2 font-mono text-[10px] text-label">
+              <span>{publication.files} file{publication.files === 1 ? "" : "s"} from {publication.variantName} · caption approved</span>
+              <button
+                type="button"
+                disabled={ checking }
+                onClick={ () => void check() }
+                className="inline-flex items-center gap-1 border-0 bg-transparent p-0 font-mono text-[10px] text-label underline disabled:no-underline"
+              >
+                <RefreshCw className={ `h-3 w-3 ${ checking ? "animate-spin" : "" }` } />
+                {checking ? "Checking…" : "Check again"}
+              </button>
             </p>
+            {failed.length > 0 && (
+              <div className="flex flex-col gap-2 rounded-lg border border-red-500/40 bg-red-500/5 p-3 text-xs text-foreground">
+                <span>
+                  Nothing went out on {failedNames.join( " and " ) || "those accounts"}. Send the same files again, or choose another variant for {failed.length === 1 ? "it" : "them"}.
+                </span>
+                <span className="flex flex-wrap gap-2">
+                  {onSendAgain && (
+                    <button
+                      type="button"
+                      disabled={ resending }
+                      onClick={ () => void sendAgain() }
+                      className="rounded-lg border border-transparent bg-foreground px-3 py-1.5 text-xs font-medium text-background hover:opacity-85 disabled:opacity-40 pointer-coarse:min-h-11"
+                    >
+                      {resending ? "Sending…" : `Send again to ${ failedNames.join( " and " ) || "them" }`}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    disabled={ resending }
+                    onClick={ () => onChooseAgain( failed ) }
+                    className="rounded-lg border border-theme bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-hover disabled:opacity-40 pointer-coarse:min-h-11"
+                  >
+                    Choose again
+                  </button>
+                </span>
+              </div>
+            )}
             {confirming && (
               <div className="flex flex-col gap-2 rounded-lg border border-red-500/40 bg-red-500/5 p-3 text-xs text-foreground">
                 <span>Take it back from your Postiz? It will not go out.</span>
@@ -271,7 +501,7 @@ export function PublishSent( {
               href={ postizUrl }
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-transparent bg-foreground px-3 py-1.5 text-xs font-medium text-background no-underline transition-opacity hover:opacity-85 pointer-coarse:min-h-11"
+              className={ `inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium no-underline transition-opacity pointer-coarse:min-h-11 ${ failed.length ? "border border-theme bg-background text-foreground hover:bg-hover" : "border border-transparent bg-foreground text-background hover:opacity-85" }` }
             >
               Open in Postiz
               <ExternalLink className="h-3.5 w-3.5" />

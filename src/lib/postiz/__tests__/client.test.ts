@@ -385,6 +385,7 @@ describe(
         expect( failureHint( "Instagram could not process this video. If the issue persists…" ) ).toMatch( /30 fps/ );
         expect( failureHint( "Failed to fetch media from url" ) ).toMatch( /reachable/ );
         expect( failureHint( "The access token has expired" ) ).toMatch( /Reconnect/ );
+        expect( failureHint( "Could not prepare the post for Bluesky, nothing was published: missing jobId" ) ).toMatch( /Bluesky refused the video/ );
         expect( failureHint( "Something else" ) ).toBeNull();
         expect( failureHint( null ) ).toBeNull();
         expect( postizHome( "https://postiz.example.com/api/public/v1" ) ).toBe( "https://postiz.example.com" );

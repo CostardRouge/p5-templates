@@ -157,7 +157,7 @@ describe(
   "a post, account by account",
   () => {
     it(
-      "gives each ticked account the first variant it can take, on the next free slot",
+      "gives each ticked account the variant its network takes — a picture on the short ones — on the next free slot",
       () => {
         const fridayTaken = zonedInstant(
           2026,
@@ -188,12 +188,12 @@ describe(
           ],
           [
             "th",
-            "reel",
+            "square",
             "first"
           ],
           [
             "x",
-            "reel",
+            "square",
             "first"
           ]
         ] );
@@ -212,6 +212,35 @@ describe(
         expect( p.verb ).toBe( "Schedule · Sun 15 Nov · 10:00" );
         expect( p.accounts.find( ( a ) => a.channel.id === "li" )?.reason ).toMatch( /Instagram, TikTok, YouTube, Threads, X and Bluesky/ );
         expect( p.blocked ).toBeNull();
+      }
+    );
+
+    it(
+      "gives the short networks a picture and the others a video when nothing says otherwise, even over a default variant",
+      () => {
+        // The send of 2026-11-11: a default `variantId` from the one-variant
+        // days gave X, Threads and Bluesky the mp4.
+        const p = plan( {
+          variantId: "reel"
+        } );
+
+        expect( p.routes.map( ( r ) => [
+          r.channel.id,
+          r.variant.id
+        ] ) ).toEqual( [
+          [
+            "ig",
+            "reel"
+          ],
+          [
+            "th",
+            "square"
+          ],
+          [
+            "x",
+            "square"
+          ]
+        ] );
       }
     );
 

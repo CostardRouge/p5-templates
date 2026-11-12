@@ -497,6 +497,13 @@ export function failureHint( error: string | null ): string | null {
     return null;
   }
 
+  // Postiz's Bluesky provider uploads a video to Bluesky's video service and
+  // waits for its job; no job back means Bluesky refused the upload (seen
+  // 2026-11-11: «Could not prepare the post for Bluesky … missing jobId»).
+  if ( /jobId|video\.bsky|uploadVideo|bluesky.{0,60}video/i.test( error ) ) {
+    return "Bluesky refused the video. Its video upload needs the account's email verified in Bluesky (Settings › Account) — or send Bluesky a picture.";
+  }
+
   if ( /could not process (this|the) video|video format|codec|aspect ratio/i.test( error ) ) {
     return "Export it again at 30 fps, then send it again.";
   }
