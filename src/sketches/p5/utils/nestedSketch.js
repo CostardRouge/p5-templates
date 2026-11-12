@@ -72,6 +72,9 @@ import {
 import {
   getSketchFns, hasSketchFns, rememberSketchFns
 } from "./sketchFnCache.js";
+import {
+  removeGraphics
+} from "./glContext.js";
 import time, {
   pushPhaseOverride, popPhaseOverride
 } from "./time.js";
@@ -382,7 +385,7 @@ function disposeInstance( instance ) {
   // own buffer. Both are the host's `_elements` entries and hidden canvases.
   for ( const owned of instance.state?.ownedGraphics ?? [] ) {
     try {
-      owned.remove();
+      removeGraphics( owned );
     } catch {
       // Already gone; nothing to free.
     }
@@ -393,7 +396,7 @@ function disposeInstance( instance ) {
   }
 
   try {
-    instance.buffer?.remove?.();
+    removeGraphics( instance.buffer );
   } catch {
     // A buffer whose canvas is already gone is not worth a broken frame.
   }

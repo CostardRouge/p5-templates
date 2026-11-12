@@ -3,7 +3,7 @@
 import "@/engines/index"; // ensure all engines are registered in the browser bundle
 
 import React, {
-  useEffect, useRef
+  useEffect, useRef, useState
 } from "react";
 import {
   getEngine
@@ -16,6 +16,7 @@ import useSketch from "../ClientProcessingSketch/components/SketchProvider/hooks
 import {
   registerNavigationPause
 } from "@/lib/navigationPauseSignal";
+import SketchFailureNotice from "./SketchFailureNotice";
 
 /**
  * Engine-agnostic sketch renderer.
@@ -34,6 +35,11 @@ export default function EngineSketchRenderer() {
   ] = useSketch();
   const containerRef = useRef<HTMLDivElement | null>( null );
   const engineRef = useRef<SketchEngine | null>( null );
+
+  const [
+    failure,
+    setFailure
+  ] = useState<Error | null>( null );
 
   const mountOptionsRef = useRef( options );
 
@@ -96,6 +102,16 @@ export default function EngineSketchRenderer() {
         handleLoading
       );
 
+      // An engine that cannot run says so once (no WebGL context, a sketch
+      // module that failed to load); the page shows it rather than an empty
+      // canvas.
+      const handleError = ( error: Error ) => setFailure( error );
+
+      instance.on(
+        "error",
+        handleError
+      );
+
       instance
         .init(
           containerRef.current,
@@ -119,6 +135,11 @@ export default function EngineSketchRenderer() {
           "loading",
           handleLoading
         );
+        instance.off(
+          "error",
+          handleError
+        );
+        setFailure( null );
         instance.destroy();
         dispatch( {
           type: "SET_LOADING_PROGRESS",
@@ -142,5 +163,10 @@ export default function EngineSketchRenderer() {
     ]
   );
 
-  return <div ref={ containerRef } className="sketch-canvas-container" />;
+  return (
+    <>
+      <div ref={ containerRef } className="sketch-canvas-container" />
+      <SketchFailureNotice error={ failure } />
+    </>
+  );
 }

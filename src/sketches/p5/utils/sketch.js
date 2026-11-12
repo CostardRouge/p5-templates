@@ -25,6 +25,9 @@ import {
 import {
   resolveAnimation
 } from "@/lib/animationConfig";
+import {
+  isWebGLUnavailable, releaseInstanceContexts, toWebGLUnavailableError
+} from "./glContext.js";
 
 let _p5 = null;
 let _container = null;
@@ -241,12 +244,14 @@ const sketch = {
     const previous = getP5();
 
     if ( previous ) {
+      releaseInstanceContexts( previous );
       previous.remove();
       setP5( null );
       events.registeredEvents = {};
     }
 
     setContainer( container );
+    sketch.failure = null;
 
     const sketchOptions = sketch.sketchOptions ?? {
       size: {
@@ -395,11 +400,21 @@ const sketch = {
           p.noStroke();
           p.pixelDensity( 1 );
 
-          await sketch._setupFn?.( {
-            center: sketch.getCanvasCenter(),
-            canvas: sketch.canvas,
-            p
-          } );
+          try {
+            await sketch._setupFn?.( {
+              center: sketch.getCanvasCenter(),
+              canvas: sketch.canvas,
+              p
+            } );
+          } catch( error ) {
+            if ( !sketch.fail(
+              p,
+              error
+            ) ) {
+              throw error;
+            }
+          }
+
           events.handle( "setup" );
 
           // -- post-setup -----------------------------------------------
@@ -409,6 +424,17 @@ const sketch = {
         };
 
         p.draw = async() => {
+          // A run that could not get a WebGL context has nothing to draw, and
+          // must not ask again: p.draw is async, so a throw here is a rejected
+          // promise the loop never notices — it would retry, and report, on
+          // every frame. `post-draw` still fires, because the engine's `ready`
+          // waits on the first one and the page has to become usable.
+          if ( sketch.failure ) {
+            events.handle( "post-draw" );
+
+            return;
+          }
+
           const drawStartedAt = performance.now();
 
           events.handle( "pre-draw" );
@@ -419,12 +445,21 @@ const sketch = {
           // changing the duration rescales the live preview and the recording
           // identically. At the default duration it equals the old real-seconds
           // value, so existing sketches are unchanged there.
-          await sketch._drawFn?.(
-            time.drawSeconds(),
-            sketch.getCanvasCenter(),
-            sketch.favoriteColors.purple,
-            p
-          );
+          try {
+            await sketch._drawFn?.(
+              time.drawSeconds(),
+              sketch.getCanvasCenter(),
+              sketch.favoriteColors.purple,
+              p
+            );
+          } catch( error ) {
+            if ( !sketch.fail(
+              p,
+              error
+            ) ) {
+              throw error;
+            }
+          }
 
           events.handle( "post-draw" );
 
@@ -534,6 +569,39 @@ const sketch = {
     return sketch;
   },
 
+  // ---- failure ------------------------------------------------------
+
+  // Set once per run when the browser refuses a WebGL context; cleared by
+  // start() and reset(). `onFailure` is the engine's hook (P5Engine emits its
+  // `error` event from it), so the page can say why the canvas is empty.
+  failure: null,
+  onFailure: null,
+
+  /**
+   * Stop a run that cannot get a WebGL context: one console line, one report
+   * to the engine, no more frames. Returns false for any other error, which
+   * the caller rethrows — a sketch bug keeps surfacing the way it did.
+   */
+  fail: (
+    p, error
+  ) => {
+    if ( !isWebGLUnavailable( error ) ) {
+      return false;
+    }
+
+    if ( !sketch.failure ) {
+      sketch.failure = toWebGLUnavailableError( error );
+      p?.noLoop?.();
+      console.error(
+        `[sketch] ${ sketch.failure.message }`,
+        error
+      );
+      sketch.onFailure?.( sketch.failure );
+    }
+
+    return true;
+  },
+
   // ---- reset (called by P5Engine.ts on destroy) -----------------------
 
   reset: () => {
@@ -554,6 +622,8 @@ const sketch = {
     sketch.paused = false;
     sketch.sketchOptions = undefined;
     sketch.engine = undefined;
+    sketch.failure = null;
+    sketch.onFailure = null;
 
     // Clear all registered events so the next sketch starts fresh
     events.registeredEvents = {};

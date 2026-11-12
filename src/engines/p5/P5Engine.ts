@@ -18,6 +18,9 @@ import {
   pauseLoop, resumeLoop
 } from "@/p5/utils/loopControl.js";
 import {
+  releaseInstanceContexts
+} from "@/p5/utils/glContext.js";
+import {
   FrameRateMeter
 } from "@/engines/frameRateMeter";
 import {
@@ -196,6 +199,17 @@ export class P5Engine extends BaseSketchEngine {
       }
     }
 
+    // A sketch that cannot get a WebGL context stops itself and says so here
+    // (sketch.fail in utils/sketch.js); the page turns it into a notice.
+    runtime.onFailure = ( error: Error ) => {
+      if ( !this.destroyed ) {
+        this.emit(
+          "error",
+          error
+        );
+      }
+    };
+
     await this.sketchRuntime.start( container );
 
     if ( this.destroyed || !this.sketchRuntime ) {
@@ -262,8 +276,14 @@ export class P5Engine extends BaseSketchEngine {
     this.unsubscribeLoading = null;
     unregisterServerCaptureController();
 
-    // p5 instance cleanup — removes canvas, stops draw, unbinds events.
-    this.sketchRuntime?.getP5()?.remove();
+    // p5 instance cleanup — removes canvas, stops draw, unbinds events. The
+    // WebGL contexts go first and by hand: remove() only detaches canvases,
+    // and an offscreen WEBGL buffer stays reachable from its GPU helper, so
+    // every shader sketch visited would keep one of the page's few contexts.
+    const instance = this.sketchRuntime?.getP5();
+
+    releaseInstanceContexts( instance );
+    instance?.remove();
     this.sketchRuntime?.reset();
     this.sketchRuntime = null;
 
