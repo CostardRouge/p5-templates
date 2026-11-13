@@ -14,8 +14,8 @@ import {
   usePostiz
 } from "@/lib/postiz/usePostiz";
 import {
-  postizWindow
-} from "@/lib/gallery/calendar";
+  recentPosts
+} from "@/lib/postiz/recentPosts";
 
 export interface GalleryPosts {
   /** The kept Postiz; null without one (and on the server). */
@@ -30,7 +30,7 @@ export interface GalleryPosts {
   publications: { key: string;
     publication: Publication }[];
   /** Read Postiz again (after a Take back). */
-  reload: () => Promise<void>;
+  reload: ( fresh?: boolean ) => Promise<void>;
 }
 
 /**
@@ -79,12 +79,10 @@ export function useGalleryPosts(): GalleryPosts {
   );
 
   const reload = useCallback(
-    async() => {
+    async( fresh = false ) => {
       if ( !client ) {
         return;
       }
-
-      const span = postizWindow( Date.now() );
 
       setRead( ( r ) => ( {
         ...r,
@@ -92,9 +90,9 @@ export function useGalleryPosts(): GalleryPosts {
       } ) );
 
       try {
-        const posts = await client.posts(
-          span.from,
-          span.to
+        const posts = await recentPosts(
+          client,
+          fresh
         );
 
         setRead( {

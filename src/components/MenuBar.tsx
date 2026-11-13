@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import PublishingPeek from "@/components/PublishingPeek";
 import {
   usePathname, useSearchParams
 } from "next/navigation";
@@ -807,6 +808,8 @@ function MenuBar( {
             </button>
           )}
         </MenuItem>
+        {/* What goes out next, and a failure if there is one — to the gallery (lab 3 Q2). */}
+        {mounted && postiz && <PublishingPeek postiz={ postiz } />}
 
         {/* The studio's dev affordances — the pending badge, the Debug section,
             the inspector's save-defaults / thumbnail / preview trio and the

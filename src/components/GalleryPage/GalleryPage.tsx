@@ -435,7 +435,7 @@ export default function GalleryPage( {
       );
     }
 
-    await gp.reload();
+    await gp.reload( true );
 
     if ( failure ) {
       throw failure;

@@ -288,7 +288,8 @@ export default function LegalPage() {
             asking which accounts it publishes to when you open Publishing,
             reading your coming posts when you open Export, reading your posts
             from five weeks back to eight weeks ahead once when you open the
-            Gallery (to show what each piece became), and, only when you
+            Gallery (to show what each piece became) or the menu (to say
+            what goes out next), at most once a minute, and, only when you
             press Schedule, Publish now or Send as a draft (or ask an agent you
             connected to), uploading the exported files and the caption.
           </p>

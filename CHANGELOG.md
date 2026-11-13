@@ -34,6 +34,8 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
   caption, with the sketch's catalogue picture and «from another device».
 - A failed post's Send again, in the gallery, reopens its piece in the sketch on Export › Publish with only the
   accounts that failed ticked.
+- The menu says what goes out next under Publishing («Next post · Sun 10:00» with its networks) and, only when
+  there is one, how many posts failed; both open the gallery.
 
 ### Changed
 
