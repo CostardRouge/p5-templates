@@ -554,3 +554,47 @@ export function foreignSends(
     ];
   } );
 }
+
+/**
+ * The Export dialog's line above the Post band (lab 3 Q5): what this sketch
+ * last sent, from what this browser kept — «Posted 11 Nov on Instagram,
+ * Threads, X, Bluesky», «Planned Sun 15 Nov on Instagram», «In Postiz as a
+ * draft on Instagram». Null when it never sent anything.
+ */
+export function postedLine(
+  publications: readonly Publication[], channels: readonly PostizChannel[], tz: string, now: number
+): string | null {
+  const last = [
+    ...publications
+  ].sort( (
+    a, b
+  ) => b.sentAt - a.sentAt )[ 0 ];
+
+  if ( !last ) {
+    return null;
+  }
+
+  const networks = [
+    ...new Set( last.channelIds.map( ( id ) => {
+      const c = channels.find( ( x ) => x.id === id );
+
+      return c ? PROVIDER_LABEL[ providerOf( c.identifier ) ] : null;
+    } ).filter( ( n ): n is string => Boolean( n ) ) )
+  ];
+  const on = networks.length ? ` on ${ networks.join( ", " ) }` : "";
+
+  if ( last.target === "draft" || !last.at ) {
+    return `In Postiz as a draft${ on }`;
+  }
+
+  const at = Date.parse( last.at );
+  const label = slotLabel(
+    new Date( at ),
+    tz
+  ).split( " · " )[ 0 ];
+
+  return at > now ? `Planned ${ label }${ on }` : `Posted ${ shortDate(
+    at,
+    tz
+  ) }${ on }`;
+}

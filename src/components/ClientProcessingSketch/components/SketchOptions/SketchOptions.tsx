@@ -313,6 +313,7 @@ export default function SketchOptions( {
             channelIds
           }
         );
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- a one-time handoff from another page, read on mount
         setCaptureOpen( true );
       }
     },

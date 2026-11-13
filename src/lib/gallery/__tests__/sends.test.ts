@@ -4,7 +4,7 @@
  */
 
 import {
-  buildSends, failedAccounts, foreignSends, sketchFromCaption, filterCounts, pieceFilterOf, pieceOfPublication, sendLine, sendsByPiece, sendState
+  buildSends, failedAccounts, foreignSends, postedLine, sketchFromCaption, filterCounts, pieceFilterOf, pieceOfPublication, sendLine, sendsByPiece, sendState
 } from "../sends";
 import {
   galleryPrefsValue, readGalleryPrefs
@@ -480,6 +480,59 @@ describe(
           ]
         ] );
         expect( found[ 0 ].foreign ).toBe( true );
+      }
+    );
+  }
+);
+
+describe(
+  "postedLine",
+  () => {
+    it(
+      "says what the sketch last sent, and where",
+      () => {
+        expect( postedLine(
+          [
+            sent
+          ],
+          channels,
+          TZ,
+          NOW
+        ) ).toBe( "Posted 11 Nov on Instagram, X, Bluesky" );
+        expect( postedLine(
+          [
+            sent,
+            {
+              ...sent,
+              channelIds: [
+                "ig"
+              ],
+              at: "2026-11-15T09:00:00Z",
+              sentAt: NOW
+            }
+          ],
+          channels,
+          TZ,
+          NOW
+        ) ).toBe( "Planned Sun 15 Nov on Instagram" );
+        expect( postedLine(
+          [
+            {
+              ...sent,
+              at: null,
+              target: "draft"
+            }
+          ],
+          [],
+          TZ,
+          NOW
+        ) ).toBe( "In Postiz as a draft" );
+        expect( postedLine(
+          [],
+          channels,
+          TZ,
+          NOW
+        ) ).toBeNull();
       }
     );
   }

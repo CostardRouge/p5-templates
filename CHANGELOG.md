@@ -36,6 +36,8 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
   accounts that failed ticked.
 - The menu says what goes out next under Publishing («Next post · Sun 10:00» with its networks) and, only when
   there is one, how many posts failed; both open the gallery.
+- Export › Publish says what the sketch already sent («Posted 11 Nov on Instagram, Threads, X, Bluesky») above the
+  Post band; it opens the same sheet as the gallery.
 
 ### Changed
 
