@@ -151,6 +151,8 @@ function artifactFile( artifact: ExportArtifact ): File {
 type PublishSnapshot = {
   plan: PostPlan;
   target: Date | "now" | "draft";
+  /** The gallery piece this run kept, so the gallery's card knows its posts. */
+  pieceId?: string;
 };
 
 /** Publish's screens, in the table's place like the preview. */
@@ -629,14 +631,14 @@ export default function ExportPanel( {
     ) );
   };
 
-  /** Keep the exported piece in the gallery; a failure there never reads as an export failure. */
-  const keepExported = async() => {
+  /** Keep the exported piece in the gallery — its id, for the send that follows; a failure there never reads as an export failure. */
+  const keepExported = async(): Promise<string | undefined> => {
     if ( !engine ) {
-      return;
+      return undefined;
     }
 
     try {
-      await keepPiece(
+      const kept = await keepPiece(
         getGalleryStore(),
         {
           engine: engineId,
@@ -647,11 +649,15 @@ export default function ExportPanel( {
           thumbnail: await captureGalleryThumbnail( engine )
         }
       );
+
+      return kept.entry.id;
     } catch( galleryError ) {
       console.warn(
         "[gallery] the export was not kept:",
         galleryError
       );
+
+      return undefined;
     }
   };
 
@@ -779,18 +785,21 @@ export default function ExportPanel( {
         );
       }
 
-      const publication = await sendRoutes( {
-        client,
-        routes: snap.plan.routes,
-        files: postable,
-        caption: snap.plan.caption.text,
-        shortCaption: snap.plan.shortCaption.text,
-        at: snap.target,
-        signal: controller.signal,
-        onFile: (
-          n, of
-        ) => setSending( `Sending ${ n } / ${ of } to Postiz` )
-      } );
+      const publication = {
+        ...await sendRoutes( {
+          client,
+          routes: snap.plan.routes,
+          files: postable,
+          caption: snap.plan.caption.text,
+          shortCaption: snap.plan.shortCaption.text,
+          at: snap.target,
+          signal: controller.signal,
+          onFile: (
+            n, of
+          ) => setSending( `Sending ${ n } / ${ of } to Postiz` )
+        } ),
+        pieceId: snap.pieceId
+      };
 
       addPublication(
         sketchKey,
@@ -905,7 +914,7 @@ export default function ExportPanel( {
         throw new Error( failed?.error ?? "The render produced no file." );
       }
 
-      await keepExported();
+      snap.pieceId = await keepExported();
     } catch( caught ) {
       if ( !( caught instanceof DOMException && caught.name === "AbortError" ) ) {
         setError( caught instanceof Error ? caught.message : String( caught ) );
@@ -981,14 +990,17 @@ export default function ExportPanel( {
     const target = view.snapshot.target instanceof Date && view.snapshot.target.getTime() > Date.now() + 60_000
       ? view.snapshot.target
       : view.snapshot.target === "draft" ? "draft" : "now";
-    const resent = await sendRoutes( {
-      client,
-      routes,
-      files: view.postable,
-      caption: view.snapshot.plan.caption.text,
-      shortCaption: view.snapshot.plan.shortCaption.text,
-      at: target
-    } );
+    const resent = {
+      ...await sendRoutes( {
+        client,
+        routes,
+        files: view.postable,
+        caption: view.snapshot.plan.caption.text,
+        shortCaption: view.snapshot.plan.shortCaption.text,
+        at: target
+      } ),
+      pieceId: view.snapshot.pieceId
+    };
 
     addPublication(
       sketchKey,

@@ -23,6 +23,13 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
 - A seventh Materials sketch, Smoke: a thread of pale smoke rising from an ember in the dark, a twisting ribbon
   that breaks into soft billows, lit from the side so it has depth and shade. Plume, air, lamp and backdrop are in
   the form.
+- The gallery shows what each piece became on the networks through your Postiz, in one of three views: Month (a
+  calendar with each day's posts, published, planned ringed blue, failed ringed red; dots and a day list on a
+  phone), Week (seven days with the times, the networks and your rhythm's free slots, then Open Postiz) and Grid
+  (your pieces, each wearing the networks it went to, with filters for planned, published, failed and not
+  posted). The page opens on the view you chose last. A click on a piece opens its sketch's sheet: every send,
+  each account with its link to the live post or what went wrong, Take back, Open in Postiz and the pieces kept.
+  Without a Postiz, Month and Week lay out the pieces you kept by day.
 
 ### Changed
 

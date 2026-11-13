@@ -231,7 +231,7 @@ export default function LegalPage() {
         <Section id="privacy" title="Privacy">
           <p className={ P_CLASS }>
             In short: { SITE_NAME } doesn’t know who you are and doesn’t try to.
-            No account, no cookie, no advertising.
+            No account, no tracking cookie, no advertising.
           </p>
         </Section>
 
@@ -286,7 +286,9 @@ export default function LegalPage() {
             are kept in your browser’s storage, on this device only, until you
             press Forget. Your browser then talks to that Postiz directly:
             asking which accounts it publishes to when you open Publishing,
-            reading your coming posts when you open Export, and, only when you
+            reading your coming posts when you open Export, reading your posts
+            from five weeks back to eight weeks ahead once when you open the
+            Gallery (to show what each piece became), and, only when you
             press Schedule, Publish now or Send as a draft (or ask an agent you
             connected to), uploading the exported files and the caption.
           </p>
@@ -339,8 +341,16 @@ export default function LegalPage() {
 
         <Section id="cookies" title="Cookies">
           <p className={ P_CLASS }>
-            { SITE_NAME } sets no cookie, so there is no consent banner: there is
-            nothing to consent to.
+            { SITE_NAME } sets one cookie, and only if you open the{ " " }
+            <Link href="/gallery" className={ LINK_CLASS }>
+              gallery
+            </Link>
+            : <code className="font-mono text-foreground">sketchbook-gallery</code>{ " " }
+            remembers which view you chose there (month, week or grid) and your
+            time zone, so the page opens the way you left it. It says nothing
+            about you, is read only by this site, and lasts a year. It tracks
+            nothing, so there is no consent banner: there is nothing to consent
+            to.
           </p>
         </Section>
 

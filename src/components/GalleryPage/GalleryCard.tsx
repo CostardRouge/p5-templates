@@ -12,6 +12,12 @@ import type {
   GalleryEntry
 } from "@/lib/gallery/types";
 import {
+  sendLine, sendState, weekdayTime, type GallerySend
+} from "@/lib/gallery/sends";
+import {
+  SendMarks, SEND_WORD
+} from "./marks";
+import {
   formatSketchTitle
 } from "@/lib/seo";
 
@@ -68,23 +74,37 @@ export function displayTitle( entry: Pick<GalleryEntry, "title" | "name"> ): str
 
 /**
  * One kept piece: the thumbnail at the canvas's own aspect ratio (so a Reel
- * and a square read as what they are), the title, the sketch, the date. The
- * whole thumbnail opens the piece; the title is renamed in place (click the
- * pencil, Enter commits, Escape reverts, blur commits) and the trash asks
- * once. Thumbnail-covering controls reveal on hover as the slide tiles do;
- * the text row's actions stay visible, as the layer rows' do.
+ * and a square read as what they are), the title, the sketch, the date — and
+ * (lab 3, G2's overlay) the networks it went to, each mark with its state, and
+ * one line saying what became of it («Planned · Sun 10:00», «Posted on 4 · 11
+ * Nov», «X failed · 3 out»). The whole thumbnail opens the sketch's sheet; the
+ * title is renamed in place (click the pencil, Enter commits, Escape reverts,
+ * blur commits) and the trash asks once. That line's place is held while the
+ * sends load, so the card never grows when they land.
  */
 export default function GalleryCard( {
   entry,
+  sends,
+  sendsKnown,
+  tz,
+  now,
   onOpen,
   onRename,
   onRemove
 }: {
   entry: GalleryEntry;
+  /** Its sends, newest first. */
+  sends: readonly GallerySend[];
+  /** False while Postiz is still being asked: the line keeps its place, empty. */
+  sendsKnown: boolean;
+  tz: string;
+  now: number;
   onOpen: ( entry: GalleryEntry ) => void;
   onRename: ( entry: GalleryEntry, title: string ) => void;
   onRemove: ( entry: GalleryEntry ) => void;
 } ) {
+  const latest = sends[ 0 ] ?? null;
+  const latestState = latest ? sendState( latest ) : null;
   const thumbnail = useObjectUrl( entry.thumbnail );
   const [
     editing,
@@ -115,8 +135,8 @@ export default function GalleryCard( {
       <button
         type="button"
         onClick={ () => onOpen( entry ) }
-        title={ `Open ${ title } in the studio` }
-        aria-label={ `Open ${ title } in the studio` }
+        title={ `${ title }: its posts and pieces` }
+        aria-label={ `${ title }: its posts and pieces` }
         className="relative block w-full overflow-hidden bg-hover/40 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus"
         style={ {
           aspectRatio: `${ entry.width } / ${ entry.height }`
@@ -148,6 +168,21 @@ export default function GalleryCard( {
             </span>
           )}
         </span>
+
+        {latest && (
+          <span className={ clsx(
+            "glass pointer-events-none absolute inset-x-1.5 bottom-1.5 flex items-center justify-between gap-1.5 rounded-lg px-1.5 py-1",
+            latestState === "failed" && "ring-1 ring-red-500"
+          ) }>
+            <SendMarks send={ latest } size="xs" />
+            <span className="truncate font-mono text-[10px] text-foreground">
+              {latestState === "planned" ? weekdayTime(
+                latest.at,
+                tz
+              ) : SEND_WORD[ latestState ?? "unknown" ]}
+            </span>
+          </span>
+        )}
       </button>
 
       <div className="flex min-w-0 items-start gap-1 px-2.5 py-2">
@@ -189,6 +224,21 @@ export default function GalleryCard( {
               {dateFormat.format( entry.at )}
             </time>
             <span className="text-foreground/40"> · {entry.width}×{entry.height}</span>
+          </p>
+          <p
+            data-piece-line
+            className={ clsx(
+              "truncate text-[11px] leading-[1.45]",
+              latestState === "failed" ? "text-red-600 dark:text-red-400" : latest ? "text-foreground/80" : "text-foreground/40"
+            ) }
+          >
+            {latest
+              ? sendLine(
+                latest,
+                tz,
+                now
+              )
+              : sendsKnown ? "Not posted" : "\u00a0"}
           </p>
         </div>
 
