@@ -25,7 +25,7 @@ import {
   DEFAULT_RHYTHM
 } from "../rhythm";
 import {
-  addPublication, dropPublication, getDraft, getPublications, patchDraft, readDraft, resetPublishStore
+  addPublication, dropPublication, getDraft, getPublications, keptPostIds, patchDraft, readDraft, resetPublishStore
 } from "../publishStore";
 import {
   jpegName, mimeOf, routesProblem, sendRoutes
@@ -512,6 +512,70 @@ describe(
           "p2"
         );
         expect( getPublications( "k" ) ).toHaveLength( 0 );
+      }
+    );
+
+    it(
+      "knows every post id this browser sent, across sketches, stored or loaded",
+      () => {
+        const sent = (
+          key: string, ids: string[]
+        ) => addPublication(
+          key,
+          {
+            postIds: ids,
+            channelIds: [
+              "ig"
+            ],
+            kind: "post",
+            variantName: "Still",
+            files: 1,
+            at: null,
+            target: "draft",
+            sentAt: 1
+          }
+        );
+
+        sent(
+          "a",
+          [
+            "p1",
+            "p2"
+          ]
+        );
+        sent(
+          "b",
+          [
+            "p3"
+          ]
+        );
+        // Another tab's sketch, only in storage.
+        localStorage.setItem(
+          "sketchbook.publish.v1:c",
+          JSON.stringify( {
+            publications: [
+              {
+                postIds: [
+                  "p4"
+                ]
+              }
+            ]
+          } )
+        );
+        localStorage.setItem(
+          "sketchbook.postiz.v1",
+          "{}"
+        );
+        expect( [
+          ...keptPostIds()
+        ].sort() ).toEqual( [
+          "p1",
+          "p2",
+          "p3",
+          "p4"
+        ] );
+        resetPublishStore();
+        expect( keptPostIds().has( "p3" ) ).toBe( true );
       }
     );
   }

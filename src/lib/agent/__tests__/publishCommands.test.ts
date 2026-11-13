@@ -113,7 +113,27 @@ function setup( withPostiz = true ) {
                 id: "old",
                 publishDate: "2020-01-01T10:00:00Z",
                 state: "PUBLISHED",
-                content: "<p>Done</p>"
+                content: "<p>Done</p>",
+                tags: [
+                  {
+                    tag: {
+                      name: "Sketchbook"
+                    }
+                  }
+                ]
+              },
+              {
+                id: "atelier",
+                publishDate: "2020-01-02T10:00:00Z",
+                state: "PUBLISHED",
+                content: "<p>A recap</p>",
+                tags: [
+                  {
+                    tag: {
+                      name: "Atelier"
+                    }
+                  }
+                ]
               }
             ]
           }
@@ -169,6 +189,27 @@ describe(
         ) ).rejects.toMatchObject( {
           message: expect.stringMatching( /Menu › Publishing/ )
         } );
+      }
+    );
+
+    it(
+      "list only Sketchbook's posts in the calendar, saying the others are hidden",
+      async() => {
+        const {
+          registry
+        } = setup();
+        const calendar = await registry.execute(
+          "publish.calendar",
+          {}
+        ) as { posts: { id: string }[];
+          hidden: number;
+          note?: string };
+
+        expect( calendar.posts.map( ( p ) => p.id ) ).toEqual( [
+          "old"
+        ] );
+        expect( calendar.hidden ).toBe( 1 );
+        expect( calendar.note ).toMatch( /hidden/ );
       }
     );
 

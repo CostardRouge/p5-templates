@@ -1,5 +1,5 @@
 import {
-  PostizClient, PostizError, apiCandidates, findApi, postBody, postProblem, readChannels, readCreated, readPosts, uploadProblem
+  PostizClient, PostizError, SKETCHBOOK_TAG, apiCandidates, findApi, hasSketchbookTag, postBody, postProblem, readChannels, readCreated, readPosts, readTagNames, uploadProblem
 } from "../client";
 
 const json = (
@@ -372,6 +372,88 @@ describe(
         expect( postizText( "<p>Ceci est un petit test</p><p>de publication &amp; plus</p>" ) ).toBe( "Ceci est un petit test\nde publication & plus" );
         expect( postizText( "A<br>B<br/>C &lt;b&gt; &#127462;&#127482; &nbsp;" ) ).toBe( "A\nB\nC <b> 🇦🇺" );
         expect( postizText( "<p><img src=x onerror=alert(1)>Hi</p>" ) ).toBe( "Hi" );
+      }
+    );
+
+    it(
+      "tags every post Sketchbook, and reads a post's tags in any shape",
+      () => {
+        expect( one( {
+          choices: {
+            kind: "post"
+          },
+          caption: "x",
+          media: [],
+          video: false,
+          at: "draft"
+        } ).tags ).toEqual( [
+          {
+            value: "Sketchbook",
+            label: "Sketchbook"
+          }
+        ] );
+        expect( SKETCHBOOK_TAG ).toBe( "Sketchbook" );
+        expect( readTagNames( [
+          {
+            tag: {
+              name: "Sketchbook"
+            }
+          },
+          {
+            name: "Atelier"
+          },
+          {
+            label: "Other"
+          },
+          "Bare",
+          "",
+          null,
+          7,
+          {
+            tag: {}
+          }
+        ] ) ).toEqual( [
+          "Sketchbook",
+          "Atelier",
+          "Other",
+          "Bare"
+        ] );
+        expect( readTagNames( undefined ) ).toEqual( [] );
+
+        const [
+          tagged,
+          bare
+        ] = readPosts( {
+          posts: [
+            {
+              id: "a",
+              publishDate: "2026-11-17T08:00:00Z",
+              tags: [
+                {
+                  tag: {
+                    name: " sketchBOOK "
+                  }
+                }
+              ]
+            },
+            {
+              id: "b",
+              publishDate: "2026-11-17T08:00:00Z"
+            }
+          ]
+        } );
+
+        expect( tagged.tags ).toEqual( [
+          " sketchBOOK "
+        ] );
+        expect( hasSketchbookTag( tagged ) ).toBe( true );
+        expect( bare.tags ).toEqual( [] );
+        expect( hasSketchbookTag( bare ) ).toBe( false );
+        expect( hasSketchbookTag( {
+          tags: [
+            "Atelier"
+          ]
+        } ) ).toBe( false );
       }
     );
 

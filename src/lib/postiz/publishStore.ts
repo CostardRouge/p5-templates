@@ -376,6 +376,40 @@ export function dropPublication(
   );
 }
 
+/**
+ * Every post id a send from this browser kept, across every sketch — what
+ * tells Sketchbook's posts from another app's when the `Sketchbook` tag is
+ * missing (sent before it existed in his Postiz). Kept stores are read from
+ * `localStorage`; one loaded in this tab wins over its stored copy.
+ */
+export function keptPostIds(): Set<string> {
+  const ids = new Set<string>();
+  const add = ( publications: readonly Publication[] ) => {
+    for ( const p of publications ) {
+      for ( const id of p.postIds ) {
+        ids.add( id );
+      }
+    }
+  };
+  const store = storage();
+
+  if ( store ) {
+    for ( let i = 0; i < store.length; i++ ) {
+      const name = store.key( i );
+
+      if ( name?.startsWith( `${ PREFIX }:` ) && !entries.has( name.slice( PREFIX.length + 1 ) ) ) {
+        add( load( name.slice( PREFIX.length + 1 ) ).publications );
+      }
+    }
+  }
+
+  for ( const entry of entries.values() ) {
+    add( entry.publications );
+  }
+
+  return ids;
+}
+
 export function subscribePublish( listener: () => void ): () => void {
   listeners.add( listener );
 

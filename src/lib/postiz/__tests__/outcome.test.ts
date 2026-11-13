@@ -58,6 +58,7 @@ const listed = (
 ): PostizPost => ( {
   id,
   group: "g",
+  tags: [],
   content: "",
   publishDate: "2026-11-11T21:01:00.000Z",
   state,

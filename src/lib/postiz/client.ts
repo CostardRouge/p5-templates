@@ -53,10 +53,23 @@ export interface PostizMedia {
   path: string;
 }
 
+/**
+ * The tag every post Sketchbook sends carries — the maintainer's convention
+ * for every app posting through his one Postiz (Atelier's is `Atelier`,
+ * CostardRouge/atelier#471): one tag per app, its own name. Postiz links a tag
+ * by NAME (`label`) and only to one that already exists in that Postiz — it
+ * drops an unknown one silently, and its public API cannot create one — so he
+ * makes it once by hand (Create Post › Tags › Add New Tag). Until then a post
+ * is known as Sketchbook's by the publications this browser keeps.
+ */
+export const SKETCHBOOK_TAG = "Sketchbook";
+
 /** A post as Postiz lists it. */
 export interface PostizPost {
   id: string;
   group: string | null;
+  /** The names of its tags, as Postiz lists them. */
+  tags: string[];
   content: string;
   publishDate: string;
   state: PostState;
@@ -372,7 +385,12 @@ export function postBody(
     type: req.at === "now" ? "now" : req.at === "draft" ? "draft" : "schedule",
     date: ( req.at instanceof Date ? req.at : now ).toISOString(),
     shortLink: false,
-    tags: [],
+    tags: [
+      {
+        value: SKETCHBOOK_TAG,
+        label: SKETCHBOOK_TAG
+      }
+    ],
     posts: req.entries.map( ( entry ) => ( {
       integration: {
         id: entry.channel.id
@@ -531,6 +549,42 @@ export function postizHome( apiBase: string ): string {
   ) || apiBase;
 }
 
+/**
+ * A post's tag names, whatever shape a version lists them in: `{ tag: { name } }`
+ * (what his Postiz answers, though its docs list no tags), `{ name }`,
+ * `{ label }` or a bare name.
+ */
+export function readTagNames( raw: unknown ): string[] {
+  if ( !Array.isArray( raw ) ) {
+    return [];
+  }
+
+  return raw.flatMap( ( t ) => {
+    if ( typeof t === "string" ) {
+      return t.trim() ? [
+        t
+      ] : [];
+    }
+
+    if ( !t || typeof t !== "object" ) {
+      return [];
+    }
+
+    const r = t as Record<string, unknown>;
+    const inner = r.tag && typeof r.tag === "object" ? r.tag as Record<string, unknown> : r;
+    const name = str( inner.name ) ?? str( inner.label ) ?? str( inner.value );
+
+    return name ? [
+      name
+    ] : [];
+  } );
+}
+
+/** Whether a post carries Sketchbook's tag — case aside, a person may have typed it either way. */
+export function hasSketchbookTag( post: Pick<PostizPost, "tags"> ): boolean {
+  return post.tags.some( ( t ) => t.trim().toLowerCase() === SKETCHBOOK_TAG.toLowerCase() );
+}
+
 const STATES: Record<string, PostState> = {
   QUEUE: "queue",
   PUBLISHED: "published",
@@ -564,6 +618,7 @@ export function readPosts( raw: unknown ): PostizPost[] {
       {
         id,
         group: str( r.group ),
+        tags: readTagNames( r.tags ),
         content: typeof r.content === "string" ? postizText( r.content ) : "",
         publishDate,
         state: STATES[ String( r.state ?? "" ).toUpperCase() ] ?? "queue",
