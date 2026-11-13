@@ -32,6 +32,8 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
   Without a Postiz, Month and Week lay out the pieces you kept by day.
 - The gallery also shows what Sketchbook posted from your other devices, recognised by the sketch's link in the
   caption, with the sketch's catalogue picture and «from another device».
+- A failed post's Send again, in the gallery, reopens its piece in the sketch on Export › Publish with only the
+  accounts that failed ticked.
 
 ### Changed
 

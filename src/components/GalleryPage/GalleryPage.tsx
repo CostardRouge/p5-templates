@@ -31,7 +31,7 @@ import {
   galleryEntryHref, stageGalleryEntry
 } from "@/lib/gallery/open";
 import {
-  buildSends, byDay, foreignSends, filterCounts, PIECE_FILTERS, pieceFilterOf, sendDay, sendsByPiece, type GallerySend, type PieceFilter
+  buildSends, byDay, failedAccounts, foreignSends, filterCounts, PIECE_FILTERS, pieceFilterOf, sendDay, sendsByPiece, type GallerySend, type PieceFilter
 } from "@/lib/gallery/sends";
 import {
   getGalleryStore
@@ -48,6 +48,9 @@ import {
 import {
   forgetPosts
 } from "@/lib/postiz/publishStore";
+import {
+  askSendAgain
+} from "@/lib/postiz/reopen";
 import {
   localDay
 } from "@/lib/postiz/rhythm";
@@ -439,6 +442,27 @@ export default function GalleryPage( {
     }
   } : null;
 
+  /**
+   * *Send again* (lab 3 Q4): the gallery keeps no video, so the piece reopens
+   * in its sketch on Export › Publish with only the failed accounts ticked —
+   * a new render, a new send. A send whose piece is not here opens the
+   * sketch with its defaults.
+   */
+  const sendAgain = ( send: GallerySend ) => {
+    askSendAgain(
+      send.sketchKey,
+      failedAccounts( send ).map( ( a ) => a.channelId )
+    );
+
+    const entry = send.pieceId ? entryById.get( send.pieceId ) : undefined;
+
+    if ( entry ) {
+      handleOpen( entry );
+    } else {
+      router.push( `/sketches/${ send.sketchKey }` );
+    }
+  };
+
   const importInputRef = useRef<HTMLInputElement>( null );
   const [
     archiving,
@@ -716,7 +740,7 @@ export default function GalleryPage( {
           onOpenPiece={ handleOpen }
           onOpenSketch={ ( sketchKey ) => router.push( `/sketches/${ sketchKey }` ) }
           onTakeBack={ takeBack }
-          onSendAgain={ null }
+          onSendAgain={ sendAgain }
         />
       )}
 
