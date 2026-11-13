@@ -175,10 +175,15 @@ export function Vignette( {
     ]
   );
 
-  const shown = url ?? src ?? null;
+  // A catalogue thumbnail can be missing (a sketch renamed since it was posted): the frame stays empty.
+  const [
+    broken,
+    setBroken
+  ] = useState<string | null>( null );
+  const shown = url ?? ( src && src !== broken ? src : null );
 
   return shown
-    ? <img src={ shown } alt="" loading="lazy" className={ clsx(
+    ? <img src={ shown } alt="" loading="lazy" onError={ () => !url && setBroken( src ?? null ) } className={ clsx(
       "absolute inset-0 h-full w-full object-cover",
       className
     ) } />

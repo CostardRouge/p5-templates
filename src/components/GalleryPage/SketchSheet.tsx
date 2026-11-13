@@ -156,7 +156,7 @@ function SendBlock( {
       <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 border-b border-border bg-hover/40 px-3 py-2 text-xs">
         <span className="font-mono text-[11px] tabular-nums text-foreground">{when}</span>
         <StatePill state={ state } />
-        <span className="text-label">{KIND_WORD[ send.kind ]} · {send.variantName}</span>
+        <span className="text-label">{send.foreign ? "from another device" : `${ KIND_WORD[ send.kind ] } · ${ send.variantName }`}</span>
       </div>
       <ul className="m-0 list-none p-0">
         {send.accounts.map( ( a ) => (
@@ -180,6 +180,11 @@ function SendBlock( {
           </li>
         ) )}
       </ul>
+      {send.foreign && (
+        <p className="m-0 border-t border-dashed border-border px-3 py-2 text-[11.5px] text-label">
+          Sent from another device: recognised by the sketch’s link in its caption. No piece of it in this browser.
+        </p>
+      )}
       {confirming ? (
         <div className="flex flex-col gap-2 border-t border-border bg-red-500/5 px-3 py-2.5 text-xs text-foreground">
           <span>
@@ -340,7 +345,7 @@ export default function SketchSheet( {
               onSendAgain={ onSendAgain }
             />
           ) ) : (
-            <p className="m-0 text-xs text-label">Never posted from this browser. Open the sketch, then Export › Publish.</p>
+            <p className="m-0 text-xs text-label">Never posted. Open the sketch, then Export › Publish.</p>
           )}
 
           <p className="m-0 font-mono text-[10.5px] uppercase tracking-wider text-label">Pieces kept · {pieces.length}</p>

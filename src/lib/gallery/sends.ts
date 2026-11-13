@@ -18,6 +18,9 @@ import {
 import {
   readOutcomes
 } from "@/lib/postiz/outcome";
+import {
+  sketchbookPosts
+} from "@/lib/postiz/own";
 import type {
   Publication
 } from "@/lib/postiz/publishStore";
@@ -59,6 +62,8 @@ export interface GallerySend {
   accounts: SendAccount[];
   /** The publication as kept, for *Take back* and *Send again*; null for a post this browser did not send. */
   publication: Publication | null;
+  /** Sent from another device: known by its tag and its caption's link, no record here. */
+  foreign?: boolean;
 }
 
 /** A send's state as one word: failed as soon as one account failed, out when all are, else planned. */
@@ -458,4 +463,94 @@ export function byDay<T>(
   }
 
   return out;
+}
+
+const ENGINES = "p5|gsap|threejs|html";
+const LINK = new RegExp(
+  `/sketches/(${ ENGINES })/(?:([a-z0-9][a-z0-9-]*)/)?([a-z0-9][a-z0-9-]*)(?![a-z0-9-])`,
+  "i"
+);
+
+/**
+ * The sketch a caption links to — `{link}` holds the sketch's route
+ * (`p5.steeve.website/sketches/p5/materials/materials-v4-sand`), which is how
+ * a post sent from ANOTHER device is recognised (lab 3 Q3). The key is the
+ * Export dialog's, `<engine>/<name>`; null when the caption carries no link.
+ */
+export function sketchFromCaption( text: string ): string | null {
+  const m = LINK.exec( text );
+
+  return m ? `${ m[ 1 ].toLowerCase() }/${ m[ 3 ].toLowerCase() }` : null;
+}
+
+/**
+ * Sketchbook's posts that no send of THIS browser kept — another device's —
+ * grouped by Postiz's own group (one send on several accounts), each tied to
+ * the sketch its caption links to. Only Sketchbook's posts (`sketchbookPosts`:
+ * the tag, case aside); one whose caption names no sketch is left out, since a
+ * sheet is a sketch's.
+ */
+export function foreignSends(
+  posts: readonly PostizPost[],
+  publications: readonly { publication: Publication }[]
+): GallerySend[] {
+  const kept = new Set( publications.flatMap( ( p ) => p.publication.postIds ) );
+  const {
+    mine
+  } = sketchbookPosts(
+    posts,
+    kept
+  );
+  const groups = new Map<string, PostizPost[]>();
+
+  for ( const post of mine ) {
+    if ( kept.has( post.id ) ) {
+      continue;
+    }
+
+    const key = post.group ?? post.id;
+
+    groups.set(
+      key,
+      [
+        ...( groups.get( key ) ?? [] ),
+        post
+      ]
+    );
+  }
+
+  return [
+    ...groups.values()
+  ].flatMap( ( group ) => {
+    const sketchKey = group.map( ( p ) => sketchFromCaption( p.content ) ).find( Boolean );
+    const dates = group.map( ( p ) => Date.parse( p.publishDate ) ).filter( Number.isFinite );
+
+    if ( !sketchKey || !dates.length ) {
+      return [];
+    }
+
+    return [
+      {
+        key: group[ 0 ].id,
+        sketchKey,
+        pieceId: null,
+        at: Math.min( ...dates ),
+        target: group.every( ( p ) => p.state === "draft" ) ? "draft" as const : "schedule" as const,
+        kind: "post" as const,
+        variantName: "from another device",
+        accounts: group.map( ( p ) => ( {
+          postId: p.id,
+          channelId: p.channel?.id ?? p.id,
+          name: p.channel?.name || "An account",
+          provider: providerOf( p.channel?.identifier ?? "" ),
+          story: false,
+          state: p.state,
+          error: p.error,
+          url: p.releaseURL
+        } ) ),
+        publication: null,
+        foreign: true
+      }
+    ];
+  } );
 }

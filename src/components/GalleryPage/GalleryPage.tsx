@@ -31,7 +31,7 @@ import {
   galleryEntryHref, stageGalleryEntry
 } from "@/lib/gallery/open";
 import {
-  buildSends, byDay, filterCounts, PIECE_FILTERS, pieceFilterOf, sendDay, sendsByPiece, type GallerySend, type PieceFilter
+  buildSends, byDay, foreignSends, filterCounts, PIECE_FILTERS, pieceFilterOf, sendDay, sendsByPiece, type GallerySend, type PieceFilter
 } from "@/lib/gallery/sends";
 import {
   getGalleryStore
@@ -240,14 +240,24 @@ export default function GalleryPage( {
     ]
   );
 
+  // This browser's sends, and (Q3) Sketchbook's posts sent from another
+  // device, known by the sketch's link in their caption.
   const sends = useMemo(
-    () => buildSends( {
-      publications: gp.publications,
-      posts: gp.posts,
-      channels: gp.conn?.channels ?? [],
-      entries: all,
-      now
-    } ),
+    () => [
+      ...buildSends( {
+        publications: gp.publications,
+        posts: gp.posts,
+        channels: gp.conn?.channels ?? [],
+        entries: all,
+        now
+      } ),
+      ...( gp.posts ? foreignSends(
+        gp.posts,
+        gp.publications
+      ) : [] )
+    ].sort( (
+      a, b
+    ) => b.at - a.at ),
     [
       gp.publications,
       gp.posts,

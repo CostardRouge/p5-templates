@@ -4,7 +4,7 @@
  */
 
 import {
-  buildSends, failedAccounts, filterCounts, pieceFilterOf, pieceOfPublication, sendLine, sendsByPiece, sendState
+  buildSends, failedAccounts, foreignSends, sketchFromCaption, filterCounts, pieceFilterOf, pieceOfPublication, sendLine, sendsByPiece, sendState
 } from "../sends";
 import {
   galleryPrefsValue, readGalleryPrefs
@@ -392,6 +392,94 @@ describe(
           timeZone: "Europe/Paris"
         } );
         expect( readGalleryPrefs( "%E0%A4%A" ).view ).toBe( "month" );
+      }
+    );
+  }
+);
+
+describe(
+  "posts from another device",
+  () => {
+    it(
+      "reads the sketch from the caption's link",
+      () => {
+        expect( sketchFromCaption( "Materials · Sand\np5.steeve.website/sketches/p5/materials/materials-v4-sand\n#sand" ) ).toBe( "p5/materials-v4-sand" );
+        expect( sketchFromCaption( "https://p5.steeve.website/sketches/threejs/dragon-corridor" ) ).toBe( "threejs/dragon-corridor" );
+        expect( sketchFromCaption( "A week in Lisbon" ) ).toBeNull();
+      }
+    );
+
+    it(
+      "keeps Sketchbook's posts no send here kept, one send per Postiz group",
+      () => {
+        const sand = (
+          id: string, channel: string
+        ) => post(
+          id,
+          channel,
+          "published",
+          {
+            group: "g-sand",
+            content: "Sand\np5.steeve.website/sketches/p5/materials/materials-v4-sand"
+          }
+        );
+        const found = foreignSends(
+          [
+            sand(
+              "s1",
+              "x"
+            ),
+            sand(
+              "s2",
+              "bsky"
+            ),
+            post(
+              "p1",
+              "ig",
+              "published"
+            ),
+            post(
+              "other",
+              "ig",
+              "queue",
+              {
+                group: "g-other",
+                tags: [
+                  "Atelier"
+                ],
+                content: "p5.steeve.website/sketches/p5/materials/materials-v5-ice"
+              }
+            ),
+            post(
+              "nolink",
+              "ig",
+              "queue",
+              {
+                group: "g-nolink",
+                content: "no link here"
+              }
+            )
+          ],
+          [
+            {
+              publication: sent
+            }
+          ]
+        );
+
+        expect( found.map( ( s ) => [
+          s.sketchKey,
+          s.accounts.map( ( a ) => a.postId )
+        ] ) ).toEqual( [
+          [
+            "p5/materials-v4-sand",
+            [
+              "s1",
+              "s2"
+            ]
+          ]
+        ] );
+        expect( found[ 0 ].foreign ).toBe( true );
       }
     );
   }
