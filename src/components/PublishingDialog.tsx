@@ -702,6 +702,13 @@ export default function PublishingDialog( {
                     Publish now or Send as a draft — or when you ask Claude to.
                   </p>
                 </Faq>
+                <Faq q="Why is every post tagged Sketchbook?">
+                  <p className="m-0">
+                    Your other apps post through the same Postiz, so each tags what it sends with its own name and lists only
+                    its own posts — while the free slots still count every post. Postiz keeps a tag only if one of that name
+                    exists: create it once in Postiz (Create Post › Tags › Add New Tag, named Sketchbook).
+                  </p>
+                </Faq>
                 <Faq q="It says your Postiz did not answer.">
                   <p className="m-0">
                     Almost always step 1: a browser hides a refusal for another site as a bare network error. Check that{" "}

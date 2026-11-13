@@ -24,6 +24,12 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
   that breaks into soft billows, lit from the side so it has depth and shade. Plume, air, lamp and backdrop are in
   the form.
 
+### Changed
+
+- Every post Sketchbook sends to your Postiz is tagged "Sketchbook", and what Sketchbook lists of your planned
+  posts shows only its own; posts from your other apps on the same Postiz are hidden there but still take their
+  slots of your rhythm. Create the tag once in Postiz (Create Post › Tags › Add New Tag) so it sticks.
+
 ### Fixed
 
 - After publishing, the screen now shows what really happened on each account — published (with a link to the

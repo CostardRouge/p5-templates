@@ -160,7 +160,7 @@ export default function WhenCard( {
                 ) : (
                   <span
                     key={ cell.at.toISOString() }
-                    title={ cell.state === "taken" ? `${ day } — a post already goes out then` : `${ day } — gone` }
+                    title={ cell.state === "taken" ? `${ day } — a post already goes out then (from any app on your Postiz)` : `${ day } — gone` }
                     className={ clsx(
                       CELL,
                       cell.state === "taken" ? "border-theme bg-hover text-label line-through" : "border-dashed border-theme text-label/60"

@@ -25,11 +25,15 @@ import {
   getDraft,
   getPublications,
   getWhen,
+  keptPostIds,
   patchDraft,
   setWhen,
   type PostDraft,
   type When
 } from "../../postiz/publishStore";
+import {
+  HIDDEN_NOTE, sketchbookPosts
+} from "../../postiz/own";
 import {
   rhythmGrid, slotLabel
 } from "../../postiz/rhythm";
@@ -825,7 +829,7 @@ export function publishCommands( h: StudioHandles ): CommandSpec[] {
     {
       id: "publish.calendar",
       title: "What is planned",
-      description: "The posts planned on the person's Postiz over the coming weeks (from any app — Atelier's too), and the rhythm's slots, each past, taken or free.",
+      description: "The posts Sketchbook planned on the person's Postiz over the coming weeks, and the rhythm's slots, each past, taken or free. Posts from the person's other apps on the same Postiz (Atelier…) are not listed — `hidden` counts them — but they still take their slots.",
       available: connected,
       params: {
         weeks: {
@@ -850,8 +854,16 @@ export function publishCommands( h: StudioHandles ): CommandSpec[] {
           ( params.weeks as number | undefined ) ?? 3
         );
 
+        // Only Sketchbook's posts are listed; every post still takes its slot.
+        const {
+          mine, others
+        } = sketchbookPosts(
+          posts,
+          keptPostIds()
+        );
+
         return {
-          posts: posts.map( ( p ) => ( {
+          posts: mine.map( ( p ) => ( {
             id: p.id,
             at: slotLabel(
               new Date( p.publishDate ),
@@ -873,7 +885,11 @@ export function publishCommands( h: StudioHandles ): CommandSpec[] {
               tz
             ),
             state: cell.state
-          } ) ) )
+          } ) ) ),
+          hidden: others,
+          ...( others ? {
+            note: HIDDEN_NOTE
+          } : {} )
         };
       }
     },
