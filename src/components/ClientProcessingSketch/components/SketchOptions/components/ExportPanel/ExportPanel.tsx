@@ -5,7 +5,7 @@ import React, {
   useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore
 } from "react";
 import {
-  ChevronUp, Plus
+  ChevronUp, History, Plus
 } from "lucide-react";
 import {
   Menu, MenuButton, MenuItem, MenuItems
@@ -57,6 +57,10 @@ import {
 import {
   publishFacts
 } from "@/lib/postiz/facts";
+import SketchSheetLoader from "@/components/GalleryPage/SketchSheetLoader";
+import {
+  postedLine
+} from "@/lib/gallery/sends";
 import {
   planPost, plannedInstants, routeWords, type PostPlan
 } from "@/lib/postiz/plan";
@@ -71,6 +75,7 @@ import {
   addPublication,
   dropPublication,
   getDraft,
+  getPublications,
   getWhen,
   patchDraft,
   setWhen,
@@ -148,9 +153,14 @@ function artifactFile( artifact: ExportArtifact ): File {
 }
 
 /** What a publish run hands from the render to the send: the plan as it was pressed. */
+/** The server's snapshot of a sketch's sends: none, one stable array. */
+const NO_PUBLICATIONS: Publication[] = [];
+
 type PublishSnapshot = {
   plan: PostPlan;
   target: Date | "now" | "draft";
+  /** The gallery piece this run kept, so the gallery's card knows its posts. */
+  pieceId?: string;
 };
 
 /** Publish's screens, in the table's place like the preview. */
@@ -278,6 +288,22 @@ export default function ExportPanel( {
     () => NEXT
   );
   const publishMode = canPublish && draft.mode === "publish";
+  const publications = useSyncExternalStore(
+    subscribePublish,
+    () => getPublications( sketchKey ),
+    () => NO_PUBLICATIONS
+  );
+  const postedWords = postiz ? postedLine(
+    publications,
+    postiz.channels,
+    postiz.rhythm.timeZone,
+    // eslint-disable-next-line react-hooks/purity -- a day-precision label, re-read with the store
+    Date.now()
+  ) : null;
+  const [
+    sheetOpen,
+    setSheetOpen
+  ] = useState( false );
   const [
     planned,
     setPlanned
@@ -629,14 +655,14 @@ export default function ExportPanel( {
     ) );
   };
 
-  /** Keep the exported piece in the gallery; a failure there never reads as an export failure. */
-  const keepExported = async() => {
+  /** Keep the exported piece in the gallery — its id, for the send that follows; a failure there never reads as an export failure. */
+  const keepExported = async(): Promise<string | undefined> => {
     if ( !engine ) {
-      return;
+      return undefined;
     }
 
     try {
-      await keepPiece(
+      const kept = await keepPiece(
         getGalleryStore(),
         {
           engine: engineId,
@@ -647,11 +673,15 @@ export default function ExportPanel( {
           thumbnail: await captureGalleryThumbnail( engine )
         }
       );
+
+      return kept.entry.id;
     } catch( galleryError ) {
       console.warn(
         "[gallery] the export was not kept:",
         galleryError
       );
+
+      return undefined;
     }
   };
 
@@ -779,18 +809,21 @@ export default function ExportPanel( {
         );
       }
 
-      const publication = await sendRoutes( {
-        client,
-        routes: snap.plan.routes,
-        files: postable,
-        caption: snap.plan.caption.text,
-        shortCaption: snap.plan.shortCaption.text,
-        at: snap.target,
-        signal: controller.signal,
-        onFile: (
-          n, of
-        ) => setSending( `Sending ${ n } / ${ of } to Postiz` )
-      } );
+      const publication = {
+        ...await sendRoutes( {
+          client,
+          routes: snap.plan.routes,
+          files: postable,
+          caption: snap.plan.caption.text,
+          shortCaption: snap.plan.shortCaption.text,
+          at: snap.target,
+          signal: controller.signal,
+          onFile: (
+            n, of
+          ) => setSending( `Sending ${ n } / ${ of } to Postiz` )
+        } ),
+        pieceId: snap.pieceId
+      };
 
       addPublication(
         sketchKey,
@@ -905,7 +938,7 @@ export default function ExportPanel( {
         throw new Error( failed?.error ?? "The render produced no file." );
       }
 
-      await keepExported();
+      snap.pieceId = await keepExported();
     } catch( caught ) {
       if ( !( caught instanceof DOMException && caught.name === "AbortError" ) ) {
         setError( caught instanceof Error ? caught.message : String( caught ) );
@@ -981,14 +1014,17 @@ export default function ExportPanel( {
     const target = view.snapshot.target instanceof Date && view.snapshot.target.getTime() > Date.now() + 60_000
       ? view.snapshot.target
       : view.snapshot.target === "draft" ? "draft" : "now";
-    const resent = await sendRoutes( {
-      client,
-      routes,
-      files: view.postable,
-      caption: view.snapshot.plan.caption.text,
-      shortCaption: view.snapshot.plan.shortCaption.text,
-      at: target
-    } );
+    const resent = {
+      ...await sendRoutes( {
+        client,
+        routes,
+        files: view.postable,
+        caption: view.snapshot.plan.caption.text,
+        shortCaption: view.snapshot.plan.shortCaption.text,
+        at: target
+      } ),
+      pieceId: view.snapshot.pieceId
+    };
 
     addPublication(
       sketchKey,
@@ -1271,6 +1307,23 @@ export default function ExportPanel( {
             </MenuItems>
           </Menu>
         </div>
+
+        {/* What this sketch already sent (lab 3 Q5): one line, opening the gallery's sheet. */}
+        {publishMode && postiz && postedWords && (
+          <button
+            type="button"
+            data-posted-line
+            onClick={ () => setSheetOpen( true ) }
+            className="flex w-full items-center gap-2 border-t border-theme px-3 py-2 text-left text-xs text-foreground/80 hover:bg-hover"
+          >
+            <History className="h-3.5 w-3.5 shrink-0 text-label" />
+            <span className="min-w-0 flex-1 truncate">{postedWords}</span>
+            <span className="shrink-0 font-mono text-[10px] text-label">its posts ›</span>
+          </button>
+        )}
+        {sheetOpen && (
+          <SketchSheetLoader sketchKey={ sketchKey } onClose={ () => setSheetOpen( false ) } />
+        )}
 
         {publishMode && postiz && plan && (
           <PostBand

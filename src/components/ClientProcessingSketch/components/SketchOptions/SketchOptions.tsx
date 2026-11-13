@@ -39,6 +39,12 @@ import ImportSuccessBanner, {
 } from "./components/ImportSuccessBanner";
 import SketchSettings from "./components/SketchSettings/SketchSettings";
 import CaptureDialog from "./components/CaptureDialog";
+import {
+  patchDraft
+} from "@/lib/postiz/publishStore";
+import {
+  takeSendAgain
+} from "@/lib/postiz/reopen";
 import TransportBar from "./components/TransportBar";
 import UndoRedo from "./components/UndoRedo";
 import InteractivePanel from "./components/InteractivePanel/InteractivePanel";
@@ -291,6 +297,31 @@ export default function SketchOptions( {
       sketchFormConfiguration
     }
   ] = useSketch();
+
+  // The gallery's *Send again* (lab 3 Q4): this sketch opens on Export ›
+  // Publish with only the accounts that failed ticked. Taken once, on mount.
+  useEffect(
+    () => {
+      const key = `${ engineId }/${ name }`;
+      const channelIds = takeSendAgain( key );
+
+      if ( channelIds ) {
+        patchDraft(
+          key,
+          {
+            mode: "publish",
+            channelIds
+          }
+        );
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- a one-time handoff from another page, read on mount
+        setCaptureOpen( true );
+      }
+    },
+    [
+      engineId,
+      name
+    ]
+  );
 
   // Identifies the PAGE, not the document: the same `<engineId>:<name>` pair
   // `resolveSketchPath` resolves a sketch with, so coming back to a sketch

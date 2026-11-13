@@ -82,6 +82,12 @@ export interface Publication {
   at: string | null;
   target: "schedule" | "now" | "draft";
   sentAt: number;
+  /**
+   * The gallery piece this send left from — the entry its export run kept
+   * (`keepPiece`), so the gallery's card knows its posts. Older sends have
+   * none; the gallery falls back to the sketch and the date.
+   */
+  pieceId?: string;
 }
 
 export const DEFAULT_DRAFT: PostDraft = {
@@ -377,6 +383,49 @@ export function dropPublication(
 }
 
 /**
+ * Posts taken back one by one (the gallery's sheet deletes only what is not
+ * out): those ids leave their publication, and a publication left with none
+ * is forgotten.
+ */
+export function forgetPosts(
+  key: string, postIds: readonly string[]
+): void {
+  const gone = new Set( postIds );
+  const current = entry( key );
+
+  commit(
+    key,
+    {
+      ...current,
+      publications: current.publications.flatMap( ( p ) => {
+        if ( !p.postIds.some( ( id ) => gone.has( id ) ) ) {
+          return [
+            p
+          ];
+        }
+
+        const postIds = p.postIds.filter( ( id ) => !gone.has( id ) );
+
+        return postIds.length ? [
+          {
+            ...p,
+            postIds,
+            // An older send's accounts are known by order only: write them down before the order breaks.
+            posts: ( p.posts ?? p.postIds.map( (
+              postId, i
+            ) => ( {
+              postId,
+              channelId: p.channelIds[ i ] ?? "",
+              story: false
+            } ) ) ).filter( ( post ) => !gone.has( post.postId ) )
+          }
+        ] : [];
+      } )
+    }
+  );
+}
+
+/**
  * Every post id a send from this browser kept, across every sketch — what
  * tells Sketchbook's posts from another app's when the `Sketchbook` tag is
  * missing (sent before it existed in his Postiz). Kept stores are read from
@@ -408,6 +457,34 @@ export function keptPostIds(): Set<string> {
   }
 
   return ids;
+}
+
+/**
+ * Every sketch's sends kept by this browser, keyed as the Export dialog keys
+ * them (`<engine>/<name>`) — what the gallery lays out by piece and by day.
+ * Kept stores are read from `localStorage`; one loaded in this tab wins.
+ */
+export function allPublications(): { key: string;
+  publication: Publication }[] {
+  const keys = new Set( entries.keys() );
+  const store = storage();
+
+  if ( store ) {
+    for ( let i = 0; i < store.length; i++ ) {
+      const name = store.key( i );
+
+      if ( name?.startsWith( `${ PREFIX }:` ) ) {
+        keys.add( name.slice( PREFIX.length + 1 ) );
+      }
+    }
+  }
+
+  return [
+    ...keys
+  ].flatMap( ( key ) => ( entries.get( key ) ?? load( key ) ).publications.map( ( publication ) => ( {
+    key,
+    publication
+  } ) ) );
 }
 
 export function subscribePublish( listener: () => void ): () => void {

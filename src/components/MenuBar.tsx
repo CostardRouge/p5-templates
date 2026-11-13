@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import PublishingPeek from "@/components/PublishingPeek";
 import {
   usePathname, useSearchParams
 } from "next/navigation";
@@ -254,7 +255,7 @@ function MenuBar( {
   // In docked mode the menu button portals into the editor's top bar, where
   // the bar supplies the surface — so drop the floating island chrome.
   const menuInDockedBar =
-    docked && isDesktop && isSketchEditor && Boolean( slot?.slotEl && slot.inlineVisible );
+    mounted && docked && isDesktop && isSketchEditor && Boolean( slot?.slotEl && slot.inlineVisible );
 
   useEffect(
     () => {
@@ -505,7 +506,12 @@ function MenuBar( {
   const hasPendingActions =
     devActionsVisible && ( hasMissingThumbnails || hasMissingPreviews );
 
-  const renderInline = Boolean( slot?.slotEl && slot.inlineVisible );
+  // Never inline before this component has mounted: the layout's Suspense
+  // boundary around the menu can hydrate AFTER the page registered its slot
+  // and the slot's observer said it is visible, and rendering inline then
+  // mismatched the server's floating button (React #418 on /gallery, whose
+  // heavier page hydrates longer). Mounted first, then moved into the slot.
+  const renderInline = mounted && Boolean( slot?.slotEl && slot.inlineVisible );
 
   const menuNode = (
     <Menu as="div" className="relative">
@@ -802,6 +808,8 @@ function MenuBar( {
             </button>
           )}
         </MenuItem>
+        {/* What goes out next, and a failure if there is one — to the gallery (lab 3 Q2). */}
+        {mounted && postiz && <PublishingPeek postiz={ postiz } />}
 
         {/* The studio's dev affordances — the pending badge, the Debug section,
             the inspector's save-defaults / thumbnail / preview trio and the

@@ -36,7 +36,19 @@
   --animate-slider-pulse: slider-pulse 3.2s cubic-bezier(0.65, 0, 0.35, 1)
     infinite;
   --animate-scan-line: scan-line 4s linear infinite;
+  --animate-sheet-in: sheet-in 0.18s ease-out;
 
+  /* The gallery's sketch sheet sliding in from the right (transform only: no layout moves). */
+  @keyframes sheet-in {
+    from {
+      transform: translateX(24px);
+      opacity: 0.6;
+    }
+    to {
+      transform: none;
+      opacity: 1;
+    }
+  }
   @keyframes cycle-align {
     0% {
       text-align: left;
