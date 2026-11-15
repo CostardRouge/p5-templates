@@ -41,7 +41,15 @@ import {
  * which is the same defect wearing a different hat.
  */
 export const VARIANT_GRID =
-  "grid grid-cols-[minmax(0,1fr)_148px_96px_52px_80px_148px_48px]";
+  "grid grid-cols-[minmax(0,1fr)_148px_96px_52px_80px_148px_48px] @max-[40rem]/vt:grid-cols-[minmax(0,1fr)_140px_92px_148px_44px]";
+
+/**
+ * Rate and Slides step out when the table sits in Publish's narrower column
+ * (lab 6): Posts as is the column that matters while publishing. Only there —
+ * the `vt` container is named in Publish alone, so Save keeps its six columns
+ * on every screen.
+ */
+export const NARROW_HIDDEN = "@max-[40rem]/vt:hidden";
 
 const CELL = "min-w-0 px-2.5";
 
@@ -186,6 +194,7 @@ export default function VariantTableRow( {
         role="cell"
         className={ clsx(
           CELL,
+          NARROW_HIDDEN,
           "font-mono text-[11px] tabular-nums"
         ) }
       >
@@ -195,7 +204,11 @@ export default function VariantTableRow( {
       {/* Which slide a run is on belongs in the Slides cell, not appended to
           the status: a ` · slide 2/7` tacked onto a label is one more string
           that changes width while the run reports. */}
-      <div role="cell" className={ CELL }>
+      <div role="cell" className={ clsx(
+        CELL,
+        NARROW_HIDDEN
+      ) }
+      >
         {showSlideCounter ? (
           <span className="font-mono text-[11px] tabular-nums text-foreground/80">
             {state.slide}/{state.slideCount}

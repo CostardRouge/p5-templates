@@ -215,7 +215,9 @@ export default function CaptureDialog( {
             // The export table needs room the old 320px card never did, so the
             // centred shape is a wide dialog rather than a narrow one.
             : clsx(
-              "glass w-full max-w-3xl max-h-full rounded-2xl border border-theme shadow-lg transition-opacity",
+              // Publish adds the Post panel beside the table (lab 6): the
+              // dialog widens while Export › Publish is shown, never in Save.
+              "glass w-full max-w-3xl max-h-full rounded-2xl border border-theme shadow-lg transition-[opacity,max-width] has-[[data-publish]]:max-w-[74rem] motion-reduce:transition-none",
               open ? "opacity-100" : "opacity-0"
             )
         ) }

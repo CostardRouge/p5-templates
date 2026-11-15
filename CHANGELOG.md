@@ -41,6 +41,9 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
 
 ### Changed
 
+- In Publish, the Export dialog widens and shows the variants and the Post panel side by side, each scrolling on
+  its own; the table keeps Posts as and leaves Rate and Slides to Save. On a phone, Publish has two tabs under the
+  title, Variants and Post (Post first). Save is the dialog it always was.
 - Export › Publish writes the caption with pills: the sketch's title, category, version, rank in its series,
   description or its first sentence, tags, engine, the day it was made and its link; the loop, frame rate and
   slides; the post's date, weekday, season, its number among your posts and in its category, a «Day N»; your note
