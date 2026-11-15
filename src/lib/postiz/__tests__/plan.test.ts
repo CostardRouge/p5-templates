@@ -353,14 +353,32 @@ describe(
     it(
       "refuses an account's own words over its limit, a past time, a missing YouTube title",
       () => {
-        // His own words are kept as written: too long blocks, nothing is cut.
-        const long = plan( {
+        // His own words are fitted like the shared ones…
+        const fitted = plan( {
           own: {
             x: "word ".repeat( 70 )
           }
         } );
 
-        expect( long.blocked ).toMatch( /X’s words are 349 characters — 280 at most/ );
+        expect( routeOf(
+          fitted,
+          "x"
+        )?.words ).toMatchObject( {
+          state: "own",
+          notes: [
+            "cut at a word"
+          ]
+        } );
+        expect( fitted.blocked ).toBeNull();
+
+        // …and only what cannot be fitted blocks.
+        const long = plan( {
+          own: {
+            x: "x".repeat( 300 )
+          }
+        } );
+
+        expect( long.blocked ).toMatch( /X’s words are 300 characters — 280 at most/ );
         expect( routeOf(
           long,
           "x"

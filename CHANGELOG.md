@@ -41,6 +41,18 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
 
 ### Changed
 
+- Export › Publish writes the caption with pills: the sketch's title, category, version, rank in its series,
+  description or its first sentence, tags, engine, the day it was made and its link; the loop, frame rate and
+  slides; the post's date, weekday, season, its number among your posts and in its category, a «Day N»; your note
+  on the sketch and your own phrases (signature, link in bio, house tags, written once in Publishing). Click a pill
+  in the list beside the text (each one shows what it says for this sketch) or drag it in, type / to search, click
+  a pill in the text for its format, how many, its case or the networks it shows on. A pill with nothing for this
+  sketch is dashed and its line folds away. Four starting points: Sketchbook's own, Minimal, Series, Story.
+- The accounts and their words are one list under the caption: each row says what the account receives, its state
+  (follows, adapted, own, shared changed, too long) and how long its words are; open it for its variant, its
+  network's settings (Instagram's kind, story, Trial Reel and collaborators, TikTok's privacy, YouTube's title),
+  its words as the network will show them up to «… more», and Rewrite for this account, pills included. On a
+  phone the list folds to two lines a row and the pills come from a row of your recent ones and a drawer.
 - One caption for every account, each receiving it fitted to its network: hashtags kept once and within what the
   network takes (one topic on Threads, two on X), the link said «Full loop: link in bio» on Instagram and TikTok
   where a link in a caption cannot be tapped, and only when it is still too long a description cut at a sentence;

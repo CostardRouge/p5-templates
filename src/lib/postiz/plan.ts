@@ -392,11 +392,12 @@ export function planPost( {
     const legacy = route.provider && SHORT_PROVIDERS.has( route.provider ) && draft.shortCaption !== null ? draft.shortCaption : undefined;
     const ownTemplate = draft.own[ id ] ?? legacy;
     const template = ownTemplate ?? shared;
+    // Own words are fitted the same way (lab 5): his pills stay live, and only
+    // what cannot be fitted (a word longer than the room) blocks.
     const fitted = composeCaption(
       template,
       ctx,
-      route.provider,
-      ownTemplate === undefined
+      route.provider
     );
     const stale = ownTemplate !== undefined && draft.ownBase[ id ] !== undefined && draft.ownBase[ id ] !== shared;
 

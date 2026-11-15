@@ -779,7 +779,7 @@ export interface Composed {
  */
 export function composeCaption(
   template: string, ctx: PillContext, provider: Provider | null,
-  /** False for an account's OWN words: they are kept as written, and too long is said, never cut. */
+  /** False keeps the words as written: too long is then said, never cut. */
   fitWords = true
 ): Composed {
   const notes: string[] = [];
@@ -896,7 +896,8 @@ export function composeCaption(
 
   let text = joinLines( lines );
 
-  if ( fitWords && captionLength(
+  // A word can be cut only where there is a space; one unbroken word stays over.
+  if ( fitWords && text.includes( " " ) && captionLength(
     text,
     provider
   ) > limit ) {
@@ -950,3 +951,20 @@ export function emptyPills(
       ] : [];
   } );
 }
+
+/** Starting points offered above the text (lab 4): Sketchbook's own is the default caption. */
+export const CAPTION_TEMPLATES: readonly { name: string;
+  template: string }[] = [
+  {
+    name: "Minimal",
+    template: "{title}\n{link}\n{categoryTag} {phrase:house}"
+  },
+  {
+    name: "Series",
+    template: "{catNo} · {title}\n{note}\n{descriptionFirst}\n\n{date|fmt=long} · {link}\n{phrase:sign}\n{categoryTag} {engineTag} {phrase:house}"
+  },
+  {
+    name: "Story",
+    template: "{dayN} — {title}\n{note}\n{tags|count=3}"
+  }
+];

@@ -20,7 +20,7 @@ import {
   DEFAULT_RHYTHM, rhythmSlotLabel, type Rhythm, type RhythmSlot
 } from "@/lib/postiz/rhythm";
 import {
-  DEFAULT_PHRASES
+  DEFAULT_PHRASES, type Phrase
 } from "@/lib/postiz/pills";
 import {
   cleanHandle, forgetPostiz, initialDefaults, putPostiz, updatePostiz
@@ -131,6 +131,121 @@ function rhythmSummary( rhythm: Rhythm ): string {
     0,
     3
   ) } ${ s.time }` ).join( " · " ) } · ${ rhythm.perWeek } a week · ${ rhythm.timeZone }`;
+}
+
+/**
+ * His phrases (the «My words» pills): written once here, used in any caption.
+ * Folded like the rhythm, behind a one-line summary of their names. Day 1 of
+ * the «Day N» pill sits with them.
+ */
+function PhrasesEditor( {
+  phrases, dayStart, onChange
+}: {
+  phrases: Phrase[];
+  dayStart: string | null;
+  onChange: ( patch: { phrases?: Phrase[];
+    dayStart?: string | null } ) => void;
+} ) {
+  const control = "min-w-0 rounded-lg border border-theme bg-background px-2 py-1.5 text-base text-foreground focus:border-foreground focus:outline-hidden sm:text-xs";
+  const set = (
+    i: number, patch: Partial<Phrase>
+  ) => onChange( {
+    phrases: phrases.map( (
+      p, j
+    ) => j === i ? {
+      ...p,
+      ...patch
+    } : p )
+  } );
+
+  return (
+    <details className="group border-b border-theme pb-3">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3">
+        <span className="flex min-w-0 flex-col gap-0.5">
+          <span className={ LEGEND }>Your phrases · for any caption</span>
+          <span className="truncate font-mono text-[11px] text-label">{phrases.map( ( p ) => p.name ).join( " · " ) || "none"}{dayStart ? ` · day 1 ${ dayStart }` : ""}</span>
+        </span>
+        <ChevronDown className="h-4 w-4 shrink-0 text-label transition-transform group-open:rotate-180" />
+      </summary>
+      <div className="mt-3 flex flex-col gap-2">
+        <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
+          {phrases.map( (
+            phrase, i
+          ) => (
+            <li key={ phrase.id } className="grid grid-cols-[minmax(0,7rem)_minmax(0,1fr)_auto] items-center gap-1.5">
+              <input
+                value={ phrase.name }
+                aria-label="Phrase name"
+                maxLength={ 40 }
+                onChange={ ( e ) => set(
+                  i,
+                  {
+                    name: e.target.value
+                  }
+                ) }
+                className={ control }
+              />
+              <input
+                value={ phrase.text }
+                aria-label={ `${ phrase.name } text` }
+                maxLength={ 500 }
+                onChange={ ( e ) => set(
+                  i,
+                  {
+                    text: e.target.value
+                  }
+                ) }
+                className={ control }
+              />
+              <button
+                type="button"
+                aria-label={ `Remove ${ phrase.name }` }
+                onClick={ () => onChange( {
+                  phrases: phrases.filter( (
+                    _, j
+                  ) => j !== i )
+                } ) }
+                className="rounded-md p-1.5 text-label hover:bg-hover hover:text-foreground"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </li>
+          ) )}
+        </ul>
+        <button
+          type="button"
+          disabled={ phrases.length >= 24 }
+          onClick={ () => onChange( {
+            phrases: [
+              ...phrases,
+              {
+                id: `p${ Date.now().toString( 36 ) }`,
+                name: "New phrase",
+                text: ""
+              }
+            ]
+          } ) }
+          className="self-start text-xs text-label underline underline-offset-2 hover:text-foreground disabled:opacity-40"
+        >
+          + A phrase
+        </button>
+        <p className="m-0 text-[11px] text-label">
+          «Link in bio» is what Instagram and TikTok say in place of the sketch&apos;s link. A phrase of hashtags only is counted with the other hashtags.
+        </p>
+        <label className="flex items-center gap-2 text-xs text-foreground">
+          Day 1 of the «Day N» pill
+          <input
+            type="date"
+            value={ dayStart ?? "" }
+            onChange={ ( e ) => onChange( {
+              dayStart: e.target.value || null
+            } ) }
+            className={ control }
+          />
+        </label>
+      </div>
+    </details>
+  );
 }
 
 function RhythmEditor( {
@@ -688,6 +803,11 @@ export default function PublishingDialog( {
                       onChange={ ( rhythm ) => updatePostiz( {
                         rhythm
                       } ) }
+                    />
+                    <PhrasesEditor
+                      phrases={ conn.phrases }
+                      dayStart={ conn.dayStart }
+                      onChange={ ( patch ) => updatePostiz( patch ) }
                     />
                   </>
                 )}
