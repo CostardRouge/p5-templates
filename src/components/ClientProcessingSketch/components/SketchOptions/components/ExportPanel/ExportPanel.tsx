@@ -55,7 +55,7 @@ import {
   PostizClient, postizHome, type PostizPost
 } from "@/lib/postiz/client";
 import {
-  publishFacts
+  publishFacts, withSends
 } from "@/lib/postiz/facts";
 import SketchSheetLoader from "@/components/GalleryPage/SketchSheetLoader";
 import {
@@ -74,6 +74,7 @@ import {
   DEFAULT_DRAFT,
   addPublication,
   dropPublication,
+  allPublications,
   getDraft,
   getPublications,
   getWhen,
@@ -100,7 +101,7 @@ import {
 } from "./components/PublishScreens";
 import ExportPreview from "./components/ExportPreview";
 import VariantTableRow, {
-  VARIANT_GRID
+  NARROW_HIDDEN, VARIANT_GRID
 } from "./components/VariantTableRow";
 import type {
   RecordingFormat
@@ -273,6 +274,37 @@ export default function ExportPanel( {
   ] = useState<string | null>( null );
   const abortRef = useRef<AbortController | null>( null );
   const scrollRef = useRef<HTMLDivElement | null>( null );
+  // Publish lays the table and the Post panel side by side when the dialog
+  // has the room (lab 6), as two tabs when it does not (a phone).
+  const layoutRef = useRef<HTMLDivElement | null>( null );
+  // A first guess from the window (the panel mounts with the open dialog), corrected once measured.
+  const [
+    sideBySide,
+    setSideBySide
+  ] = useState( () => typeof window !== "undefined" && window.innerWidth >= 1040 );
+  const [
+    publishTab,
+    setPublishTab
+  ] = useState<"variants" | "post">( "post" );
+
+  useEffect(
+    () => {
+      const el = layoutRef.current;
+
+      if ( !el ) {
+        return;
+      }
+
+      const observer = new ResizeObserver( ( [
+        e
+      ] ) => setSideBySide( e.contentRect.width >= 960 ) );
+
+      observer.observe( el );
+
+      return () => observer.disconnect();
+    },
+    []
+  );
 
   // ---- Export › Publish (lab 1, docs/memory/publishing.md) ----
   const postiz = usePostiz();
@@ -495,16 +527,30 @@ export default function ExportPanel( {
   );
 
   const facts = useMemo(
-    () => publishFacts(
-      name,
-      engineId,
-      ( options as { animation?: { duration?: number;
-        framerate?: number } } ).animation
+    () => withSends(
+      publishFacts(
+        name,
+        engineId,
+        ( options as { animation?: { duration?: number;
+          framerate?: number } } ).animation,
+        Math.max(
+          1,
+          slideCount
+        )
+      ),
+      sketchKey,
+      draft.note,
+      allPublications()
     ),
+    // `publications` re-reads the kept sends after one of this sketch's.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       name,
       engineId,
-      options
+      options,
+      sketchKey,
+      draft.note,
+      publications
     ]
   );
   const taken = useMemo(
@@ -814,8 +860,6 @@ export default function ExportPanel( {
           client,
           routes: snap.plan.routes,
           files: postable,
-          caption: snap.plan.caption.text,
-          shortCaption: snap.plan.shortCaption.text,
           at: snap.target,
           signal: controller.signal,
           onFile: (
@@ -1019,8 +1063,6 @@ export default function ExportPanel( {
         client,
         routes,
         files: view.postable,
-        caption: view.snapshot.plan.caption.text,
-        shortCaption: view.snapshot.plan.shortCaption.text,
         at: target
       } ),
       pieceId: view.snapshot.pieceId
@@ -1088,7 +1130,7 @@ export default function ExportPanel( {
           files={ [
             ...publishView.files.values()
           ].flat() }
-          caption={ publishView.snapshot.plan.caption.used ? publishView.snapshot.plan.caption.text : publishView.snapshot.plan.shortCaption.text }
+          caption={ publishView.snapshot.plan.routes[ 0 ]?.words.text ?? publishView.snapshot.plan.caption.text }
           targets={ publishView.snapshot.plan.targets }
           sending={ running }
           onConfirm={ () => void sendToPostiz(
@@ -1209,17 +1251,67 @@ export default function ExportPanel( {
     )
   } );
 
+  const twoTabs = publishMode && !sideBySide;
+
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      {/* In Publish, the table, its add row and the Post band scroll as one;
-          in Save this wrapper is `contents` and the layout is exactly as it
-          was. */}
-      <div className={ publishMode ? "flex min-h-0 flex-1 flex-col overflow-y-auto bg-background" : "contents" }>
-        {/* Opaque, unlike the dialog's glass chrome around it: a table of small
+    // `data-publish` widens the dialog (CaptureDialog's `has-` rule): Publish
+    // ADDS a panel, Save stays the dialog it always was.
+    <div ref={ layoutRef } data-publish={ publishMode ? "" : undefined } className="flex min-h-0 flex-1 flex-col">
+      {twoTabs && (
+        <div role="tablist" aria-label="Export" className="grid shrink-0 grid-cols-2 border-b border-theme bg-background">
+          {( [
+            [
+              "variants",
+              "Variants",
+              `${ snapshot.variants.length }`
+            ],
+            [
+              "post",
+              "Post",
+              plan ? `${ plan.routes.length } account${ plan.routes.length === 1 ? "" : "s" }` : ""
+            ]
+          ] as const ).map( ( [
+            id,
+            label,
+            note
+          ] ) => (
+            <button
+              key={ id }
+              type="button"
+              role="tab"
+              aria-selected={ publishTab === id }
+              onClick={ () => setPublishTab( id ) }
+              className={ clsx(
+                "min-h-11 border-b-2 px-3 text-xs font-medium",
+                publishTab === id ? "border-foreground text-foreground" : "border-transparent text-label hover:text-foreground"
+              ) }
+            >
+              {label}
+              {note && <span className="ml-1.5 font-mono text-[10px] text-label">{note}</span>}
+            </button>
+          ) )}
+        </div>
+      )}
+      {/* In Publish the table (with its add row and what the sketch already
+          sent) and the Post panel each scroll on their own, side by side or
+          as two tabs; in Save both wrappers are `contents` and the layout is
+          exactly as it was. */}
+      <div className={ publishMode ? clsx(
+        "min-h-0 flex-1 bg-background",
+        sideBySide ? "grid grid-cols-[minmax(0,1fr)_minmax(0,600px)]" : "flex flex-col"
+      ) : "contents" }
+      >
+        <div className={ publishMode ? clsx(
+          "@container/vt flex min-h-0 flex-col overflow-y-auto",
+          sideBySide ? "border-r border-theme" : publishTab !== "variants" && "hidden",
+          !sideBySide && "flex-1"
+        ) : "contents" }
+        >
+          {/* Opaque, unlike the dialog's glass chrome around it: a table of small
           mono values with a sketch showing through is unreadable, and this is
           the region you actually read. The glass stays on the title bar and
           the footer, where it still frames the dialog against the canvas. */}
-        {/* The one table, every viewport. A phone scrolls it sideways rather
+          {/* The one table, every viewport. A phone scrolls it sideways rather
           than folding it into cards: the six settings are the same on both,
           and the edge fades say when more of them are off to the side — which
           is the part a bare sideways scroll never admitted to.
@@ -1228,129 +1320,150 @@ export default function ExportPanel( {
           an absolutely positioned child of a scroll container is placed
           against that container's UNSCROLLED origin, so it would slide away
           with the content it is meant to be marking. */}
-        <div className={ publishMode ? "relative flex shrink-0" : "relative flex min-h-0 flex-1" }>
-          <div
-            ref={ scrollRef }
-            data-more="none"
-            className="peer min-h-0 flex-1 overflow-auto bg-background"
-          >
-            <div role="table" aria-label="Export variants" className="min-w-[700px]">
-              <div
-                role="row"
-                className={ `${ VARIANT_GRID } sticky top-0 z-10 h-8 items-center border-b border-theme bg-background` }
-              >
-                <div role="columnheader" className={ HEAD_CELL }>Variant</div>
-                <div role="columnheader" className={ HEAD_CELL }>Size</div>
-                <div role="columnheader" className={ HEAD_CELL }>Output</div>
-                <div role="columnheader" className={ HEAD_CELL }>Rate</div>
-                <div role="columnheader" className={ HEAD_CELL }>Slides</div>
-                <div role="columnheader" className={ `${ HEAD_CELL } text-right` }>
-                  {publishMode ? "Posts as" : "Delivers"}
+          <div className={ publishMode ? "relative flex shrink-0" : "relative flex min-h-0 flex-1" }>
+            <div
+              ref={ scrollRef }
+              data-more="none"
+              className="peer min-h-0 flex-1 overflow-auto bg-background"
+            >
+              <div role="table" aria-label="Export variants" className="min-w-[700px] @max-[40rem]/vt:min-w-[500px]">
+                <div
+                  role="row"
+                  className={ `${ VARIANT_GRID } sticky top-0 z-10 h-8 items-center border-b border-theme bg-background` }
+                >
+                  <div role="columnheader" className={ HEAD_CELL }>Variant</div>
+                  <div role="columnheader" className={ HEAD_CELL }>Size</div>
+                  <div role="columnheader" className={ HEAD_CELL }>Output</div>
+                  <div role="columnheader" className={ clsx(
+                    HEAD_CELL,
+                    NARROW_HIDDEN
+                  ) }
+                  >
+                    Rate
+                  </div>
+                  <div role="columnheader" className={ clsx(
+                    HEAD_CELL,
+                    NARROW_HIDDEN
+                  ) }
+                  >
+                    Slides
+                  </div>
+                  <div role="columnheader" className={ `${ HEAD_CELL } text-right` }>
+                    {publishMode ? "Posts as" : "Delivers"}
+                  </div>
+                  <div role="columnheader" className="px-2">
+                    <span className="sr-only">Row actions</span>
+                  </div>
                 </div>
-                <div role="columnheader" className="px-2">
-                  <span className="sr-only">Row actions</span>
-                </div>
-              </div>
 
-              {snapshot.variants.map( ( variant ) => (
-                <VariantTableRow key={ variant.id } { ...rowProps( variant ) } />
-              ) )}
+                {snapshot.variants.map( ( variant ) => (
+                  <VariantTableRow key={ variant.id } { ...rowProps( variant ) } />
+                ) )}
+              </div>
             </div>
+
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-linear-to-r from-background to-transparent opacity-0 transition-opacity motion-reduce:transition-none peer-data-[more=both]:opacity-100 peer-data-[more=left]:opacity-100"
+            />
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-linear-to-l from-background to-transparent opacity-0 transition-opacity motion-reduce:transition-none peer-data-[more=both]:opacity-100 peer-data-[more=right]:opacity-100"
+            />
           </div>
 
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-linear-to-r from-background to-transparent opacity-0 transition-opacity motion-reduce:transition-none peer-data-[more=both]:opacity-100 peer-data-[more=left]:opacity-100"
-          />
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-linear-to-l from-background to-transparent opacity-0 transition-opacity motion-reduce:transition-none peer-data-[more=both]:opacity-100 peer-data-[more=right]:opacity-100"
-          />
-        </div>
-
-        {/* Adding a variant starts from a preset, never a blank row: a new
+          {/* Adding a variant starts from a preset, never a blank row: a new
           variant needing four fields filled in before it does anything is not
           a starting point. Kept out of the scrolling region so it stays put
           while the table is scrolled sideways. */}
-        <div className="border-t border-dashed border-theme">
-          <Menu as="div" className="relative">
-            <MenuButton
-              disabled={ running }
-              className="flex min-h-[44px] w-full items-center gap-1.5 px-2.5 py-2 text-left text-[11px] text-label transition-colors hover:bg-hover hover:text-foreground disabled:opacity-40 md:min-h-0"
+          <div className="border-t border-dashed border-theme">
+            <Menu as="div" className="relative">
+              <MenuButton
+                disabled={ running }
+                className="flex min-h-[44px] w-full items-center gap-1.5 px-2.5 py-2 text-left text-[11px] text-label transition-colors hover:bg-hover hover:text-foreground disabled:opacity-40 md:min-h-0"
+              >
+                <Plus className="h-3 w-3 shrink-0" />
+                Add a variant
+              </MenuButton>
+              <MenuItems
+                anchor="bottom start"
+                className="z-110 w-56 rounded-xl border border-theme bg-background p-1 shadow-lg focus:outline-hidden"
+              >
+                {VARIANT_PRESETS.map( ( preset ) => (
+                  <MenuItem key={ preset.key }>
+                    <button
+                      type="button"
+                      onClick={ () => addVariant(
+                        sketchKey,
+                        preset
+                      ) }
+                      className="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-left text-xs text-foreground data-focus:bg-hover"
+                    >
+                      <span className="truncate">{preset.label}</span>
+                      {preset.size && (
+                        <span className="shrink-0 font-mono text-[10px] tabular-nums text-label">
+                          {preset.size.width}×{preset.size.height}
+                        </span>
+                      )}
+                    </button>
+                  </MenuItem>
+                ) )}
+              </MenuItems>
+            </Menu>
+          </div>
+
+          {/* What this sketch already sent (lab 3 Q5): one line, opening the gallery's sheet. */}
+          {publishMode && postiz && postedWords && (
+            <button
+              type="button"
+              data-posted-line
+              onClick={ () => setSheetOpen( true ) }
+              className="flex w-full items-center gap-2 border-t border-theme px-3 py-2 text-left text-xs text-foreground/80 hover:bg-hover"
             >
-              <Plus className="h-3 w-3 shrink-0" />
-              Add a variant
-            </MenuButton>
-            <MenuItems
-              anchor="bottom start"
-              className="z-110 w-56 rounded-xl border border-theme bg-background p-1 shadow-lg focus:outline-hidden"
-            >
-              {VARIANT_PRESETS.map( ( preset ) => (
-                <MenuItem key={ preset.key }>
-                  <button
-                    type="button"
-                    onClick={ () => addVariant(
-                      sketchKey,
-                      preset
-                    ) }
-                    className="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-left text-xs text-foreground data-focus:bg-hover"
-                  >
-                    <span className="truncate">{preset.label}</span>
-                    {preset.size && (
-                      <span className="shrink-0 font-mono text-[10px] tabular-nums text-label">
-                        {preset.size.width}×{preset.size.height}
-                      </span>
-                    )}
-                  </button>
-                </MenuItem>
-              ) )}
-            </MenuItems>
-          </Menu>
+              <History className="h-3.5 w-3.5 shrink-0 text-label" />
+              <span className="min-w-0 flex-1 truncate">{postedWords}</span>
+              <span className="shrink-0 font-mono text-[10px] text-label">its posts ›</span>
+            </button>
+          )}
+          {sheetOpen && (
+            <SketchSheetLoader sketchKey={ sketchKey } onClose={ () => setSheetOpen( false ) } />
+          )}
+
         </div>
 
-        {/* What this sketch already sent (lab 3 Q5): one line, opening the gallery's sheet. */}
-        {publishMode && postiz && postedWords && (
-          <button
-            type="button"
-            data-posted-line
-            onClick={ () => setSheetOpen( true ) }
-            className="flex w-full items-center gap-2 border-t border-theme px-3 py-2 text-left text-xs text-foreground/80 hover:bg-hover"
-          >
-            <History className="h-3.5 w-3.5 shrink-0 text-label" />
-            <span className="min-w-0 flex-1 truncate">{postedWords}</span>
-            <span className="shrink-0 font-mono text-[10px] text-label">its posts ›</span>
-          </button>
-        )}
-        {sheetOpen && (
-          <SketchSheetLoader sketchKey={ sketchKey } onClose={ () => setSheetOpen( false ) } />
-        )}
-
         {publishMode && postiz && plan && (
-          <PostBand
-            conn={ postiz }
-            plan={ plan }
-            draft={ draft }
-            when={ when }
-            taken={ taken }
-            facts={ facts }
-            disabled={ running }
-            onPatch={ ( patch ) => patchDraft(
-              sketchKey,
-              patch
-            ) }
-            onWhen={ ( next ) => setWhen(
-              sketchKey,
-              next
-            ) }
-            onRemember={ (
-              accountId, format
-            ) => updatePostiz( {
-              usual: {
-                ...postiz.usual,
-                [ accountId ]: format
-              }
-            } ) }
-          />
+          <div className={ clsx(
+            "min-h-0 overflow-y-auto",
+            !sideBySide && publishTab !== "post" && "hidden",
+            !sideBySide && "flex-1"
+          ) }
+          >
+            <PostBand
+              conn={ postiz }
+              plan={ plan }
+              draft={ draft }
+              when={ when }
+              taken={ taken }
+              facts={ facts }
+              disabled={ running }
+              onPatch={ ( patch ) => patchDraft(
+                sketchKey,
+                patch
+              ) }
+              onWhen={ ( next ) => setWhen(
+                sketchKey,
+                next
+              ) }
+              onRemember={ (
+                accountId, format
+              ) => updatePostiz( {
+                usual: {
+                  ...postiz.usual,
+                  [ accountId ]: format
+                }
+              } ) }
+            />
+          </div>
         )}
       </div>
 

@@ -25,8 +25,11 @@ import {
   type Provider
 } from "./client";
 import {
-  captionLimit, DEFAULT_CAPTION, DEFAULT_SHORT_CAPTION, fillCaption, type CaptionFacts
+  DEFAULT_CAPTION
 } from "./caption";
+import {
+  composeCaption, type PillContext, type PillFacts
+} from "./pills";
 import {
   fitKind, postShape, providerFits, variantFormat, type PostShape
 } from "./postShape";
@@ -91,9 +94,25 @@ export interface PostRoute {
   kind: PostKind | null;
   /** Instagram: the same file also goes out as a story. */
   story: boolean;
-  /** Takes the short caption (Threads, X, Bluesky). */
-  short: boolean;
+  /** The words this account receives. */
+  words: RouteWords;
   choices: PostChoices;
+}
+
+/**
+ * An account's words: the shared ones fitted to its network (`follows` when
+ * nothing had to change, `adapted` when something did), or its own (`own`,
+ * `stale` when the shared words changed since they were written), `over`
+ * when they are still too long — the only state that blocks the send.
+ */
+export interface RouteWords {
+  template: string;
+  own: boolean;
+  text: string;
+  notes: string[];
+  length: number;
+  limit: number;
+  state: "follows" | "adapted" | "own" | "stale" | "over";
 }
 
 /** An account as the band lists it: ticked or not, what it can take, its route. */
@@ -142,16 +161,13 @@ export interface PostPlan {
   /** The footer's verb: `Schedule · Sun 15 Nov · 10:00`, `Publish now…`, `Send as a draft`. */
   verb: string;
   warnings: string[];
-  /** The long caption (Instagram, TikTok, YouTube): template, words, limit; `used` when a route takes it. */
+  /** The shared words: the template and how it reads for no network in particular. */
   caption: { template: string;
     text: string;
-    limit: number;
+    /** Pills with nothing for this sketch: their lines fold away. */
     used: boolean };
-  /** The short caption (Threads, X, Bluesky). */
-  shortCaption: { template: string;
-    text: string;
-    limit: number;
-    used: boolean };
+  /** Accounts whose words Sketchbook adapted or that have their own — what is worth a look before sending. */
+  toRead: number;
   /** Files sent in all (each variant's once). */
   files: number;
   /** Why it cannot be sent as it stands, or null. */
@@ -165,7 +181,7 @@ export function planPost( {
   draft: PostDraft;
   when: When;
   variants: readonly VariantSpan[];
-  facts: CaptionFacts;
+  facts: PillFacts;
   /** Postiz's live posts' instants (not drafts nor failures). */
   planned: readonly Date[];
   now?: Date;
@@ -249,7 +265,16 @@ export function planPost( {
         source,
         kind,
         story: storyAllowed && draft.storyToo.includes( channel.id ),
-        short: SHORT_PROVIDERS.has( provider ),
+        // Filled once the instant is known (the date pills read it).
+        words: {
+          template: "",
+          own: false,
+          text: "",
+          notes: [],
+          length: 0,
+          limit: 0,
+          state: "follows"
+        },
         // The rest of the choices are filled once the collaborators are known.
         choices: {
           kind: kind ?? chosen.shape.kinds[ 0 ] ?? "post"
@@ -352,28 +377,51 @@ export function planPost( {
     at
   ) : [];
 
-  const longRoutes = routes.filter( ( r ) => !r.short );
-  const shortRoutes = routes.filter( ( r ) => r.short );
-  const longTemplate = draft.caption ?? DEFAULT_CAPTION;
-  const shortTemplate = draft.shortCaption ?? DEFAULT_SHORT_CAPTION;
+  const shared = draft.caption ?? DEFAULT_CAPTION;
+  const ctx: PillContext = {
+    facts,
+    at: at instanceof Date ? at : at === "now" ? now : null,
+    timeZone: tz,
+    dayStart: conn.dayStart,
+    phrases: conn.phrases
+  };
+
+  for ( const route of routes ) {
+    const id = route.channel.id;
+    // The short caption of 2026-11-11 stays the short networks' own words until taken back.
+    const legacy = route.provider && SHORT_PROVIDERS.has( route.provider ) && draft.shortCaption !== null ? draft.shortCaption : undefined;
+    const ownTemplate = draft.own[ id ] ?? legacy;
+    const template = ownTemplate ?? shared;
+    // Own words are fitted the same way (lab 5): his pills stay live, and only
+    // what cannot be fitted (a word longer than the room) blocks.
+    const fitted = composeCaption(
+      template,
+      ctx,
+      route.provider
+    );
+    const stale = ownTemplate !== undefined && draft.ownBase[ id ] !== undefined && draft.ownBase[ id ] !== shared;
+
+    route.words = {
+      template,
+      own: ownTemplate !== undefined,
+      text: fitted.text,
+      notes: fitted.notes,
+      length: fitted.length,
+      limit: fitted.limit,
+      state: fitted.over ? "over" : ownTemplate !== undefined ? stale ? "stale" : "own" : fitted.notes.length ? "adapted" : "follows"
+    };
+  }
+
   const caption = {
-    template: longTemplate,
-    text: fillCaption(
-      longTemplate,
-      facts
-    ),
-    limit: captionLimit( longRoutes.map( ( r ) => r.channel.identifier ) ),
-    used: longRoutes.length > 0
+    template: shared,
+    text: composeCaption(
+      shared,
+      ctx,
+      null
+    ).text,
+    used: routes.some( ( r ) => !r.words.own )
   };
-  const shortCaption = {
-    template: shortTemplate,
-    text: fillCaption(
-      shortTemplate,
-      facts
-    ),
-    limit: shortRoutes.length ? captionLimit( shortRoutes.map( ( r ) => r.channel.identifier ) ) : 280,
-    used: shortRoutes.length > 0
-  };
+  const tooLong = routes.find( ( r ) => r.words.state === "over" );
 
   const youtube = routes.some( ( r ) => r.provider === "youtube" );
   let blocked: string | null = null;
@@ -386,10 +434,8 @@ export function planPost( {
     blocked = "That time is past — choose another, or Now.";
   } else if ( at === null ) {
     blocked = "Choose when it goes out.";
-  } else if ( caption.used && caption.text.length > caption.limit ) {
-    blocked = `The caption is ${ caption.text.length.toLocaleString( "en-GB" ) } characters — ${ caption.limit.toLocaleString( "en-GB" ) } at most here.`;
-  } else if ( shortCaption.used && shortCaption.text.length > shortCaption.limit ) {
-    blocked = `The short caption is ${ shortCaption.text.length.toLocaleString( "en-GB" ) } characters — ${ shortCaption.limit.toLocaleString( "en-GB" ) } at most for ${ shortRoutes.map( ( r ) => PROVIDER_LABEL[ r.provider ] ).join( ", " ) }.`;
+  } else if ( tooLong ) {
+    blocked = `${ PROVIDER_LABEL[ tooLong.provider ] }’s words are ${ tooLong.words.length.toLocaleString( "en-GB" ) } characters — ${ tooLong.words.limit.toLocaleString( "en-GB" ) } at most. Shorten them in its row.`;
   } else if ( instagram && collaborators.length > 3 ) {
     blocked = `Instagram invites 3 collaborators at most — ${ collaborators.length } are ticked.`;
   } else if ( youtube && ( draft.youtubeTitle ?? facts.title ).trim().length < 2 ) {
@@ -410,7 +456,7 @@ export function planPost( {
     verb,
     warnings,
     caption,
-    shortCaption,
+    toRead: routes.filter( ( r ) => r.words.state !== "follows" ).length,
     files,
     blocked
   };

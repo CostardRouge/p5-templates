@@ -111,10 +111,6 @@ export interface SendRoutes {
   routes: readonly PostRoute[];
   /** Each variant's files, already postable (`postableFile`), by variant id. */
   files: ReadonlyMap<string, readonly File[]>;
-  /** The long caption's words (Instagram, TikTok, YouTube). */
-  caption: string;
-  /** The short caption's words (Threads, X, Bluesky). */
-  shortCaption: string;
   at: Date | "now" | "draft";
   signal?: AbortSignal;
   /** Before each file leaves: its place, of how many. */
@@ -209,7 +205,8 @@ export async function sendRoutes( s: SendRoutes ): Promise<Publication> {
       kind: "story",
       collaborators: []
     } : route.choices,
-    caption: route.short ? s.shortCaption : s.caption,
+    // Each account its own words: the shared ones fitted to its network, or its own (`planPost`).
+    caption: route.words.text,
     media: media.get( route.variant.id ) ?? [],
     video: ( s.files.get( route.variant.id ) ?? [] ).some( ( f ) => f.type.startsWith( "video/" ) )
   } );

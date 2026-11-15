@@ -15,6 +15,9 @@ import {
 import {
   DEFAULT_RHYTHM, readRhythm, type Rhythm
 } from "./rhythm";
+import {
+  DEFAULT_PHRASES, type Phrase
+} from "./pills";
 
 export interface PostizConnection {
   /** The public API's base, as found on connect: `https://postiz.example/api/public/v1`. */
@@ -38,7 +41,56 @@ export interface PostizConnection {
    */
   usual: Record<string, string>;
   rhythm: Rhythm;
+  /** His phrases, written once for every caption (the «My words» pills). */
+  phrases: Phrase[];
+  /** Day 1 of the «Day N» pill, `YYYY-MM-DD`, or null. */
+  dayStart: string | null;
   connectedAt: number;
+}
+
+/** His phrases as stored, whatever an older or a hand-edited copy holds; none kept → Sketchbook's own. */
+export function readPhrases( raw: unknown ): Phrase[] {
+  if ( !Array.isArray( raw ) ) {
+    return DEFAULT_PHRASES.map( ( p ) => ( {
+      ...p
+    } ) );
+  }
+
+  const seen = new Set<string>();
+
+  return raw.flatMap( ( x ) => {
+    const r = ( x && typeof x === "object" ? x : {} ) as Record<string, unknown>;
+    const id = typeof r.id === "string" ? r.id.replace(
+      /[^\w-]/g,
+      ""
+    ).slice(
+      0,
+      32
+    ) : "";
+
+    if ( !id || seen.has( id ) ) {
+      return [];
+    }
+
+    seen.add( id );
+
+    return [
+      {
+        id,
+        name: typeof r.name === "string" ? r.name.slice(
+          0,
+          40
+        ) : id,
+        text: typeof r.text === "string" ? r.text.slice(
+          0,
+          500
+        ) : ""
+      }
+    ];
+  } ).slice(
+    0,
+    24
+  );
 }
 
 const KEY = "sketchbook.postiz.v1";
@@ -91,6 +143,8 @@ export function readConnection( raw: unknown ): PostizConnection | null {
       channels
     ),
     rhythm: readRhythm( r.rhythm ),
+    phrases: readPhrases( r.phrases ),
+    dayStart: typeof r.dayStart === "string" && /^\d{4}-\d{2}-\d{2}$/.test( r.dayStart ) ? r.dayStart : null,
     connectedAt: typeof r.connectedAt === "number" ? r.connectedAt : 0
   };
 }

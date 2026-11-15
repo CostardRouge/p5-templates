@@ -10,6 +10,9 @@
 import {
   CAPTION_LIMIT, providerOf
 } from "./client";
+import {
+  composeCaption, DEFAULT_PHRASES, type Phrase
+} from "./pills";
 
 /** The words a caption can carry. */
 export interface CaptionFacts {
@@ -39,35 +42,31 @@ export const CAPTION_TOKENS: ReadonlyArray<keyof CaptionFacts> = [
   "sketch"
 ];
 
-/** Sketchbook's own caption (the lab's Q5, his pick: the long one). */
-export const DEFAULT_CAPTION = "{title}\n{description}\n\n{engine} · a {seconds} s loop · {link}\n{tags} #generativeart #creativecoding";
+/** Sketchbook's own caption (lab 1's Q5, the long one), in pills since lab 4: the same words, the house tags now his phrase. */
+export const DEFAULT_CAPTION = "{title}\n{description}\n\n{engine} · {loop} · {link}\n{tags} {phrase:house}";
 
 /** Sketchbook's own SHORT caption, for Threads (500), X (280) and Bluesky (300). */
 export const DEFAULT_SHORT_CAPTION = "{title} — {engine}, a {seconds} s loop\n{link}\n{tags}";
 
-/** The template filled: each `{token}` its fact, an unknown one left as typed, blank runs folded. */
+/**
+ * The template filled for no network in particular: each pill its value
+ * (`pills.ts`), an unknown token left as typed, a line of empty pills folded,
+ * blank runs folded. A network's own words go through `composeCaption`.
+ */
 export function fillCaption(
-  template: string, facts: CaptionFacts
+  template: string, facts: CaptionFacts, phrases: readonly Phrase[] = DEFAULT_PHRASES
 ): string {
-  return template
-    .replace(
-      /\{(\w+)\}/g,
-      (
-        all, key: string
-      ) => Object.prototype.hasOwnProperty.call(
-        facts,
-        key
-      ) ? facts[ key as keyof CaptionFacts ] : all
-    )
-    .replace(
-      /[ \t]+\n/g,
-      "\n"
-    )
-    .replace(
-      /\n{3,}/g,
-      "\n\n"
-    )
-    .trim();
+  return composeCaption(
+    template,
+    {
+      facts,
+      at: null,
+      timeZone: "UTC",
+      dayStart: null,
+      phrases
+    },
+    null
+  ).text;
 }
 
 /** The longest caption every chosen account takes. */

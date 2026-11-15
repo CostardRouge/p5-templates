@@ -284,7 +284,9 @@ export default function LegalPage() {
             </a>{ " " }
             (Menu › Publishing), the address you type and the API key you paste
             are kept in your browser’s storage, on this device only, until you
-            press Forget. Your browser then talks to that Postiz directly:
+            press Forget, with your phrases and day 1 for captions; each
+            sketch’s caption, an account’s own words and your note on the
+            sketch are kept there too, beside its export settings. Your browser then talks to that Postiz directly:
             asking which accounts it publishes to when you open Publishing,
             reading your coming posts when you open Export, reading your posts
             from five weeks back to eight weeks ahead once when you open the

@@ -1,7 +1,7 @@
 "use client";
 
 import React, {
-  useRef, useState
+  useCallback, useEffect, useMemo, useRef, useState
 } from "react";
 import clsx from "clsx";
 import {
@@ -14,13 +14,16 @@ import {
   PROVIDER_LABEL, providerOf, type PostKind, type TikTokPrivacy, type YouTubeVisibility
 } from "@/lib/postiz/client";
 import {
-  CAPTION_TOKENS, type CaptionFacts
+  DEFAULT_CAPTION
 } from "@/lib/postiz/caption";
+import {
+  CAPTION_TEMPLATES, FOLD, emptyPills, paletteOf, type PillContext, type PillFacts
+} from "@/lib/postiz/pills";
 import {
   KIND_LABEL, kindWhy
 } from "@/lib/postiz/postShape";
 import {
-  routeWords, type PlanAccount, type PostPlan
+  routeWords, type PlanAccount, type PostPlan, type PostRoute, type RouteWords
 } from "@/lib/postiz/plan";
 import type {
   PostDraft, When
@@ -32,6 +35,12 @@ import {
   openPublishing
 } from "@/lib/postiz/usePostiz";
 import WhenCard from "./WhenCard";
+import PillEditor, {
+  type PillEditorHandle
+} from "./PillEditor";
+import PillPalette, {
+  noteRecent, recentPills
+} from "./PillPalette";
 
 const LEGEND = "font-mono text-[10px] uppercase tracking-[0.14em] text-label";
 const KINDS: PostKind[] = [
@@ -143,15 +152,63 @@ function Toggle( {
   );
 }
 
+const STATE_WORDS: Record<RouteWords[ "state" ], string> = {
+  follows: "follows",
+  adapted: "adapted",
+  own: "own",
+  stale: "own · shared changed",
+  over: "too long"
+};
+const STATE_CLASS: Record<RouteWords[ "state" ], string> = {
+  follows: "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+  adapted: "border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+  own: "border-indigo-500/40 bg-indigo-500/10 text-indigo-600 dark:text-indigo-300",
+  stale: "border-dashed border-indigo-500/60 text-indigo-600 dark:text-indigo-300",
+  over: "border-red-500/40 bg-red-500/10 text-red-600 dark:text-red-400"
+};
+
+function StateChip( {
+  words
+}: {
+  words: RouteWords;
+} ) {
+  return (
+    <span className={ clsx(
+      "inline-flex items-center gap-1 whitespace-nowrap rounded-full border px-1.5 font-mono text-[10px] leading-4",
+      STATE_CLASS[ words.state ]
+    ) }
+    >
+      <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-current" />
+      {STATE_WORDS[ words.state ]}
+    </span>
+  );
+}
+
+function Count( {
+  words
+}: {
+  words: RouteWords;
+} ) {
+  return (
+    <span className={ clsx(
+      "whitespace-nowrap font-mono text-[10px] tabular-nums",
+      words.state === "over" ? "text-red-500" : "text-label"
+    ) }
+    >
+      {words.length.toLocaleString( "en-GB" )} / {words.limit.toLocaleString( "en-GB" )}
+    </span>
+  );
+}
+
 /**
- * Export › Publish's band under the variants (lab 1 §6, reworked 2026-11-11
- * on his ask: each network its own format). To is one ROW per account — ticked
- * or not, the variant it takes (a 9:16 Reel for Instagram, a square picture
- * for Threads, X and Bluesky), Instagram's kind and «also as a story». A pick
- * is remembered for the account as a FORMAT (`video 9:16`), so the next
- * sketch's export routes itself. Then Instagram's collaborators, TikTok's and
- * YouTube's settings, When, and two captions: the long one (Instagram, TikTok,
- * YouTube) and the short one (Threads, X, Bluesky).
+ * Export › Publish's Post panel (labs 2, 4, 5 and 6, his yes to every
+ * recommendation, 2026-11-15): When, then ONE shared text made of pills —
+ * the list of pills with their values beside it when the panel is wide, his
+ * recent pills and a drawer of all of them when it is narrow — then ONE list
+ * of accounts, each row carrying what it receives: ticked or not, its
+ * variant, its state and the start of its words; open, its network's
+ * settings, its words as they will read (with the network's «… more»), and
+ * its own words if he rewrites them, pills still live.
  */
 export default function PostBand( {
   conn, plan, draft, when, taken, facts, disabled, onPatch, onWhen, onRemember
@@ -161,49 +218,105 @@ export default function PostBand( {
   draft: PostDraft;
   when: When;
   taken: readonly Date[];
-  facts: CaptionFacts;
+  facts: PillFacts;
   disabled: boolean;
   onPatch: ( patch: Partial<PostDraft> ) => void;
   onWhen: ( next: When ) => void;
   /** Keep `format` as what this account usually takes. */
   onRemember: ( accountId: string, format: string ) => void;
 } ) {
+  const rootRef = useRef<HTMLElement | null>( null );
   const [
-    open,
-    setOpen
-  ] = useState( true );
-  const longArea = useRef<HTMLTextAreaElement | null>( null );
-  const shortArea = useRef<HTMLTextAreaElement | null>( null );
-  const lastArea = useRef<"long" | "short">( "long" );
+    narrow,
+    setNarrow
+  ] = useState( false );
+  const [
+    drawer,
+    setDrawer
+  ] = useState( false );
+  const [
+    openId,
+    setOpenId
+  ] = useState<string | null>( null );
+  const shared = useRef<PillEditorHandle | null>( null );
+  const active = useRef<PillEditorHandle | null>( null );
+  const [
+    activeLabel,
+    setActiveLabel
+  ] = useState( "the shared words" );
   const ticked = new Set( plan.accounts.filter( ( a ) => a.ticked ).map( ( a ) => a.channel.id ) );
-  const providers = new Set( plan.routes.map( ( r ) => r.provider ) );
 
-  // `Reel → Steeve Pommier · Picture 1:1 → X, Threads`, grouped by what each variant sends.
-  const groups = new Map<string, string[]>();
+  useEffect(
+    () => {
+      const el = rootRef.current;
 
-  for ( const route of plan.routes ) {
-    const key = `${ routeWords( route ).split( " · " )[ 0 ] } ${ route.format.split( " " )[ 1 ] }`;
-    const twin = plan.routes.filter( ( r ) => r.provider === route.provider ).length > 1;
+      if ( !el ) {
+        return;
+      }
 
-    groups.set(
-      key,
-      [
-        ...( groups.get( key ) ?? [] ),
-        twin ? `${ PROVIDER_LABEL[ route.provider ] } (${ route.channel.name })` : PROVIDER_LABEL[ route.provider ]
-      ]
-    );
-  }
+      const observer = new ResizeObserver( ( [
+        e
+      ] ) => setNarrow( e.contentRect.width < 640 ) );
+
+      observer.observe( el );
+
+      return () => observer.disconnect();
+    },
+    []
+  );
+
+  const ctx = useMemo<PillContext>(
+    () => ( {
+      facts,
+      at: plan.at instanceof Date ? plan.at : null,
+      timeZone: conn.rhythm.timeZone,
+      dayStart: conn.dayStart,
+      phrases: conn.phrases
+    } ),
+    [
+      facts,
+      plan.at,
+      conn.rhythm.timeZone,
+      conn.dayStart,
+      conn.phrases
+    ]
+  );
+  const palette = useMemo(
+    () => paletteOf( conn.phrases ),
+    [
+      conn.phrases
+    ]
+  );
+  const template = draft.caption ?? DEFAULT_CAPTION;
+  const empty = emptyPills(
+    template,
+    ctx
+  );
+
+  const onActive = useCallback(
+    ( h: PillEditorHandle ) => {
+      active.current = h;
+      setActiveLabel( h.label );
+    },
+    []
+  );
+  const onSharedMount = useCallback(
+    ( h: PillEditorHandle ) => {
+      shared.current = h;
+    },
+    []
+  );
+  const pick = ( key: string ) => {
+    noteRecent( key );
+    ( active.current ?? shared.current )?.insert( key );
+  };
 
   const summary = [
-    plan.routes.length ? [
-      ...groups
-    ].map( ( [
-      what,
-      names
-    ] ) => `${ what } → ${ names.join( ", " ) }` ).join( " · " ) : "no account",
+    plan.routes.length ? `${ plan.routes.length } account${ plan.routes.length === 1 ? "" : "s" }` : "no account",
+    plan.toRead ? `${ plan.toRead } adapted or own` : null,
     plan.collaborators.length ? `with ${ plan.collaborators.map( ( h ) => `@${ h }` ).join( ", " ) }` : null,
     plan.whenWords,
-    `caption ${ draft.approved ? "approved" : "not approved yet" }`
+    `words ${ draft.approved ? "approved" : "not approved yet" }`
   ].filter( Boolean )
     .join( " · " );
 
@@ -261,359 +374,376 @@ export default function PostBand( {
     }
   };
 
-  const insertToken = ( token: string ) => {
-    const short = lastArea.current === "short" && plan.shortCaption.used;
-    const area = short ? shortArea.current : longArea.current;
-    const text = short ? plan.shortCaption.template : plan.caption.template;
-    const start = area?.selectionStart ?? text.length;
-    const end = area?.selectionEnd ?? start;
-    const next = `${ text.slice(
-      0,
-      start
-    ) }{${ token }}${ text.slice( end ) }`;
+  const rewrite = ( route: PostRoute ) => {
+    const id = route.channel.id;
 
-    onPatch( short ? {
-      shortCaption: next
-    } : {
-      caption: next
+    onPatch( {
+      own: {
+        ...draft.own,
+        [ id ]: route.words.own ? route.words.template : template
+      },
+      ownBase: {
+        ...draft.ownBase,
+        [ id ]: template
+      }
     } );
   };
+  const takeShared = ( route: PostRoute ) => {
+    const own = {
+      ...draft.own
+    };
+    const ownBase = {
+      ...draft.ownBase
+    };
 
-  const showLong = plan.caption.used || !plan.shortCaption.used;
-  const accountsLegend = ( names: Set<string> ) => [
-    ...names
-  ].map( ( p ) => PROVIDER_LABEL[ p as keyof typeof PROVIDER_LABEL ] ).join( ", " );
-  const longNames = accountsLegend( new Set( plan.routes.filter( ( r ) => !r.short ).map( ( r ) => r.provider ) ) ) || "Instagram, TikTok, YouTube";
-  const shortNames = accountsLegend( new Set( plan.routes.filter( ( r ) => r.short ).map( ( r ) => r.provider ) ) );
+    delete own[ route.channel.id ];
+    delete ownBase[ route.channel.id ];
+    onPatch( {
+      own,
+      ownBase,
+      // The old short caption was these networks' own words: taking the shared ones back leaves it.
+      ...( route.words.own && !draft.own[ route.channel.id ] ? {
+        shortCaption: null
+      } : {} )
+    } );
+  };
+  const anyOwn = plan.routes.some( ( r ) => r.words.own );
+  const recent = recentPills().map( ( k ) => palette.find( ( p ) => p.key === k ) )
+    .filter( ( p ): p is NonNullable<typeof p> => Boolean( p ) )
+    .slice(
+      0,
+      6
+    );
 
   return (
-    <section aria-label="Post" className="border-t border-theme">
-      <button
-        type="button"
-        aria-expanded={ open }
-        onClick={ () => setOpen( ( o ) => !o ) }
-        className="sticky top-0 z-10 flex w-full items-center gap-3 border-b border-theme bg-background px-3 py-2 text-left pointer-coarse:min-h-11"
-      >
+    <section ref={ rootRef } aria-label="Post" data-narrow={ narrow ? "" : undefined } className="flex min-w-0 flex-col">
+      <div className="sticky top-0 z-10 flex items-center gap-3 border-b border-theme bg-background px-3 py-2">
         <span className="text-xs font-semibold text-foreground">Post</span>
         <span className="min-w-0 flex-1 truncate text-xs text-label">{summary}</span>
-        <ChevronDown className={ clsx(
-          "h-3.5 w-3.5 shrink-0 text-label transition-transform",
-          open && "rotate-180"
-        ) }
-        />
-      </button>
+      </div>
 
-      {open && (
-        <fieldset
-          disabled={ disabled }
-          className="m-0 grid min-w-0 grid-cols-1 gap-x-6 gap-y-4 border-0 px-3 pb-4 pt-3 md:grid-cols-2"
-        >
-          <div className="flex min-w-0 flex-col gap-3">
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-baseline justify-between gap-2">
-                <span className={ LEGEND }>To · each account its variant</span>
+      <fieldset disabled={ disabled } className="m-0 flex min-w-0 flex-col gap-4 border-0 px-3 pb-4 pt-3">
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <span className={ LEGEND }>When</span>
+          <WhenCard
+            rhythm={ conn.rhythm }
+            taken={ taken }
+            when={ when }
+            at={ plan.at }
+            free={ plan.free }
+            warnings={ plan.warnings }
+            onChoose={ onWhen }
+          />
+        </div>
+
+        <div className="flex min-w-0 flex-col gap-2">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+            <span className={ LEGEND }>Words · shared by every account</span>
+            <span className="flex flex-wrap gap-1">
+              {[
+                {
+                  name: "Sketchbook’s own",
+                  template: DEFAULT_CAPTION
+                },
+                ...CAPTION_TEMPLATES
+              ].map( ( t ) => (
                 <button
+                  key={ t.name }
                   type="button"
-                  onClick={ openPublishing }
-                  className="font-mono text-[10px] text-label underline underline-offset-2 hover:text-foreground"
+                  onClick={ () => onPatch( {
+                    caption: t.template === DEFAULT_CAPTION ? null : t.template
+                  } ) }
+                  className={ clsx(
+                    "rounded-md border px-1.5 py-0.5 text-[11px] transition-colors pointer-coarse:min-h-9",
+                    template === t.template ? "border-foreground text-foreground" : "border-theme text-label hover:border-foreground hover:text-foreground"
+                  ) }
                 >
-                  accounts
-                </button>
-              </div>
-              <ul aria-label="Accounts" className="m-0 flex list-none flex-col gap-1.5 p-0">
-                {plan.accounts.map( ( account ) => (
-                  <AccountRow
-                    key={ account.channel.id }
-                    account={ account }
-                    invited={ draft.collabAccounts.includes( account.channel.id ) }
-                    storyToo={ draft.storyToo.includes( account.channel.id ) }
-                    onToggle={ () => toggle( account.channel.id ) }
-                    onVariant={ ( id ) => pickVariant(
-                      account,
-                      id
-                    ) }
-                    onKind={ ( kind ) => onPatch( {
-                      kindFor: {
-                        ...draft.kindFor,
-                        [ account.channel.id ]: kind
-                      }
-                    } ) }
-                    onStory={ ( on ) => onPatch( {
-                      storyToo: on
-                        ? [
-                          ...draft.storyToo,
-                          account.channel.id
-                        ]
-                        : draft.storyToo.filter( ( x ) => x !== account.channel.id )
-                    } ) }
-                  />
-                ) )}
-              </ul>
-              {plan.routes.some( ( r ) => r.shape.media === "image" ) && (
-                <p className="m-0 text-[11px] leading-snug text-label">
-                  Pictures go out as JPEG — Instagram takes nothing else. Your downloaded file stays PNG.
-                </p>
-              )}
-            </div>
-
-            {plan.routes.some( ( r ) => r.kind === "reel" ) && (
-              <div className="flex flex-col gap-1.5">
-                <Toggle
-                  checked={ draft.trial }
-                  onChange={ ( trial ) => onPatch( {
-                    trial
-                  } ) }
-                  title="Shown to people who do not follow you first; nothing reaches your followers until it is shared with them"
-                >
-                  Trial Reel — non-followers first
-                </Toggle>
-                {draft.trial && (
-                  <Segmented<"auto" | "manual">
-                    label="Share it with your followers"
-                    value={ draft.graduate }
-                    options={ [
-                      {
-                        id: "auto",
-                        label: "When it works"
-                      },
-                      {
-                        id: "manual",
-                        label: "By hand"
-                      }
-                    ] }
-                    onChange={ ( graduate ) => onPatch( {
-                      graduate
-                    } ) }
-                  />
-                )}
-              </div>
-            )}
-
-            {plan.instagram && ( plan.partners.length > 0 || conn.collaborator ) && plan.routes.some( ( r ) => r.provider === "instagram" && r.kind !== "story" ) && (
-              <div className="flex flex-col gap-1.5">
-                <span className={ LEGEND }>With · Instagram collaborators</span>
-                {plan.partners.length > 0 && (
-                  <div role="group" aria-label="Your accounts as collaborators" className="flex flex-wrap gap-1.5">
-                    {plan.partners.map( ( partner ) => (
-                      <ChannelChip
-                        key={ partner.channel.id }
-                        channel={ partner.channel }
-                        checked={ partner.invited }
-                        note={ partner.handle ? `@${ partner.handle }` : "username?" }
-                        disabledReason={ partner.handle ? null : "Type its Instagram username in Publishing (accounts) to invite it" }
-                        onToggle={ () => invite( partner.channel.id ) }
-                      />
-                    ) )}
-                  </div>
-                )}
-                {conn.collaborator && (
-                  <Toggle
-                    checked={ draft.collab }
-                    onChange={ ( collab ) => onPatch( {
-                      collab
-                    } ) }
-                  >
-                    @{conn.collaborator} as collaborator
-                  </Toggle>
-                )}
-                <p className="m-0 text-[11px] leading-snug text-label">
-                  {plan.collaborators.length
-                    ? `One post on ${ plan.routes.filter( ( r ) => r.provider === "instagram" ).map( ( r ) => r.channel.name )
-                      .join( " and " ) }, co-signed by ${ plan.collaborators.map( ( h ) => `@${ h }` ).join( ", " ) } once the invite is accepted in Instagram.`
-                    : "Invite your other account to co-sign ONE post — or tick both in To for a post on each."}
-                </p>
-              </div>
-            )}
-
-            {providers.has( "tiktok" ) && (
-              <div className="flex flex-col gap-1.5">
-                <span className={ LEGEND }>TikTok · who can see it</span>
-                <Segmented<TikTokPrivacy>
-                  label="TikTok privacy"
-                  value={ draft.tiktokPrivacy }
-                  options={ TIKTOK.map( ( [
-                    id,
-                    label
-                  ] ) => ( {
-                    id,
-                    label
-                  } ) ) }
-                  onChange={ ( tiktokPrivacy ) => onPatch( {
-                    tiktokPrivacy
-                  } ) }
-                />
-              </div>
-            )}
-
-            {providers.has( "youtube" ) && (
-              <div className="flex flex-col gap-1.5">
-                <span className={ LEGEND }>YouTube needs</span>
-                <input
-                  id="publish-youtube-title"
-                  value={ draft.youtubeTitle ?? facts.title }
-                  maxLength={ 100 }
-                  onChange={ ( event ) => onPatch( {
-                    youtubeTitle: event.target.value
-                  } ) }
-                  aria-label="YouTube title"
-                  className="w-full rounded-lg border border-theme bg-background px-3 py-1.5 text-base text-foreground focus:border-foreground focus:outline-hidden sm:text-xs"
-                />
-                <Segmented<YouTubeVisibility>
-                  label="YouTube visibility"
-                  value={ draft.youtubeVisibility }
-                  options={ YOUTUBE.map( ( [
-                    id,
-                    label
-                  ] ) => ( {
-                    id,
-                    label
-                  } ) ) }
-                  onChange={ ( youtubeVisibility ) => onPatch( {
-                    youtubeVisibility
-                  } ) }
-                />
-              </div>
-            )}
-          </div>
-
-          <div className="flex min-w-0 flex-col gap-1.5">
-            <span className={ LEGEND }>When</span>
-            <WhenCard
-              rhythm={ conn.rhythm }
-              taken={ taken }
-              when={ when }
-              at={ plan.at }
-              free={ plan.free }
-              warnings={ plan.warnings }
-              onChoose={ onWhen }
-            />
-          </div>
-
-          <div className="flex min-w-0 flex-col gap-3 md:col-span-2">
-            {showLong && (
-              <CaptionField
-                id="publish-caption"
-                legend={ `Caption · ${ longNames }` }
-                caption={ plan.caption }
-                approved={ draft.approved }
-                areaRef={ longArea }
-                onFocus={ () => {
-                  lastArea.current = "long";
-                } }
-                onChange={ ( caption ) => onPatch( {
-                  caption
-                } ) }
-                onReset={ draft.caption !== null ? () => onPatch( {
-                  caption: null
-                } ) : null }
-              />
-            )}
-            {plan.shortCaption.used && (
-              <CaptionField
-                id="publish-short-caption"
-                legend={ `Short caption · ${ shortNames }` }
-                caption={ plan.shortCaption }
-                approved={ draft.approved }
-                areaRef={ shortArea }
-                onFocus={ () => {
-                  lastArea.current = "short";
-                } }
-                onChange={ ( shortCaption ) => onPatch( {
-                  shortCaption
-                } ) }
-                onReset={ draft.shortCaption !== null ? () => onPatch( {
-                  shortCaption: null
-                } ) : null }
-              />
-            )}
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-[11px] text-label">Filled when it is sent:</span>
-              {CAPTION_TOKENS.map( ( token ) => (
-                <button
-                  key={ token }
-                  type="button"
-                  title={ facts[ token ] || "(empty for this sketch)" }
-                  onMouseDown={ ( event ) => event.preventDefault() }
-                  onClick={ () => insertToken( token ) }
-                  className="rounded-md border border-theme bg-background px-1.5 py-0.5 font-mono text-[10.5px] text-label transition-colors hover:border-foreground hover:text-foreground"
-                >
-                  {`{${ token }}`}
+                  {t.name}
                 </button>
               ) )}
-            </div>
-            <p className="m-0 text-[11px] text-label">
-              Pressing {plan.at === "now" ? "Publish now" : plan.at === "draft" ? "Send as a draft" : "Schedule"} approves
-              the words you read. Claude can only schedule a caption you approved.
-            </p>
+            </span>
           </div>
-        </fieldset>
-      )}
+
+          <div className={ clsx(
+            "grid min-w-0 gap-3",
+            !narrow && "grid-cols-[minmax(0,210px)_minmax(0,1fr)]"
+          ) }
+          >
+            {!narrow && (
+              <PillPalette
+                palette={ palette }
+                ctx={ ctx }
+                onPick={ pick }
+                className="max-h-80 overflow-y-auto rounded-lg border border-theme p-1.5"
+              />
+            )}
+            <div className="flex min-w-0 flex-col gap-2">
+              {narrow && (
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none]">
+                  <button
+                    type="button"
+                    aria-expanded={ drawer }
+                    onMouseDown={ ( e ) => e.preventDefault() }
+                    onClick={ () => setDrawer( ( d ) => !d ) }
+                    className="shrink-0 rounded-full border border-dashed border-theme px-2.5 text-xs leading-7 text-foreground"
+                  >
+                    {drawer ? "Close" : "＋ Pill"}
+                  </button>
+                  {recent.map( ( p ) => (
+                    <button
+                      key={ p.key }
+                      type="button"
+                      onMouseDown={ ( e ) => e.preventDefault() }
+                      onClick={ () => pick( p.key ) }
+                      className="shrink-0 rounded-full border border-theme px-2.5 text-xs leading-7 text-foreground hover:bg-hover"
+                    >
+                      {p.label}
+                    </button>
+                  ) )}
+                </div>
+              )}
+              {narrow && drawer && (
+                <div className="rounded-lg border border-theme p-1.5">
+                  <span className="block px-1.5 pb-1 text-[11px] text-label">Adds to {activeLabel}.</span>
+                  <PillPalette palette={ palette } ctx={ ctx } onPick={ pick } className="max-h-72 overflow-y-auto" />
+                </div>
+              )}
+              <PillEditor
+                id="publish-caption"
+                label="the shared words"
+                value={ template }
+                ctx={ ctx }
+                palette={ palette }
+                onChange={ ( next ) => onPatch( {
+                  caption: next === DEFAULT_CAPTION ? null : next
+                } ) }
+                onActive={ onActive }
+                onMount={ onSharedMount }
+              />
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-label">
+                <span className="tabular-nums">
+                  {plan.caption.text.length.toLocaleString( "en-GB" )} characters
+                  {empty.length ? ` · ${ empty.length } empty for this sketch` : ""}
+                </span>
+                <span className="hidden sm:inline">Type <kbd className="rounded border border-theme px-1 font-mono">/</kbd> for a pill · click one for its options</span>
+                <span className="flex-1" />
+                {anyOwn && (
+                  <button
+                    type="button"
+                    onClick={ () => onPatch( {
+                      own: {},
+                      ownBase: {},
+                      shortCaption: null
+                    } ) }
+                    className="underline underline-offset-2 hover:text-foreground"
+                  >
+                    ↺ Every account to the shared words
+                  </button>
+                )}
+              </div>
+              <label className="flex min-w-0 items-center gap-2 text-[11px] text-label">
+                <span className="shrink-0">My note</span>
+                <input
+                  id="publish-note"
+                  value={ draft.note }
+                  placeholder="A line about this sketch, in your words — the My note pill"
+                  maxLength={ 1000 }
+                  onChange={ ( e ) => onPatch( {
+                    note: e.target.value
+                  } ) }
+                  className="min-w-0 flex-1 rounded-md border border-theme bg-background px-2 py-1 text-base text-foreground focus:border-foreground focus:outline-hidden sm:text-xs"
+                />
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <div className="flex items-baseline justify-between gap-2">
+            <span className={ LEGEND }>Accounts · {plan.routes.length} of {plan.accounts.length} · open one for its words</span>
+            <button
+              type="button"
+              onClick={ openPublishing }
+              className="font-mono text-[10px] text-label underline underline-offset-2 hover:text-foreground"
+            >
+              accounts
+            </button>
+          </div>
+          <ul aria-label="Accounts" className="m-0 flex list-none flex-col rounded-lg border border-theme p-0">
+            {plan.accounts.map( ( account ) => (
+              <AccountRow
+                key={ account.channel.id }
+                account={ account }
+                open={ openId === account.channel.id && Boolean( account.route ) }
+                narrow={ narrow }
+                draft={ draft }
+                plan={ plan }
+                conn={ conn }
+                facts={ facts }
+                ctx={ ctx }
+                palette={ palette }
+                onOpen={ () => setOpenId( ( o ) => o === account.channel.id ? null : account.channel.id ) }
+                onToggle={ () => toggle( account.channel.id ) }
+                onVariant={ ( id ) => pickVariant(
+                  account,
+                  id
+                ) }
+                onInvite={ invite }
+                onPatch={ onPatch }
+                onRewrite={ rewrite }
+                onShared={ takeShared }
+                onActive={ onActive }
+              />
+            ) )}
+          </ul>
+          {plan.routes.some( ( r ) => r.shape.media === "image" ) && (
+            <p className="m-0 text-[11px] leading-snug text-label">
+              Pictures go out as JPEG — Instagram takes nothing else. Your downloaded file stays PNG.
+            </p>
+          )}
+        </div>
+
+        <p className="m-0 text-[11px] text-label">
+          Pressing {plan.at === "now" ? "Publish now" : plan.at === "draft" ? "Send as a draft" : "Schedule"} approves
+          every account’s words as you read them. Claude can only schedule words you approved.
+        </p>
+      </fieldset>
     </section>
   );
 }
 
-/** One account: ticked or not, the variant it takes, Instagram's kind and «also as a story». */
+/** The words as the network shows them: «… more» where it folds a caption. */
+function AsItReads( {
+  words, provider
+}: {
+  words: RouteWords;
+  provider: PostRoute[ "provider" ];
+} ) {
+  const fold = FOLD[ provider ];
+  const text = words.text || "—";
+
+  return (
+    <div className="flex flex-col gap-1">
+      <p className="m-0 whitespace-pre-wrap break-words border-l-2 border-theme pl-3 text-xs leading-relaxed text-foreground/85">
+        {fold && text.length > fold ? (
+          <>
+            {text.slice(
+              0,
+              fold
+            )}
+            <span className="text-label"> … more</span>
+            <span className="text-foreground/40">{text.slice( fold )}</span>
+          </>
+        ) : text}
+      </p>
+      {fold && text.length > fold && <span className="text-[11px] text-label">{PROVIDER_LABEL[ provider ]} shows the first {fold} characters before «more».</span>}
+    </div>
+  );
+}
+
+/**
+ * One account: ticked or not; folded, its variant, its state and the start of
+ * its words; open, its network's settings (Instagram's kind, story, Trial
+ * Reel and collaborators, TikTok's privacy, YouTube's title and visibility),
+ * its words as they will read, and its own words if he rewrites them.
+ */
 function AccountRow( {
-  account, invited, storyToo, onToggle, onVariant, onKind, onStory
+  account, open, narrow, draft, plan, conn, facts, ctx, palette, onOpen, onToggle, onVariant, onInvite, onPatch, onRewrite, onShared, onActive
 }: {
   account: PlanAccount;
-  invited: boolean;
-  storyToo: boolean;
+  open: boolean;
+  narrow: boolean;
+  draft: PostDraft;
+  plan: PostPlan;
+  conn: PostizConnection;
+  facts: PillFacts;
+  ctx: PillContext;
+  palette: ReturnType<typeof paletteOf>;
+  onOpen: () => void;
   onToggle: () => void;
   onVariant: ( variantId: string ) => void;
-  onKind: ( kind: PostKind ) => void;
-  onStory: ( on: boolean ) => void;
+  onInvite: ( id: string ) => void;
+  onPatch: ( patch: Partial<PostDraft> ) => void;
+  onRewrite: ( route: PostRoute ) => void;
+  onShared: ( route: PostRoute ) => void;
+  onActive: ( h: PillEditorHandle ) => void;
 } ) {
   const {
     channel, provider, ticked, reason, options, usual, route
   } = account;
   const on = ticked && !reason;
+  const invited = draft.collabAccounts.includes( channel.id );
   const storyAllowed = route?.kind && route.kind !== "story" && route.shape.files === 1;
+  const words = route?.words;
+  const firstLine = words ? ( words.text.split( "\n" ).find( ( l ) => l.trim() ) ?? "—" ) : null;
+  const line = reason && ticked ? reason : invited && !ticked ? "Invited as collaborator on the Instagram post" : !ticked ? "Not ticked" : firstLine;
 
   return (
-    <li
-      className={ clsx(
-        "flex flex-col gap-1.5 rounded-lg border px-2 py-1.5",
-        on ? "border-foreground/60" : "border-theme",
-        reason && "opacity-50"
-      ) }
+    <li className={ clsx(
+      "border-b border-theme last:border-b-0",
+      reason && "opacity-55"
+    ) }
     >
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="grid grid-cols-[auto_minmax(0,1fr)] items-stretch">
         <button
           type="button"
           role="checkbox"
           aria-checked={ on }
+          aria-label={ `Post to ${ channel.name } on ${ PROVIDER_LABEL[ provider ] }` }
           disabled={ Boolean( reason ) }
           title={ reason ?? undefined }
           onClick={ onToggle }
-          className="flex min-h-8 min-w-0 flex-1 items-center gap-2 text-left text-xs text-foreground pointer-coarse:min-h-11"
+          className="grid place-items-center pl-2.5 pr-1 pointer-coarse:min-w-11"
         >
           <span
             aria-hidden="true"
             className={ clsx(
-              "grid h-4 w-4 shrink-0 place-items-center rounded border",
+              "grid h-4 w-4 place-items-center rounded border pointer-coarse:h-5 pointer-coarse:w-5",
               on ? "border-foreground bg-foreground text-background" : "border-label"
             ) }
           >
             {on && <Check className="h-3 w-3" strokeWidth={ 3 } />}
           </span>
+        </button>
+        <button
+          type="button"
+          aria-expanded={ open }
+          disabled={ !route }
+          onClick={ onOpen }
+          className="grid min-w-0 grid-cols-[20px_minmax(0,1fr)_auto] items-center gap-x-2.5 gap-y-0.5 py-2 pl-1 pr-3 text-left enabled:hover:bg-hover pointer-coarse:min-h-13"
+        >
           {channel.picture
-            ? <img src={ channel.picture } alt="" className="h-5 w-5 shrink-0 rounded-full object-cover" />
-            : <span aria-hidden="true" className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-hover font-mono text-[8px] font-semibold">{PROVIDER_GLYPH[ provider ]}</span>}
-          <span className="truncate">{channel.name}</span>
-          <span className="shrink-0 font-mono text-[10px] text-label">{PROVIDER_LABEL[ provider ].toLowerCase()}</span>
+            ? <img src={ channel.picture } alt="" className="row-span-2 h-5 w-5 self-start rounded-full object-cover" />
+            : <span aria-hidden="true" className="row-span-2 grid h-5 w-5 place-items-center self-start rounded-full bg-hover font-mono text-[8px] font-semibold">{PROVIDER_GLYPH[ provider ]}</span>}
+          <span className="flex min-w-0 items-baseline gap-2">
+            <span className="truncate text-xs font-medium text-foreground">{channel.name}</span>
+            <span className="shrink-0 font-mono text-[10px] text-label">
+              {PROVIDER_LABEL[ provider ]}{route ? ` · ${ routeWords( route ).split( " · " )[ 0 ] }` : ""}
+            </span>
+          </span>
+          <span className="flex items-center justify-end gap-2">
+            {words && <StateChip words={ words } />}
+            {words && !narrow && <Count words={ words } />}
+          </span>
+          <span className={ clsx(
+            "col-span-2 min-w-0 text-[11px]",
+            narrow ? "line-clamp-2" : "truncate",
+            reason && ticked ? "text-red-500" : "text-label"
+          ) }
+          >
+            {line}
+          </span>
         </button>
       </div>
-      {invited && !ticked && <span className="pl-6 text-[11px] text-label">Invited as collaborator below</span>}
-      {reason && ticked && <span className="pl-6 text-[11px] text-red-500">{reason}</span>}
-      {route && (
-        <div className="flex flex-wrap items-center gap-2 pl-6">
-          {route && (
+
+      {open && route && words && (
+        <div className="flex min-w-0 flex-col gap-2.5 px-3 pb-3 pt-1 sm:pl-12">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
             <select
               value={ route.variant.id }
               onChange={ ( event ) => onVariant( event.target.value ) }
               aria-label={ `Variant for ${ channel.name }` }
-              className="min-w-0 max-w-full basis-full rounded-md border border-theme bg-background px-2 py-1 text-base text-foreground focus:border-foreground focus:outline-hidden sm:text-xs"
+              className="min-w-0 max-w-full rounded-md border border-theme bg-background px-2 py-1 text-base text-foreground focus:border-foreground focus:outline-hidden sm:text-xs pointer-coarse:min-h-10"
             >
               {options.map( ( option ) => (
                 <option key={ option.variant.id } value={ option.variant.id } disabled={ Boolean( option.reason ) }>
@@ -621,85 +751,222 @@ function AccountRow( {
                 </option>
               ) )}
             </select>
-          )}
+            <span className="font-mono text-[10px] text-label">
+              {routeWords( route )}
+              {route.source === "usual" ? ` · usually ${ route.format }` : route.source === "picked" ? ` · remembered: ${ route.format }` : usual ? ` · usually ${ usual }, none here` : ""}
+            </span>
+          </div>
+
           {route.kind && (
-            <div className="min-w-0 flex-1">
-              <Segmented<PostKind>
-                label={ `Post as on ${ channel.name }` }
-                value={ route.kind }
-                options={ KINDS.map( ( k ) => ( {
-                  id: k,
-                  label: KIND_LABEL[ k ],
-                  disabled: kindWhy(
-                    k,
-                    route.shape
-                  )
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <div className="min-w-0 flex-1">
+                <Segmented<PostKind>
+                  label={ `Post as on ${ channel.name }` }
+                  value={ route.kind }
+                  options={ KINDS.map( ( k ) => ( {
+                    id: k,
+                    label: KIND_LABEL[ k ],
+                    disabled: kindWhy(
+                      k,
+                      route.shape
+                    )
+                  } ) ) }
+                  onChange={ ( kind ) => onPatch( {
+                    kindFor: {
+                      ...draft.kindFor,
+                      [ channel.id ]: kind
+                    }
+                  } ) }
+                />
+              </div>
+              {storyAllowed && (
+                <Toggle
+                  checked={ draft.storyToo.includes( channel.id ) }
+                  onChange={ ( storyOn ) => onPatch( {
+                    storyToo: storyOn
+                      ? [
+                        ...draft.storyToo,
+                        channel.id
+                      ]
+                      : draft.storyToo.filter( ( x ) => x !== channel.id )
+                  } ) }
+                  title="The same file also goes out as a story on this account"
+                >
+                  + Story
+                </Toggle>
+              )}
+            </div>
+          )}
+
+          {route.kind === "reel" && (
+            <div className="flex flex-col gap-1.5">
+              <Toggle
+                checked={ draft.trial }
+                onChange={ ( trial ) => onPatch( {
+                  trial
+                } ) }
+                title="Shown to people who do not follow you first; nothing reaches your followers until it is shared with them"
+              >
+                Trial Reel — non-followers first
+              </Toggle>
+              {draft.trial && (
+                <Segmented<"auto" | "manual">
+                  label="Share it with your followers"
+                  value={ draft.graduate }
+                  options={ [
+                    {
+                      id: "auto",
+                      label: "When it works"
+                    },
+                    {
+                      id: "manual",
+                      label: "By hand"
+                    }
+                  ] }
+                  onChange={ ( graduate ) => onPatch( {
+                    graduate
+                  } ) }
+                />
+              )}
+            </div>
+          )}
+
+          {provider === "instagram" && route.kind !== "story" && ( plan.partners.length > 0 || conn.collaborator ) && (
+            <div className="flex flex-col gap-1.5">
+              <span className={ LEGEND }>With · Instagram collaborators</span>
+              {plan.partners.length > 0 && (
+                <div role="group" aria-label="Your accounts as collaborators" className="flex flex-wrap gap-1.5">
+                  {plan.partners.map( ( partner ) => (
+                    <ChannelChip
+                      key={ partner.channel.id }
+                      channel={ partner.channel }
+                      checked={ partner.invited }
+                      note={ partner.handle ? `@${ partner.handle }` : "username?" }
+                      disabledReason={ partner.handle ? null : "Type its Instagram username in Publishing (accounts) to invite it" }
+                      onToggle={ () => onInvite( partner.channel.id ) }
+                    />
+                  ) )}
+                </div>
+              )}
+              {conn.collaborator && (
+                <Toggle
+                  checked={ draft.collab }
+                  onChange={ ( collab ) => onPatch( {
+                    collab
+                  } ) }
+                >
+                  @{conn.collaborator} as collaborator
+                </Toggle>
+              )}
+            </div>
+          )}
+
+          {provider === "tiktok" && (
+            <Segmented<TikTokPrivacy>
+              label="TikTok privacy"
+              value={ draft.tiktokPrivacy }
+              options={ TIKTOK.map( ( [
+                id,
+                label
+              ] ) => ( {
+                id,
+                label
+              } ) ) }
+              onChange={ ( tiktokPrivacy ) => onPatch( {
+                tiktokPrivacy
+              } ) }
+            />
+          )}
+
+          {provider === "youtube" && (
+            <div className="flex flex-col gap-1.5">
+              <input
+                id="publish-youtube-title"
+                value={ draft.youtubeTitle ?? facts.title }
+                maxLength={ 100 }
+                onChange={ ( event ) => onPatch( {
+                  youtubeTitle: event.target.value
+                } ) }
+                aria-label="YouTube title"
+                className="w-full rounded-md border border-theme bg-background px-2 py-1.5 text-base text-foreground focus:border-foreground focus:outline-hidden sm:text-xs"
+              />
+              <Segmented<YouTubeVisibility>
+                label="YouTube visibility"
+                value={ draft.youtubeVisibility }
+                options={ YOUTUBE.map( ( [
+                  id,
+                  label
+                ] ) => ( {
+                  id,
+                  label
                 } ) ) }
-                onChange={ onKind }
+                onChange={ ( youtubeVisibility ) => onPatch( {
+                  youtubeVisibility
+                } ) }
               />
             </div>
           )}
-          {storyAllowed && (
-            <Toggle checked={ storyToo } onChange={ onStory } title="The same file also goes out as a story on this account">
-              + Story
-            </Toggle>
-          )}
-          <span className="basis-full font-mono text-[10px] text-label">
-            {routeWords( route )}
-            {route.source === "usual" ? ` · usually ${ route.format }` : route.source === "picked" ? ` · remembered: ${ route.format }` : usual ? ` · usually ${ usual }, none here` : ""}
+
+          <AsItReads words={ words } provider={ provider } />
+          <span className="text-[11px] text-label">
+            <Count words={ words } />
+            {" · "}
+            {words.notes.length ? `Adapted: ${ words.notes.join( " · " ) }.` : words.own ? "Its own words, as they will read." : "The shared words, as they are."}
           </span>
+
+          {words.state === "stale" && (
+            <div className="flex flex-wrap items-center gap-2 rounded-md border border-dashed border-indigo-500/50 bg-indigo-500/5 px-2.5 py-1.5 text-xs">
+              <span className="min-w-0 basis-full sm:basis-auto sm:flex-1">You changed the shared words after rewriting this one.</span>
+              <button type="button" onClick={ () => onShared( route ) } className="rounded-md border border-theme bg-background px-2 py-1 hover:bg-hover">Take the new shared words</button>
+              <button
+                type="button"
+                onClick={ () => onPatch( {
+                  ownBase: {
+                    ...draft.ownBase,
+                    [ channel.id ]: draft.caption ?? DEFAULT_CAPTION
+                  }
+                } ) }
+                className="text-label underline underline-offset-2"
+              >
+                Keep mine
+              </button>
+            </div>
+          )}
+
+          {words.own ? (
+            <div className="flex flex-col gap-1.5">
+              <span className={ LEGEND }>Its own words · pills stay live</span>
+              <PillEditor
+                id={ `publish-own-${ channel.id }` }
+                label={ `the words of ${ channel.name } on ${ PROVIDER_LABEL[ provider ] }` }
+                value={ words.template }
+                ctx={ ctx }
+                palette={ palette }
+                small
+                onChange={ ( next ) => onPatch( {
+                  own: {
+                    ...draft.own,
+                    [ channel.id ]: next
+                  },
+                  ownBase: {
+                    ...draft.ownBase,
+                    [ channel.id ]: draft.ownBase[ channel.id ] ?? ( draft.caption ?? DEFAULT_CAPTION )
+                  }
+                } ) }
+                onActive={ onActive }
+              />
+              <span>
+                <button type="button" onClick={ () => onShared( route ) } className="rounded-md border border-theme px-2 py-1 text-xs hover:bg-hover pointer-coarse:min-h-10">↺ Shared words</button>
+              </span>
+            </div>
+          ) : (
+            <span className="flex flex-wrap items-center gap-2">
+              <button type="button" onClick={ () => onRewrite( route ) } className="rounded-md border border-theme px-2 py-1 text-xs hover:bg-hover pointer-coarse:min-h-10">Rewrite for this account</button>
+              <span className="text-[11px] text-label">It starts from the shared words, pills included.</span>
+            </span>
+          )}
         </div>
       )}
     </li>
-  );
-}
-
-/** A caption template, its count against its networks' limit, and how it will read. */
-function CaptionField( {
-  id, legend, caption, approved, areaRef, onFocus, onChange, onReset
-}: {
-  id: string;
-  legend: string;
-  caption: PostPlan[ "caption" ];
-  approved: boolean;
-  areaRef: React.RefObject<HTMLTextAreaElement | null>;
-  onFocus: () => void;
-  onChange: ( template: string ) => void;
-  onReset: ( () => void ) | null;
-} ) {
-  const over = caption.text.length > caption.limit;
-
-  return (
-    <div className="flex min-w-0 flex-col gap-1.5">
-      <span className={ clsx(
-        LEGEND,
-        over && "text-red-500"
-      ) }
-      >
-        {legend} · {caption.text.length.toLocaleString( "en-GB" )} / {caption.limit.toLocaleString( "en-GB" )} · {approved ? "approved" : "not approved yet"}
-      </span>
-      <textarea
-        ref={ areaRef }
-        id={ id }
-        value={ caption.template }
-        onFocus={ onFocus }
-        onChange={ ( event ) => onChange( event.target.value ) }
-        rows={ id === "publish-caption" ? 5 : 3 }
-        spellCheck
-        aria-label={ legend }
-        className="w-full resize-y rounded-lg border border-theme bg-background px-3 py-2 font-mono text-base leading-snug text-foreground focus:border-foreground focus:outline-hidden sm:text-xs"
-      />
-      <div className="flex items-center gap-3">
-        <details className="group min-w-0 flex-1">
-          <summary className="cursor-pointer list-none text-xs text-label hover:text-foreground">As it will read</summary>
-          <p className="m-0 mt-2 whitespace-pre-wrap border-l-2 border-theme pl-3 text-xs leading-relaxed text-foreground/80">{caption.text || "—"}</p>
-        </details>
-        {onReset && (
-          <button type="button" onClick={ onReset } className="shrink-0 self-start text-[11px] text-label underline underline-offset-2 hover:text-foreground">
-            Sketchbook’s own
-          </button>
-        )}
-      </div>
-    </div>
   );
 }
