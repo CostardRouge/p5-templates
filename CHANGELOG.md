@@ -41,6 +41,11 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
 
 ### Changed
 
+- One caption for every account, each receiving it fitted to its network: hashtags kept once and within what the
+  network takes (one topic on Threads, two on X), the link said «Full loop: link in bio» on Instagram and TikTok
+  where a link in a caption cannot be tapped, and only when it is still too long a description cut at a sentence;
+  each account's row says how long its words are and what was adapted. The short caption for Threads, X and
+  Bluesky is gone: what you wrote there stays those accounts' own words.
 - Every post Sketchbook sends to your Postiz is tagged "Sketchbook", and what Sketchbook lists of your planned
   posts shows only its own; posts from your other apps on the same Postiz are hidden there but still take their
   slots of your rhythm. Create the tag once in Postiz (Create Post › Tags › Add New Tag) so it sticks.

@@ -11,8 +11,11 @@ import {
   CommandError, type CommandSpec
 } from "../../../../scripts/mcp/registry.ts";
 import {
-  PROVIDER_LABEL, providerOf, type PostKind, type PostizClient
+  PROVIDER_LABEL, providerOf, SHORT_PROVIDERS, type PostKind, type PostizClient
 } from "../../postiz/client";
+import {
+  DEFAULT_CAPTION
+} from "../../postiz/caption";
 import {
   planPost, plannedInstants, routeWords, type PostPlan, type VariantSpan
 } from "../../postiz/plan";
@@ -156,7 +159,16 @@ function describePlan(
             instagramKind: KIND_LABEL[ a.route.kind ],
             instagramKinds: a.route.shape.kinds.map( ( k ) => KIND_LABEL[ k ] )
           } : {} ),
-          caption: a.route.short ? "short" : "long",
+          words: {
+            state: a.route.words.state,
+            length: a.route.words.length,
+            limit: a.route.words.limit,
+            own: a.route.words.own,
+            ...( a.route.words.notes.length ? {
+              adapted: a.route.words.notes
+            } : {} ),
+            reads: a.route.words.text
+          },
           why: a.route.source
         }
       } : {} )
@@ -177,11 +189,27 @@ function describePlan(
       tz
     ) : null,
     rhythmWarnings: plan.warnings,
-    caption: plan.caption.used ? `${ plan.caption.text } (${ plan.caption.text.length } / ${ plan.caption.limit })` : null,
-    shortCaption: plan.shortCaption.used ? `${ plan.shortCaption.text } (${ plan.shortCaption.text.length } / ${ plan.shortCaption.limit })` : null,
+    caption: plan.caption.text,
     approved: draft.approved,
     blocked: plan.blocked
   };
+}
+
+/** How each ticked account reads: its state, its count against its limit, its words. */
+function wordsOf( plan: PostPlan ) {
+  return plan.routes.map( ( r ) => ( {
+    id: r.channel.id,
+    account: r.channel.name,
+    network: r.provider,
+    state: r.words.state,
+    own: r.words.own,
+    length: r.words.length,
+    limit: r.words.limit,
+    ...( r.words.notes.length ? {
+      adapted: r.words.notes
+    } : {} ),
+    reads: r.words.text
+  } ) );
 }
 
 /** `next`, `now`, `draft` or an ISO date-time with its zone. */
@@ -285,16 +313,9 @@ export function publishCommands( h: StudioHandles ): CommandSpec[] {
           facts,
           caption: plan ? {
             template: plan.caption.template,
-            reads: plan.caption.text,
-            limit: plan.caption.limit,
-            usedBy: plan.caption.used ? "Instagram, TikTok, YouTube" : "no account ticked"
+            reads: plan.caption.text
           } : null,
-          shortCaption: plan ? {
-            template: plan.shortCaption.template,
-            reads: plan.shortCaption.text,
-            limit: plan.shortCaption.limit,
-            usedBy: plan.shortCaption.used ? "Threads, X, Bluesky" : "no account ticked"
-          } : null,
+          accounts: plan ? wordsOf( plan ) : [],
           approved: draft.approved
         };
       }
@@ -623,21 +644,33 @@ export function publishCommands( h: StudioHandles ): CommandSpec[] {
     {
       id: "publish.caption",
       title: "Write the captions",
-      description: "Replace the caption TEMPLATES: `template` for Instagram, TikTok and YouTube (2,200 characters on Instagram), `short` for Threads (500), X (280) and Bluesky (300). {title}, {description}, {tags}, {engine}, {seconds}, {link}, {sketch} are filled when it is sent; give an empty string to go back to Sketchbook's own. New words are NOT approved: show the person the captions as they read, and publish.approve only once they say they suit them.",
+      description: "One shared caption TEMPLATE, each account receiving it fitted to its network (hashtags once and within its count, the link said «link in bio» on Instagram and TikTok, a long description cut at a sentence on X…), unless an account has its own words. Pills are tokens filled when it is sent: {title} {category} {categoryTag} {version} {rank} {description} {descriptionFirst} {tags} {engine} {engineTag} {created} {link} {loop} {fps} {slides} {date} {weekday} {season} {postNo} {catNo} {dayN} {note} and his phrases {phrase:<id>}; options after a bar: {date|fmt=long}, {tags|count=3}, {title|case=upper}, {link|inbio=off}, {phrase:sign|nets=instagram,tiktok}. `template` replaces the shared words (\"\" for Sketchbook's own); `on` + `words` gives ONE account its own words (\"\" takes the shared ones back); `note` is the «My note» line of this sketch. New words are NOT approved: show the person how each account reads, and publish.approve only once they say they suit them.",
       params: {
         template: {
           type: "string",
-          description: "The long caption template; \"\" for Sketchbook's own",
+          description: "The shared caption template; \"\" for Sketchbook's own",
           optional: true
         },
-        short: {
+        on: {
           type: "string",
-          description: "The short caption template; \"\" for Sketchbook's own",
+          description: "One account, by id, or a network or name that names one account only — for `words`",
+          optional: true
+        },
+        words: {
+          type: "string",
+          description: "That account's own words (a template, pills included); \"\" takes the shared words back",
+          optional: true
+        },
+        note: {
+          type: "string",
+          description: "This sketch's «My note» line; \"\" clears it",
           optional: true
         }
       },
       run( params ) {
         const key = h.publish.key();
+        const conn = h.publish.connection();
+        const draft = getDraft( key );
         const patch: Partial<PostDraft> = {
           approved: false
         };
@@ -646,8 +679,62 @@ export function publishCommands( h: StudioHandles ): CommandSpec[] {
           patch.caption = String( params.template ) || null;
         }
 
-        if ( params.short !== undefined ) {
-          patch.shortCaption = String( params.short ) || null;
+        if ( params.note !== undefined ) {
+          patch.note = String( params.note ).slice(
+            0,
+            1000
+          );
+        }
+
+        if ( params.words !== undefined ) {
+          if ( params.on === undefined ) {
+            throw new CommandError(
+              "invalid",
+              "Say which account the words are for: `on`."
+            );
+          }
+
+          if ( !conn ) {
+            throw new CommandError(
+              "unavailable",
+              "Connect a Postiz first (Menu › Connections › Publishing)."
+            );
+          }
+
+          const wanted = String( params.on ).toLowerCase();
+          const matches = conn.channels.filter( ( c ) => c.id === params.on || c.name.toLowerCase().includes( wanted ) || providerOf( c.identifier ) === wanted );
+
+          if ( matches.length !== 1 ) {
+            throw new CommandError(
+              "invalid",
+              matches.length ? `"${ params.on }" names ${ matches.length } accounts — give an id: ${ matches.map( ( c ) => `${ c.id } (${ c.name })` ).join( ", " ) }.` : `No account "${ params.on }" in this Postiz.`
+            );
+          }
+
+          const id = matches[ 0 ].id;
+          const own = {
+            ...draft.own
+          };
+          const ownBase = {
+            ...draft.ownBase
+          };
+          const shared = patch.caption !== undefined ? patch.caption ?? DEFAULT_CAPTION : draft.caption ?? DEFAULT_CAPTION;
+
+          if ( String( params.words ) ) {
+            own[ id ] = String( params.words );
+            ownBase[ id ] = shared;
+          } else {
+            delete own[ id ];
+            delete ownBase[ id ];
+
+            // Taking a short network's words back also leaves the old short caption.
+            if ( SHORT_PROVIDERS.has( providerOf( matches[ 0 ].identifier ) ) ) {
+              patch.shortCaption = null;
+            }
+          }
+
+          patch.own = own;
+          patch.ownBase = ownBase;
         }
 
         patchDraft(
@@ -655,7 +742,6 @@ export function publishCommands( h: StudioHandles ): CommandSpec[] {
           patch
         );
 
-        const conn = h.publish.connection();
         const plan = conn ? planPost( {
           conn,
           draft: getDraft( key ),
@@ -667,7 +753,7 @@ export function publishCommands( h: StudioHandles ): CommandSpec[] {
 
         return {
           caption: plan?.caption.text ?? null,
-          shortCaption: plan?.shortCaption.text ?? null,
+          accounts: plan ? wordsOf( plan ) : [],
           approved: false
         };
       }
@@ -788,8 +874,6 @@ export function publishCommands( h: StudioHandles ): CommandSpec[] {
             client,
             routes: plan.routes,
             files,
-            caption: plan.caption.text,
-            shortCaption: plan.shortCaption.text,
             at: target
           } );
 

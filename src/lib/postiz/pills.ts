@@ -778,7 +778,9 @@ export interface Composed {
  * count; the rest only when the network's limit asks.
  */
 export function composeCaption(
-  template: string, ctx: PillContext, provider: Provider | null
+  template: string, ctx: PillContext, provider: Provider | null,
+  /** False for an account's OWN words: they are kept as written, and too long is said, never cut. */
+  fitWords = true
 ): Composed {
   const notes: string[] = [];
   const lines = fill(
@@ -844,7 +846,7 @@ export function composeCaption(
   );
 
   for ( const p of lines.flat() ) {
-    if ( length() <= limit ) {
+    if ( !fitWords || length() <= limit ) {
       break;
     }
 
@@ -884,7 +886,7 @@ export function composeCaption(
 
   for ( const p of lines.flat().filter( ( x ) => x.def?.minor && x.text )
     .reverse() ) {
-    if ( length() <= limit ) {
+    if ( !fitWords || length() <= limit ) {
       break;
     }
 
@@ -894,7 +896,7 @@ export function composeCaption(
 
   let text = joinLines( lines );
 
-  if ( captionLength(
+  if ( fitWords && captionLength(
     text,
     provider
   ) > limit ) {

@@ -26,8 +26,18 @@ export interface PostDraft {
   channelIds: string[] | null;
   /** The caption TEMPLATE; null is Sketchbook's own. */
   caption: string | null;
-  /** The SHORT caption template, for Threads, X and Bluesky; null is Sketchbook's own. */
+  /**
+   * The SHORT caption template of 2026-11-11 (Threads, X, Bluesky), kept only
+   * so what he wrote there is not lost: since the pills (2026-11-15) the short
+   * networks read it as their OWN words until he takes the shared ones back.
+   */
   shortCaption: string | null;
+  /** An account's own words (a template, pills included), by account id; absent = the shared words, fitted. */
+  own: Record<string, string>;
+  /** The shared template when each account's own words were written: a change since is said («shared changed»). */
+  ownBase: Record<string, string>;
+  /** His line about this sketch — the «My note» pill. */
+  note: string;
   /** The variant each account takes, by account id; an account absent follows its usual format. */
   variantFor: Record<string, string>;
   /** Instagram's kind per account; absent follows `kind`. */
@@ -97,6 +107,9 @@ export const DEFAULT_DRAFT: PostDraft = {
   channelIds: null,
   caption: null,
   shortCaption: null,
+  own: {},
+  ownBase: {},
+  note: "",
   variantFor: {},
   kindFor: {},
   storyToo: [],
@@ -164,6 +177,21 @@ export function readDraft( raw: unknown ): PostDraft {
       0,
       2000
     ) : null,
+    own: Object.fromEntries( Object.entries( stringRecord( r.own ) ).map( ( [
+      id,
+      t
+    ] ) => [
+      id,
+      t.slice(
+        0,
+        6000
+      )
+    ] ) ),
+    ownBase: stringRecord( r.ownBase ),
+    note: typeof r.note === "string" ? r.note.slice(
+      0,
+      1000
+    ) : "",
     variantFor: stringRecord( r.variantFor ),
     kindFor: Object.fromEntries( Object.entries( stringRecord( r.kindFor ) ).filter( ( [
       , kind
@@ -237,7 +265,7 @@ export function patchedDraft(
     ...patch
   };
 
-  const newWords = ( "caption" in patch && patch.caption !== draft.caption ) || ( "shortCaption" in patch && patch.shortCaption !== draft.shortCaption );
+  const newWords = ( "caption" in patch && patch.caption !== draft.caption ) || ( "shortCaption" in patch && patch.shortCaption !== draft.shortCaption ) || ( "own" in patch && JSON.stringify( patch.own ) !== JSON.stringify( draft.own ) ) || ( "note" in patch && patch.note !== draft.note );
 
   if ( newWords && !( "approved" in patch ) ) {
     next.approved = false;

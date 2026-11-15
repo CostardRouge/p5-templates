@@ -55,7 +55,7 @@ import {
   PostizClient, postizHome, type PostizPost
 } from "@/lib/postiz/client";
 import {
-  publishFacts
+  publishFacts, withSends
 } from "@/lib/postiz/facts";
 import SketchSheetLoader from "@/components/GalleryPage/SketchSheetLoader";
 import {
@@ -74,6 +74,7 @@ import {
   DEFAULT_DRAFT,
   addPublication,
   dropPublication,
+  allPublications,
   getDraft,
   getPublications,
   getWhen,
@@ -495,16 +496,30 @@ export default function ExportPanel( {
   );
 
   const facts = useMemo(
-    () => publishFacts(
-      name,
-      engineId,
-      ( options as { animation?: { duration?: number;
-        framerate?: number } } ).animation
+    () => withSends(
+      publishFacts(
+        name,
+        engineId,
+        ( options as { animation?: { duration?: number;
+          framerate?: number } } ).animation,
+        Math.max(
+          1,
+          slideCount
+        )
+      ),
+      sketchKey,
+      draft.note,
+      allPublications()
     ),
+    // `publications` re-reads the kept sends after one of this sketch's.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       name,
       engineId,
-      options
+      options,
+      sketchKey,
+      draft.note,
+      publications
     ]
   );
   const taken = useMemo(
@@ -814,8 +829,6 @@ export default function ExportPanel( {
           client,
           routes: snap.plan.routes,
           files: postable,
-          caption: snap.plan.caption.text,
-          shortCaption: snap.plan.shortCaption.text,
           at: snap.target,
           signal: controller.signal,
           onFile: (
@@ -1019,8 +1032,6 @@ export default function ExportPanel( {
         client,
         routes,
         files: view.postable,
-        caption: view.snapshot.plan.caption.text,
-        shortCaption: view.snapshot.plan.shortCaption.text,
         at: target
       } ),
       pieceId: view.snapshot.pieceId
@@ -1088,7 +1099,7 @@ export default function ExportPanel( {
           files={ [
             ...publishView.files.values()
           ].flat() }
-          caption={ publishView.snapshot.plan.caption.used ? publishView.snapshot.plan.caption.text : publishView.snapshot.plan.shortCaption.text }
+          caption={ publishView.snapshot.plan.routes[ 0 ]?.words.text ?? publishView.snapshot.plan.caption.text }
           targets={ publishView.snapshot.plan.targets }
           sending={ running }
           onConfirm={ () => void sendToPostiz(

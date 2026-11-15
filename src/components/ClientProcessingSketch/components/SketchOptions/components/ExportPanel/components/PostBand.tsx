@@ -262,9 +262,8 @@ export default function PostBand( {
   };
 
   const insertToken = ( token: string ) => {
-    const short = lastArea.current === "short" && plan.shortCaption.used;
-    const area = short ? shortArea.current : longArea.current;
-    const text = short ? plan.shortCaption.template : plan.caption.template;
+    const area = longArea.current;
+    const text = plan.caption.template;
     const start = area?.selectionStart ?? text.length;
     const end = area?.selectionEnd ?? start;
     const next = `${ text.slice(
@@ -272,19 +271,10 @@ export default function PostBand( {
       start
     ) }{${ token }}${ text.slice( end ) }`;
 
-    onPatch( short ? {
-      shortCaption: next
-    } : {
+    onPatch( {
       caption: next
     } );
   };
-
-  const showLong = plan.caption.used || !plan.shortCaption.used;
-  const accountsLegend = ( names: Set<string> ) => [
-    ...names
-  ].map( ( p ) => PROVIDER_LABEL[ p as keyof typeof PROVIDER_LABEL ] ).join( ", " );
-  const longNames = accountsLegend( new Set( plan.routes.filter( ( r ) => !r.short ).map( ( r ) => r.provider ) ) ) || "Instagram, TikTok, YouTube";
-  const shortNames = accountsLegend( new Set( plan.routes.filter( ( r ) => r.short ).map( ( r ) => r.provider ) ) );
 
   return (
     <section aria-label="Post" className="border-t border-theme">
@@ -490,42 +480,22 @@ export default function PostBand( {
           </div>
 
           <div className="flex min-w-0 flex-col gap-3 md:col-span-2">
-            {showLong && (
-              <CaptionField
-                id="publish-caption"
-                legend={ `Caption · ${ longNames }` }
-                caption={ plan.caption }
-                approved={ draft.approved }
-                areaRef={ longArea }
-                onFocus={ () => {
-                  lastArea.current = "long";
-                } }
-                onChange={ ( caption ) => onPatch( {
-                  caption
-                } ) }
-                onReset={ draft.caption !== null ? () => onPatch( {
-                  caption: null
-                } ) : null }
-              />
-            )}
-            {plan.shortCaption.used && (
-              <CaptionField
-                id="publish-short-caption"
-                legend={ `Short caption · ${ shortNames }` }
-                caption={ plan.shortCaption }
-                approved={ draft.approved }
-                areaRef={ shortArea }
-                onFocus={ () => {
-                  lastArea.current = "short";
-                } }
-                onChange={ ( shortCaption ) => onPatch( {
-                  shortCaption
-                } ) }
-                onReset={ draft.shortCaption !== null ? () => onPatch( {
-                  shortCaption: null
-                } ) : null }
-              />
-            )}
+            <CaptionField
+              id="publish-caption"
+              legend="Words · shared by every account"
+              caption={ plan.caption }
+              approved={ draft.approved }
+              areaRef={ longArea }
+              onFocus={ () => {
+                lastArea.current = "long";
+              } }
+              onChange={ ( caption ) => onPatch( {
+                caption
+              } ) }
+              onReset={ draft.caption !== null ? () => onPatch( {
+                caption: null
+              } ) : null }
+            />
             <div className="flex flex-wrap items-center gap-1.5">
               <span className="text-[11px] text-label">Filled when it is sent:</span>
               {CAPTION_TOKENS.map( ( token ) => (
@@ -648,6 +618,13 @@ function AccountRow( {
             {routeWords( route )}
             {route.source === "usual" ? ` · usually ${ route.format }` : route.source === "picked" ? ` · remembered: ${ route.format }` : usual ? ` · usually ${ usual }, none here` : ""}
           </span>
+          <span className={ clsx(
+            "basis-full truncate text-[11px]",
+            route.words.state === "over" ? "text-red-500" : "text-label"
+          ) } title={ route.words.text }
+          >
+            {route.words.length.toLocaleString( "en-GB" )} / {route.words.limit.toLocaleString( "en-GB" )} · {route.words.notes.length ? route.words.notes.join( " · " ) : route.words.own ? "its own words" : "the shared words"}
+          </span>
         </div>
       )}
     </li>
@@ -667,16 +644,10 @@ function CaptionField( {
   onChange: ( template: string ) => void;
   onReset: ( () => void ) | null;
 } ) {
-  const over = caption.text.length > caption.limit;
-
   return (
     <div className="flex min-w-0 flex-col gap-1.5">
-      <span className={ clsx(
-        LEGEND,
-        over && "text-red-500"
-      ) }
-      >
-        {legend} · {caption.text.length.toLocaleString( "en-GB" )} / {caption.limit.toLocaleString( "en-GB" )} · {approved ? "approved" : "not approved yet"}
+      <span className={ LEGEND }>
+        {legend} · {caption.text.length.toLocaleString( "en-GB" )} characters · {approved ? "approved" : "not approved yet"}
       </span>
       <textarea
         ref={ areaRef }

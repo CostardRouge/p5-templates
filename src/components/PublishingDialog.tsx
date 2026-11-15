@@ -20,6 +20,9 @@ import {
   DEFAULT_RHYTHM, rhythmSlotLabel, type Rhythm, type RhythmSlot
 } from "@/lib/postiz/rhythm";
 import {
+  DEFAULT_PHRASES
+} from "@/lib/postiz/pills";
+import {
   cleanHandle, forgetPostiz, initialDefaults, putPostiz, updatePostiz
 } from "@/lib/postiz/store";
 import {
@@ -397,6 +400,11 @@ export default function PublishingDialog( {
         handles: same ? conn.handles : {},
         usual: same ? conn.usual : {},
         rhythm: same ? conn.rhythm : DEFAULT_RHYTHM,
+        // His phrases are his words, whatever Postiz they go through.
+        phrases: conn?.phrases ?? DEFAULT_PHRASES.map( ( p ) => ( {
+          ...p
+        } ) ),
+        dayStart: conn?.dayStart ?? null,
         connectedAt: Date.now()
       } );
       setKey( "" );

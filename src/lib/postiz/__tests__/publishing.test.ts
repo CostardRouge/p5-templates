@@ -2,6 +2,10 @@
  * @jest-environment jsdom
  */
 
+import {
+  DEFAULT_PHRASES
+} from "../pills";
+
 /**
  * What Sketchbook adds to Atelier's Postiz client: one post to several
  * accounts (Instagram, TikTok, YouTube) with each network's own settings,
@@ -396,6 +400,8 @@ describe(
           handles: {},
           usual: {},
           rhythm: DEFAULT_RHYTHM,
+          phrases: DEFAULT_PHRASES,
+          dayStart: null,
           connectedAt: 1
         } );
         resetPostizCache();
@@ -777,7 +783,15 @@ describe(
           source: "first" as const,
           kind,
           story,
-          short: providerOf( channel.identifier ) === "x",
+          words: {
+            template: "",
+            own: false,
+            text: providerOf( channel.identifier ) === "x" ? "Short" : "The long one",
+            notes: [],
+            length: 0,
+            limit: 0,
+            state: "follows" as const
+          },
           choices: {
             kind: kind ?? ( "post" as const )
           }
@@ -818,8 +832,6 @@ describe(
               ]
             ]
           ] ),
-          caption: "The long one",
-          shortCaption: "Short",
           at: new Date( "2026-11-15T09:00:00Z" ),
           onFile: ( n ) => files.push( n )
         } );

@@ -1,4 +1,7 @@
 import {
+  DEFAULT_PHRASES
+} from "@/lib/postiz/pills";
+import {
   createCommandRegistry
 } from "../../../../scripts/mcp/registry.ts";
 import {
@@ -51,6 +54,8 @@ const conn: PostizConnection = {
   handles: {},
   usual: {},
   rhythm: DEFAULT_RHYTHM,
+  phrases: DEFAULT_PHRASES,
+  dayStart: null,
   connectedAt: 0
 };
 

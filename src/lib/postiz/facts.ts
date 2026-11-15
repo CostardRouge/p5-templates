@@ -19,6 +19,9 @@ import {
 import type {
   PillFacts
 } from "./pills";
+import {
+  sendNumbers
+} from "./counters";
 
 /** `churros-v11-perspective` → 11; null without a `-vN`. */
 export function versionOf( name: string ): number | null {
@@ -106,4 +109,45 @@ export function publishFacts(
       ""
     )
   };
+}
+
+/** A sketch key `<engine>/<name>` → its category, from the catalogue. */
+export function categoryOfKey( key: string ): string | null {
+  const [
+    engineId,
+    name
+  ] = key.split( "/" );
+
+  return name ? findSketchMeta(
+    name,
+    engineId
+  )?.category ?? null : null;
+}
+
+/** The facts with what this browser adds: his note on the sketch and this send's numbers. */
+export function withSends(
+  facts: PillFacts,
+  sketchKey: string,
+  note: string,
+  kept: Parameters<typeof sendNumbers>[ 0 ]
+): PillFacts {
+  const numbers = sendNumbers(
+    kept,
+    categoryOfKey,
+    categoryOfKey( sketchKey )
+  );
+
+  return {
+    ...facts,
+    note,
+    postNo: numbers.postNo,
+    catNo: numbers.catNo
+  };
+}
+
+/** How many slides a document has (the root alone counts as one). */
+export function slideCount( options: unknown ): number {
+  const slides = options && typeof options === "object" ? ( options as { slides?: unknown } ).slides : undefined;
+
+  return Array.isArray( slides ) && slides.length > 0 ? slides.length : 1;
 }

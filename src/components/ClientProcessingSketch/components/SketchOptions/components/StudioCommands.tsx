@@ -1,6 +1,9 @@
 "use client";
 
 import {
+  allPublications, getDraft
+} from "@/lib/postiz/publishStore";
+import {
   useEffect, useLayoutEffect, useRef
 } from "react";
 import {
@@ -37,7 +40,7 @@ import {
   PostizClient
 } from "@/lib/postiz/client";
 import {
-  publishFacts
+  publishFacts, slideCount, withSends
 } from "@/lib/postiz/facts";
 import {
   postableFile
@@ -588,12 +591,22 @@ export default function StudioCommands( {
               conn.apiKey
             ) : null;
           },
-          facts: () => publishFacts(
-            name,
-            now().state.engineId,
-            ( now().form.getValues() as { animation?: { duration?: number;
-              framerate?: number } } ).animation
-          ),
+          facts: () => {
+            const values = now().form.getValues();
+
+            return withSends(
+              publishFacts(
+                name,
+                now().state.engineId,
+                ( values as { animation?: { duration?: number;
+                  framerate?: number } } ).animation,
+                slideCount( values )
+              ),
+              variantKey,
+              getDraft( variantKey ).note,
+              allPublications()
+            );
+          },
           slideSpan: ( variant ) => {
             const options = now().form.getValues() as SketchOption;
 

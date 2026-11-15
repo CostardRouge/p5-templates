@@ -5,6 +5,10 @@
  */
 
 import {
+  DEFAULT_PHRASES
+} from "../pills";
+
+import {
   planPost, plannedInstants, routeWords, type VariantSpan
 } from "../plan";
 import {
@@ -79,6 +83,8 @@ const conn: PostizConnection = {
   handles: {},
   usual: {},
   rhythm: DEFAULT_RHYTHM,
+  phrases: DEFAULT_PHRASES,
+  dayStart: null,
   connectedAt: 0
 };
 const variant = (
@@ -302,7 +308,7 @@ describe(
     );
 
     it(
-      "gives Instagram a story beside its post, and the short networks the short caption",
+      "gives Instagram a story beside its post, and the short networks their old short caption as their own words",
       () => {
         const p = plan( {
           storyToo: [
@@ -322,25 +328,43 @@ describe(
         expect( routeOf(
           p,
           "x"
-        )?.short ).toBe( true );
-        expect( p.caption ).toMatchObject( {
-          used: true,
-          limit: 2200
-        } );
-        expect( p.shortCaption ).toMatchObject( {
-          used: true,
+        )?.words ).toMatchObject( {
+          own: true,
+          state: "own",
           limit: 280,
           text: "Iridescent · Peaks shell p5.steeve.website/sketches/p5/iridescent/iridescent-v7-peaks-shell"
         } );
+        // Instagram reads the shared words, its link said as «link in bio».
+        expect( routeOf(
+          p,
+          "ig"
+        )?.words ).toMatchObject( {
+          own: false,
+          limit: 2200
+        } );
+        expect( routeOf(
+          p,
+          "ig"
+        )?.words.text ).toContain( "Full loop: link in bio" );
+        expect( p.caption.used ).toBe( true );
       }
     );
 
     it(
-      "refuses a short caption over X's 280, a past time, a missing YouTube title",
+      "refuses an account's own words over its limit, a past time, a missing YouTube title",
       () => {
-        expect( plan( {
-          shortCaption: "x".repeat( 300 )
-        } ).blocked ).toMatch( /short caption is 300 characters — 280 at most for Threads, X/ );
+        // His own words are kept as written: too long blocks, nothing is cut.
+        const long = plan( {
+          own: {
+            x: "word ".repeat( 70 )
+          }
+        } );
+
+        expect( long.blocked ).toMatch( /X’s words are 349 characters — 280 at most/ );
+        expect( routeOf(
+          long,
+          "x"
+        )?.words.state ).toBe( "over" );
         expect( plan(
           {},
           {
