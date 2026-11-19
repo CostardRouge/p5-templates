@@ -67,6 +67,8 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
 
 ### Fixed
 
+- A piece exported or published at another size than its sketch's is kept in the gallery with its real picture;
+  it used to get a black thumbnail. Pieces already kept with a black one show the sketch's own picture instead.
 - After publishing, the screen now shows what really happened on each account — published (with a link to the
   post), queued or failed — instead of saying "publishing" for all of them. A failed account shows what Postiz said
   and what to do about it, and can be sent the same files again, or taken back to the variants to pick another one.

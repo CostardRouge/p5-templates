@@ -1,11 +1,11 @@
 "use client";
 
 import React, {
-  useEffect, useState
+  useState
 } from "react";
 import clsx from "clsx";
 import {
-  ImageOff, Pencil, Trash2
+  Pencil, Trash2
 } from "lucide-react";
 
 import type {
@@ -15,7 +15,10 @@ import {
   sendLine, sendState, weekdayTime, type GallerySend
 } from "@/lib/gallery/sends";
 import {
-  SendMarks, SEND_WORD
+  catalogueThumbnail
+} from "./items";
+import {
+  SendMarks, SEND_WORD, Vignette
 } from "./marks";
 import {
   formatSketchTitle
@@ -34,38 +37,6 @@ const dateFormat = new Intl.DateTimeFormat(
     timeStyle: "short"
   }
 );
-
-/** The thumbnail Blob as an object URL for the card's lifetime. */
-function useObjectUrl( blob: Blob | null ): string | null {
-  const [
-    url,
-    setUrl
-  ] = useState<string | null>( null );
-
-  // The URL is minted in the effect that revokes it, so a re-run of the
-  // effect (StrictMode in dev runs mount → cleanup → mount) mints a fresh one
-  // rather than handing back a URL its own cleanup just revoked — a memoised
-  // URL showed as a broken image on every other card.
-  useEffect(
-    () => {
-      const next = blob ? URL.createObjectURL( blob ) : null;
-
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- the URL's lifetime is this effect's
-      setUrl( next );
-
-      return () => {
-        if ( next ) {
-          URL.revokeObjectURL( next );
-        }
-      };
-    },
-    [
-      blob
-    ]
-  );
-
-  return url;
-}
 
 /** What the card prints when no title was given. */
 export function displayTitle( entry: Pick<GalleryEntry, "title" | "name"> ): string {
@@ -105,7 +76,6 @@ export default function GalleryCard( {
 } ) {
   const latest = sends[ 0 ] ?? null;
   const latestState = latest ? sendState( latest ) : null;
-  const thumbnail = useObjectUrl( entry.thumbnail );
   const [
     editing,
     setEditing
@@ -142,18 +112,8 @@ export default function GalleryCard( {
           aspectRatio: `${ entry.width } / ${ entry.height }`
         } }
       >
-        {thumbnail ? (
-
-          <img
-            src={ thumbnail }
-            alt=""
-            className="absolute inset-0 h-full w-full object-cover"
-          />
-        ) : (
-          <span className="absolute inset-0 flex items-center justify-center text-foreground/30">
-            <ImageOff className="h-6 w-6" />
-          </span>
-        )}
+        {/* The kept thumbnail, or — none kept, or a blank one (`blankThumbnail.ts`) — the sketch's catalogue picture. */}
+        <Vignette blob={ entry.thumbnail } src={ catalogueThumbnail( `${ entry.engine }/${ entry.name }` ) } />
 
         <span className="pointer-events-none absolute left-1.5 top-1.5 flex flex-wrap gap-1">
           <span className="glass rounded-md px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-foreground/80">
