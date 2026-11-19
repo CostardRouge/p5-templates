@@ -1,0 +1,65 @@
+name: Notify the site
+
+# Tells steevepommier.com that the sketch catalogue changed, so its /motion gallery follows within
+# minutes instead of waiting for its daily run.
+#
+# That site reads a copy of src/sketches/metadata.json at build time — which sketches exist, which
+# are favourites, when each was created, which have a preview loop (docs/memory/sketches.md, "The
+# catalogue is read outside this repo"). Its own workflow, motion-manifest.yml, refreshes the copy,
+# runs its checks and deploys. This one only starts it, on every push to main that changes the
+# catalogue, and names the commit: the site then reads the manifest at that exact commit, because
+# raw.githubusercontent.com serves a branch from a cache of up to five minutes and `main`, read
+# right after a push, is still the previous file.
+#
+# The site's repository is private, so starting its workflow takes a token this repository's own
+# GITHUB_TOKEN cannot be: the secret SITE_DISPATCH_TOKEN, a fine-grained personal access token
+# limited to CostardRouge/steevepommier.com with "Actions: Read and write" and nothing else. Only
+# the owner can create it (GitHub → Settings → Developer settings → Fine-grained tokens), and it
+# expires: when it does, this job goes red and the site falls back to its daily run. Without the
+# secret the job says so and stays green — the daily run still covers it.
+#
+# The job runs on a push to main only, never on a pull request, so a fork cannot reach the secret.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - src/sketches/metadata.json
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: notify-site
+  # A newer push supersedes a notification not sent yet: the site reads one manifest, the latest.
+  cancel-in-progress: true
+
+jobs:
+  dispatch:
+    name: Start the site's manifest refresh
+    runs-on: ubuntu-24.04
+    # One HTTP request.
+    timeout-minutes: 5
+    steps:
+      - name: Dispatch motion-manifest.yml on steevepommier.com
+        env:
+          TOKEN: ${{ secrets.SITE_DISPATCH_TOKEN }}
+          COMMIT: ${{ github.sha }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "::notice title=Site not notified::No SITE_DISPATCH_TOKEN secret: the site will pick the change up on its daily run."
+            exit 0
+          fi
+          status=$(curl --silent --show-error --output response.json --write-out '%{http_code}' \
+            --request POST \
+            --header "Authorization: Bearer $TOKEN" \
+            --header 'Accept: application/vnd.github+json' \
+            --header 'X-GitHub-Api-Version: 2022-11-28' \
+            --data "{\"ref\":\"main\",\"inputs\":{\"app_ref\":\"$COMMIT\"}}" \
+            https://api.github.com/repos/CostardRouge/steevepommier.com/actions/workflows/motion-manifest.yml/dispatches)
+          if [ "$status" != "204" ]; then
+            echo "::error title=Site not notified::GitHub answered $status — an expired or under-scoped SITE_DISPATCH_TOKEN is the usual cause."
+            cat response.json
+            exit 1
+          fi
+          echo "The site's motion-manifest workflow was started for $COMMIT." >> "$GITHUB_STEP_SUMMARY"
