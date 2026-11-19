@@ -265,7 +265,7 @@ export default function HomePage( {
     setQuery
   ] = useState( "" );
 
-  // `.hidden-home` entries stay searchable but never appear in the
+  // `hiddenFromHome` entries stay searchable but never appear in the
   // latest/random sections.
   const homePool = useMemo(
     () => sketches.filter( ( t ) => !t.hiddenFromHome ),

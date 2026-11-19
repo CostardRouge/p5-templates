@@ -20,7 +20,7 @@ export type CatalogueEntry = {
   name: string;
   hiddenFromGallery?: boolean;
   hasSketchForm?: boolean;
-  /** From the sketch's `about.json` (`sketches.md`); absent until written. */
+  /** From the sketch's `sketch.json` (`sketches.md`); absent until written. */
   description?: string;
   tags?: string[];
 };

@@ -75,7 +75,7 @@ function compareSketches(
     a.name.localeCompare( b.name );
 }
 
-/** What a sketch is: its own `about.json` description when it has one. */
+/** What a sketch is: its own `sketch.json` description when it has one. */
 function sketchNote( sketch: SketchMetadata ): string {
   if ( sketch.description ) {
     return sketch.description;

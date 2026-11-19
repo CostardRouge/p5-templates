@@ -38,8 +38,8 @@ export default async function Home() {
 
   const allSketches = Object.values( sketchesByEngine ).flat();
 
-  // `.hidden-template` is the public gate — anything hidden from the gallery
-  // page is also hidden from the home page, search included. `.hidden-home`
+  // `hiddenFromGallery` is the public gate — anything hidden from the gallery
+  // page is also hidden from the home page, search included. `hiddenFromHome`
   // entries stay searchable from the home page but are filtered out of its
   // latest/random sections by HomePage itself.
   const gallerySketches = allSketches.filter( ( t ) => !t.hiddenFromGallery );

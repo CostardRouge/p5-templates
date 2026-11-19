@@ -236,10 +236,17 @@ export interface SketchMetadata {
   hasSketchForm: boolean;
   hasThumbnail: boolean;
   hasPreview: boolean;
-  // Visibility markers (driven by `.hidden-home` / `.hidden-template`
-  // files inside a sketch dir — see scripts/watch-sketches.mjs).
+  /**
+   * The larger encode of the preview loop (`preview-md.webm`) exists — only
+   * some sketches have one, and a reader outside this repo cannot stat it.
+   */
+  hasPreviewMd?: boolean;
+  // What the sketch says about itself, from its optional `sketch.json`
+  // (scripts/sketch-file.mjs): off the home showcase, off the gallery in
+  // production, starred as a favourite. Absent key = false.
   hiddenFromHome?: boolean;
   hiddenFromGallery?: boolean;
+  favorite?: boolean;
   /**
    * The sketch registers an async draw (`sketch.draw( async … )`). Read off the
    * entry file's source by the generator, for the one consumer that needs to
@@ -249,13 +256,20 @@ export interface SketchMetadata {
    */
   asyncDraw?: boolean;
   /**
-   * What the sketch is, from its `about.json` (`scripts/watch-sketches.mjs`,
-   * `readAbout`): one or two sentences on what it draws and how it moves, and
+   * What the sketch is, from its `sketch.json` (`scripts/sketch-file.mjs`):
+   * one or two sentences on what it draws and how it moves, and
    * a few lowercase tags — for an agent (or the gallery search) choosing a
    * sketch without opening it. Absent until someone writes the file.
    */
   description?: string;
   tags?: string[];
+  /**
+   * The day the sketch was first committed, `YYYY-MM-DD` — recorded once by
+   * the generator (from git, or today for a sketch not committed yet) and
+   * kept, unless `sketch.json` overrides it. Unlike `mtime`/`ctime`, which are
+   * one disk's file times, this is the sketch's own age: sort by it.
+   */
+  createdAt?: string;
   mtime: string;
   ctime: string;
 }

@@ -17,7 +17,7 @@ Read a sketch's options (`sketch.describe`: JSON Schema with ranges, choices, la
 1. **Save and share** — no command saves a draft or preset or yields a share link: a good variant lives only as long as the tab, or as an exported file. Track B's gallery is the natural home (an agent command to snapshot the current piece into it, and to list/reopen entries).
 2. ~~**Contact sheet of the loop**~~ — DONE 2026-10-11: `studio.contactSheet` (`agent-commands.md`).
 3. ~~**Grouped undo**~~ — DONE 2026-10-11: every command's `run` is one undo step, and `studio.batch` runs a list as one (`agent-commands.md`).
-4. ~~**Describe a sketch**~~ — DONE 2026-10-11 for the mechanism (`about.json` → `metadata.json` → `sketches.list` with `tag` / `query`, `sketch.describe`; `sketches.md`); 14 sketches described, the other ~320 still list with their id only.
+4. ~~**Describe a sketch**~~ — DONE 2026-10-11 for the mechanism (`sketch.json`, then named `about.json`, → `metadata.json` → `sketches.list` with `tag` / `query`, `sketch.describe`; `sketches.md`); 14 sketches described, the other ~320 still list with their id only.
 5. ~~**Interactive bindings**~~ — DONE 2026-10-11: `bindings.targets` / `list` / `add` / `update` / `remove`, through the affordance's own write path; unavailable on a build without `INTERACTION_BINDINGS=true` (`agent-commands.md`). Not covered: MIDI learn, a sketch-declared `binding: { control }`.
 6. **Local files** — an image on disk must be base64'd by the agent; deliberately no file-read primitive in the relay. If it grates: an allow-listed folder only.
 7. Out of scope for the MCP: unattended rendering without a tab (level 2), writing a NEW sketch (that is code in the repo + a deploy).

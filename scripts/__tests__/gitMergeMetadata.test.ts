@@ -209,6 +209,39 @@ describe(
     );
 
     it(
+      "dates a sketch both sides added to the earlier day",
+      () => {
+        const [
+          merged
+        ] = merge(
+          [],
+          [
+            sketch(
+              "a",
+              T1,
+              {
+                createdAt: "2026-03-04"
+              }
+            )
+          ],
+          [
+            sketch(
+              "a",
+              T1,
+              {
+                createdAt: "2026-03-02",
+                favorite: true
+              }
+            )
+          ]
+        ).entries;
+
+        expect( merged.createdAt ).toBe( "2026-03-02" );
+        expect( merged.favorite ).toBe( true );
+      }
+    );
+
+    it(
       "applies a change that turns a flag off on one side only",
       () => {
         const base = [

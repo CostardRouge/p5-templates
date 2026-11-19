@@ -320,7 +320,7 @@ describe(
     );
 
     it(
-      "metadata carries each sketch's about.json (description, tags) as written",
+      "metadata carries each sketch's sketch.json as written",
       () => {
         const byKey = new Map( entries.map( ( e ) => [
           `${ e.engine }/${ e.name }`,
@@ -331,27 +331,28 @@ describe(
         for ( const sketch of onDisk ) {
           const file = path.join(
             sketch.dir,
-            "about.json"
+            "sketch.json"
           );
           const entry = byKey.get( `${ sketch.engine }/${ sketch.name }` );
 
           if ( !entry ) {
             continue;
           }
-          if ( !fs.existsSync( file ) ) {
-            if ( entry.description !== undefined || entry.tags !== undefined ) {
-              drifted.push( `${ sketch.engine }/${ sketch.name }: metadata has a description or tags but no about.json exists` );
-            }
-            continue;
-          }
 
-          // The generator's own normalisation (readAbout): trimmed, single
-          // spaces, tags deduplicated in order.
-          const about = JSON.parse( fs.readFileSync(
-            file,
-            "utf8"
-          ) ) as { description?: string;
-            tags?: string[] };
+          // The generator's own normalisation (parseSketchFile in
+          // scripts/sketch-file.mjs): description trimmed to single spaces,
+          // tags deduplicated in order, an absent flag false.
+          const about = ( fs.existsSync( file )
+            ? JSON.parse( fs.readFileSync(
+              file,
+              "utf8"
+            ) )
+            : {} ) as { description?: string;
+            tags?: string[];
+            favorite?: boolean;
+            hiddenFromHome?: boolean;
+            hiddenFromGallery?: boolean;
+            createdAt?: string; };
           const description = about.description?.trim().replace(
             /\s+/g,
             " "
@@ -359,13 +360,57 @@ describe(
           const tags = about.tags ? [
             ...new Set( about.tags )
           ] : undefined;
+          const key = `${ sketch.engine }/${ sketch.name }`;
 
           if ( entry.description !== description || JSON.stringify( entry.tags ) !== JSON.stringify( tags ) ) {
-            drifted.push( `${ sketch.engine }/${ sketch.name }: about.json differs from metadata.json` );
+            drifted.push( `${ key }: description or tags differ between sketch.json and metadata.json` );
+          }
+          for ( const flag of [
+            "favorite",
+            "hiddenFromHome",
+            "hiddenFromGallery"
+          ] as const ) {
+            if ( entry[ flag ] !== ( about[ flag ] === true ) ) {
+              drifted.push( `${ key }: "${ flag }" differs between sketch.json and metadata.json` );
+            }
+          }
+          if ( about.createdAt !== undefined && entry.createdAt !== about.createdAt ) {
+            drifted.push( `${ key }: sketch.json overrides createdAt, metadata.json does not carry it` );
           }
         }
 
         expectInSync( drifted );
+      }
+    );
+
+    it(
+      "every entry records the day its sketch was created",
+      () => {
+        const undated = entries
+          .filter( ( e ) => !/^\d{4}-\d{2}-\d{2}$/.test( e.createdAt ?? "" ) )
+          .map( ( e ) => `${ e.engine }/${ e.name }` );
+
+        expectInSync( undated );
+      }
+    );
+
+    it(
+      "no sketch still carries a file sketch.json replaced",
+      () => {
+        // about.json and the .hidden-* markers merge in without a conflict from
+        // a branch cut before sketch.json existed; the generator refuses them.
+        const legacy = onDisk.flatMap( ( sketch ) => [
+          "about.json",
+          ".hidden-home",
+          ".hidden-template"
+        ]
+          .filter( ( name ) => fs.existsSync( path.join(
+            sketch.dir,
+            name
+          ) ) )
+          .map( ( name ) => `${ sketch.engine }/${ sketch.name }/${ name }` ) );
+
+        expect( legacy ).toEqual( [] );
       }
     );
 

@@ -50,7 +50,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   // Studio pages — all engines, derived from unified metadata, minus the
-  // `.hidden-template` sketches in production (`listIndexableSketches`, the
+  // `hiddenFromGallery` sketches in production (`listIndexableSketches`, the
   // rule `/llms.txt` shares).
   const visible = listIndexableSketches();
 

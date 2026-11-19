@@ -44,6 +44,7 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 - Prisma models were renamed Template → Preset behind `@@map`, so the database columns still say "template" → `architecture.md`.
 - Sketches live in `src/sketches/<engine>/`; `src/templates/` has not existed since 4946ea6, and `/templates` URLs survive as 308 redirects → `sketches.md`.
 - The sketch catalogue and import registries are generated, hook-synced, drift-tested and merge-driver-resolved — never hand-edited → `sketches.md`, `tooling.md`.
+- A sketch's own settings — description, tags, `favorite`, the two `hiddenFrom…` flags, a `createdAt` override — live in **one optional `sketch.json`** (2026-11-19); `about.json` and the `.hidden-*` markers it replaced now fail the generation. `metadata.json` is read at build by steevepommier.com, which also writes `favorite` here from its dev editor: its keys and `scripts/sketch-file.mjs`'s exports are a contract → `sketches.md`.
 - Sketch variants are added as new `-vN` directories rather than edited in place → `sketches.md`.
 - All internal navigation is client-side `next/link`; the hard-reload `HardLink` workaround is gone and must not come back → `sketches.md`.
 - `/embed` is a **published contract**: steevepommier.com/motion frames 44 sketches by URL, so a sketch rename breaks a live page on another domain → `sketches.md`.
