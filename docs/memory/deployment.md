@@ -39,3 +39,7 @@ workflows differ from `main`'s, so `release.yml` skips them with a warning and
 token. **Trap**: a tag or release made with `GITHUB_TOKEN` triggers no other
 workflow, so a deploy that should follow a release must run inside
 `release.yml`'s publish job.
+
+## CI: one install, cached (2026-11-20)
+
+**Decision.** `ci.yml` runs two jobs, `checks` (lint, typecheck, tests in one job) and `build`, instead of four. **Why**: measured on the last 100 runs, `npm ci` was 56% of the runner time (≈235 s of 420 s), paid four times for 10–42 s of real work per job. **How**: `node_modules` is cached on `.nvmrc` + `package-lock.json` (native modules are per ABI) and `npm ci` runs only on a miss; a hit runs `npx prisma generate`, since the client lands in `src/generated/prisma`, outside the cache, and `postinstall` does not run. ESLint's cache (`.next/cache/eslint`) and Next's compiler cache (`.next/cache`) are restored with prefix keys. Typecheck and tests run even when lint fails (`!cancelled()`), so one red run lists every failure. This is PR 1 of the front/back split (Cloudflare Workers Builds, Docker at release): the `build` job goes once Cloudflare's preview build replaces it.
