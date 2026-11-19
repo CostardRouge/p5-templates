@@ -51,7 +51,7 @@ let catalogue: SketchChoice[] | null = null;
  * Every sketch that can be added as a layer, in catalogue order.
  *
  * Sketches hidden from the gallery are hidden here too: the picker offers what
- * the product offers, and a sketch carrying `.hidden-template` was withdrawn on
+ * the product offers, and a sketch carrying `hiddenFromGallery` was withdrawn on
  * purpose.
  */
 export function listEmbeddableSketches(): SketchChoice[] {

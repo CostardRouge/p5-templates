@@ -40,7 +40,7 @@ export default async function SketchesPage() {
   } = await getSketchesData();
   const baseUrl = getBaseUrl();
 
-  // In production we hide sketches marked `.hidden-template` entirely.
+  // In production we hide sketches marked `hiddenFromGallery` entirely.
   // In development they stay visible but are rendered grayed-out + still
   // clickable (the flag is forwarded so the UI can style them).
   const filteredByEngine = filterSketchesForGallery( sketchesByEngine );

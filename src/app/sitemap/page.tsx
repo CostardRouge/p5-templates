@@ -52,7 +52,7 @@ export const metadata: Metadata = {
  * keep the default.
  *
  * Sketches are listed under the same rules as the gallery
- * (`filterSketchesForGallery`): in production the `.hidden-template` ones are
+ * (`filterSketchesForGallery`): in production the `hiddenFromGallery` ones are
  * dropped, in development they stay so a new sketch shows up here immediately.
  */
 

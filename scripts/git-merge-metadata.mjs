@@ -62,8 +62,10 @@ const PRESENCE_FLAGS = new Set( [
   "hasSketchForm",
   "hasThumbnail",
   "hasPreview",
+  "hasPreviewMd",
   "hiddenFromHome",
-  "hiddenFromGallery"
+  "hiddenFromGallery",
+  "favorite"
 ] );
 
 const warnings = [];
@@ -114,6 +116,9 @@ function mergeEntry(
       value = Boolean( mine ) || Boolean( other );
     } else if ( field === "mtime" || field === "ctime" ) {
       value = new Date( mine ).getTime() >= new Date( other ).getTime() ? mine : other;
+    } else if ( field === "createdAt" ) {
+      // Two branches that each added the sketch: it was born on the earlier day.
+      value = mine <= other ? mine : other;
     } else {
       value = mine;
       warnings.push( `${ key }: "${ field }" changed on both sides, kept ours` );

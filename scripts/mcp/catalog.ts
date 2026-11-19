@@ -20,7 +20,7 @@ export interface CatalogEntry {
   hasPreview?: boolean;
   hiddenFromHome?: boolean;
   hiddenFromGallery?: boolean;
-  /** From the sketch's `about.json`; absent until someone writes it. */
+  /** From the sketch's `sketch.json`; absent until someone writes it. */
   description?: string;
   tags?: string[];
 }

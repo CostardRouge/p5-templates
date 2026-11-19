@@ -77,7 +77,7 @@ export async function getSketchesData() {
 
 /**
  * Filter for the /sketches page (and engine sub-pages):
- *   - production → drop entries marked `.hidden-template`
+ *   - production → drop entries marked `hiddenFromGallery`
  *   - development → keep them all so they can be rendered grayed out
  */
 export function filterSketchesForGallery( sketchesByEngine: Record<string, SketchItem[]> ): Record<string, SketchItem[]> {

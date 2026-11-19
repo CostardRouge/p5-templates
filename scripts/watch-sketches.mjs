@@ -1,9 +1,19 @@
 #!/usr/bin/env node
+import {
+  execFileSync
+} from "child_process";
 import fs from "fs";
 import path from "path";
 import {
   fileURLToPath
 } from "url";
+
+import {
+  BIRTH_LOG_ARGS,
+  birthDates,
+  SKETCH_FILE,
+  readSketchFile
+} from "./sketch-file.mjs";
 
 const __dirname = path.dirname( fileURLToPath( import.meta.url ) );
 const ROOT_DIR = path.join(
@@ -86,91 +96,16 @@ function hasAsyncDraw(
   }
 }
 
-/** A tag is a short lowercase word or kebab-case phrase: `typography`, `needs-photo`. */
-const TAG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const DESCRIPTION_MAX = 400;
-
-/**
- * What a sketch IS, for someone — an agent, mostly — choosing one without
- * opening it: `about.json` beside the entry file, `{ "description", "tags" }`.
- * The description is one or two sentences on what it draws and how it moves;
- * the tags are a few lowercase words (`typography`, `raymarched`,
- * `needs-photo`…) an agent filters by. Both are copied into metadata.json
- * (read by `sketches.list` / `sketch.describe` in the tab and the MCP server).
- * Absent file: no fields. A malformed one fails the generation loudly rather
- * than silently dropping the text — the drift test runs this generator.
- */
-function readAbout( sketchDir ) {
-  const file = path.join(
-    sketchDir,
-    "about.json"
-  );
-
-  if ( !fs.existsSync( file ) ) {
-    return {};
-  }
-
-  let parsed;
-
-  try {
-    parsed = JSON.parse( fs.readFileSync(
-      file,
-      "utf8"
-    ) );
-  } catch( error ) {
-    throw new Error( `${ file }: not valid JSON (${ error.message })` );
-  }
-
-  if ( typeof parsed !== "object" || parsed === null || Array.isArray( parsed ) ) {
-    throw new Error( `${ file }: must be an object { "description", "tags" }` );
-  }
-  for ( const key of Object.keys( parsed ) ) {
-    if ( key !== "description" && key !== "tags" ) {
-      throw new Error( `${ file }: unknown key "${ key }" — only "description" and "tags"` );
-    }
-  }
-
-  const about = {};
-
-  if ( parsed.description !== undefined ) {
-    if ( typeof parsed.description !== "string" || !parsed.description.trim() ) {
-      throw new Error( `${ file }: "description" must be a non-empty string` );
-    }
-    if ( parsed.description.trim().length > DESCRIPTION_MAX ) {
-      throw new Error( `${ file }: "description" is over ${ DESCRIPTION_MAX } characters — it is a blurb, not a manual` );
-    }
-    about.description = parsed.description.trim().replace(
-      /\s+/g,
-      " "
-    );
-  }
-  if ( parsed.tags !== undefined ) {
-    if ( !Array.isArray( parsed.tags ) || parsed.tags.some( ( tag ) => typeof tag !== "string" ) ) {
-      throw new Error( `${ file }: "tags" must be a list of strings` );
-    }
-    for ( const tag of parsed.tags ) {
-      if ( !TAG_PATTERN.test( tag ) ) {
-        throw new Error( `${ file }: tag "${ tag }" must be lowercase letters, digits and hyphens (e.g. "needs-photo")` );
-      }
-    }
-    about.tags = [
-      ...new Set( parsed.tags )
-    ];
-  }
-
-  return about;
-}
-
 /**
  * Build the metadata + registry record for a single sketch directory.
  *
- * Visibility markers (touch one of these files inside the sketch dir):
- *   .hidden-home      → hide from the home page showcase
- *   .hidden-template  → hide from the /sketches gallery (forward-looking)
- *
- * Markers are committed to git like any other source file; they survive
- * metadata regenerations because watch-sketches.mjs reads them on every scan.
- * `about.json` (description + tags, see readAbout) is read the same way.
+ * What the files show (an options form, a thumbnail, an async draw) is read
+ * off the disk; what the sketch says about itself — description, tags,
+ * `favorite`, `hiddenFromHome` (off the home page showcase),
+ * `hiddenFromGallery` (off the /sketches gallery in production), a
+ * `createdAt` override — comes from its optional `sketch.json`
+ * (scripts/sketch-file.mjs). Both are read on every scan, so the catalogue
+ * survives a regeneration.
  */
 function buildRecord(
   sketchDir, name, engineId, category
@@ -185,6 +120,7 @@ function buildRecord(
     sketchDir,
     "options.ts"
   ) );
+  const about = readSketchFile( sketchDir );
 
   const meta = {
     name,
@@ -199,19 +135,28 @@ function buildRecord(
       assetsBase,
       "preview.webm"
     ) ),
-    hiddenFromHome: fs.existsSync( path.join(
-      sketchDir,
-      ".hidden-home"
+    // The larger encode of the same loop, rendered for some sketches only: a
+    // reader outside this repo (steevepommier.com/motion) cannot stat the file.
+    hasPreviewMd: fs.existsSync( path.join(
+      assetsBase,
+      "preview-md.webm"
     ) ),
-    hiddenFromGallery: fs.existsSync( path.join(
-      sketchDir,
-      ".hidden-template"
-    ) ),
+    hiddenFromHome: about.hiddenFromHome,
+    hiddenFromGallery: about.hiddenFromGallery,
+    favorite: about.favorite,
     asyncDraw: hasAsyncDraw(
       sketchDir,
       entryFile
     ),
-    ...readAbout( sketchDir ),
+    ...( about.description === undefined ? {} : {
+      description: about.description
+    } ),
+    ...( about.tags === undefined ? {} : {
+      tags: about.tags
+    } ),
+    // Filled by generate(): the override below, else the recorded day, else
+    // the first commit, else today.
+    createdAt: about.createdAt,
     mtime: stats.mtime.toISOString(),
     ctime: stats.birthtime?.toISOString() || stats.ctime.toISOString()
   };
@@ -219,6 +164,7 @@ function buildRecord(
   return {
     meta,
     // Registry-only fields (never written to metadata.json).
+    createdAtOverride: about.createdAt !== undefined,
     engine: engineId,
     sketchPath: category ? `${ category }/${ name }` : name,
     entryFile,
@@ -445,8 +391,8 @@ ${ renderLoaderEntries( formEntries ) }
 /* ---- Output ------------------------------------------------------ */
 
 /**
- * Read the `mtime`/`ctime` already recorded in metadata.json, keyed by
- * `<engine>:<name>`.
+ * Read the `mtime`/`ctime`/`createdAt` already recorded in metadata.json,
+ * keyed by `<engine>:<name>`.
  *
  * These timestamps come from the filesystem, which resets them on every fresh
  * clone/checkout — so regenerating from raw `fs.stat` would rewrite every entry
@@ -473,7 +419,8 @@ function readExistingTimestamps() {
           `${ entry.engine }:${ entry.name }`,
           {
             mtime: entry.mtime,
-            ctime: entry.ctime
+            ctime: entry.ctime,
+            createdAt: entry.createdAt
           }
         );
       }
@@ -485,21 +432,89 @@ function readExistingTimestamps() {
   return map;
 }
 
+/**
+ * First commit day of every sketch, from this clone's history — or an empty
+ * map where there is none to read (the Docker build has no `.git`, CI clones
+ * one commit deep, which would date every sketch to that commit).
+ */
+function readBirthDates( names ) {
+  try {
+    const git = ( args ) => execFileSync(
+      "git",
+      [
+        "-C",
+        ROOT_DIR,
+        ...args
+      ],
+      {
+        encoding: "utf8",
+        maxBuffer: 1 << 28,
+        stdio: [
+          "ignore",
+          "pipe",
+          "ignore"
+        ]
+      }
+    );
+
+    if ( git( [
+      "rev-parse",
+      "--is-shallow-repository"
+    ] ).trim() !== "false" ) {
+      return new Map();
+    }
+
+    return birthDates(
+      git( BIRTH_LOG_ARGS ),
+      names
+    );
+  } catch {
+    return new Map();
+  }
+}
+
+/** Today as `YYYY-MM-DD`, in the machine's own time zone — a commit's author day. */
+function today() {
+  const now = new Date();
+  const pad = ( n ) => String( n ).padStart(
+    2,
+    "0"
+  );
+
+  return `${ now.getFullYear() }-${ pad( now.getMonth() + 1 ) }-${ pad( now.getDate() ) }`;
+}
+
 function generate() {
   const records = scanAll();
   const preserved = readExistingTimestamps();
+  // `createdAt` is the day the sketch was first committed. Like the two
+  // timestamps it is RECORDED once and reused: git is only asked when an entry
+  // has no day yet (a new sketch, or a catalogue rebuilt from nothing), so a
+  // clone without history regenerates the same file. A sketch not committed
+  // yet is born today. `sketch.json` overrides it for work older than the repo.
+  let births = null;
 
   const meta = records
     .map( ( record ) => {
       const prev = preserved.get( `${ record.meta.engine }:${ record.meta.name }` );
+      let createdAt = record.createdAtOverride ? record.meta.createdAt : prev?.createdAt;
+
+      if ( !createdAt ) {
+        births ??= readBirthDates( new Set( records.map( ( r ) => r.meta.name ) ) );
+        createdAt = births.get( record.meta.name ) ?? today();
+      }
 
       return prev
         ? {
           ...record.meta,
+          createdAt,
           mtime: prev.mtime,
           ctime: prev.ctime
         }
-        : record.meta;
+        : {
+          ...record.meta,
+          createdAt
+        };
     } )
     .sort( (
       a, b
@@ -605,11 +620,6 @@ if ( !ONCE ) {
     }
   );
 
-  const VISIBILITY_MARKERS = new Set( [
-    ".hidden-home",
-    ".hidden-template"
-  ] );
-
   // Adding/removing these to an existing sketch dir changes the generated
   // registries (entry module or option files), so they must trigger a regen
   // even though no directory was added/removed.
@@ -617,13 +627,11 @@ if ( !ONCE ) {
     ...ENTRY_FILES,
     "options.ts",
     "options.json",
-    "about.json"
+    SKETCH_FILE
   ] );
 
   function shouldRegenerate( filePath ) {
-    const base = path.basename( filePath );
-
-    return VISIBILITY_MARKERS.has( base ) || REGISTRY_FILES.has( base );
+    return REGISTRY_FILES.has( path.basename( filePath ) );
   }
 
   watcher
@@ -666,10 +674,10 @@ if ( !ONCE ) {
     .on(
       "change",
       ( filePath ) => {
-        // Only about.json carries CONTENT into the catalogue; the other
+        // Only sketch.json carries CONTENT into the catalogue; the other
         // registry files matter by their presence alone.
-        if ( path.basename( filePath ) === "about.json" ) {
-          console.log( `✏️  Sketch description changed: ${ filePath }` );
+        if ( path.basename( filePath ) === SKETCH_FILE ) {
+          console.log( `✏️  Sketch settings changed: ${ filePath }` );
           generate();
         }
       }

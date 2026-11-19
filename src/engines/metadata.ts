@@ -25,7 +25,7 @@ export function getMetadata(): SketchMetadata[] {
 
 /**
  * The sketches a crawler is told about — `/sitemap.xml` and `/llms.txt`
- * share this one rule. Sketches marked `.hidden-template` are dropped in
+ * share this one rule. Sketches marked `hiddenFromGallery` are dropped in
  * production, as the gallery and `/sitemap` do (`filterSketchesForGallery`):
  * a sketch the site itself hides has no business being submitted. They stay
  * in a development build so a work-in-progress sketch is still reachable from
