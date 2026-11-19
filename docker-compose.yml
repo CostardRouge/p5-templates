@@ -1,3 +1,9 @@
+# One container by default (2026-11-20): `docker compose up` starts the app
+# alone — the studio, /embed, the gallery and browser export need nothing else.
+# The recording backend (Redis queue, MinIO storage, PostgreSQL jobs and push
+# subscriptions) is the `backend` profile:
+#   docker compose --profile backend up -d     (with BACKEND_RECORDING=true)
+# docs/memory/deployment.md, "The backend is optional".
 services:
   app:
     # Prod (Portainer) pulls this published image; the moving `:main` tag lets
@@ -15,13 +21,18 @@ services:
         NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${NEXT_PUBLIC_VAPID_PUBLIC_KEY:-}
     ports:
       - "${APP_PORT:-3000}:3000"
+    # `required: false`: waited for when the backend profile runs them, ignored
+    # otherwise (Compose ≥ 2.20).
     depends_on:
       redis:
         condition: service_healthy
+        required: false
       minio:
         condition: service_healthy
+        required: false
       postgres:
         condition: service_healthy
+        required: false
     restart: unless-stopped
     labels:
       # Opt this container in to Watchtower updates (see deploy/watchtower.compose.yml).
@@ -53,6 +64,7 @@ services:
 
   # ─── Redis for BullMQ queue ────────────────────────────────────────────────
   redis:
+    profiles: [backend]
     image: redis:8-alpine
     restart: unless-stopped
     networks:
@@ -69,6 +81,7 @@ services:
 
   # ─── MinIO for S3-compatible storage ──────────────────────────────────────
   minio:
+    profiles: [backend]
     image: minio/minio:latest
     command: server /data --console-address ":9001"
     restart: unless-stopped
@@ -90,6 +103,7 @@ services:
 
   # ─── PostgreSQL Database ───────────────────────────────────────────────────
   postgres:
+    profiles: [backend]
     image: postgres:15-alpine
     restart: unless-stopped
     environment:
