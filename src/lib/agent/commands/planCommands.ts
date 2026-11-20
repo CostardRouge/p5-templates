@@ -25,7 +25,7 @@ import {
   askPlanned
 } from "../../postiz/reopen";
 import {
-  GAP_WEEKS, MIXES, monthRecap, PIN_REEL_MAX, PLAN_WEEKS, planSlots, playable, REEL_HOST, reelOf, sketchKeyOf, sketchPath, tooSoon, yearRecap, type Pin, type PlanSketch, type PlanSlot
+  GAP_WEEKS, MIXES, monthRecap, PIN_REEL_MAX, PLAN_WEEKS, playable, REEL_HOST, reelOf, sketchKeyOf, sketchPath, tooSoon, yearRecap, type Pin, type PlanSketch, type PlanSlot
 } from "../../planner/planner";
 import {
   sketchTitle
@@ -45,6 +45,21 @@ import {
 import {
   planFreeSlots
 } from "../../planner/slots";
+import {
+  askStage, stageBeat, withBreakdown
+} from "../../planner/beatStage";
+import {
+  routeBeat
+} from "../../planner/beatVariant";
+import {
+  beatOf, CAMPAIGN_WEEKS, planWithCampaigns, type LaidCampaign
+} from "../../planner/campaign";
+import {
+  getCampaigns, markBeatOpened, passBeat
+} from "../../planner/campaignStore";
+import {
+  acceptedCounts
+} from "../../variations/kept";
 import type {
   StudioHandles
 } from "../handles";
@@ -61,8 +76,13 @@ const AT_PARAM = {
   }
 };
 
-interface Reading {
+export interface Reading {
   slots: PlanSlot[];
+  /** The campaigns, every beat laid on the calendar (`campaign.ts`). */
+  campaigns: LaidCampaign[];
+  /** The free slots as far as a campaign reaches, and the instant the plan was read at. */
+  farSlots: Date[];
+  now: number;
   posted: Posted[];
   catalogue: PlanSketch[];
   /** False when no Postiz is kept: the default rhythm, and only this browser's sends. */
@@ -73,7 +93,7 @@ interface Reading {
   calendarError: string | null;
 }
 
-async function readPlan( h: StudioHandles ): Promise<Reading> {
+export async function readPlan( h: StudioHandles ): Promise<Reading> {
   const conn = h.publish.connection();
   const client = h.publish.client();
   const rhythm = conn?.rhythm ?? DEFAULT_RHYTHM;
@@ -95,6 +115,31 @@ async function readPlan( h: StudioHandles ): Promise<Reading> {
     posts
   );
 
+  const farSlots = planFreeSlots(
+    rhythm,
+    posts ?? [],
+    new Date( now ),
+    CAMPAIGN_WEEKS
+  );
+  // The campaigns' beats are laid first; with none this is `planSlots` itself.
+  const plan = planWithCampaigns(
+    {
+      catalogue,
+      slots: planFreeSlots(
+        rhythm,
+        posts ?? [],
+        new Date( now )
+      ),
+      farSlots,
+      accepted: acceptedCounts( await h.gallery.store.entries() ),
+      posted,
+      choices: getChoices(),
+      now,
+      timeZone: rhythm.timeZone
+    },
+    getCampaigns()
+  );
+
   return {
     catalogue,
     posted,
@@ -102,18 +147,9 @@ async function readPlan( h: StudioHandles ): Promise<Reading> {
     timeZone: rhythm.timeZone,
     rhythm: rhythm.slots.map( slotHead ).join( " · " ),
     calendarError,
-    slots: planSlots( {
-      catalogue,
-      slots: planFreeSlots(
-        rhythm,
-        posts ?? [],
-        new Date( now )
-      ),
-      posted,
-      choices: getChoices(),
-      now,
-      timeZone: rhythm.timeZone
-    } )
+    farSlots,
+    now,
+    ...plan
   };
 }
 
@@ -121,6 +157,7 @@ function describe(
   slot: PlanSlot, timeZone: string
 ) {
   const p = slot.proposal;
+  const beat = beatOf( p );
 
   return {
     at: slot.slot,
@@ -128,7 +165,18 @@ function describe(
       slot.at,
       timeZone
     ),
-    state: slot.skipped ? "skipped" : !p ? "nothing left" : p.pin ? `pinned by ${ p.pin.by === "agent" ? "an agent" : "the person" }` : "proposed",
+    state: slot.skipped ? "skipped" : !p ? "nothing left" : beat ? "a campaign's beat" : p.pin ? `pinned by ${ p.pin.by === "agent" ? "an agent" : "the person" }` : "proposed",
+    ...( beat ? {
+      campaign: {
+        id: beat.id,
+        beat: beat.beat,
+        label: beat.label,
+        of: `${ beat.index }/${ beat.total }`,
+        ...( beat.needs ? {
+          waitsFor: beat.needs
+        } : {} )
+      }
+    } : {} ),
     ...( p ? {
       sketch: p.path,
       title: p.title,
@@ -264,7 +312,7 @@ function recapReel(
   };
 }
 
-async function slotOrRefuse(
+export async function slotOrRefuse(
   h: StudioHandles, at: unknown
 ): Promise<{ slot: PlanSlot;
   reading: Reading }> {
@@ -495,10 +543,20 @@ export function planCommands( h: StudioHandles ): CommandSpec[] {
           );
         }
 
-        passProposal(
-          slot.proposal.key,
-          slot.slot
-        );
+        const beat = beatOf( slot.proposal );
+
+        // A campaign's beat is left out of its campaign; campaign.beat puts it back.
+        if ( beat ) {
+          passBeat(
+            beat.id,
+            beat.beat
+          );
+        } else {
+          passProposal(
+            slot.proposal.key,
+            slot.slot
+          );
+        }
 
         return answer( h );
       }
@@ -789,8 +847,51 @@ export function planCommands( h: StudioHandles ): CommandSpec[] {
           );
         }
 
-        const reel = reelDocument( p );
-        const caption = reelCaption( p );
+        // A campaign's beat stages its own document (`beatStage.ts`): the
+        // variations' carousel, the breakdown, the series' reel, the words card.
+        const beat = beatOf( p );
+        const staged = beat
+          ? stageBeat(
+            p,
+            beat,
+            await h.gallery.store.entries()
+          )
+          : null;
+
+        if ( staged && !staged.ok ) {
+          throw new CommandError(
+            "unavailable",
+            `${ p.title } cannot be opened yet. ${ staged.reason } (variations.list, campaign.get).`
+          );
+        }
+
+        const reel = staged?.ok ? staged.staged.document : reelDocument( p );
+        const caption = staged?.ok ? staged.staged.caption : reelCaption( p );
+        const stage = staged?.ok ? staged.staged.stage : null;
+        const opened = () => beat
+          ? markBeatOpened(
+            beat.id,
+            beat.beat,
+            slot.slot
+          )
+          : reel ? markOpened( p.key ) : undefined;
+
+        if ( beat ) {
+          patchDraft(
+            p.sketchKey,
+            {
+              trial: beat.trial
+            }
+          );
+          // The variations go out as a carousel; any other beat of the sketch as it usually does.
+          if ( beat.kind === "sketch" || beat.kind === "variations" || beat.kind === "process" ) {
+            routeBeat(
+              p.sketchKey,
+              Array.isArray( reel?.slides ) && reel.slides.length > 1,
+              h.publish.connection()?.channels?.map( ( channel ) => channel.id ) ?? []
+            );
+          }
+        }
 
         if ( p.path === h.sketchId ) {
           if ( reel ) {
@@ -799,11 +900,27 @@ export function planCommands( h: StudioHandles ): CommandSpec[] {
             if ( !applied.ok ) {
               throw new CommandError(
                 "failed",
-                `the reel could not be built: ${ applied.reason }`
+                `the ${ beat ? "piece" : "reel" } could not be built: ${ applied.reason }`
               );
             }
-            markOpened( p.key );
           }
+          if ( stage ) {
+            const content = withBreakdown(
+              h.getValues( "content" ),
+              ( seed ) => h.makeItem(
+                "breakdown",
+                seed
+              )
+            );
+
+            if ( content ) {
+              h.setValue(
+                "content",
+                content
+              );
+            }
+          }
+          opened();
           patchDraft(
             p.sketchKey,
             {
@@ -835,15 +952,19 @@ export function planCommands( h: StudioHandles ): CommandSpec[] {
           );
         }
 
-        if ( reel ) {
-          if ( !h.gallery.stageImport( reel ) ) {
-            throw new CommandError(
-              "failed",
-              "the reel could not be handed over (this browser's storage is unavailable)"
-            );
-          }
-          markOpened( p.key );
+        if ( reel && !h.gallery.stageImport( reel ) ) {
+          throw new CommandError(
+            "failed",
+            "the piece could not be handed over (this browser's storage is unavailable)"
+          );
         }
+        if ( stage ) {
+          askStage(
+            p.sketchKey,
+            stage
+          );
+        }
+        opened();
         askPlanned(
           p.sketchKey,
           slot.slot,
