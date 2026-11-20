@@ -1,9 +1,9 @@
 import {
   GET
-} from "../schema/route";
+} from "../schema/route.server";
 import {
   POST
-} from "../validate/route";
+} from "../validate/route.server";
 
 function post( body: string ) {
   return POST( new Request(

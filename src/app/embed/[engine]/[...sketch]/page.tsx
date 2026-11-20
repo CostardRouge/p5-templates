@@ -10,7 +10,8 @@ import {
   isKnownEngine, getEngineLabel
 } from "@/engines/engineCatalog";
 import {
-  findSketchMeta
+  findSketchMeta,
+  getMetadata
 } from "@/engines/metadata";
 import {
   buildCanonicalPath,
@@ -40,7 +41,24 @@ type RouteParams = {
   sketch: string[]; // catch-all: ["category", "name"] or ["name"]
 };
 
-export const revalidate = 0;
+/* Prerendered for every sketch, in both builds (next.config.ts, "Two builds"):
+   an embed reads no query string — its parameters ride in the URL fragment,
+   which the client applies — so the page is the same for every visitor. */
+export const dynamicParams = false;
+
+export function generateStaticParams(): RouteParams[] {
+  return getMetadata().map( ( sketch ) => ( {
+    engine: sketch.engine,
+    sketch: sketch.category
+      ? [
+        sketch.category,
+        sketch.name
+      ]
+      : [
+        sketch.name
+      ]
+  } ) );
+}
 
 /* ------------------------------------------------------------------ */
 /*  Metadata — an /embed URL doubles as the share link pasted on       */

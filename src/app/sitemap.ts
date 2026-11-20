@@ -8,6 +8,10 @@ import {
   getBaseUrl
 } from "@/lib/seo";
 
+// Written once at build: the static export requires it, and the content
+// only changes with a deploy anyway.
+export const dynamic = "force-static";
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = getBaseUrl();
   const now = new Date();
