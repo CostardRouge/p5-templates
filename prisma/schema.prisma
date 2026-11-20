@@ -17,38 +17,8 @@ enum JobStatus {
   draft
 }
 
-// A saved, named configuration of a sketch. Mapped onto the historical
-// "Template"/"TemplateSnapshot" tables so the rename needs no SQL migration.
-model Preset {
-  id          String           @id @default(uuid())
-  name        String // e.g., "p5/mySketch"
-  description String?
-  options     Json // Current mutable configuration
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  snapshots   PresetSnapshot[]
-
-  @@unique([name])
-  @@map("Template")
-}
-
-model PresetSnapshot {
-  id        String   @id @default(uuid())
-  presetId  String   @map("templateId")
-  preset    Preset   @relation(fields: [presetId], references: [id], onDelete: Cascade)
-  name      String // Snapshot of preset name at creation time
-  options   Json // Immutable snapshot of options
-  createdAt DateTime @default(now())
-  jobs      Job[]
-
-  @@index([presetId])
-  @@map("TemplateSnapshot")
-}
-
 model Job {
   id                String          @id
-  snapshotId        String?
-  snapshot          PresetSnapshot? @relation(fields: [snapshotId], references: [id], onDelete: SetNull)
   // Sketch route path ("sketches/{engine}/{category?}/{name}"). Stored values
   // predating the /sketches rename keep their "templates/…" prefix — the
   // permanent redirect keeps them loadable, so never rewrite them.
@@ -68,8 +38,6 @@ model Job {
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
   options           Json? // Legacy: inline options for backward compatibility
-
-  @@index([snapshotId])
 }
 
 model PushSubscription {

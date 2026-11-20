@@ -4,7 +4,7 @@ import {
 
 import {
   GET
-} from "../route";
+} from "../route.server";
 import {
   getJobById
 } from "@/lib/jobStore";

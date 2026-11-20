@@ -18,7 +18,7 @@ import type {
 
 import Link from "next/link";
 import AnimatedPreview from "@/components/AnimatedPreview";
-import AnimationsToggle from "@/components/AnimationsToggle";
+import PreviewPlaybackControl from "@/components/PreviewPlaybackControl";
 import Toast from "@/components/Toast";
 import {
   MenuBarSlot, useMenuBarSlot
@@ -26,9 +26,6 @@ import {
 import {
   usePersistedViewMode
 } from "@/hooks/usePersistedViewMode";
-import {
-  useAnimationsEnabled
-} from "@/hooks/useAnimationsEnabled";
 import {
   useMarqueeOnHover
 } from "@/hooks/useMarqueeOnHover";
@@ -95,11 +92,6 @@ export default function SketchesList( {
     "sketchbook:view-mode",
     "grid"
   );
-  const [
-    animationsEnabled,
-    setAnimationsEnabled,
-    animationsHydrated
-  ] = useAnimationsEnabled();
   const [
     search,
     setSearch
@@ -403,11 +395,7 @@ export default function SketchesList( {
               Sketches
             </h1>
           </div>
-          <AnimationsToggle
-            enabled={ animationsEnabled }
-            onChange={ setAnimationsEnabled }
-            disabled={ !animationsHydrated }
-          />
+          <PreviewPlaybackControl />
         </div>
 
         <div className="flex items-center gap-2 w-full">
@@ -664,7 +652,6 @@ export default function SketchesList( {
                       onToggle={ () => handleToggleSection( id ) }
                       items={ subItems }
                       view={ view }
-                      animationsEnabled={ animationsEnabled }
                     />
                   );
                 } ) }
@@ -686,7 +673,6 @@ export default function SketchesList( {
                       ) ) }
                       items={ uncategorized }
                       view={ view }
-                      animationsEnabled={ animationsEnabled }
                     />
                   ) : (
                     // No category groups for this engine — render the grid
@@ -716,7 +702,6 @@ export default function SketchesList( {
                           hiddenFromGallery={ hiddenFromGallery }
                           view={ view }
                           eager={ index === 0 }
-                          animationsEnabled={ animationsEnabled }
                         />
                       ) ) }
                     </div>
@@ -747,8 +732,7 @@ function CategorySection( {
   forced = false,
   onToggle,
   items,
-  view,
-  animationsEnabled
+  view
 }: {
   title: string;
   count: number;
@@ -760,7 +744,6 @@ function CategorySection( {
   onToggle: () => void;
   items: SketchItem[];
   view: "grid" | "list";
-  animationsEnabled?: boolean;
 } ) {
   const isList = view === "list";
   const showGrid = expanded;
@@ -829,7 +812,6 @@ function CategorySection( {
       hiddenFromGallery={ item.hiddenFromGallery }
       view={ view }
       eager={ index === 0 }
-      animationsEnabled={ animationsEnabled }
     />
   ) );
 
@@ -895,8 +877,7 @@ function SketchCard( {
   preview,
   hiddenFromGallery = false,
   view,
-  eager = false,
-  animationsEnabled
+  eager = false
 }: {
   href: string;
   name: string;
@@ -906,7 +887,6 @@ function SketchCard( {
   hiddenFromGallery?: boolean;
   view: "grid" | "list";
   eager?: boolean;
-  animationsEnabled?: boolean;
 } ) {
   const {
     ref: nameRef,
@@ -953,7 +933,6 @@ function SketchCard( {
               thumbnailUrl={ thumbnail }
               name={ name }
               eager={ eager }
-              animationsEnabled={ animationsEnabled }
               imgClassName="w-full h-full object-contain transition-transform duration-300"
             />
           ) : (
@@ -1006,7 +985,6 @@ function SketchCard( {
             thumbnailUrl={ thumbnail }
             name={ name }
             eager={ eager }
-            animationsEnabled={ animationsEnabled }
             imgClassName="w-full h-full object-cover"
           />
         ) : (

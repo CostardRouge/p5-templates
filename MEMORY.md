@@ -40,7 +40,7 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 - Every engine extends `BaseSketchEngine` and is only the part that differs; the listener map, the performance loop, the frame maths and the capture waits live once, in the base → `architecture.md`.
 - A canvas engine's `seekAndDraw` yields one task and never waits a display frame: the frame is drawn when `seek()` returns, a rAF capped exports at the refresh rate and never came in a hidden tab → `recording.md`.
 - Deterministic capture is a constraint on sketches: animate from the loop clock, never wall-clock time → `architecture.md`.
-- Optional features are compile-time `NEXT_PUBLIC_*` flags, default off, baked in at build time → `architecture.md`.
+- Optional features are compile-time `NEXT_PUBLIC_*` flags, default off, baked in at build time — but only those that need the server or must stay out of the bundle; card previews and the live slide thumbnail are per-browser settings (2026-11-20) → `architecture.md`.
 - Prisma models were renamed Template → Preset behind `@@map`, so the database columns still say "template" → `architecture.md`.
 - Sketches live in `src/sketches/<engine>/`; `src/templates/` has not existed since 4946ea6, and `/templates` URLs survive as 308 redirects → `sketches.md`.
 - The sketch catalogue and import registries are generated, hook-synced, drift-tested and merge-driver-resolved — never hand-edited → `sketches.md`, `tooling.md`.

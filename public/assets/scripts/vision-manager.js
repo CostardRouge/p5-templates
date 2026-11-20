@@ -7,6 +7,20 @@ const TASK_NAMES = [
   "faceMesh"
 ];
 
+/* The heavy pose model (30 MB) is loaded from Google's own CDN, byte-identical
+   to the copy this repo used to ship: Cloudflare's static hosting refuses any
+   file over 25 MiB (docs/memory/deployment.md, "The front is static"). The
+   URL is versioned (`/float16/1/`) and served with CORS. Lite stays local. */
+const POSE_HEAVY_URL = "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_heavy/float16/1/pose_landmarker_heavy.task";
+
+function poseModelPath(
+  mediapipeLibraryPath, model
+) {
+  return model === "heavy"
+    ? POSE_HEAVY_URL
+    : `${ mediapipeLibraryPath }/pose_landmarker_${ model }.task`;
+}
+
 export class VisionManager {
   constructor() {
     this.state = {
@@ -190,7 +204,10 @@ export class VisionManager {
             baseOptions: {
               delegate,
               // "lite" is ~5× faster than "heavy" and plenty for interaction.
-              modelAssetPath: `${ mediapipeLibraryPath }/pose_landmarker_${ taskOptions.poses?.model ?? "heavy" }.task`
+              modelAssetPath: poseModelPath(
+                mediapipeLibraryPath,
+                taskOptions.poses?.model ?? "heavy"
+              )
             }
           }
         )

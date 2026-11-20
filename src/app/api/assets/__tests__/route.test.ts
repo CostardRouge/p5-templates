@@ -4,7 +4,7 @@ import path from "node:path";
 
 import {
   GET
-} from "../route";
+} from "../route.server";
 
 function request( query: Record<string, string> ) {
   return new Request( `http://localhost/api/assets?${ new URLSearchParams( query ).toString() }` );

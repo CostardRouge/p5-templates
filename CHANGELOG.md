@@ -41,6 +41,19 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
 
 ### Changed
 
+- The sketch previews have a three-way setting on the Sketches page: play while a card is in view, only on
+  hover, or never. A screen with a mouse starts on hover and a phone starts on still pictures; your choice is
+  remembered in this browser and the home page's cards follow it too. On a phone the switch stays an on/off.
+- The live thumbnail of the slide being played in the studio can be turned off from the menu, under Workspace
+  ("Live slide thumbnail"). It is on by default, now on the public site as well.
+- Self-hosting no longer needs Redis, MinIO or PostgreSQL: `docker compose up` starts the app alone, and the
+  recording backend joins with `docker compose --profile backend up` (or `make dc-up-backend`). The app skips its
+  database migrations unless backend recording or notifications are on.
+- The studio is served from Cloudflare's network as a static site: pages, stills and preview loops load from the
+  data centre nearest you, and the site no longer depends on a home server being up. Recording and the recordings
+  page are not part of it; the gallery restores its saved layout once the page has loaded.
+- The heavy body-tracking model is downloaded from Google's model library instead of this site (it is larger than
+  what Cloudflare serves per file); the other tracking models are unchanged.
 - In Publish, the Export dialog widens and shows the variants and the Post panel side by side, each scrolling on
   its own; the table keeps Posts as and leaves Rate and Slides to Save. On a phone, Publish has two tabs under the
   title, Variants and Post (Post first). Save is the dialog it always was.
@@ -79,6 +92,11 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
   gives its graphics context back when you leave it, where before every visited sketch kept one until the page
   failed with an empty canvas. When a browser still refuses WebGL (no hardware acceleration, too many 3D tabs), the
   sketch says so on the page instead of staying blank and retrying every frame.
+
+### Removed
+
+- The unused saved-preset tables (`Template`, `TemplateSnapshot`) are dropped by a database migration; the gallery
+  has long done their job.
 
 ## [1.3.0] - 2026-11-11 — Parabola
 

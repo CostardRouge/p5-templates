@@ -2,11 +2,43 @@ import type {
   NextConfig
 } from "next";
 
+/* Two builds from one tree (docs/memory/deployment.md, "The front is static").
+ *
+ * `npm run build` — the full server: the Docker image, the recording backend,
+ * every API route. `npm run build:static` (STATIC_EXPORT=true) — the front
+ * alone, exported to out/ and served as files by Cloudflare: the studio,
+ * /embed, the gallery, browser export.
+ *
+ * Which files belong to which build is in their names, through pageExtensions:
+ * `route.server.ts` / `page.server.tsx` exist only in the full build,
+ * `*.static.ts(x)` only in the static one, plain `route.ts` / `page.tsx` in
+ * both. A name that does not match is not a route at all, so the static build
+ * never even compiles the server code. */
+const STATIC_EXPORT = process.env.STATIC_EXPORT === "true";
+const PLAIN_EXTENSIONS = [
+  "tsx",
+  "ts",
+  "jsx",
+  "js"
+];
+
 const nextConfig: NextConfig = {
-  // Emit a self-contained server bundle (.next/standalone) so the runtime
-  // image only ships the modules actually traced by the build instead of the
-  // whole node_modules tree. Started with `node server.js`.
-  output: "standalone",
+  // Full build: a self-contained server bundle (.next/standalone) so the
+  // runtime image only ships the modules actually traced by the build instead
+  // of the whole node_modules tree. Started with `node server.js`.
+  output: STATIC_EXPORT ? "export" : "standalone",
+  pageExtensions: [
+    ...( STATIC_EXPORT
+      ? [
+        "static.tsx",
+        "static.ts"
+      ]
+      : [
+        "server.tsx",
+        "server.ts"
+      ] ),
+    ...PLAIN_EXTENSIONS
+  ],
   distDir: process.env.NEXT_BUILD_DIR || ".next",
   poweredByHeader: false,
   devIndicators: false,
@@ -52,8 +84,6 @@ const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_BACKEND_RECORDING: process.env.BACKEND_RECORDING,
     NEXT_PUBLIC_NOTIFICATIONS: process.env.NOTIFICATIONS,
-    NEXT_PUBLIC_LIVE_THUMBNAIL: process.env.LIVE_THUMBNAIL,
-    NEXT_PUBLIC_PREVIEW_ON_HOVER: process.env.PREVIEW_ON_HOVER,
     NEXT_PUBLIC_INTERACTION_BINDINGS: process.env.INTERACTION_BINDINGS
   },
 
@@ -62,40 +92,48 @@ const nextConfig: NextConfig = {
   // only). Restrict which origins may embed by setting EMBED_FRAME_ANCESTORS
   // (space-separated, e.g. "https://portfolio.example https://staging.example");
   // defaults to "*" so a fresh install works as a public widget out of the box.
-  async headers() {
-    const frameAncestors = process.env.EMBED_FRAME_ANCESTORS?.trim() || "*";
-
-    return [
-      {
-        source: "/embed/:path*",
-        headers: [
-          {
-            key: "Content-Security-Policy",
-            value: `frame-ancestors ${ frameAncestors }`
-          }
-        ]
-      }
-    ];
-  },
-
-  // The gallery/editor moved from /templates to /sketches. Permanent (308)
-  // redirects keep every previously shared link, bookmark, and indexed URL
-  // alive — including old recording jobs whose stored path still starts with
-  // "templates/" (Playwright follows the redirect during backend capture).
-  async redirects() {
-    return [
-      {
-        source: "/templates",
-        destination: "/sketches",
-        permanent: true
-      },
-      {
-        source: "/templates/:path*",
-        destination: "/sketches/:path*",
-        permanent: true
-      }
-    ];
-  }
+  // The static export cannot send headers nor redirect: public/_headers and
+  // public/_redirects carry the same rules to Cloudflare (a test keeps them in
+  // step with these two functions).
+  ...( STATIC_EXPORT ? {} : {
+    headers,
+    redirects
+  } )
 };
+
+async function headers() {
+  const frameAncestors = process.env.EMBED_FRAME_ANCESTORS?.trim() || "*";
+
+  return [
+    {
+      source: "/embed/:path*",
+      headers: [
+        {
+          key: "Content-Security-Policy",
+          value: `frame-ancestors ${ frameAncestors }`
+        }
+      ]
+    }
+  ];
+}
+
+// The gallery/editor moved from /templates to /sketches. Permanent (308)
+// redirects keep every previously shared link, bookmark, and indexed URL
+// alive — including old recording jobs whose stored path still starts with
+// "templates/" (Playwright follows the redirect during backend capture).
+async function redirects() {
+  return [
+    {
+      source: "/templates",
+      destination: "/sketches",
+      permanent: true
+    },
+    {
+      source: "/templates/:path*",
+      destination: "/sketches/:path*",
+      permanent: true
+    }
+  ];
+}
 
 export default nextConfig;

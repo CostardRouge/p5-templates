@@ -13,6 +13,7 @@ import {
   ExternalLink,
   FileUp,
   Film,
+  GalleryThumbnails,
   Home,
   ImageIcon,
   ImagePlus,
@@ -46,9 +47,6 @@ import {
 } from "react-dom";
 import Github from "@/components/ui/GithubIcon";
 import {
-  subscribeUser, unsubscribeUser
-} from "@/app/actions/notifications";
-import {
   pauseSketchForNav
 } from "@/lib/navigationPauseSignal";
 import {
@@ -61,6 +59,9 @@ import {
 import {
   useDevActions
 } from "@/hooks/useDevActions";
+import {
+  useLiveSlideThumbnail
+} from "@/hooks/useLiveSlideThumbnail";
 import {
   connectBridge, disconnectBridge, getBridgeStatus, subscribeBridge, type BridgeStatus
 } from "@/lib/agent/studioBridge";
@@ -91,6 +92,28 @@ type NavLink = {
 };
 
 const BACKEND_RECORDING = process.env.NEXT_PUBLIC_BACKEND_RECORDING === "true";
+
+/* Push subscriptions live on the full server (api/push/*); the menu only
+   offers them when it was built with the backend and notifications on. */
+async function postPush(
+  url: string, body: unknown
+) {
+  const response = await fetch(
+    url,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify( body )
+    }
+  );
+
+  if ( !response.ok ) {
+    throw new Error( `${ url } answered ${ response.status }` );
+  }
+}
+
 const NOTIFICATIONS_ENABLED = process.env.NEXT_PUBLIC_NOTIFICATIONS === "true";
 const SHOW_NOTIFICATIONS = BACKEND_RECORDING && NOTIFICATIONS_ENABLED;
 const GITHUB_REPO_URL = process.env.NEXT_PUBLIC_GITHUB_REPO_URL;
@@ -244,12 +267,16 @@ function MenuBar( {
     setPushLoading
   ] = useState( false );
 
-  // Master toggle for the editor's docked workspace layout. Only meaningful
-  // on the desktop editor — the section is hidden on other pages and on
-  // mobile (where the studio drawer replaces the panels).
+  // The studio's Workspace section. "Docked layout" is only meaningful on the
+  // desktop editor (on mobile the studio drawer replaces the panels); the live
+  // slide thumbnail applies to the filmstrip on every screen. The section is
+  // hidden outside the sketch editor.
   const {
     docked, toggleDocked
   } = usePanelDock();
+  const {
+    liveSlideThumbnail, toggleLiveSlideThumbnail
+  } = useLiveSlideThumbnail();
   const isDesktop = useMediaQuery( "(min-width: 768px)" );
   const isSketchEditor = /^\/sketches\/[^/]+\/.+/.test( pathname );
   // In docked mode the menu button portals into the editor's top bar, where
@@ -375,7 +402,10 @@ function MenuBar( {
         } );
 
         setPushSubscription( sub );
-        await subscribeUser( JSON.parse( JSON.stringify( sub ) ) );
+        await postPush(
+          "/api/push/subscribe",
+          sub.toJSON()
+        );
       } catch( error ) {
         console.error(
           "Error subscribing to push:",
@@ -399,7 +429,12 @@ function MenuBar( {
 
       try {
         await pushSubscription.unsubscribe();
-        await unsubscribeUser( pushSubscription.endpoint );
+        await postPush(
+          "/api/push/unsubscribe",
+          {
+            endpoint: pushSubscription.endpoint
+          }
+        );
         setPushSubscription( null );
       } catch( error ) {
         console.error(
@@ -701,25 +736,49 @@ function MenuBar( {
           </>
         )}
 
-        {isDesktop && isSketchEditor && (
+        {isSketchEditor && (
           <>
             <Divider />
             <SectionLabel>Workspace</SectionLabel>
+            {isDesktop && (
+              <MenuItem>
+                {( {
+                  focus
+                } ) => (
+                  <button
+                    type="button"
+                    onClick={ toggleDocked }
+                    className={ clsx(
+                      itemClass,
+                      focus && "bg-hover"
+                    ) }
+                  >
+                    <PanelsLeftRight className="h-4 w-4 text-foreground/70" />
+                    <span className="flex-1 text-left">Docked layout</span>
+                    {docked && (
+                      <Check className="h-4 w-4 text-foreground" />
+                    )}
+                  </button>
+                )}
+              </MenuItem>
+            )}
+            {/* The active slide's filmstrip tile mirrors the canvas while it
+                plays. On by default; off, every tile is a still. */}
             <MenuItem>
               {( {
                 focus
               } ) => (
                 <button
                   type="button"
-                  onClick={ toggleDocked }
+                  onClick={ toggleLiveSlideThumbnail }
                   className={ clsx(
                     itemClass,
                     focus && "bg-hover"
                   ) }
                 >
-                  <PanelsLeftRight className="h-4 w-4 text-foreground/70" />
-                  <span className="flex-1 text-left">Docked layout</span>
-                  {docked && (
+                  <GalleryThumbnails className="h-4 w-4 text-foreground/70" />
+                  <span className="flex-1 text-left">Live slide thumbnail</span>
+                  {mounted && liveSlideThumbnail && (
                     <Check className="h-4 w-4 text-foreground" />
                   )}
                 </button>
