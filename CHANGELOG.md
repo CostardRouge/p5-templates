@@ -16,6 +16,9 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
 
 ### Added
 
+- Claude can do more from a connected studio tab: cut any sketches into one reel — or every favourite of a series
+  (`reel.build`) —, pin a reel or a recap of a given month to a slot of the Plan (`plan.propose`), list what you
+  already posted (`plan.posted`), and filter sketches by series and by favourite (`sketches.list`).
 - Your favourites wear a star wherever sketches are listed: the sketch grid and list, the home page, the sketch
   picker of a layer, and the Plan.
 - Pick favourites in bulk on your own machine: on the sketch grid of a development server, press **E**, click the

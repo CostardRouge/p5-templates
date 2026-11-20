@@ -130,7 +130,19 @@ export interface Pin {
   sketchKey: string;
   note?: string;
   by: "agent" | "person";
+  /**
+   * A reel made on purpose instead of one sketch — «every favourite of this
+   * series», «what I posted in November»: its card's words and its sketches,
+   * `<engine>/<name>` each, in order. `sketchKey` is then the host's.
+   */
+  reel?: { title: string;
+    subtitle: string;
+    sketches: string[];
+    pillar: "series" | "recap"; };
 }
+
+/** A reel made on purpose holds this many sketches at most (a planned series is sampled to `REEL_MAX`). */
+export const PIN_REEL_MAX = 12;
 
 /** The person's choices, as `planStore` keeps them. */
 export interface PlanChoices {
@@ -352,7 +364,7 @@ export function tooSoon(
 }
 
 /** A sketch that can be a scene of a reel: p5, shown, drawing by itself. */
-function playable( s: PlanSketch ): boolean {
+export function playable( s: PlanSketch ): boolean {
   return s.engine === REEL_HOST.engine && !s.hiddenFromGallery && !s.asyncDraw && s.name !== REEL_HOST.name && !NEEDS_INPUT.test( seriesOf( s ) );
 }
 
@@ -374,10 +386,13 @@ export function sampleReel<T>( list: readonly T[] ): T[] {
   );
 }
 
-function reelOf(
-  title: string, subtitle: string, sketches: readonly PlanSketch[]
+/** The reel of `sketches`, sampled to `REEL_MAX` unless `whole`. */
+export function reelOf(
+  title: string, subtitle: string, sketches: readonly PlanSketch[], whole = false
 ): Reel {
-  const picked = sampleReel( sketches );
+  const picked = whole ? [
+    ...sketches
+  ] : sampleReel( sketches );
 
   return {
     title,
@@ -780,9 +795,37 @@ export function planSlots( input: PlanInput ): PlanSlot[] {
   ) => a.getTime() - b.getTime() );
   const pinned = new Map<string, PlanSketch>();
 
+  const pinnedReels = new Map<string, Proposal>();
+
   for ( const at of slots ) {
     const pin = choices.pins[ at.toISOString() ];
     const sketch = pin ? byKey.get( pin.sketchKey ) : undefined;
+
+    if ( pin?.reel && !choices.skipped[ at.toISOString() ] ) {
+      const scenes = pin.reel.sketches.map( ( key ) => byKey.get( key ) ).filter( ( s ): s is PlanSketch => Boolean( s && playable( s ) ) );
+
+      if ( scenes.length >= 2 ) {
+        pinnedReels.set(
+          at.toISOString(),
+          {
+            ...reelProposal(
+              `pin:${ at.toISOString() }`,
+              pin.reel.pillar,
+              pin.reel.title,
+              pin.note ?? `${ scenes.length } sketches chosen for this slot`,
+              reelOf(
+                pin.reel.title.toUpperCase(),
+                pin.reel.subtitle,
+                scenes,
+                true
+              )
+            ),
+            pin
+          }
+        );
+      }
+      continue;
+    }
 
     if ( sketch && !choices.skipped[ at.toISOString() ] ) {
       pinned.set(
@@ -820,6 +863,19 @@ export function planSlots( input: PlanInput ): PlanSlot[] {
         proposal: null,
         skipped: true
       } );
+      continue;
+    }
+
+    const pinnedReel = pinnedReels.get( slot );
+
+    if ( pinnedReel ) {
+      out.push( {
+        slot,
+        at,
+        proposal: pinnedReel,
+        skipped: false
+      } );
+      previous = null;
       continue;
     }
 

@@ -58,6 +58,35 @@ const CATALOGUE = [
   }
 ];
 
+const RINGS = [
+  {
+    engine: "p5",
+    category: "rings",
+    name: "rings-v1-a",
+    createdAt: day( -6 ),
+    favorite: true
+  },
+  {
+    engine: "p5",
+    category: "rings",
+    name: "rings-v2-b",
+    createdAt: day( -5 )
+  },
+  {
+    engine: "p5",
+    category: "rings",
+    name: "rings-v3-c",
+    createdAt: day( -4 ),
+    favorite: true
+  },
+  {
+    engine: "p5",
+    category: "photo",
+    name: "photo-a",
+    createdAt: day( -300 )
+  }
+];
+
 interface Plan {
   slots: { at: string;
     state: string;
@@ -304,6 +333,162 @@ describe(
     );
 
     it(
+      "pin a reel made on purpose, or a recap, and refuse what cannot play",
+      async() => {
+        const fake = fakeHandles( {} );
+
+        fake.handles.navigation.catalogue = () => RINGS;
+        clearPlanStore();
+
+        const registry = createCommandRegistry();
+
+        registry.register( planCommands( fake.handles ) );
+
+        const plan = await registry.execute(
+          "plan.get",
+          {}
+        ) as Plan;
+        const at = plan.slots[ 0 ].at;
+
+        await expect( registry.execute(
+          "plan.propose",
+          {
+            at
+          }
+        ) ).rejects.toThrow( /exactly one/ );
+        await expect( registry.execute(
+          "plan.propose",
+          {
+            at,
+            sketches: [
+              "p5/rings/rings-v1-a",
+              "p5/photo/photo-a"
+            ]
+          }
+        ) ).rejects.toThrow( /cannot be a scene/ );
+        await expect( registry.execute(
+          "plan.propose",
+          {
+            at,
+            recap: "2019-03"
+          }
+        ) ).rejects.toThrow( /nothing to recap/ );
+
+        const pinned = await registry.execute(
+          "plan.propose",
+          {
+            at,
+            sketches: [
+              "p5/rings/rings-v3-c",
+              "p5/rings/rings-v1-a"
+            ],
+            note: "Your two favourite rings, back to back."
+          }
+        ) as Plan & { slots: { reel?: string[];
+          title?: string }[]; };
+
+        expect( pinned.slots[ 0 ] ).toMatchObject( {
+          state: "pinned by an agent",
+          pillar: "series",
+          title: "Rings",
+          sketch: "p5/empty-sketch",
+          reel: [
+            "p5/rings/rings-v3-c",
+            "p5/rings/rings-v1-a"
+          ],
+          why: "Your two favourite rings, back to back."
+        } );
+
+        const recap = await registry.execute(
+          "plan.propose",
+          {
+            at: plan.slots[ 1 ].at,
+            recap: day( -5 ).slice(
+              0,
+              7
+            ),
+            title: "This month"
+          }
+        ) as typeof pinned;
+
+        expect( recap.slots[ 1 ] ).toMatchObject( {
+          pillar: "recap",
+          title: "This month"
+        } );
+        expect( recap.slots[ 1 ].reel!.length ).toBe( 3 );
+      }
+    );
+
+    it(
+      "build a reel of a series' favourites at once, and list what was posted",
+      async() => {
+        const fake = fakeHandles( {} );
+        const staged: unknown[] = [];
+        const opened: string[] = [];
+
+        fake.handles.navigation.catalogue = () => RINGS;
+        fake.handles.gallery.stageImport = ( options ) => {
+          staged.push( options );
+
+          return true;
+        };
+        fake.handles.navigation.open = ( href ) => {
+          opened.push( href );
+        };
+        fake.handles.navigation.currentSketch = () => opened.length ? "p5/empty-sketch" : "p5/voronoi/voronoi-v1-cells";
+        clearPlanStore();
+
+        const registry = createCommandRegistry();
+
+        registry.register( planCommands( fake.handles ) );
+
+        await expect( registry.execute(
+          "reel.build",
+          {}
+        ) ).rejects.toThrow( /sketches, or a category/ );
+        await expect( registry.execute(
+          "reel.build",
+          {
+            category: "nope"
+          }
+        ) ).rejects.toThrow( /no series/ );
+
+        expect( await registry.execute(
+          "reel.build",
+          {
+            category: "rings",
+            favorite: true,
+            discard: true
+          }
+        ) ).toMatchObject( {
+          sketch: "p5/empty-sketch",
+          title: "Rings",
+          reel: [
+            "p5/rings/rings-v1-a",
+            "p5/rings/rings-v3-c"
+          ],
+          seconds: 7,
+          opened: true
+        } );
+        expect( staged[ 0 ] ).toMatchObject( {
+          name: "empty-sketch"
+        } );
+        expect( await registry.execute(
+          "plan.posted",
+          {}
+        ) ).toMatchObject( {
+          posts: []
+        } );
+        await expect( registry.execute(
+          "plan.posted",
+          {
+            month: "november"
+          }
+        ) ).rejects.toThrow( /not a month/ );
+      }
+    );
+
+    it(
       "have no way to approve or send, and open only with a Postiz",
       async() => {
         const {
@@ -316,6 +501,7 @@ describe(
           "plan.another",
           "plan.get",
           "plan.open",
+          "plan.posted",
           "plan.propose",
           "plan.reset",
           "plan.set",

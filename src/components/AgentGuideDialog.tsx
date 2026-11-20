@@ -41,7 +41,8 @@ const PROMPTS = [
   "Give this sketch a sunset palette, put the title “Hello” in the top third, add a HUD gauge for the hue speed, and show me the result.",
   "Make three slides from this sketch with different palettes, then export each one as a square 1080 × 1080 video.",
   "Write a caption for this sketch’s Reel, show it to me, and once I say yes, schedule it on my next free slot.",
-  "Read my plan for the next weeks, tell me what you would change and why, and open the first proposal on Export › Publish."
+  "Read my plan for the next weeks, tell me what you would change and why, and open the first proposal on Export › Publish.",
+  "Take every favourite of the rings series and cut them into one reel, then show me a snapshot."
 ];
 
 function readClient(): Client {

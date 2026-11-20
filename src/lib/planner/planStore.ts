@@ -7,10 +7,11 @@
  */
 
 import {
-  DEFAULT_GAP_WEEKS, DEFAULT_MIX, EMPTY_CHOICES, GAP_WEEKS, MIXES, type Mix, type Pin, type PlanChoices
+  DEFAULT_GAP_WEEKS, DEFAULT_MIX, EMPTY_CHOICES, GAP_WEEKS, MIXES, PIN_REEL_MAX, type Mix, type Pin, type PlanChoices
 } from "./planner";
 
 const KEY = "sketchbook.plan.v1";
+const SKETCH_KEY = /^[a-z0-9]+\/[A-Za-z0-9._-]+$/;
 /** A passed-over sketch comes back after this long: the plan is for now, not for ever. */
 const PASSED_MS = 56 * 86_400_000;
 /** A slot's choice is forgotten this long after the slot went by. */
@@ -52,10 +53,30 @@ export function readChoices(
   ] of Object.entries( record( r.pins ) ) ) {
     const pin = record( value );
 
-    if ( ahead( slot ) && typeof pin.sketchKey === "string" && /^[a-z0-9]+\/[A-Za-z0-9._-]+$/.test( pin.sketchKey ) ) {
+    if ( ahead( slot ) && typeof pin.sketchKey === "string" && SKETCH_KEY.test( pin.sketchKey ) ) {
+      const reel = record( pin.reel );
+      const scenes = Array.isArray( reel.sketches ) ? reel.sketches.filter( ( key ): key is string => typeof key === "string" && SKETCH_KEY.test( key ) ).slice(
+        0,
+        PIN_REEL_MAX
+      ) : [];
+
       pins[ slot ] = {
         sketchKey: pin.sketchKey,
         by: pin.by === "agent" ? "agent" : "person",
+        ...( scenes.length >= 2 && typeof reel.title === "string" && reel.title.trim() ? {
+          reel: {
+            title: reel.title.trim().slice(
+              0,
+              80
+            ),
+            subtitle: typeof reel.subtitle === "string" ? reel.subtitle.trim().slice(
+              0,
+              80
+            ) : "",
+            sketches: scenes,
+            pillar: reel.pillar === "recap" ? "recap" : "series"
+          }
+        } : {} ),
         ...( typeof pin.note === "string" && pin.note.trim() ? {
           note: pin.note.trim().slice(
             0,
