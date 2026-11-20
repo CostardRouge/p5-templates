@@ -25,11 +25,20 @@ import {
   askPlanned
 } from "../../postiz/reopen";
 import {
-  GAP_WEEKS, MIXES, PLAN_WEEKS, planSlots, sketchKeyOf, sketchPath, tooSoon, type PlanSketch, type PlanSlot
+  GAP_WEEKS, MIXES, monthRecap, PIN_REEL_MAX, PLAN_WEEKS, planSlots, playable, REEL_HOST, reelOf, sketchKeyOf, sketchPath, tooSoon, yearRecap, type Pin, type PlanSketch, type PlanSlot
 } from "../../planner/planner";
 import {
-  getChoices, passProposal, pinSlot, resetPlan, skipSlot, updateChoices
+  sketchTitle
+} from "../../postiz/caption";
+import {
+  localDay
+} from "../../postiz/rhythm";
+import {
+  getChoices, markOpened, passProposal, pinSlot, resetPlan, skipSlot, updateChoices
 } from "../../planner/planStore";
+import {
+  reelCaption, reelDocument, reelSeconds
+} from "../../planner/reel";
 import {
   postedFrom, type Posted
 } from "../../planner/posted";
@@ -102,7 +111,8 @@ async function readPlan( h: StudioHandles ): Promise<Reading> {
       ),
       posted,
       choices: getChoices(),
-      now
+      now,
+      timeZone: rhythm.timeZone
     } )
   };
 }
@@ -125,7 +135,11 @@ function describe(
       pillar: p.pillar,
       favorite: p.favorite,
       why: p.why,
-      key: p.key
+      key: p.key,
+      ...( p.reel ? {
+        reel: p.reel.scenes.map( ( scene ) => `p5/${ scene }` ),
+        seconds: reelSeconds( p.reel.scenes.length )
+      } : {} )
     } : {} )
   };
 }
@@ -149,6 +163,104 @@ async function answer( h: StudioHandles ) {
       reading.calendarError ? `The person's Postiz did not answer (${ reading.calendarError }): taken slots are not known.` : null,
       "A proposal is not a post. plan.open puts one on Export › Publish; publish.approve stays the person's word."
     ].filter( Boolean ).join( " " )
+  };
+}
+
+type PinReel = NonNullable<Pin[ "reel" ]>;
+
+/** The sketches named by `paths`, each one existing and able to play in a reel — or the refusal that says which is not. */
+export function playableSketches(
+  catalogue: readonly PlanSketch[], paths: unknown
+): PlanSketch[] {
+  const list = Array.isArray( paths ) ? paths.map( ( path ) => String( path ).replace(
+    /^\/+|\/+$/g,
+    ""
+  ) ) : [];
+
+  if ( list.length < 2 || list.length > PIN_REEL_MAX ) {
+    throw new CommandError(
+      "invalid",
+      `a reel takes 2 to ${ PIN_REEL_MAX } sketches — ${ list.length } given`
+    );
+  }
+
+  return list.map( ( path ) => {
+    const sketch = catalogue.find( ( s ) => sketchPath( s ) === path );
+
+    if ( !sketch ) {
+      throw new CommandError(
+        "invalid",
+        `no sketch "${ path }" — sketches.list shows them`
+      );
+    }
+    if ( !playable( sketch ) ) {
+      throw new CommandError(
+        "invalid",
+        `${ path } cannot be a scene of a reel (it is not a p5 sketch, it is hidden, it draws asynchronously, or it waits for a camera, a microphone or a file)`
+      );
+    }
+
+    return sketch;
+  } );
+}
+
+function chosenReel(
+  reading: Reading, paths: unknown, title: string
+): PinReel {
+  const sketches = playableSketches(
+    reading.catalogue,
+    paths
+  );
+  const series = new Set( sketches.map( ( s ) => s.category ?? s.name ) );
+  const name = series.size === 1 && sketches[ 0 ].category
+    ? sketchTitle(
+      sketches[ 0 ].category,
+      null
+    )
+    : "Selection";
+
+  return {
+    title: title.trim() || name,
+    subtitle: `${ sketches.length } SKETCHES`,
+    sketches: sketches.map( sketchKeyOf ),
+    pillar: "series"
+  };
+}
+
+function recapReel(
+  reading: Reading, period: string
+): PinReel {
+  if ( !/^\d{4}(-(0[1-9]|1[0-2]))?$/.test( period ) ) {
+    throw new CommandError(
+      "invalid",
+      `recap "${ period }" is not a month nor a year — "2026-11" or "2026"`
+    );
+  }
+
+  const proposal = period.length === 4
+    ? yearRecap(
+      reading.catalogue,
+      period
+    )
+    : monthRecap(
+      reading.catalogue,
+      reading.posted,
+      period,
+      reading.timeZone
+    );
+
+  if ( !proposal?.reel ) {
+    throw new CommandError(
+      "invalid",
+      `nothing to recap for ${ period }: fewer than three sketches were posted or made then (plan.posted lists what was posted)`
+    );
+  }
+
+  return {
+    title: proposal.title,
+    subtitle: proposal.reel.subtitle,
+    sketches: proposal.reel.sketches,
+    pillar: "recap"
   };
 }
 
@@ -186,7 +298,7 @@ export function planCommands( h: StudioHandles ): CommandSpec[] {
     {
       id: "plan.get",
       title: "Read the plan",
-      description: "What to post next: one line per FREE slot of the person's rhythm over the next five weeks, each with the sketch proposed for it — a new sketch in the order of its series, or a favourite not posted recently — and why. The same plan as the gallery's Plan view. Answers { rhythm, mix, gapWeeks, slots: [{ at, when, state, sketch, title, pillar, why, key }] }. It reads the calendar; it sends nothing.",
+      description: "What to post next: one line per FREE slot of the person's rhythm over the next five weeks, each with what is proposed for it and why — a new sketch in the order of its series, a favourite not posted recently, a whole SERIES as one Reel, or a RECAP of the month or the year. The same plan as the gallery's Plan view. Answers { rhythm, mix, gapWeeks, slots: [{ at, when, state, sketch, title, pillar, why, key, reel?, seconds? }] }; a series or a recap has `reel` (its sketches in order) and its `sketch` is the empty host it is built on. It reads the calendar; it sends nothing.",
       run: () => answer( h )
     },
     {
@@ -230,13 +342,29 @@ export function planCommands( h: StudioHandles ): CommandSpec[] {
     },
     {
       id: "plan.propose",
-      title: "Propose a sketch for a slot",
-      description: "Pin a sketch to a free slot of the plan, with a line saying why — it shows in the gallery's Plan as «Pinned by Claude» for the person to open, replace or skip. Refused for a slot that is not free, a sketch that does not exist, one already in the plan, or one posted within the gap. Proposes only: nothing is rendered, approved or sent.",
+      title: "Propose a post for a slot",
+      description: "Pin a post to a free slot of the plan, with a line saying why — it shows in the gallery's Plan as «Pinned by Claude» for the person to open, replace or skip. Give ONE of: `sketch` (one sketch), `sketches` (a reel of 2 to 12 sketches cut together, e.g. the favourites of a series from sketches.list), or `recap` (\"2026-11\" for what was posted — else made — that month, \"2026\" for the year month by month). Refused for a slot that is not free, a sketch that does not exist or cannot play in a reel, one already pinned, or one posted within the gap. Proposes only: nothing is rendered, approved or sent.",
       params: {
         ...AT_PARAM,
         sketch: {
           type: "string",
-          description: "\"engine/category/name\" from sketches.list"
+          description: "\"engine/category/name\" from sketches.list",
+          optional: true
+        },
+        sketches: {
+          type: "strings",
+          description: "A reel: 2 to 12 sketches, \"engine/category/name\" each, in order",
+          optional: true
+        },
+        recap: {
+          type: "string",
+          description: "A month \"YYYY-MM\" or a year \"YYYY\" to recap",
+          optional: true
+        },
+        title: {
+          type: "string",
+          description: "The reel's opening card and the post's title (a reel only); a default is written otherwise",
+          optional: true
         },
         note: {
           type: "string",
@@ -251,6 +379,53 @@ export function planCommands( h: StudioHandles ): CommandSpec[] {
           h,
           params.at
         );
+        const given = [
+          params.sketch,
+          params.sketches,
+          params.recap
+        ].filter( ( value ) => value !== undefined ).length;
+
+        if ( given !== 1 ) {
+          throw new CommandError(
+            "invalid",
+            "give exactly one of sketch, sketches or recap"
+          );
+        }
+
+        const note = typeof params.note === "string" && params.note.trim() ? {
+          note: params.note.trim()
+        } : {};
+
+        if ( params.sketch === undefined ) {
+          const reel = params.recap !== undefined
+            ? recapReel(
+              reading,
+              String( params.recap )
+            )
+            : chosenReel(
+              reading,
+              params.sketches,
+              typeof params.title === "string" ? params.title : ""
+            );
+
+          pinSlot(
+            slot.slot,
+            {
+              sketchKey: sketchKeyOf( REEL_HOST ),
+              by: "agent",
+              ...note,
+              reel: {
+                ...reel,
+                ...( typeof params.title === "string" && params.title.trim() ? {
+                  title: params.title.trim()
+                } : {} )
+              }
+            }
+          );
+
+          return answer( h );
+        }
+
         const target = String( params.sketch ).replace(
           /^\/+|\/+$/g,
           ""
@@ -293,9 +468,7 @@ export function planCommands( h: StudioHandles ): CommandSpec[] {
           {
             sketchKey: key,
             by: "agent",
-            ...( typeof params.note === "string" && params.note.trim() ? {
-              note: params.note.trim()
-            } : {} )
+            ...note
           }
         );
 
@@ -359,6 +532,225 @@ export function planCommands( h: StudioHandles ): CommandSpec[] {
       }
     },
     {
+      id: "plan.posted",
+      title: "List what was posted",
+      description: "The sketches already posted or still queued, newest first: what this browser sent and what the person's Postiz lists with a link to a sketch (another device's). Narrow to a month \"YYYY-MM\". Answers { posts: [{ sketch, title, at, day }], known } — `known` says what could not be read. A series or a recap leaves no trace here: it is posted from the empty sketch. Reads only; never a statistic.",
+      params: {
+        month: {
+          type: "string",
+          description: "Only this month, \"YYYY-MM\" in the rhythm's time zone",
+          optional: true
+        }
+      },
+      async run( params ) {
+        const month = params.month === undefined ? null : String( params.month );
+
+        if ( month !== null && !/^\d{4}-(0[1-9]|1[0-2])$/.test( month ) ) {
+          throw new CommandError(
+            "invalid",
+            `month "${ month }" is not a month — "2026-11"`
+          );
+        }
+
+        const reading = await readPlan( h );
+        const byKey = new Map( reading.catalogue.map( ( s ) => [
+          sketchKeyOf( s ),
+          s
+        ] ) );
+
+        return {
+          posts: [
+            ...reading.posted
+          ].sort( (
+            a, b
+          ) => b.at - a.at ).map( ( post ) => {
+            const sketch = byKey.get( post.sketchKey );
+
+            return {
+              sketch: sketch ? sketchPath( sketch ) : post.sketchKey,
+              title: sketch ? sketchTitle(
+                sketch.name,
+                sketch.category
+              ) : post.sketchKey,
+              at: new Date( post.at ).toISOString(),
+              day: localDay(
+                new Date( post.at ),
+                reading.timeZone
+              ),
+              ...( post.at > Date.now() ? {
+                queued: true
+              } : {} )
+            };
+          } )
+            .filter( ( post ) => month === null || post.day.startsWith( month ) ),
+          known: [
+            reading.connected ? ( reading.calendarError ? `Postiz did not answer (${ reading.calendarError }): only this browser's sends are listed.` : "This browser's sends, and the posts of the person's Postiz whose caption links a sketch (five weeks back, eight ahead)." ) : "No Postiz is connected: only this browser's sends are listed."
+          ].join( " " )
+        };
+      }
+    },
+    {
+      id: "reel.build",
+      title: "Build a reel of several sketches",
+      description: "Cut several sketches together NOW, on the empty sketch: an opening card, then each sketch as a scene of one sequence (content.list shows it; content.update changes a scene, its length or its transition). Give `sketches` (2 to 12, in order), or `category` — every sketch of that series that can play, optionally only the person's favourites — at most 12, evenly sampled. For «take every favourite of this series and make me one piece». It opens the empty sketch and replaces its document: pass discard: true to leave this tab's unsaved changes behind. Nothing is planned, approved or sent.",
+      params: {
+        sketches: {
+          type: "strings",
+          description: "\"engine/category/name\" each, in order",
+          optional: true
+        },
+        category: {
+          type: "string",
+          description: "A series, e.g. \"rings\" — every sketch of it that can play",
+          optional: true
+        },
+        favorite: {
+          type: "boolean",
+          description: "With category: only the person's favourites",
+          optional: true
+        },
+        title: {
+          type: "string",
+          description: "The opening card's words; the series' name otherwise",
+          optional: true
+        },
+        subtitle: {
+          type: "string",
+          description: "The opening card's second line",
+          optional: true
+        },
+        discard: {
+          type: "boolean",
+          description: "Leave this tab's unsaved changes behind",
+          optional: true
+        }
+      },
+      async run( params ) {
+        const catalogue = h.navigation.catalogue() as PlanSketch[];
+
+        if ( ( params.sketches === undefined ) === ( params.category === undefined ) ) {
+          throw new CommandError(
+            "invalid",
+            "give sketches, or a category"
+          );
+        }
+
+        let sketches: PlanSketch[];
+        let name = "Selection";
+
+        if ( params.category !== undefined ) {
+          const category = String( params.category ).toLowerCase();
+          const all = catalogue.filter( ( s ) => s.category === category );
+
+          if ( !all.length ) {
+            throw new CommandError(
+              "invalid",
+              `no series "${ category }" — sketches.list shows the categories in each id`
+            );
+          }
+
+          sketches = all.filter( ( s ) => playable( s ) && ( !params.favorite || s.favorite ) ).sort( (
+            a, b
+          ) => ( a.createdAt ?? "" ).localeCompare( b.createdAt ?? "" ) || a.name.localeCompare(
+            b.name,
+            undefined,
+            {
+              numeric: true
+            }
+          ) );
+          if ( sketches.length < 2 ) {
+            throw new CommandError(
+              "invalid",
+              `${ sketches.length } ${ params.favorite ? "favourite " : "" }${ sketches.length === 1 ? "sketch" : "sketches" } of "${ category }" can play in a reel — it takes two`
+            );
+          }
+          name = sketchTitle(
+            category,
+            null
+          );
+        } else {
+          sketches = playableSketches(
+            catalogue,
+            params.sketches
+          );
+        }
+
+        const even = sketches.length > PIN_REEL_MAX
+          ? Array.from(
+            {
+              length: PIN_REEL_MAX
+            },
+            (
+              _, i
+            ) => sketches[ Math.round( i * ( sketches.length - 1 ) / ( PIN_REEL_MAX - 1 ) ) ]
+          )
+          : sketches;
+        const title = typeof params.title === "string" && params.title.trim() ? params.title.trim() : name;
+        const reel = reelOf(
+          title.toUpperCase(),
+          typeof params.subtitle === "string" ? params.subtitle.trim() : `${ even.length } ${ params.favorite ? "FAVOURITES" : "SKETCHES" }`,
+          even,
+          true
+        );
+        const document = reelDocument( {
+          reel
+        } )!;
+        const host = sketchPath( REEL_HOST );
+        const built = {
+          sketch: host,
+          title,
+          reel: reel.scenes.map( ( scene ) => `p5/${ scene }` ),
+          left: sketches.length - even.length,
+          seconds: reelSeconds( reel.scenes.length )
+        };
+
+        if ( h.sketchId === host ) {
+          const applied = h.gallery.importDocument( document );
+
+          if ( !applied.ok ) {
+            throw new CommandError(
+              "failed",
+              `the reel could not be built: ${ applied.reason }`
+            );
+          }
+
+          return {
+            ...built,
+            opened: false
+          };
+        }
+        if ( h.history.canUndo() && !params.discard ) {
+          throw new CommandError(
+            "invalid",
+            "this tab has changes that are not saved — building a reel opens the empty sketch and leaves them behind; pass discard: true to go anyway"
+          );
+        }
+        if ( !h.gallery.stageImport( document ) ) {
+          throw new CommandError(
+            "failed",
+            "the reel could not be handed over (this browser's storage is unavailable)"
+          );
+        }
+
+        h.navigation.open( `/sketches/${ host }` );
+
+        if ( !await until(
+          () => h.navigation.currentSketch() === host,
+          OPEN_TIMEOUT_MS
+        ) ) {
+          throw new CommandError(
+            "failed",
+            `${ host } did not finish loading within ${ OPEN_TIMEOUT_MS / 1000 } s — studio.status tells when it is ready`
+          );
+        }
+
+        return {
+          ...built,
+          opened: true
+        };
+      }
+    },
+    {
       id: "plan.reset",
       title: "Start the plan over",
       description: "Forget everything passed over, skipped and pinned; the mix and the gap stay. Only when the person asks: it also forgets THEIR skips.",
@@ -371,7 +763,7 @@ export function planCommands( h: StudioHandles ): CommandSpec[] {
     {
       id: "plan.open",
       title: "Open a proposal on Export › Publish",
-      description: "Open the sketch proposed on this slot, on Export › Publish, with the slot as its When — the gallery's «Open in Publish». From there publish.status shows the post, publish.compose and publish.caption shape it, and publish.schedule sends it once the person approved the words (publish.approve, on their word only). Needs a connected Postiz. Leaves this tab's unsaved changes behind only with discard: true.",
+      description: "Open the sketch proposed on this slot, on Export › Publish, with the slot as its When — the gallery's «Open in Publish». A series or a recap is BUILT first: the empty sketch receives a sequence of its sketches behind an opening card (content.list shows it, content.update changes a scene), with words to start from that are not approved. From there publish.status shows the post, publish.compose and publish.caption shape it, and publish.schedule sends it once the person approved the words (publish.approve, on their word only). Needs a connected Postiz. Leaves this tab's unsaved changes behind only with discard: true.",
       params: {
         ...AT_PARAM,
         discard: {
@@ -397,11 +789,28 @@ export function planCommands( h: StudioHandles ): CommandSpec[] {
           );
         }
 
+        const reel = reelDocument( p );
+        const caption = reelCaption( p );
+
         if ( p.path === h.sketchId ) {
+          if ( reel ) {
+            const applied = h.gallery.importDocument( reel );
+
+            if ( !applied.ok ) {
+              throw new CommandError(
+                "failed",
+                `the reel could not be built: ${ applied.reason }`
+              );
+            }
+            markOpened( p.key );
+          }
           patchDraft(
             p.sketchKey,
             {
-              mode: "publish"
+              mode: "publish",
+              ...( caption ? {
+                caption
+              } : {} )
             }
           );
           setWhen(
@@ -426,9 +835,19 @@ export function planCommands( h: StudioHandles ): CommandSpec[] {
           );
         }
 
+        if ( reel ) {
+          if ( !h.gallery.stageImport( reel ) ) {
+            throw new CommandError(
+              "failed",
+              "the reel could not be handed over (this browser's storage is unavailable)"
+            );
+          }
+          markOpened( p.key );
+        }
         askPlanned(
           p.sketchKey,
-          slot.slot
+          slot.slot,
+          caption
         );
         h.navigation.open( `/sketches/${ p.path }` );
 

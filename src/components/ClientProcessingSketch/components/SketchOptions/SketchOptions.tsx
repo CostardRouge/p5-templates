@@ -319,20 +319,25 @@ export default function SketchOptions( {
 
       // The gallery's Plan (lab 7): the same crossing with a WHEN — this
       // sketch opens on Export › Publish, on the slot the plan proposed.
-      const slot = takePlanned( key );
+      const planned = takePlanned( key );
 
-      if ( slot ) {
+      if ( planned ) {
+        // A reel (a series, a recap) comes with the words it starts from:
+        // new words, so never approved (`patchedDraft`).
         patchDraft(
           key,
           {
-            mode: "publish"
+            mode: "publish",
+            ...( planned.caption ? {
+              caption: planned.caption
+            } : {} )
           }
         );
         setWhen(
           key,
           {
             kind: "at",
-            at: slot
+            at: planned.slot
           }
         );
         setCaptureOpen( true );

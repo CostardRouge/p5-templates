@@ -102,6 +102,11 @@ export function navigationCommands( h: StudioHandles ): CommandSpec[] {
           description: "Only sketches carrying this tag (the answer's `tags` lists every tag in use with its count)",
           optional: true
         },
+        category: {
+          type: "string",
+          description: "Only this series, e.g. \"materials\" (the middle of an id)",
+          optional: true
+        },
         favorite: {
           type: "boolean",
           description: "Only the person's favourites (the star they set on their site)",
@@ -119,7 +124,8 @@ export function navigationCommands( h: StudioHandles ): CommandSpec[] {
         const visible = h.navigation.catalogue()
           .filter( ( entry ) => ( params.includeHidden || !entry.hiddenFromGallery ) &&
             ( params.engine === undefined || entry.engine === params.engine ) &&
-            ( !params.favorite || Boolean( entry.favorite ) ) );
+            ( !params.favorite || Boolean( entry.favorite ) ) &&
+            ( params.category === undefined || entry.category === String( params.category ).toLowerCase() ) );
         const tags: Record<string, number> = {};
 
         for ( const entry of visible ) {

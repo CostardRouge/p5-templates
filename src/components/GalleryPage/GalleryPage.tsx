@@ -61,6 +61,15 @@ import {
   postedFrom
 } from "@/lib/planner/posted";
 import {
+  markOpened
+} from "@/lib/planner/planStore";
+import {
+  reelCaption, reelDocument
+} from "@/lib/planner/reel";
+import {
+  writePendingImport
+} from "@/lib/pendingImportOptions";
+import {
   localDay
 } from "@/lib/postiz/rhythm";
 import GalleryCard, {
@@ -162,6 +171,10 @@ export default function GalleryPage( {
     setSheet
   ] = useState<SheetTarget | null>( null );
   const [
+    planSketches,
+    setPlanSketches
+  ] = useState<string[]>( [] );
+  const [
     toast,
     setToast
   ] = useState<{ message: string;
@@ -201,6 +214,10 @@ export default function GalleryPage( {
   );
 
   const chooseView = ( next: GalleryView ) => {
+    // The sketch filter lists the pieces' sketches, or — on the Plan — the plan's: one does not carry to the other.
+    if ( ( next === "plan" ) !== ( view === "plan" ) ) {
+      setSketchFilter( "" );
+    }
     setView( next );
     writeGalleryCookie( {
       view: next,
@@ -492,10 +509,26 @@ export default function GalleryPage( {
     if ( !slot.proposal ) {
       return;
     }
+    // A series or a recap is a document of its own (`reel.ts`), handed to the
+    // empty sketch through the gallery's crossing, with the words it starts from.
+    const reel = reelDocument( slot.proposal );
+
+    if ( reel ) {
+      if ( !writePendingImport( reel ) ) {
+        setToast( {
+          message: "Could not hand the reel over (storage unavailable) — nothing was opened.",
+          type: "error"
+        } );
+
+        return;
+      }
+      markOpened( slot.proposal.key );
+    }
     if ( gp.conn ) {
       askPlanned(
         slot.proposal.sketchKey,
-        slot.slot
+        slot.slot,
+        reelCaption( slot.proposal )
       );
     }
     router.push( `/sketches/${ slot.proposal.path }` );
@@ -594,7 +627,7 @@ export default function GalleryPage( {
               <input
                 type="search"
                 aria-label="Search the gallery"
-                placeholder="Search titles…"
+                placeholder={ view === "plan" ? "Search the plan…" : "Search titles…" }
                 value={ search }
                 onChange={ ( event ) => setSearch( event.target.value ) }
                 className={ `${ INPUT_CLASS } w-full pl-8` }
@@ -609,7 +642,7 @@ export default function GalleryPage( {
               className={ `${ INPUT_CLASS } w-0 min-w-0 flex-1 lg:w-56 lg:flex-none` }
             >
               <option value="">Every sketch</option>
-              {sketches.map( ( sketch ) => (
+              {( view === "plan" ? planSketches : sketches ).map( ( sketch ) => (
                 <option key={ sketch } value={ sketch }>{sketch}</option>
               ) )}
             </select>
@@ -781,6 +814,9 @@ export default function GalleryPage( {
             sendKey: null
           } ) }
           onRhythm={ openPublishing }
+          search={ needle }
+          sketchFilter={ sketchFilter }
+          onSketches={ setPlanSketches }
         />
       )}
 

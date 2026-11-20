@@ -14,6 +14,24 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
 - Self-hosting: the Docker image `ghcr.io/costardrouge/p5-templates` is no longer published with each release.
   1.4.0 is the last one built automatically; build your own from the repository, or ask for a build of a release.
 
+### Added
+
+- Claude can do more from a connected studio tab: cut any sketches into one reel — or every favourite of a series
+  (`reel.build`) —, pin a reel or a recap of a given month to a slot of the Plan (`plan.propose`), list what you
+  already posted (`plan.posted`), and filter sketches by series and by favourite (`sketches.list`).
+- Your favourites wear a star wherever sketches are listed: the sketch grid and list, the home page, the sketch
+  picker of a layer, and the Plan.
+- Pick favourites in bulk on your own machine: on the sketch grid of a development server, press **E**, click the
+  sketches to star or unstar, undo with ⌘Z, then Write — each star is saved to its sketch, ready to commit. The
+  public site only shows them.
+- The Plan proposes two more kinds of post: a whole **series** as one Reel (every fifth post) and a **recap** — the
+  month just ended on the first slot of the next one, the year month by month on December's last. Opening one
+  builds the Reel for you on the empty sketch: an opening card, then each sketch in turn, cut together, with words
+  to start from. A series or recap you opened waits before it is proposed again.
+- The gallery's search and its sketch filter now narrow the Plan too; on the Plan the filter lists the plan's own
+  sketches.
+
+
 ## [1.4.0] - 2026-11-20 — Quadratrix
 
 ### Added

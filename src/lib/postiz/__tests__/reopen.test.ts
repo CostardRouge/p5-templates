@@ -81,7 +81,17 @@ describe(
           planned(),
           "p5/materials-v1-flame",
           NOW
-        ) ).toBe( new Date( NOW + 86_400_000 ).toISOString() );
+        ) ).toEqual( {
+          slot: new Date( NOW + 86_400_000 ).toISOString(),
+          caption: null
+        } );
+        expect( readPlannedAsk(
+          planned( {
+            caption: "Materials · the series"
+          } ),
+          "p5/materials-v1-flame",
+          NOW
+        )?.caption ).toBe( "Materials · the series" );
       }
     );
 
