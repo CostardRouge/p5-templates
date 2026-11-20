@@ -1,11 +1,7 @@
 import {
   execFile
 } from "node:child_process";
-import fs from "node:fs/promises";
 import path from "node:path";
-import {
-  promisify
-} from "node:util";
 
 import {
   findSketchMeta
@@ -14,11 +10,43 @@ import {
   localSameOrigin, parseFavoriteChanges
 } from "@/lib/favorites/changes";
 
-import {
-  readSketchFile, serializeSketchFile, SKETCH_FILE
-} from "../../../../../scripts/sketch-file.mjs";
+/** `scripts/set-favorites.mjs`, fed the batch on stdin: its own process, so this route bundles no file walker. */
+function setFavorites( targets: { dir: string;
+  favorite: boolean }[] ): Promise<number> {
+  return new Promise( (
+    resolve, reject
+  ) => {
+    const child = execFile(
+      process.execPath,
+      [
+        path.join(
+          /* turbopackIgnore: true */ process.cwd(),
+          "scripts",
+          "set-favorites.mjs"
+        )
+      ],
+      {
+        cwd: process.cwd()
+      },
+      (
+        error, stdout, stderr
+      ) => {
+        if ( error ) {
+          reject( new Error( stderr.trim() || error.message ) );
 
-const run = promisify( execFile );
+          return;
+        }
+        try {
+          resolve( Number( ( JSON.parse( stdout ) as { written?: number } ).written ?? 0 ) );
+        } catch {
+          reject( new Error( "the favourites script answered nothing readable" ) );
+        }
+      }
+    );
+
+    child.stdin?.end( JSON.stringify( targets ) );
+  } );
+}
 
 const refuse = (
   status: number, error: string
@@ -33,10 +61,11 @@ const refuse = (
 
 /**
  * The write half of the favourites editor (`docs/memory/sketches.md`) — a
- * development server only, as steevepommier.com's is: it sets `favorite` in
- * each sketch's own `sketch.json` through `scripts/sketch-file.mjs` (the one
- * definition of that file), then runs the catalogue's generator so
- * `metadata.json` follows. The star ships when that change is committed.
+ * development server only, as steevepommier.com's is: `scripts/set-favorites.mjs`
+ * sets `favorite` in each sketch's own `sketch.json` through
+ * `scripts/sketch-file.mjs` (the one definition of that file), then runs the
+ * catalogue's generator so `metadata.json` follows. The star ships when that
+ * change is committed.
  *
  * Guards, since it writes to disk and nothing here is authenticated
  * (`security.md`): never in production, this machine and this site's own page
@@ -98,8 +127,7 @@ export async function POST( request: Request ) {
     }
 
     targets.push( {
-      dir: path.join(
-        process.cwd(),
+      dir: [
         "src",
         "sketches",
         meta.engine,
@@ -108,72 +136,19 @@ export async function POST( request: Request ) {
           meta.category
         ] : [] ),
         meta.name
-      ),
+      ].join( "/" ),
       favorite
     } );
   }
 
-  let written = 0;
-
   try {
-    for ( const {
-      dir, favorite
-    } of targets ) {
-      const values = readSketchFile( dir ) as Record<string, unknown>;
-
-      if ( Boolean( values.favorite ) === favorite ) {
-        continue;
-      }
-
-      const text = serializeSketchFile( {
-        ...values,
-        favorite
-      } );
-      const file = path.join(
-        dir,
-        SKETCH_FILE
-      );
-
-      if ( text === null ) {
-        await fs.rm(
-          file,
-          {
-            force: true
-          }
-        );
-      } else {
-        await fs.writeFile(
-          file,
-          text
-        );
-      }
-      written++;
-    }
-
-    if ( written ) {
-      await run(
-        process.execPath,
-        [
-          path.join(
-            process.cwd(),
-            "scripts",
-            "watch-sketches.mjs"
-          ),
-          "--once"
-        ],
-        {
-          cwd: process.cwd()
-        }
-      );
-    }
+    return Response.json( {
+      written: await setFavorites( targets )
+    } );
   } catch( caught ) {
     return refuse(
       500,
       caught instanceof Error ? caught.message : "the favourites could not be written"
     );
   }
-
-  return Response.json( {
-    written
-  } );
 }
