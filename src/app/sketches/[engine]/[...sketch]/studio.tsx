@@ -17,9 +17,6 @@ import SketchPage from "@/components/SketchPage/SketchPage";
 import SketchJsonLd from "@/components/SketchJsonLd/SketchJsonLd";
 import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd/BreadcrumbJsonLd";
 import {
-  getJobById
-} from "@/lib/jobStore";
-import {
   buildCanonicalPath,
   buildOgTitle,
   buildSketchDescription,
@@ -29,10 +26,13 @@ import {
   getBaseUrl,
   SITE_NAME
 } from "@/lib/seo";
+import type {
+  JobModel
+} from "@/types/recording.types";
 import {
-  OptionsSchema
+  OptionsSchema,
+  type SketchOption
 } from "@/types/sketch.types";
-import getCaptureOptions from "@/utils/getCaptureOptions";
 import migrateLegacyHudItems from "@/utils/migrateLegacyHudItems";
 import {
   getJSONSketchOptions,
@@ -42,7 +42,7 @@ import {
 /* ------------------------------------------------------------------ */
 /*  Route params type                                                  */
 /* ------------------------------------------------------------------ */
-type RouteParams = {
+export type RouteParams = {
   engine: string;
   sketch: string[]; // catch-all: ["category", "name"] or ["name"]
 };
@@ -128,21 +128,38 @@ export async function generateMetadata( {
 
 /* ------------------------------------------------------------------ */
 /*  Page                                                               */
+/*                                                                     */
+/*  Two routes render this (next.config.ts, "Two builds"):             */
+/*  page.server.tsx on the full server, which reads the query string   */
+/*  (a recording job's ?id=, the preview generator's ?capturing) and   */
+/*  loads the job; page.static.tsx on the static front, prerendered    */
+/*  for every sketch, with no query string and no job.                 */
 /* ------------------------------------------------------------------ */
 
-export const revalidate = 0;
+/** What the full server reads from the query string. */
+export type StudioSearchParams = {
+  id?: string;
+  capturing?: string;
+  previewFramerate?: string;
+  previewDuration?: string;
+};
 
-export default async function StudioPage( {
+/** A recording job and the options it was captured with (full server only). */
+export type LoadedJob = {
+  job: JobModel;
+  options: SketchOption;
+};
+
+export async function renderStudio( {
   params,
-  searchParams
+  searchParams = {},
+  loadJob,
+  backendRecording = false
 }: {
   params: Promise<RouteParams>;
-  searchParams: Promise<{
-    id?: string;
-    capturing?: string;
-    previewFramerate?: string;
-    previewDuration?: string;
-  }>;
+  searchParams?: StudioSearchParams;
+  loadJob?: ( id: string ) => Promise<LoadedJob | null>;
+  backendRecording?: boolean;
 } ) {
   const {
     engine: engineId, sketch: sketchSegments
@@ -207,20 +224,23 @@ export default async function StudioPage( {
   }
 
   /* ---- persisted job? -------------------------------------------- */
-  const resolvedSearchParams = await searchParams;
+  const resolvedSearchParams = searchParams;
   const jobIdSearchParams = resolvedSearchParams.id;
   let persistedJob;
 
   if ( jobIdSearchParams ) {
-    persistedJob = await getJobById( jobIdSearchParams );
+    const loaded = loadJob
+      ? await loadJob( jobIdSearchParams )
+      : null;
 
-    if ( !persistedJob ) {
+    if ( !loaded ) {
       return notFound();
     }
 
+    persistedJob = loaded.job;
     Object.assign(
       sketchOptions,
-      await getCaptureOptions( `${ persistedJob.id }/options.json` )
+      loaded.options
     );
     sketchOptions.id = persistedJob.id;
   }
@@ -309,7 +329,7 @@ export default async function StudioPage( {
         sketchFormValues={ formValues }
         sketchFormConfiguration={ formConfiguration }
         capturing={ resolvedSearchParams.capturing === "" }
-        backendRecording={ process.env.BACKEND_RECORDING === "true" }
+        backendRecording={ backendRecording }
         activeSlideIndex={
           migratedSketchOptions.slides?.length > 0 ? 0 : undefined
         }

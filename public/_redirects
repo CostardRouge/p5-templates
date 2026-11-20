@@ -1,0 +1,4 @@
+# Redirects of the static front on Cloudflare — the same as next.config.ts's
+# redirects() on the full server (src/app/__tests__/staticFront.test.ts).
+/templates /sketches 308
+/templates/* /sketches/:splat 308

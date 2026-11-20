@@ -1,0 +1,26 @@
+// The static front on Cloudflare (docs/memory/deployment.md, "The front is static").
+//
+// Workers Builds, set up in the Cloudflare dashboard on this repository, runs
+// `npm run build:static` (out/), then `npx wrangler deploy`, which reads this
+// file: static assets, plus a few lines of Worker for byte ranges on the preview
+// loops (worker/ranges.js). wrangler is deliberately not a dependency — it
+// pulls workerd, and every `npm ci` would pay for it.
+{
+  "name": "sketchbook",
+  "compatibility_date": "2026-10-15",
+  "main": "worker/ranges.js",
+  "assets": {
+    "directory": "./out",
+    "binding": "ASSETS",
+    // Only the stills and loops go through the Worker; everything else is
+    // served by the assets alone, at no Worker cost.
+    "run_worker_first": [
+      "/assets/images/templates/*"
+    ],
+    // out/404.html, Next's not-found page, with a real 404 status.
+    "not_found_handling": "404-page",
+    // Next exports /sketches/p5/x as sketches/p5/x.html: served at
+    // /sketches/p5/x, the URLs the full server always used (no trailing slash).
+    "html_handling": "auto-trailing-slash"
+  }
+}

@@ -46,9 +46,6 @@ import {
 } from "react-dom";
 import Github from "@/components/ui/GithubIcon";
 import {
-  subscribeUser, unsubscribeUser
-} from "@/app/actions/notifications";
-import {
   pauseSketchForNav
 } from "@/lib/navigationPauseSignal";
 import {
@@ -91,6 +88,28 @@ type NavLink = {
 };
 
 const BACKEND_RECORDING = process.env.NEXT_PUBLIC_BACKEND_RECORDING === "true";
+
+/* Push subscriptions live on the full server (api/push/*); the menu only
+   offers them when it was built with the backend and notifications on. */
+async function postPush(
+  url: string, body: unknown
+) {
+  const response = await fetch(
+    url,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify( body )
+    }
+  );
+
+  if ( !response.ok ) {
+    throw new Error( `${ url } answered ${ response.status }` );
+  }
+}
+
 const NOTIFICATIONS_ENABLED = process.env.NEXT_PUBLIC_NOTIFICATIONS === "true";
 const SHOW_NOTIFICATIONS = BACKEND_RECORDING && NOTIFICATIONS_ENABLED;
 const GITHUB_REPO_URL = process.env.NEXT_PUBLIC_GITHUB_REPO_URL;
@@ -375,7 +394,10 @@ function MenuBar( {
         } );
 
         setPushSubscription( sub );
-        await subscribeUser( JSON.parse( JSON.stringify( sub ) ) );
+        await postPush(
+          "/api/push/subscribe",
+          sub.toJSON()
+        );
       } catch( error ) {
         console.error(
           "Error subscribing to push:",
@@ -399,7 +421,12 @@ function MenuBar( {
 
       try {
         await pushSubscription.unsubscribe();
-        await unsubscribeUser( pushSubscription.endpoint );
+        await postPush(
+          "/api/push/unsubscribe",
+          {
+            endpoint: pushSubscription.endpoint
+          }
+        );
         setPushSubscription( null );
       } catch( error ) {
         console.error(

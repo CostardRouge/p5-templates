@@ -9,6 +9,7 @@ import {
 } from "react";
 
 import {
+  ENGINE_CATALOG,
   isKnownEngine
 } from "@/engines/engineCatalog";
 import {
@@ -22,6 +23,15 @@ import {
 } from "../getSketchesData";
 
 type RouteParams = { engine: string };
+
+/* One page per engine, prerendered (the static front needs the list). */
+export const dynamicParams = false;
+
+export function generateStaticParams(): RouteParams[] {
+  return ENGINE_CATALOG.map( ( entry ) => ( {
+    engine: entry.id
+  } ) );
+}
 
 export async function generateMetadata( {
   params

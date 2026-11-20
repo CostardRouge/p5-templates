@@ -1,0 +1,26 @@
+# Response headers of the static front on Cloudflare (wrangler.jsonc). The full
+# server sends the same from next.config.ts's headers() and its routes;
+# src/app/__tests__/staticFront.test.ts keeps the two in step.
+
+# An embed is meant to be framed by other sites (steevepommier.com/motion).
+/embed/*
+  Content-Security-Policy: frame-ancestors *
+
+# A sketch's form, read from the browser by steevepommier.com's control panels.
+/api/sketches/form/*
+  Access-Control-Allow-Origin: *
+  Content-Type: application/json
+
+/api/config
+  Content-Type: application/json
+
+# Next writes the share cards without an extension.
+/opengraph-image
+  Content-Type: image/png
+/twitter-image
+  Content-Type: image/png
+
+# Thumbnails and preview loops, shown by steevepommier.com's gallery
+# (worker/ranges.js serves them and sets the same header).
+/assets/images/templates/*
+  Access-Control-Allow-Origin: *
