@@ -45,6 +45,13 @@ import {
 import {
   planFreeSlots
 } from "../../planner/slots";
+// Statistics' one hold on the plan (`src/lib/stats/plan.ts`): without it, drop `signal` and `listening` below.
+import {
+  knownSends
+} from "../../stats/listen";
+import {
+  heardPlan, type PlanListening
+} from "../../stats/plan";
 import type {
   StudioHandles
 } from "../handles";
@@ -71,6 +78,8 @@ interface Reading {
   rhythm: string;
   /** Why Postiz's calendar could not be read, when it could not. */
   calendarError: string | null;
+  /** Whether measured results moved anything, and on which figures. */
+  listening: PlanListening;
 }
 
 async function readPlan( h: StudioHandles ): Promise<Reading> {
@@ -94,6 +103,17 @@ async function readPlan( h: StudioHandles ): Promise<Reading> {
     allPublications(),
     posts
   );
+  const heard = heardPlan( {
+    sends: knownSends(
+      allPublications(),
+      posts,
+      conn?.channels ?? [],
+      now
+    ),
+    catalogue,
+    rhythm,
+    now
+  } );
 
   return {
     catalogue,
@@ -102,7 +122,9 @@ async function readPlan( h: StudioHandles ): Promise<Reading> {
     timeZone: rhythm.timeZone,
     rhythm: rhythm.slots.map( slotHead ).join( " · " ),
     calendarError,
+    listening: heard.listening,
     slots: planSlots( {
+      signal: heard.signal,
       catalogue,
       slots: planFreeSlots(
         rhythm,
@@ -135,6 +157,9 @@ function describe(
       pillar: p.pillar,
       favorite: p.favorite,
       why: p.why,
+      ...( p.heard ? {
+        heard: p.heard
+      } : {} ),
       key: p.key,
       ...( p.reel ? {
         reel: p.reel.scenes.map( ( scene ) => `p5/${ scene }` ),
@@ -154,6 +179,7 @@ async function answer( h: StudioHandles ) {
     mix: choices.mix,
     gapWeeks: choices.gapWeeks,
     weeks: PLAN_WEEKS,
+    listening: reading.listening,
     slots: reading.slots.map( ( slot ) => describe(
       slot,
       reading.timeZone
@@ -298,7 +324,7 @@ export function planCommands( h: StudioHandles ): CommandSpec[] {
     {
       id: "plan.get",
       title: "Read the plan",
-      description: "What to post next: one line per FREE slot of the person's rhythm over the next five weeks, each with what is proposed for it and why — a new sketch in the order of its series, a favourite not posted recently, a whole SERIES as one Reel, or a RECAP of the month or the year. The same plan as the gallery's Plan view. Answers { rhythm, mix, gapWeeks, slots: [{ at, when, state, sketch, title, pillar, why, key, reel?, seconds? }] }; a series or a recap has `reel` (its sketches in order) and its `sketch` is the empty host it is built on. It reads the calendar; it sends nothing.",
+      description: "What to post next: one line per FREE slot of the person's rhythm over the next five weeks, each with what is proposed for it and why — a new sketch in the order of its series, a favourite not posted recently, a whole SERIES as one Reel, or a RECAP of the month or the year. The same plan as the gallery's Plan view. Answers { rhythm, mix, gapWeeks, listening, slots: [{ at, when, state, sketch, title, pillar, why, key, reel?, seconds? }] }; a series or a recap has `reel` (its sketches in order) and its `sketch` is the empty host it is built on. `listening` says whether post statistics moved anything ({ level: off | show | listen, measured, moving, note }) — when they did, the line's `why` ends with what moved it and on which figures, also given alone as `heard`; stats.* reads the figures themselves. It reads the calendar; it sends nothing.",
       run: () => answer( h )
     },
     {

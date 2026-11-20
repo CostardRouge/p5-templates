@@ -61,7 +61,8 @@ export default function GalleryCard( {
   now,
   onOpen,
   onRename,
-  onRemove
+  onRemove,
+  stat
 }: {
   entry: GalleryEntry;
   /** Its sends, newest first. */
@@ -73,6 +74,8 @@ export default function GalleryCard( {
   onOpen: ( entry: GalleryEntry ) => void;
   onRename: ( entry: GalleryEntry, title: string ) => void;
   onRemove: ( entry: GalleryEntry ) => void;
+  /** What its newest send did, in one figure (`IG 4,210 reached`) in place of the word «published» — statistics', absent when they are off. */
+  stat?: string | null;
 } ) {
   const latest = sends[ 0 ] ?? null;
   const latestState = latest ? sendState( latest ) : null;
@@ -135,11 +138,11 @@ export default function GalleryCard( {
             latestState === "failed" && "ring-1 ring-red-500"
           ) }>
             <SendMarks send={ latest } size="xs" />
-            <span className="truncate font-mono text-[10px] text-foreground">
+            <span className="truncate font-mono text-[10px] text-foreground" data-piece-stat={ stat ? "true" : undefined }>
               {latestState === "planned" ? weekdayTime(
                 latest.at,
                 tz
-              ) : SEND_WORD[ latestState ?? "unknown" ]}
+              ) : latestState === "published" && stat ? stat : SEND_WORD[ latestState ?? "unknown" ]}
             </span>
           </span>
         )}

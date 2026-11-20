@@ -16,6 +16,19 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
 
 ### Added
 
+- **Results**, off unless you turn them on (Menu › Publishing › Results): Sketchbook can read what each post did
+  from your Postiz — reach or views, likes, comments, shares, saves, as each network gives them — and show it where
+  the post already is: under each account in a sketch's sheet, on the piece's card, and in «What works» under the
+  Plan, by pillar, by series and by slot of your rhythm. A post is compared only once it was read seven days after it
+  went out, against your own account's usual; a group with too few posts says so instead of giving a number, and a
+  network that gives nothing (Bluesky) says that. The figures are read by your browser, a few posts at a time, and
+  kept in it only.
+- **A Plan that listens**, the third position of that same setting: a favourite whose last post did well comes back
+  sooner, a new sketch of a series that does well moves up, and each week the stronger kind of post takes your
+  strongest slot — never more than three places, never changing the mix you chose, and each line it moved says why,
+  with the figures. Turn it off and the Plan is exactly what it was.
+- Claude can read those figures from a connected studio tab (`stats.status`, `stats.read`, `stats.sketch`,
+  `stats.post`, `stats.summary`, `stats.accounts`), and `plan.get` says what the Plan listened to.
 - Claude can do more from a connected studio tab: cut any sketches into one reel — or every favourite of a series
   (`reel.build`) —, pin a reel or a recap of a given month to a slot of the Plan (`plan.propose`), list what you
   already posted (`plan.posted`), and filter sketches by series and by favourite (`sketches.list`).
