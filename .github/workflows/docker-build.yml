@@ -1,26 +1,17 @@
 name: Build & Push Docker Image
 
-# The full server image (recording, notifications, the debug pages) for the NAS. Since the front
-# went static on Cloudflare (docs/memory/deployment.md, "The front is static" and "The image is
-# built at release"), the public site no longer waits on this image: it is built once per release,
-# not on every push to main, which saved 7–11 min of runner time per merge for an image nobody
-# pulled in between.
+# The full server image (recording, notifications, the debug pages) for a self-hosted backend.
+# Built by hand only (2026-11-20, docs/memory/deployment.md "Production is the static front
+# alone"): the public site is the static export Cloudflare deploys on every push, and no server
+# runs this image any more, so building it at each release cost ~11 min of runner for nobody.
 #
-# Two ways in:
-# - After the Release workflow finishes on main. Release runs on every push that touches
-#   CHANGELOG.md or package.json, and publishes only when the version changed; this job reads the
-#   version at that commit and builds only when its tag v<version> exists and the image does not
-#   yet carry <version>. Every other Release run ends here in a few seconds.
-#   A workflow_run, not a tag push: release.yml makes the tag with GITHUB_TOKEN, and a push made
-#   with that token starts no workflow.
-# - By hand ("Run workflow"), which always builds main's head: a hotfix, or the image of a commit
-#   between releases.
+# "Run workflow" builds the ref you pick in its menu:
+# - a release tag (vX.Y.Z): the image gets X.Y.Z, X.Y and latest;
+# - main: the image gets main and latest;
+# - any other branch: only its sha-<short> tag, to try a build without moving latest.
+# Then, if DEPLOY_WEBHOOK_URL is set, it asks Watchtower to re-pull (deploy/README.md).
 
 on:
-  workflow_run:
-    workflows: [Release]
-    types: [completed]
-    branches: [main]
   workflow_dispatch:
 
 concurrency:
@@ -29,10 +20,6 @@ concurrency:
 
 jobs:
   build-and-push:
-    # A Release run from a pull request never builds; a failed one neither.
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event != 'pull_request')
     runs-on: ubuntu-24.04
     timeout-minutes: 40
 
@@ -53,11 +40,23 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7
-        with:
-          # The commit the Release run published from, not main's head: main may have moved.
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
-          fetch-tags: true
-          fetch-depth: 0
+
+      - name: Which tags?
+        id: release
+        run: |
+          is_release=false
+          is_main=false
+          if [ "$GITHUB_REF_TYPE" = tag ] && [[ "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            version=${GITHUB_REF_NAME#v}
+            echo "version=$version" >> "$GITHUB_OUTPUT"
+            echo "minor=${version%.*}" >> "$GITHUB_OUTPUT"
+            is_release=true
+          elif [ "$GITHUB_REF" = refs/heads/main ]; then
+            is_main=true
+          fi
+          echo "release=$is_release" >> "$GITHUB_OUTPUT"
+          echo "main=$is_main" >> "$GITHUB_OUTPUT"
+          echo "Building $IMAGE from $GITHUB_REF_NAME ($(git rev-parse --short HEAD))." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v4
@@ -66,53 +65,24 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Is there a new release to build?
-        id: release
-        run: |
-          version=$(node -p 'require("./package.json").version')
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-          minor=${version%.*}
-          echo "minor=$minor" >> "$GITHUB_OUTPUT"
-          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then
-            echo "build=true" >> "$GITHUB_OUTPUT"
-            echo "Built by hand from $(git rev-parse --short HEAD) (package.json says $version)." >> "$GITHUB_STEP_SUMMARY"
-            exit 0
-          fi
-          if ! git rev-parse -q --verify "refs/tags/v$version" > /dev/null; then
-            echo "build=false" >> "$GITHUB_OUTPUT"
-            echo "No tag v$version: this Release run published nothing, no image to build." >> "$GITHUB_STEP_SUMMARY"
-            exit 0
-          fi
-          if docker manifest inspect "$IMAGE:$version" > /dev/null 2>&1; then
-            echo "build=false" >> "$GITHUB_OUTPUT"
-            echo "$IMAGE:$version already exists." >> "$GITHUB_STEP_SUMMARY"
-            exit 0
-          fi
-          echo "build=true" >> "$GITHUB_OUTPUT"
-          echo "Building $IMAGE:$version for the release v$version." >> "$GITHUB_STEP_SUMMARY"
-
       - name: Docker metadata (tags & labels)
-        if: steps.release.outputs.build == 'true'
         id: meta
         uses: docker/metadata-action@v6
         with:
           images: ${{ env.IMAGE }}
-          # `main` + `latest` move (what Watchtower and the NAS compose re-pull);
-          # the version tags and `sha-<short>` are what you pin to for a rollback.
-          # A build by hand moves `main` and `latest` and adds its sha, never a version tag.
+          # `latest` (and `main`) move: what Watchtower and the NAS compose re-pull.
+          # The version tags and `sha-<short>` are what you pin to for a rollback.
           tags: |
-            type=raw,value=main
-            type=raw,value=latest
-            type=raw,value=${{ steps.release.outputs.version }},enable=${{ github.event_name == 'workflow_run' }}
-            type=raw,value=${{ steps.release.outputs.minor }},enable=${{ github.event_name == 'workflow_run' }}
+            type=raw,value=latest,enable=${{ steps.release.outputs.release == 'true' || steps.release.outputs.main == 'true' }}
+            type=raw,value=main,enable=${{ steps.release.outputs.main == 'true' }}
+            type=raw,value=${{ steps.release.outputs.version }},enable=${{ steps.release.outputs.release == 'true' }}
+            type=raw,value=${{ steps.release.outputs.minor }},enable=${{ steps.release.outputs.release == 'true' }}
             type=sha,format=short
 
       - name: Set up Docker Buildx
-        if: steps.release.outputs.build == 'true'
         uses: docker/setup-buildx-action@v4
 
       - name: Build and push
-        if: steps.release.outputs.build == 'true'
         uses: docker/build-push-action@v7
         with:
           context: .
@@ -120,17 +90,18 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           # GitHub Actions layer cache, so unchanged layers (base image, deps)
-          # aren't rebuilt every release.
+          # aren't rebuilt every time.
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
             BACKEND_RECORDING=true
             NOTIFICATIONS=false
+            LIVE_THUMBNAIL=true
             INTERACTION_BINDINGS=true
             NEXT_PUBLIC_GITHUB_REPO_URL=${{ vars['NEXT_PUBLIC_GITHUB_REPO_URL'] }}
 
       - name: Trigger redeploy (Watchtower HTTP API)
-        if: steps.release.outputs.build == 'true' && env.DEPLOY_WEBHOOK_URL != ''
+        if: env.DEPLOY_WEBHOOK_URL != ''
         run: |
           echo "Triggering Watchtower update…"
           curl -fsS --retry 3 --retry-delay 5 -X POST \

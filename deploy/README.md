@@ -6,14 +6,15 @@ export Cloudflare deploys on every push to `main` — `docs/memory/deployment.md
 "The front is static".)
 
 ```
-release merged ─▶ Release workflow (tag vX.Y.Z)
-                   └▶ docker-build.yml ─▶ build + push image to GHCR
-                                         └▶ POST /v1/update ─▶ Watchtower (on the NAS)
-                                                               └▶ re-pull image + recreate app
+Run workflow (on a tag vX.Y.Z or main) ─▶ docker-build.yml ─▶ build + push image to GHCR
+                                                             └▶ POST /v1/update ─▶ Watchtower (on the NAS)
+                                                                                   └▶ re-pull image + recreate app
 ```
 
-A push to `main` that is not a release builds no image; "Run workflow" on
-*Build & Push Docker Image* builds `main`'s head by hand.
+No push and no release builds an image any more (2026-11-20: no server runs it).
+"Run workflow" on *Build & Push Docker Image*, with a release tag picked in its
+menu, builds `:X.Y.Z`, `:X.Y` and `:latest`; on `main` it builds `:main` and
+`:latest`.
 
 Two moving parts replace the old "Watchtower polls Docker Hub every minute":
 
