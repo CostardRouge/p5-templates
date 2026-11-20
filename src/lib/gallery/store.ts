@@ -5,7 +5,7 @@ import {
   memoryBackend
 } from "./memoryBackend";
 import {
-  summarize, type GalleryEntry, type GalleryEntrySummary, type GalleryFilter
+  summarize, type GalleryEntry, type GalleryEntrySummary, type GalleryFilter, type VariationMark
 } from "./types";
 
 /** The five operations a backend provides; the store does the rest. */
@@ -135,6 +135,32 @@ export class GalleryStore {
     this.notify();
 
     return renamed;
+  }
+
+  /** Mark an entry as a variation of its sketch — a candidate, or accepted — or take the mark back (null). */
+  async mark(
+    id: string, variation: VariationMark | null
+  ): Promise<GalleryEntry | undefined> {
+    const entry = await this.backend.get( id );
+
+    if ( !entry ) {
+      return undefined;
+    }
+
+    const {
+      variation: _old, ...rest
+    } = entry;
+    const marked: GalleryEntry = variation
+      ? {
+        ...rest,
+        variation
+      }
+      : rest;
+
+    await this.backend.put( marked );
+    this.notify();
+
+    return marked;
   }
 
   async remove( id: string ): Promise<boolean> {

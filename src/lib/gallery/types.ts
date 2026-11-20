@@ -36,6 +36,46 @@ export interface GalleryEntry {
   height: number;
   /** ~240 px wide JPEG of the frame on screen when kept, or null. */
   thumbnail: Blob | null;
+  /** Set when the piece is a VARIATION of its sketch, for a campaign (`src/lib/variations/kept.ts`). */
+  variation?: VariationMark;
+}
+
+/**
+ * A kept piece that is another LOOK of its sketch (lab 9): a `candidate` is
+ * proposed — by an agent, or by the person — and waits; only the person makes
+ * it `accepted`, and only accepted pieces enter a Variations post.
+ */
+export interface VariationMark {
+  state: "candidate" | "accepted";
+  by: "agent" | "person";
+  /** What changed against the sketch as it was: `Palette: Sunset`. */
+  label?: string;
+}
+
+/** A stored mark read back, whatever it holds; undefined when it is not one. */
+export function readVariationMark( raw: unknown ): VariationMark | undefined {
+  if ( typeof raw !== "object" || raw === null ) {
+    return undefined;
+  }
+
+  const mark = raw as Record<string, unknown>;
+
+  if ( mark.state !== "candidate" && mark.state !== "accepted" ) {
+    return undefined;
+  }
+
+  return {
+    state: mark.state,
+    by: mark.by === "agent" ? "agent" : "person",
+    ...( typeof mark.label === "string" && mark.label.trim()
+      ? {
+        label: mark.label.trim().slice(
+          0,
+          160
+        )
+      }
+      : {} )
+  };
 }
 
 /** An entry without its heavy fields, what a list answers. */

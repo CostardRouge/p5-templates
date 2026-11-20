@@ -46,7 +46,7 @@ import {
   postizHome
 } from "@/lib/postiz/client";
 import {
-  forgetPosts
+  forgetPosts, patchDraft
 } from "@/lib/postiz/publishStore";
 import {
   askPlanned, askSendAgain
@@ -82,6 +82,18 @@ import {
   itemTarget, type CalendarItem, type SheetTarget
 } from "./items";
 import PlanView from "./PlanView";
+import {
+  askStage, stageBeat
+} from "@/lib/planner/beatStage";
+import {
+  routeBeat
+} from "@/lib/planner/beatVariant";
+import {
+  beatOf
+} from "@/lib/planner/campaign";
+import {
+  markBeatOpened
+} from "@/lib/planner/campaignStore";
 import SketchSheet from "./SketchSheet";
 import {
   useGallery
@@ -511,24 +523,74 @@ export default function GalleryPage( {
     }
     // A series or a recap is a document of its own (`reel.ts`), handed to the
     // empty sketch through the gallery's crossing, with the words it starts from.
-    const reel = reelDocument( slot.proposal );
+    // A campaign's beat stages its own piece (`beatStage.ts`): the carousel of
+    // accepted variations, the breakdown, the series' reel, the words card.
+    const beat = beatOf( slot.proposal );
+    const staged = beat
+      ? stageBeat(
+        slot.proposal,
+        beat,
+        entries ?? []
+      )
+      : null;
+
+    if ( staged && !staged.ok ) {
+      setToast( {
+        message: staged.reason,
+        type: "error"
+      } );
+
+      return;
+    }
+
+    const reel = staged?.ok ? staged.staged.document : reelDocument( slot.proposal );
 
     if ( reel ) {
       if ( !writePendingImport( reel ) ) {
         setToast( {
-          message: "Could not hand the reel over (storage unavailable) — nothing was opened.",
+          message: "Could not hand the piece over (storage unavailable) — nothing was opened.",
           type: "error"
         } );
 
         return;
       }
-      markOpened( slot.proposal.key );
+      if ( !beat ) {
+        markOpened( slot.proposal.key );
+      }
+    }
+    if ( beat && staged?.ok ) {
+      if ( staged.staged.stage ) {
+        askStage(
+          slot.proposal.sketchKey,
+          staged.staged.stage
+        );
+      }
+      // Opened is not posted: the post made on this slot's day will be this beat's.
+      markBeatOpened(
+        beat.id,
+        beat.beat,
+        slot.slot
+      );
+      patchDraft(
+        slot.proposal.sketchKey,
+        {
+          trial: beat.trial
+        }
+      );
+      // The variations go out as a carousel; any other beat of the sketch as it usually does.
+      if ( beat.kind === "sketch" || beat.kind === "variations" || beat.kind === "process" ) {
+        routeBeat(
+          slot.proposal.sketchKey,
+          Array.isArray( reel?.slides ) && reel.slides.length > 1,
+          gp.conn?.channels.map( ( channel ) => channel.id ) ?? []
+        );
+      }
     }
     if ( gp.conn ) {
       askPlanned(
         slot.proposal.sketchKey,
         slot.slot,
-        reelCaption( slot.proposal )
+        staged?.ok ? staged.staged.caption : reelCaption( slot.proposal )
       );
     }
     router.push( `/sketches/${ slot.proposal.path }` );
@@ -802,6 +864,7 @@ export default function GalleryPage( {
 
       {view === "plan" && (
         <PlanView
+          entries={ entries ?? undefined }
           rhythm={ gp.conn?.rhythm ?? null }
           posts={ gp.posts }
           posted={ posted }
