@@ -9,6 +9,8 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-11-20 — Quadratrix
+
 ### Added
 
 - A Plan in the gallery, beside Month, Week and Grid: for each free slot of your rhythm over the next five weeks, a
