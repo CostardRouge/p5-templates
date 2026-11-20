@@ -49,8 +49,17 @@ import {
   forgetPosts
 } from "@/lib/postiz/publishStore";
 import {
-  askSendAgain
+  askPlanned, askSendAgain
 } from "@/lib/postiz/reopen";
+import {
+  openPublishing
+} from "@/lib/postiz/usePostiz";
+import type {
+  PlanSlot
+} from "@/lib/planner/planner";
+import {
+  postedFrom
+} from "@/lib/planner/posted";
 import {
   localDay
 } from "@/lib/postiz/rhythm";
@@ -63,6 +72,7 @@ import {
 import {
   itemTarget, type CalendarItem, type SheetTarget
 } from "./items";
+import PlanView from "./PlanView";
 import SketchSheet from "./SketchSheet";
 import {
   useGallery
@@ -89,7 +99,8 @@ function browserZone(): string | null {
 /**
  * The gallery: every piece kept in THIS browser (`src/lib/gallery/`) and —
  * lab 3 — what each became on the networks through his Postiz, in ONE of
- * three views, Month (the default), Week or Grid, remembered by a cookie so
+ * four views, Month (the default), Week, Grid or — lab 7 — the Plan of what
+ * to post next, remembered by a cookie so
  * the server paints the page in its final view (`view.ts`). Everything that
  * loads late (IndexedDB, Postiz) lands in frames already sized for it: a
  * fixed six-week month, a week whose days only grow downwards at the page's
@@ -267,6 +278,16 @@ export default function GalleryPage( {
       gp.conn?.channels,
       all,
       now
+    ]
+  );
+  const posted = useMemo(
+    () => postedFrom(
+      gp.publications,
+      gp.posts
+    ),
+    [
+      gp.publications,
+      gp.posts
     ]
   );
   const byPiece = useMemo(
@@ -461,6 +482,23 @@ export default function GalleryPage( {
     } else {
       router.push( `/sketches/${ send.sketchKey }` );
     }
+  };
+
+  /**
+   * The Plan's one send-side gesture (lab 7): the sketch opens on Export ›
+   * Publish with the proposed slot as its When. Nothing leaves from here.
+   */
+  const openPlanned = ( slot: PlanSlot ) => {
+    if ( !slot.proposal ) {
+      return;
+    }
+    if ( gp.conn ) {
+      askPlanned(
+        slot.proposal.sketchKey,
+        slot.slot
+      );
+    }
+    router.push( `/sketches/${ slot.proposal.path }` );
   };
 
   const importInputRef = useRef<HTMLInputElement>( null );
@@ -727,6 +765,23 @@ export default function GalleryPage( {
             </div>
           )}
         </section>
+      )}
+
+      {view === "plan" && (
+        <PlanView
+          rhythm={ gp.conn?.rhythm ?? null }
+          posts={ gp.posts }
+          posted={ posted }
+          known={ sendsKnown && ( !gp.conn || gp.posts !== null ) }
+          now={ now }
+          onOpen={ openPlanned }
+          onSheet={ ( sketchKey ) => setSheet( {
+            sketchKey,
+            pieceId: null,
+            sendKey: null
+          } ) }
+          onRhythm={ openPublishing }
+        />
       )}
 
       {sheet && (

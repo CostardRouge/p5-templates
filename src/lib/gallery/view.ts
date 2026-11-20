@@ -1,6 +1,6 @@
 /**
- * Which view the gallery opens on (lab 3: Month · Week · Grid, Month by
- * default, else the last one chosen) and the time zone its calendars use —
+ * Which view the gallery opens on (lab 3: Month · Week · Grid, and lab 7's
+ * Plan; Month by default, else the last one chosen) and the time zone its calendars use —
  * kept in a COOKIE rather than `localStorage` so the SERVER renders the page
  * in its final view: a client read would paint the default first and swap,
  * which is the reflow the maintainer ruled out (`docs/memory/gallery.md`).
@@ -9,12 +9,13 @@
  * `document`.
  */
 
-export type GalleryView = "month" | "week" | "grid";
+export type GalleryView = "month" | "week" | "grid" | "plan";
 
 export const GALLERY_VIEWS: readonly GalleryView[] = [
   "month",
   "week",
-  "grid"
+  "grid",
+  "plan"
 ];
 
 export const DEFAULT_GALLERY_VIEW: GalleryView = "month";

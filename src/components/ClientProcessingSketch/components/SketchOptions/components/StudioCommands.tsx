@@ -37,6 +37,9 @@ import {
   publishCommands
 } from "@/lib/agent/commands/publishCommands";
 import {
+  planCommands
+} from "@/lib/agent/commands/planCommands";
+import {
   PostizClient
 } from "@/lib/postiz/client";
 import {
@@ -842,6 +845,7 @@ export default function StudioCommands( {
           ...slideCommands( handles ),
           ...exportCommands( handles ),
           ...publishCommands( handles ),
+          ...planCommands( handles ),
           ...assetCommands( handles ),
           ...navigationCommands( handles ),
           ...galleryCommands( handles ),

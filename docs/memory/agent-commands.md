@@ -100,3 +100,7 @@ Claude Desktop and Claude Code each start their own `sketchbook-studio-mcp.mjs`,
 ## Publishing commands (2026-11-10)
 
 `publish.*` schedule an export on the person's own Postiz through the same post the Export dialog's Publish mode edits; an agent sends only a caption the person approved. Their rules live in `publishing.md`.
+
+## Plan commands (2026-11-20)
+
+`plan.*` read and steer the gallery's Plan — the calculation and the choices of `src/lib/planner/`, so the view and an agent see one plan. They only propose; the rules, and why there is no `plan.approve`, live in `publishing.md` («The Plan»).

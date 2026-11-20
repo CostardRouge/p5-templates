@@ -40,10 +40,10 @@ import ImportSuccessBanner, {
 import SketchSettings from "./components/SketchSettings/SketchSettings";
 import CaptureDialog from "./components/CaptureDialog";
 import {
-  patchDraft
+  patchDraft, setWhen
 } from "@/lib/postiz/publishStore";
 import {
-  takeSendAgain
+  takePlanned, takeSendAgain
 } from "@/lib/postiz/reopen";
 import TransportBar from "./components/TransportBar";
 import UndoRedo from "./components/UndoRedo";
@@ -314,6 +314,27 @@ export default function SketchOptions( {
           }
         );
         // eslint-disable-next-line react-hooks/set-state-in-effect -- a one-time handoff from another page, read on mount
+        setCaptureOpen( true );
+      }
+
+      // The gallery's Plan (lab 7): the same crossing with a WHEN — this
+      // sketch opens on Export › Publish, on the slot the plan proposed.
+      const slot = takePlanned( key );
+
+      if ( slot ) {
+        patchDraft(
+          key,
+          {
+            mode: "publish"
+          }
+        );
+        setWhen(
+          key,
+          {
+            kind: "at",
+            at: slot
+          }
+        );
         setCaptureOpen( true );
       }
     },

@@ -11,6 +11,13 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
 
 ### Added
 
+- A Plan in the gallery, beside Month, Week and Grid: for each free slot of your rhythm over the next five weeks, a
+  sketch to post — one made lately, in the order of its series, or one of your favourites not posted recently —
+  with why. Open it on Export › Publish already set to that slot, ask for another, or skip the slot; choose the
+  mix of new work and favourites and how long before a sketch may come back. Nothing is sent from the Plan.
+- Claude can read and steer that plan from a connected studio tab (`plan.get`, `plan.propose`, `plan.another`,
+  `plan.skip`, `plan.set`, `plan.reset`, `plan.open`): what it pins shows in the gallery as «Pinned by Claude».
+  It proposes only — a post still needs your approval of its words. `sketches.list` can list your favourites.
 - A fourth Materials sketch, Sand: a sea of dunes under a low sun, their crests cutting lit slopes from shaded
   faces, with veils of sand streaming over them, plumes spilling off the crests and ripples creeping in the wind.
   Dunes, wind, sun, sky, sand colour and camera are in the form.

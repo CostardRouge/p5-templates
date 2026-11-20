@@ -23,14 +23,22 @@ export type CatalogueEntry = {
   /** From the sketch's `sketch.json` (`sketches.md`); absent until written. */
   description?: string;
   tags?: string[];
+  /** The star set from steevepommier.com's favourites editor (`sketch.json`). */
+  favorite?: boolean;
+  createdAt?: string;
+  hasPreview?: boolean;
 };
 
 /** What `sketches.list` says of one sketch: its id, and what it is when known. */
 export function catalogueSummary( entry: CatalogueEntry ): { id: string;
   description?: string;
-  tags?: string[] } {
+  tags?: string[];
+  favorite?: true } {
   return {
     id: sketchPathOf( entry ),
+    ...( entry.favorite ? {
+      favorite: true as const
+    } : {} ),
     ...( entry.description ? {
       description: entry.description
     } : {} ),
@@ -71,7 +79,7 @@ export function navigationCommands( h: StudioHandles ): CommandSpec[] {
     {
       id: "sketches.list",
       title: "List sketches",
-      description: "The gallery: every sketch as { id: \"engine/category/name\", description, tags } — the description and tags exist for the sketches someone has described (the answer counts them), the others are named only. Narrow by engine, by a tag, or by text found in the id, the description or a tag. studio.open takes an id.",
+      description: "The gallery: every sketch as { id: \"engine/category/name\", description, tags, favorite } — the description and tags exist for the sketches someone has described (the answer counts them), the others are named only. Narrow by engine, by a tag, or by text found in the id, the description or a tag. studio.open takes an id.",
       params: {
         engine: {
           type: "string",
@@ -94,6 +102,11 @@ export function navigationCommands( h: StudioHandles ): CommandSpec[] {
           description: "Only sketches carrying this tag (the answer's `tags` lists every tag in use with its count)",
           optional: true
         },
+        favorite: {
+          type: "boolean",
+          description: "Only the person's favourites (the star they set on their site)",
+          optional: true
+        },
         includeHidden: {
           type: "boolean",
           description: "Also list sketches hidden from the gallery (drafts, utilities)",
@@ -105,7 +118,8 @@ export function navigationCommands( h: StudioHandles ): CommandSpec[] {
         const tag = params.tag === undefined ? undefined : String( params.tag ).toLowerCase();
         const visible = h.navigation.catalogue()
           .filter( ( entry ) => ( params.includeHidden || !entry.hiddenFromGallery ) &&
-            ( params.engine === undefined || entry.engine === params.engine ) );
+            ( params.engine === undefined || entry.engine === params.engine ) &&
+            ( !params.favorite || Boolean( entry.favorite ) ) );
         const tags: Record<string, number> = {};
 
         for ( const entry of visible ) {
