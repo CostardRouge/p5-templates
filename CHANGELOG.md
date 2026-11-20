@@ -41,12 +41,14 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
 
 ### Changed
 
+- Self-hosting no longer needs Redis, MinIO or PostgreSQL: `docker compose up` starts the app alone, and the
+  recording backend joins with `docker compose --profile backend up` (or `make dc-up-backend`). The app skips its
+  database migrations unless backend recording or notifications are on.
 - The studio is served from Cloudflare's network as a static site: pages, stills and preview loops load from the
   data centre nearest you, and the site no longer depends on a home server being up. Recording and the recordings
   page are not part of it; the gallery restores its saved layout once the page has loaded.
 - The heavy body-tracking model is downloaded from Google's model library instead of this site (it is larger than
   what Cloudflare serves per file); the other tracking models are unchanged.
-
 - In Publish, the Export dialog widens and shows the variants and the Post panel side by side, each scrolling on
   its own; the table keeps Posts as and leaves Rate and Slides to Save. On a phone, Publish has two tabs under the
   title, Variants and Post (Post first). Save is the dialog it always was.
@@ -73,6 +75,8 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
 
 ### Fixed
 
+- A piece exported or published at another size than its sketch's is kept in the gallery with its real picture;
+  it used to get a black thumbnail. Pieces already kept with a black one show the sketch's own picture instead.
 - After publishing, the screen now shows what really happened on each account — published (with a link to the
   post), queued or failed — instead of saying "publishing" for all of them. A failed account shows what Postiz said
   and what to do about it, and can be sent the same files again, or taken back to the variants to pick another one.
@@ -83,6 +87,11 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
   gives its graphics context back when you leave it, where before every visited sketch kept one until the page
   failed with an empty canvas. When a browser still refuses WebGL (no hardware acceleration, too many 3D tabs), the
   sketch says so on the page instead of staying blank and retrying every frame.
+
+### Removed
+
+- The unused saved-preset tables (`Template`, `TemplateSnapshot`) are dropped by a database migration; the gallery
+  has long done their job.
 
 ## [1.3.0] - 2026-11-11 — Parabola
 

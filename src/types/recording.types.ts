@@ -24,7 +24,6 @@ export type JobStatusEnum = ( typeof validStatuses )[ number ];
  */
 export type JobModel = {
   id: JobId;
-  snapshotId: string | null;
   sketch: string;
   status: JobStatusEnum;
   progress: number; // 0–100
