@@ -9,6 +9,11 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
 
 ## [Unreleased]
 
+### Changed
+
+- Self-hosting: the Docker image `ghcr.io/costardrouge/p5-templates` is no longer published with each release.
+  1.4.0 is the last one built automatically; build your own from the repository, or ask for a build of a release.
+
 ## [1.4.0] - 2026-11-20 — Quadratrix
 
 ### Added
