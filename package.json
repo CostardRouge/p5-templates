@@ -13,7 +13,7 @@
     "dev": "next dev --turbopack",
     "watch": "node scripts/dev-watch.mjs",
     "build": "next build",
-    "build:static": "STATIC_EXPORT=true BACKEND_RECORDING=false NOTIFICATIONS=false LIVE_THUMBNAIL=false PREVIEW_ON_HOVER=true INTERACTION_BINDINGS=true next build",
+    "build:static": "STATIC_EXPORT=true BACKEND_RECORDING=false NOTIFICATIONS=false INTERACTION_BINDINGS=true next build",
     "start": "next start",
     "lint": "eslint --cache --cache-location .next/cache/eslint src scripts eslint.config.mjs next.config.ts postcss.config.mjs",
     "lint:fix": "eslint --cache --cache-location .next/cache/eslint --fix src scripts eslint.config.mjs next.config.ts postcss.config.mjs",

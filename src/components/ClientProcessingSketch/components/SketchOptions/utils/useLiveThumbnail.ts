@@ -3,12 +3,11 @@ import {
 } from "react";
 import useSketch from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
 import {
+  useLiveSlideThumbnail
+} from "@/hooks/useLiveSlideThumbnail";
+import {
   getActiveSketchCanvas
 } from "./thumbnailUtils";
-
-// Resolved once at module load — zero runtime cost when disabled.
-const LIVE_THUMBNAIL_ENABLED =
-  process.env.NEXT_PUBLIC_LIVE_THUMBNAIL === "true";
 
 const TARGET_FPS = 30;
 const FRAME_INTERVAL = 1000 / TARGET_FPS;
@@ -48,9 +47,10 @@ function blitToThumbnail(
 }
 
 /**
- * When NEXT_PUBLIC_LIVE_THUMBNAIL=true, mirrors the active sketch's current
- * frame into `thumbCanvasRef` at ~30 fps. Only runs while `isActive` is true;
- * completely idle for inactive slides.
+ * While the "Live slide thumbnail" setting is on (the default, see
+ * `useLiveSlideThumbnail`), mirrors the active sketch's current frame into
+ * `thumbCanvasRef` at ~30 fps. Only runs while `isActive` is true; completely
+ * idle for inactive slides and while the setting is off.
  *
  * It goes through the engine's capture source rather than a raw canvas query so
  * it works for every engine: canvas engines (p5, Three.js) hand back their live
@@ -59,7 +59,7 @@ function blitToThumbnail(
  * slow, so overlapping reads are skipped (the mirror self-throttles). When no
  * engine is available yet it falls back to a direct canvas lookup.
  *
- * Returns `LIVE_THUMBNAIL_ENABLED` so the consumer knows which element to render.
+ * Returns the setting so the consumer knows which element to render.
  */
 export function useLiveThumbnail( {
   thumbCanvasRef,
@@ -73,6 +73,9 @@ export function useLiveThumbnail( {
       engine, browserRecording
     }
   ] = useSketch();
+  const {
+    liveSlideThumbnail
+  } = useLiveSlideThumbnail();
   // Stable ref for the rAF id so we can cancel without adding to deps
   const rafIdRef = useRef<number | null>( null );
 
@@ -82,7 +85,7 @@ export function useLiveThumbnail( {
       // a DOM engine (GSAP) `readFrame()` rasterises the *same* singleton mirror
       // canvas the recorder is driving, so mirroring here would double the
       // per-frame rasterisation cost and race the recorder's own writes.
-      if ( !LIVE_THUMBNAIL_ENABLED || !isActive || browserRecording ) {
+      if ( !liveSlideThumbnail || !isActive || browserRecording ) {
         return;
       }
 
@@ -166,6 +169,7 @@ export function useLiveThumbnail( {
       };
     },
     [
+      liveSlideThumbnail,
       isActive,
       thumbCanvasRef,
       engine,
@@ -173,5 +177,5 @@ export function useLiveThumbnail( {
     ]
   );
 
-  return LIVE_THUMBNAIL_ENABLED;
+  return liveSlideThumbnail;
 }

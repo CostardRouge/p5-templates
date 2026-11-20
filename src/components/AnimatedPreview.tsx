@@ -4,6 +4,10 @@ import {
   useEffect, useRef, useState
 } from "react";
 import usePageVisibility from "@/hooks/usePageVisibility";
+import {
+  type PreviewPlayback,
+  usePreviewPlayback
+} from "@/hooks/usePreviewPlayback";
 
 interface AnimatedPreviewProps {
   previewUrl: string;
@@ -21,15 +25,7 @@ interface AnimatedPreviewProps {
   alt?: string;
   imgClassName?: string;
   eager?: boolean;
-  // When defined, overrides the OS `prefers-reduced-motion` setting:
-  // `true` forces playback to be allowed, `false` keeps the static thumbnail.
-  animationsEnabled?: boolean;
 }
-
-// Read once at module level — safe in both browser and SSR (defaults to false on server)
-const TRIGGER_ON_HOVER =
-  typeof process !== "undefined" &&
-  process.env.NEXT_PUBLIC_PREVIEW_ON_HOVER === "true";
 
 // Matches Tailwind's `md:` — the breakpoint at which the home page layout
 // switches to multi-column, making the higher-res preview worthwhile.
@@ -38,10 +34,11 @@ const DESKTOP_PREVIEW_QUERY = "(min-width: 768px)";
 /**
  * Renders a static thumbnail with an animated WebM overlay.
  *
- * Playback is triggered either by the element entering the viewport
- * (default) or by hover when NEXT_PUBLIC_PREVIEW_ON_HOVER=true.
+ * When it plays is the visitor's "Previews" setting (`usePreviewPlayback`):
+ * while the card is in view, while the pointer is over it, or never. That
+ * setting already folds in `prefers-reduced-motion` and whether the screen can
+ * hover, so this component only follows the mode it is handed.
  *
- * Respects prefers-reduced-motion: shows the static thumbnail only.
  * Pauses video playback when the tab is hidden to save CPU/GPU/battery.
  */
 export default function AnimatedPreview( {
@@ -51,17 +48,28 @@ export default function AnimatedPreview( {
   name,
   alt,
   imgClassName = "",
-  eager = false,
-  animationsEnabled
+  eager = false
 }: AnimatedPreviewProps ) {
   const containerRef = useRef<HTMLDivElement>( null );
   const videoRef = useRef<HTMLVideoElement>( null );
-  const prefersReducedRef = useRef( false );
-  const animationsEnabledRef = useRef( animationsEnabled );
+  const {
+    mode
+  } = usePreviewPlayback();
+  // The intent (in view, or hovered) is recorded with the mode it was seen in,
+  // so a mode change starts from rest without an effect resetting it: a card
+  // playing because it was in view does not keep playing once the mode becomes
+  // "on hover", until it is hovered.
   const [
-    wantsToPlay,
-    setWantsToPlay
-  ] = useState( false );
+    intent,
+    setIntent
+  ] = useState<{
+    mode: PreviewPlayback;
+    wants: boolean;
+  }>( {
+    mode,
+    wants: false
+  } );
+  const wantsToPlay = intent.mode === mode && intent.wants;
   const [
     isPlaying,
     setIsPlaying
@@ -127,64 +135,10 @@ export default function AnimatedPreview( {
     ]
   );
 
-  // Track prefers-reduced-motion without causing re-render on each frame
-  useEffect(
-    () => {
-      const mq = window.matchMedia( "(prefers-reduced-motion: reduce)" );
-
-      prefersReducedRef.current = mq.matches;
-
-      const handler = ( e: MediaQueryListEvent ) => {
-        prefersReducedRef.current = e.matches;
-
-        // Only honour OS changes when the parent hasn't opted-in explicitly.
-        if ( e.matches && animationsEnabledRef.current !== true ) {
-          stopVideo();
-        }
-      };
-
-      mq.addEventListener(
-        "change",
-        handler
-      );
-      return () => mq.removeEventListener(
-        "change",
-        handler
-      );
-    },
-    []
-  );
-
-  // Stop or resume when the parent toggles animations on/off.
-  useEffect(
-    () => {
-      animationsEnabledRef.current = animationsEnabled;
-
-      if ( animationsEnabled === false ) {
-        stopVideo();
-      } else if ( animationsEnabled === true && wantsToPlay && isPageVisible ) {
-        playVideo();
-      }
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [
-      animationsEnabled
-    ]
-  );
-
   function playVideo() {
     const video = videoRef.current;
 
     if ( !video ) {
-      return;
-    }
-
-    // Explicit override from the parent wins over the OS preference.
-    if ( animationsEnabledRef.current === false ) {
-      return;
-    }
-
-    if ( animationsEnabledRef.current !== true && prefersReducedRef.current ) {
       return;
     }
 
@@ -206,10 +160,10 @@ export default function AnimatedPreview( {
     setIsPlaying( false );
   }
 
-  // Viewport-based intent (default mode)
+  // Viewport-based intent ("in view" mode)
   useEffect(
     () => {
-      if ( TRIGGER_ON_HOVER || !containerRef.current ) {
+      if ( mode !== "inview" || !containerRef.current ) {
         return;
       }
 
@@ -218,7 +172,10 @@ export default function AnimatedPreview( {
       const observer = new IntersectionObserver(
         ( entries ) => {
           for ( const entry of entries ) {
-            setWantsToPlay( entry.isIntersecting );
+            setIntent( {
+              mode: "inview",
+              wants: entry.isIntersecting
+            } );
           }
         },
         {
@@ -229,14 +186,16 @@ export default function AnimatedPreview( {
       observer.observe( el );
       return () => observer.disconnect();
     },
-    []
+    [
+      mode
+    ]
   );
 
   // Combine intent (viewport/hover) with permission (tab visibility).
   // The video only plays when the user can actually see it.
   useEffect(
     () => {
-      if ( wantsToPlay && isPageVisible ) {
+      if ( mode !== "off" && wantsToPlay && isPageVisible ) {
         playVideo();
       } else {
         stopVideo();
@@ -244,15 +203,22 @@ export default function AnimatedPreview( {
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
+      mode,
       wantsToPlay,
       isPageVisible
     ]
   );
 
-  const hoverHandlers = TRIGGER_ON_HOVER
+  const hoverHandlers = mode === "hover"
     ? {
-      onMouseEnter: () => setWantsToPlay( true ),
-      onMouseLeave: () => setWantsToPlay( false )
+      onMouseEnter: () => setIntent( {
+        mode: "hover",
+        wants: true
+      } ),
+      onMouseLeave: () => setIntent( {
+        mode: "hover",
+        wants: false
+      } )
     }
     : {};
 
