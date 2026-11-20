@@ -1,3 +1,11 @@
 {
+  "description": "A single photograph matted on warm cream like a museum label, captioned in small monospaced type read from the file itself: date top-left, GPS position top-right, while camera, lens and exposure settings cycle in a corner. Any corner can carry your own text.",
+  "tags": [
+    "photo",
+    "typography",
+    "flat",
+    "needs-photo",
+    "needs-text"
+  ],
   "hiddenFromHome": true
 }

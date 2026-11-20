@@ -1,0 +1,9 @@
+{
+  "description": "Two photos meet along a seam, and small square tiles across the seam show the opposite photo in exact register, like windows through to the other picture. Tile transitions are optional; it holds still by default. Needs your photos.",
+  "tags": [
+    "photo",
+    "needs-photo",
+    "grid",
+    "flat"
+  ]
+}

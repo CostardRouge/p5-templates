@@ -1,4 +1,10 @@
 {
+  "description": "A blank frame that draws nothing but its background, black by default (a flat colour or a gradient). Identical to the empty sketch, kept as a second blank starting point.",
+  "tags": [
+    "flat",
+    "monochrome",
+    "gradient"
+  ],
   "hiddenFromHome": true,
   "hiddenFromGallery": true
 }

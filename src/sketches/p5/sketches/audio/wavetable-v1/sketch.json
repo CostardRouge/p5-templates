@@ -1,0 +1,10 @@
+{
+  "description": "A synth voice that is its own display: a receding stack of dim waveform frames on near-black, one bright green curve morphing through the pile and flashing on each note, a step lane for the pattern and a small readout. Dragging scrubs the visible curve.",
+  "tags": [
+    "flat",
+    "neon",
+    "pulse",
+    "interactive",
+    "sound"
+  ]
+}

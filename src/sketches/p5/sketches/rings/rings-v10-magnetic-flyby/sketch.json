@@ -1,3 +1,13 @@
 {
+  "description": "A formation of drawn cursors, by default a breathing circle of hands, flies over an iridescent liquid word on black without touching it; the letters lean toward each passing cursor and settle like jelly. Plays soft sounds as they pass.",
+  "tags": [
+    "3d",
+    "typography",
+    "shader",
+    "iridescent",
+    "needs-text",
+    "interactive",
+    "sound"
+  ],
   "favorite": true
 }

@@ -1,0 +1,10 @@
+{
+  "description": "A small ring of white dots joined by thin lines on near-black, with a text readout in the corner. The mouse moves it and sets its line weight and dot count while oscillators swell its radius and turn it.",
+  "tags": [
+    "geometry",
+    "flat",
+    "monochrome",
+    "interactive",
+    "pulse"
+  ]
+}

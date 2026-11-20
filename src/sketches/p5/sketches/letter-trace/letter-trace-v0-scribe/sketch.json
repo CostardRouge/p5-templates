@@ -1,0 +1,9 @@
+{
+  "description": "A white pen dot crawls along the outline of each letter in turn, laying down a purple stroke while the view stays locked on the tip, then pulls back to reveal the whole word on black. Shows a text you type.",
+  "tags": [
+    "typography",
+    "flat",
+    "needs-text",
+    "drift"
+  ]
+}

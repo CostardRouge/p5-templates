@@ -40,11 +40,14 @@ import ImportSuccessBanner, {
 import SketchSettings from "./components/SketchSettings/SketchSettings";
 import CaptureDialog from "./components/CaptureDialog";
 import {
-  patchDraft, setWhen
+  patchDraft, setWhen, getDraft
 } from "@/lib/postiz/publishStore";
 import {
   takePlanned, takeSendAgain
 } from "@/lib/postiz/reopen";
+import {
+  activePostKey, mountReel
+} from "@/lib/postiz/postKey";
 import TransportBar from "./components/TransportBar";
 import UndoRedo from "./components/UndoRedo";
 import InteractivePanel from "./components/InteractivePanel/InteractivePanel";
@@ -302,8 +305,11 @@ export default function SketchOptions( {
   // Publish with only the accounts that failed ticked. Taken once, on mount.
   useEffect(
     () => {
-      const key = `${ engineId }/${ name }`;
-      const channelIds = takeSendAgain( key );
+      const sketchKey = `${ engineId }/${ name }`;
+      // The host of a reel learns which reel it shows: its words have their own key.
+      const leaveReel = mountReel( sketchKey );
+      const key = activePostKey( sketchKey );
+      const channelIds = takeSendAgain( sketchKey );
 
       if ( channelIds ) {
         patchDraft(
@@ -319,7 +325,7 @@ export default function SketchOptions( {
 
       // The gallery's Plan (lab 7): the same crossing with a WHEN — this
       // sketch opens on Export › Publish, on the slot the plan proposed.
-      const planned = takePlanned( key );
+      const planned = takePlanned( sketchKey );
 
       if ( planned ) {
         // A reel (a series, a recap) comes with the words it starts from:
@@ -328,7 +334,8 @@ export default function SketchOptions( {
           key,
           {
             mode: "publish",
-            ...( planned.caption ? {
+            // …unless this reel already has words (written or approved in the Plan).
+            ...( planned.caption && getDraft( key ).caption === null ? {
               caption: planned.caption
             } : {} )
           }
@@ -342,6 +349,8 @@ export default function SketchOptions( {
         );
         setCaptureOpen( true );
       }
+
+      return leaveReel;
     },
     [
       engineId,

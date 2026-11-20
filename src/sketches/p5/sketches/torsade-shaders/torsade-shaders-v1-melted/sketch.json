@@ -1,3 +1,11 @@
 {
+  "description": "A grid of thick molten double strands on black, the colour cycling like a soap bubble along each strand and across its width. Drawn per pixel on the GPU, with the layout of the grid set by count, spacing and axis.",
+  "tags": [
+    "shader",
+    "iridescent",
+    "gradient",
+    "drift",
+    "geometry"
+  ],
   "favorite": true
 }

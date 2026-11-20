@@ -1,3 +1,10 @@
 {
+  "description": "A heavily blurred photograph in which regions snap into focus one after another, as a looping noise walk picks points and a segmentation model cuts out whatever sits there, a circle marking the pick. Clicks override it. Needs a photo.",
+  "tags": [
+    "photo",
+    "needs-photo",
+    "noise",
+    "interactive"
+  ],
   "hiddenFromHome": true
 }

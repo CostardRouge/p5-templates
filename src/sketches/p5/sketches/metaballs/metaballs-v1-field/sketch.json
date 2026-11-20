@@ -1,0 +1,9 @@
+{
+  "description": "The raw influence field of drifting metaballs: a coarse, smoothly scaled buffer colours each pixel by the summed pull of the balls, glowing orange and white cores on blue over a dark red ground. A pointer adds balls.",
+  "tags": [
+    "noise",
+    "gradient",
+    "colourful",
+    "interactive"
+  ]
+}

@@ -11,6 +11,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Dotted copies of a zero ring an invisible cylinder in red, cyan and white on black. Only slivers of each ring light up at any moment, and the whole cage tips, rolls and spins like confetti in flight. Type is editable.",
+    "tags": [
+      "typography",
+      "3d",
+      "neon",
+      "orbit",
+      "needs-text"
+    ],
     "createdAt": "2026-05-20",
     "mtime": "2026-05-20T12:32:21.509Z",
     "ctime": "2026-05-20T12:32:21.508Z"
@@ -27,6 +35,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A blocky digit mosaicked from small cubes in the whole spectrum of colours, standing on black. Each column pushes toward the viewer and sinks back as a drifting noise field kneads it, so the relief swells in slow waves.",
+    "tags": [
+      "typography",
+      "3d",
+      "noise",
+      "colourful",
+      "needs-text"
+    ],
     "createdAt": "2026-05-20",
     "mtime": "2026-05-20T12:32:21.509Z",
     "ctime": "2026-05-20T12:32:21.509Z"
@@ -43,6 +59,15 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A digit made of shallow tiles that stay in their cells but rock around their own axes with staggered timing, so tilts ripple across the glyph in feathered, brushed strokes of rainbow colour on black.",
+    "tags": [
+      "typography",
+      "3d",
+      "noise",
+      "colourful",
+      "pulse",
+      "needs-text"
+    ],
     "createdAt": "2026-05-20",
     "mtime": "2026-05-20T12:32:21.509Z",
     "ctime": "2026-05-20T12:32:21.509Z"
@@ -59,6 +84,15 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "On warm paper, a digit extruded into long square rods in red, teal and purple. A wave sweeping across it makes each cell corkscrew and thin to a translucent shell. The wave can run linear, radial or follow a hand cursor.",
+    "tags": [
+      "typography",
+      "3d",
+      "noise",
+      "colourful",
+      "pulse",
+      "needs-text"
+    ],
     "createdAt": "2025-12-08",
     "mtime": "2026-05-20T12:32:21.510Z",
     "ctime": "2026-05-20T12:32:21.509Z"
@@ -75,6 +109,15 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "On warm paper, a digit built of boxes whose faces drain to transparency as a wave passes, leaving pastel rainbow wireframe cages whose edges pile up into fine cross-hatched moire. Sweeps linearly, radially or from a cursor.",
+    "tags": [
+      "typography",
+      "3d",
+      "noise",
+      "colourful",
+      "pulse",
+      "needs-text"
+    ],
     "createdAt": "2025-12-01",
     "mtime": "2026-05-20T12:32:21.510Z",
     "ctime": "2026-05-20T12:32:21.510Z"
@@ -91,6 +134,14 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "On warm paper, the rods that spell a digit fling out to random points in space with an elastic snap, in blue, green, orange and purple, then thread back as the wave recedes, like a box of pencils mid-explosion.",
+    "tags": [
+      "typography",
+      "3d",
+      "colourful",
+      "pulse",
+      "needs-text"
+    ],
     "createdAt": "2025-12-22",
     "mtime": "2026-05-20T12:32:21.511Z",
     "ctime": "2026-05-20T12:32:21.511Z"
@@ -107,6 +158,14 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "On warm paper, a digit whose two bowls are deep, pastel wire funnels tumbling as one rigid body. A small hand cursor roams across it and thins the cells nearby from solid to bare glass-like scaffolding.",
+    "tags": [
+      "typography",
+      "3d",
+      "colourful",
+      "interactive",
+      "needs-text"
+    ],
     "createdAt": "2025-11-26",
     "mtime": "2026-05-20T12:32:21.512Z",
     "ctime": "2026-05-20T12:32:21.511Z"
@@ -123,6 +182,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A word outlined in rainbow-coloured points melts letter by letter into the next, with dozens of larger, dimmer copies receding behind it into depth on black. A thin sine wave sweeps across the frame and everything below it turns into a coarse pixel mosaic.",
+    "tags": [
+      "typography",
+      "3d",
+      "noise",
+      "colourful",
+      "needs-text"
+    ],
     "createdAt": "2025-11-18",
     "mtime": "2026-05-20T12:32:21.514Z",
     "ctime": "2026-05-20T12:32:21.514Z"
@@ -139,6 +206,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Small black letters and digits strewn across a cream field. An orbiting pointer, thin crosshair lines through it, makes nearby glyphs swell and turn until they pile into a heavy knot of ink; mouse, touch or hands can join in.",
+    "tags": [
+      "typography",
+      "flat",
+      "monochrome",
+      "interactive",
+      "needs-text"
+    ],
     "createdAt": "2025-12-16",
     "mtime": "2026-05-20T12:32:21.519Z",
     "ctime": "2026-05-20T12:32:21.519Z"
@@ -155,6 +230,14 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "A flat sheet of thin black triangles on white that bulges toward the viewer wherever a pointer passes. Six pointers orbit on their own, raising bumps that glide across and relax. A photo or webcam can be stretched over it.",
+    "tags": [
+      "3d",
+      "mesh",
+      "monochrome",
+      "interactive",
+      "orbit"
+    ],
     "createdAt": "2025-12-14",
     "mtime": "2026-05-20T12:32:21.519Z",
     "ctime": "2026-05-20T12:32:21.519Z"
@@ -171,6 +254,13 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "A segmented snake of overlapping circles in colour-cycling teal, orange and magenta crawls across black, while a thin blue outlined window drifts over the frame. Inside the window the scene becomes a chunky pixelated copy; outside it stays sharp.",
+    "tags": [
+      "flat",
+      "geometry",
+      "colourful",
+      "drift"
+    ],
     "createdAt": "2025-11-18",
     "mtime": "2026-05-20T12:32:21.519Z",
     "ctime": "2026-05-20T12:32:21.519Z"
@@ -187,6 +277,13 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "A single thick tube-like ribbon whips around a black field like a bent neon sign, striped by concentric outlines with a rainbow that slides along its length. It keeps swinging and doubling back on itself. Fluid, glowing, full-frame.",
+    "tags": [
+      "flat",
+      "neon",
+      "colourful",
+      "drift"
+    ],
     "createdAt": "2025-11-14",
     "mtime": "2026-05-20T12:32:21.520Z",
     "ctime": "2026-05-20T12:32:21.519Z"
@@ -203,6 +300,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Concentric noise-warped rings drawn as chains of separate glowing dots on black, with hue and brightness cycling around each ring so bands of spectrum sweep along the contours while darker arcs sink into the background.",
+    "tags": [
+      "flat",
+      "noise",
+      "colourful",
+      "drift"
+    ],
     "createdAt": "2026-01-13",
     "mtime": "2026-05-20T12:32:21.520Z",
     "ctime": "2026-05-20T12:32:21.520Z"
@@ -219,6 +323,13 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "Two hundred concentric thin dark ink rings wobble around a shared centre on warm cream paper, bunching into dense ridges and opening into calm clearings like the grain of a sawn trunk. The ridges slowly roll round the disc.",
+    "tags": [
+      "flat",
+      "noise",
+      "monochrome",
+      "drift"
+    ],
     "createdAt": "2025-12-25",
     "mtime": "2026-05-20T12:32:21.521Z",
     "ctime": "2026-05-20T12:32:21.520Z"
@@ -235,6 +346,14 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "A star-burst of tall conical spikes radiating from a central point on black, each cone built from fine dots that run through a rainbow palette from warm to cool. Noise swells the spikes while the whole mass slowly turns, like a kaleidoscopic sea urchin seen head-on.",
+    "tags": [
+      "3d",
+      "shader",
+      "noise",
+      "colourful",
+      "orbit"
+    ],
     "createdAt": "2026-05-06",
     "mtime": "2026-05-20T12:32:21.521Z",
     "ctime": "2026-05-20T12:32:21.521Z"
@@ -251,6 +370,13 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "A cylinder wearing a dense coat of soft, tapered quills that jut straight out from its wall, like a bottle-brush on black. The body rocks gently while waves of blue, green and orange roll across the coat.",
+    "tags": [
+      "3d",
+      "noise",
+      "colourful",
+      "drift"
+    ],
     "createdAt": "2026-04-22",
     "mtime": "2026-05-20T12:32:21.522Z",
     "ctime": "2026-05-20T12:32:21.521Z"
@@ -267,6 +393,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A symmetrical starburst of long teardrop spikes fanning out from the centre of the frame like a mandala, in dark lacquered blues, greens and oranges on black. Cells at equal distance from the middle share a colour; the figure sits still by default.",
+    "tags": [
+      "3d",
+      "noise",
+      "colourful",
+      "geometry"
+    ],
     "createdAt": "2026-05-20",
     "mtime": "2026-05-20T12:32:21.522Z",
     "ctime": "2026-05-20T12:32:21.522Z"
@@ -283,6 +416,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A bed of glossy teardrops, one per grid cell, points out of the screen toward the viewer and leans outward toward the edges, in rainbow shading that a noise field keeps repainting. The whole board tilts a few degrees over the loop, on black.",
+    "tags": [
+      "3d",
+      "noise",
+      "grid",
+      "colourful"
+    ],
     "createdAt": "2026-04-12",
     "mtime": "2026-05-20T12:32:21.523Z",
     "ctime": "2026-05-20T12:32:21.522Z"
@@ -299,6 +439,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "An aerial view of a terrain planted with rows of upright quills like grass on dunes: crests catch bright colour, valleys fall to near black, and the relief slowly migrates under a gently swaying camera.",
+    "tags": [
+      "3d",
+      "noise",
+      "colourful",
+      "drift"
+    ],
     "createdAt": "2026-04-23",
     "mtime": "2026-05-20T12:32:21.523Z",
     "ctime": "2026-05-20T12:32:21.523Z"
@@ -315,6 +462,13 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "A ball bristling with spikes of unequal length, long quills and low nubs mixed into a sea-urchin silhouette, in rainbow colours on black. A noise field slides over the surface so the spikes lengthen and retract while the body rocks slightly.",
+    "tags": [
+      "3d",
+      "noise",
+      "colourful",
+      "pulse"
+    ],
     "createdAt": "2026-04-25",
     "mtime": "2026-05-20T12:32:21.523Z",
     "ctime": "2026-05-20T12:32:21.523Z"
@@ -331,6 +485,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A view down a tunnel whose walls are packed with rounded, scale-like lobes, rings receding and tightening toward a vanishing point while colour spirals from warm rims into a deep blue core. The bore rolls slowly and the far rings dim.",
+    "tags": [
+      "3d",
+      "noise",
+      "colourful",
+      "orbit"
+    ],
     "createdAt": "2026-05-06",
     "mtime": "2026-05-20T12:32:21.524Z",
     "ctime": "2026-05-20T12:32:21.523Z"
@@ -347,6 +508,15 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "A photograph cut into a tall grid of small tiles, each one flickering between its own crop of the picture and a flat block of that crop's dominant colour. The flips travel across the frame in waves on black, so the image keeps dissolving into paint chips and reassembling.",
+    "tags": [
+      "photo",
+      "grid",
+      "noise",
+      "flat",
+      "colourful",
+      "needs-photo"
+    ],
     "createdAt": "2025-04-25",
     "mtime": "2026-05-20T12:32:21.525Z",
     "ctime": "2026-05-20T12:32:21.524Z"
@@ -363,6 +533,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Photographs stand edge to edge around an invisible drum that turns in perspective on black, swinging in eased steps so each picture squares up to the camera while the others wrap away round the curve. Options tilt it, roll it vertically or pulse the zoom.",
+    "tags": [
+      "3d",
+      "photo",
+      "orbit",
+      "needs-photo"
+    ],
     "createdAt": "2025-05-14",
     "mtime": "2026-05-20T12:32:21.526Z",
     "ctime": "2026-05-20T12:32:21.525Z"
@@ -379,6 +556,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "White-framed prints sit on an invisible sphere in near-black space, spread evenly, in a ring or in a spiral. The globe pivots by the shortest arc so each print arrives upright at the centre, holds, then hands over, while the others tilt away and dim.",
+    "tags": [
+      "3d",
+      "photo",
+      "orbit",
+      "needs-photo"
+    ],
     "createdAt": "2025-05-16",
     "mtime": "2026-05-20T12:32:21.526Z",
     "ctime": "2026-05-20T12:32:21.526Z"
@@ -395,6 +579,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A queue of photographs that starts small and deep in the frame and eases down toward the viewer on pale grey. Two oversize words, top and bottom, stay fixed and invert against whatever slides beneath, while a slim line of camera settings runs along the front card.",
+    "tags": [
+      "3d",
+      "photo",
+      "typography",
+      "needs-photo",
+      "needs-text"
+    ],
     "createdAt": "2025-04-25",
     "mtime": "2026-05-20T12:32:21.527Z",
     "ctime": "2026-05-20T12:32:21.526Z"
@@ -411,6 +603,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A crowd of round portholes rolls and piles inside an invisible box on a warm cream ground, joined by hairlines, while gravity keeps swinging round. Each disc is a window onto its own fixed full-frame photograph. Dragging across the canvas adds more discs.",
+    "tags": [
+      "photo",
+      "geometry",
+      "bounce",
+      "interactive",
+      "needs-photo"
+    ],
     "createdAt": "2025-04-25",
     "mtime": "2026-05-20T12:32:21.527Z",
     "ctime": "2026-05-20T12:32:21.527Z"
@@ -427,6 +627,14 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "A few soft circular windows drift on slow looping orbits over a warm cream ground, each revealing a piece of a different, fixed photograph. Thin lines tie them together and darken as they pull apart, so they read as balloons on stretching strings.",
+    "tags": [
+      "photo",
+      "geometry",
+      "orbit",
+      "drift",
+      "needs-photo"
+    ],
     "createdAt": "2025-04-25",
     "mtime": "2026-05-20T12:32:21.528Z",
     "ctime": "2026-05-20T12:32:21.527Z"
@@ -443,6 +651,13 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "A cube wearing a photograph on each face floats on a warm cream ground and rolls through eased turns, squaring up and pausing on every picture in a fixed tour of all six sides before pitching away to the next.",
+    "tags": [
+      "3d",
+      "photo",
+      "flip",
+      "needs-photo"
+    ],
     "createdAt": "2025-04-25",
     "mtime": "2026-05-20T12:32:21.528Z",
     "ctime": "2026-05-20T12:32:21.528Z"
@@ -459,6 +674,13 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "Photographs orbit the centre as a turning wheel on warm cream, the ring repeatedly collapsing into a tight huddle and swinging wide again, the collapse rolling round the circle. Each print twists on its own axis and shrinks as it gathers, so it reads as tumbling paper.",
+    "tags": [
+      "photo",
+      "orbit",
+      "pulse",
+      "needs-photo"
+    ],
     "createdAt": "2025-04-25",
     "mtime": "2026-05-20T12:32:21.531Z",
     "ctime": "2026-05-20T12:32:21.531Z"
@@ -475,6 +697,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Prints appear one below another down a warm cream page, each centred on its own fixed rung, until the ladder is full. Then the newest vanish first and the page drains from the bottom back up before filling again. Nothing slides: each picture simply is or is not there.",
+    "tags": [
+      "photo",
+      "grid",
+      "flat",
+      "needs-photo"
+    ],
     "createdAt": "2025-04-25",
     "mtime": "2026-05-20T12:32:21.532Z",
     "ctime": "2026-05-20T12:32:21.532Z"
@@ -491,6 +720,13 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "Snapshots drop one by one onto a pile at the centre of a warm cream ground, each landing slightly aside and tilted a few degrees so the edges of earlier prints peek out. The pile grows to the full set, then thins from the top and rebuilds.",
+    "tags": [
+      "photo",
+      "flat",
+      "pulse",
+      "needs-photo"
+    ],
     "createdAt": "2025-04-25",
     "mtime": "2026-05-20T12:32:21.533Z",
     "ctime": "2026-05-20T12:32:21.532Z"
@@ -507,6 +743,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A giant letterform fills a warm cream page as a window: photographs cut hard through the set inside its strokes while the glyph itself keeps melting from one character into the next. Cycles through the characters of a word you type.",
+    "tags": [
+      "photo",
+      "typography",
+      "flat",
+      "needs-photo",
+      "needs-text"
+    ],
     "createdAt": "2025-04-25",
     "mtime": "2026-05-20T12:32:21.533Z",
     "ctime": "2026-05-20T12:32:21.533Z"
@@ -523,6 +767,12 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A plain hard-cut slideshow: one photograph at a time, centred with an adjustable margin on warm cream, each holding the frame for an equal slice of the loop before the next replaces it outright. No transition, just the cut.",
+    "tags": [
+      "photo",
+      "flat",
+      "needs-photo"
+    ],
     "createdAt": "2025-04-25",
     "mtime": "2026-05-20T12:32:21.534Z",
     "ctime": "2026-05-20T12:32:21.534Z"
@@ -539,6 +789,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A photograph tiled into a lattice that reads as a single image until patches of tiles flip to the matching crops of another photo in noise-driven waves. The frame becomes a quilt of two or three pictures, then settles back into one. Warm cream ground.",
+    "tags": [
+      "photo",
+      "grid",
+      "noise",
+      "needs-photo"
+    ],
     "createdAt": "2025-05-09",
     "mtime": "2026-05-20T12:32:21.534Z",
     "ctime": "2026-05-20T12:32:21.533Z"
@@ -555,6 +812,14 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "One photograph re-stamped inside itself again and again on white, each copy a notch smaller, so the edges pile into stepped contours that form a corridor into the picture. The echoes build up across each photo's turn; options twist them into a spiral.",
+    "tags": [
+      "photo",
+      "geometry",
+      "flat",
+      "pulse",
+      "needs-photo"
+    ],
     "createdAt": "2025-04-25",
     "mtime": "2026-05-20T12:32:21.534Z",
     "ctime": "2026-05-20T12:32:21.534Z"
@@ -571,6 +836,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A letter drawn as a spray of rainbow dots on black, morphing between its lowercase and uppercase forms and toward a second letter at once, fanned into depth layers while two thin gauges plot the blend along the frame edges.",
+    "tags": [
+      "typography",
+      "3d",
+      "colourful",
+      "needs-text"
+    ],
     "createdAt": "2025-12-10",
     "mtime": "2026-05-20T12:32:21.535Z",
     "ctime": "2026-05-20T12:32:21.535Z"
@@ -587,6 +859,14 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "Digits count from 1 to 11 as rainbow dot bursts on black while the formation hops between points around the frame, each depth layer lagging the last so every move stretches into a comet before snapping back.",
+    "tags": [
+      "typography",
+      "3d",
+      "colourful",
+      "orbit",
+      "needs-text"
+    ],
     "createdAt": "2026-01-16",
     "mtime": "2026-05-20T12:32:21.536Z",
     "ctime": "2026-05-20T12:32:21.535Z"
@@ -603,6 +883,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A letter at the mouth of a swirling dotted vortex on black, morphing through the alphabet while the rainbow rings around it sink far back and surge forward in sectors, so the whole tunnel seems to breathe.",
+    "tags": [
+      "typography",
+      "3d",
+      "colourful",
+      "pulse",
+      "needs-text"
+    ],
     "createdAt": "2026-01-25",
     "mtime": "2026-05-20T12:32:21.536Z",
     "ctime": "2026-05-20T12:32:21.536Z"
@@ -619,6 +907,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A single character cycling through the lowercase alphabet, repeated through dozens of depth layers into a widening tunnel of rainbow dots on black, the whole stack swinging from anchor to anchor with an elastic snap.",
+    "tags": [
+      "typography",
+      "3d",
+      "colourful",
+      "needs-text"
+    ],
     "createdAt": "2026-01-25",
     "mtime": "2026-05-20T12:32:21.537Z",
     "ctime": "2026-05-20T12:32:21.536Z"
@@ -635,6 +930,14 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "The dotted rainbow glyph tunnel on black, tipping over in space and easing to a new pitch and yaw with each letter change, so the cone of dots is seen from the side, edge-on, then face-on again.",
+    "tags": [
+      "typography",
+      "3d",
+      "colourful",
+      "orbit",
+      "needs-text"
+    ],
     "createdAt": "2025-12-31",
     "mtime": "2026-05-20T12:32:21.537Z",
     "ctime": "2026-05-20T12:32:21.537Z"
@@ -651,6 +954,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A white wireframe rectangle with crop-mark ticks at its corners sits centred on black, snapping elastically between three sizes with overshoot. Its top-left corner prints a rotated readout of its own changing coordinate, like a technical drawing annotating itself.",
+    "tags": [
+      "typography",
+      "geometry",
+      "flat",
+      "monochrome",
+      "pulse"
+    ],
     "createdAt": "2025-05-14",
     "mtime": "2026-05-20T12:32:21.538Z",
     "ctime": "2026-05-20T12:32:21.538Z"
@@ -667,6 +978,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Giant glyphs filling the frame, their insides streaked with ragged horizontal strips of rainbow colour that creep and shear sideways, over plain black. Shows a word you type (a number by default) and lets colour show only through its letters.",
+    "tags": [
+      "typography",
+      "noise",
+      "colourful",
+      "drift",
+      "needs-text"
+    ],
     "createdAt": "2025-04-25",
     "mtime": "2026-05-20T12:32:21.539Z",
     "ctime": "2026-05-20T12:32:21.539Z"
@@ -706,6 +1025,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A digit assembled from small spectrum-coloured boxes on black that hold, then slide off to randomly paired cells, hold, and swap back, so the glyph keeps dissolving into drifting blocks and re-forming with a slight overshoot.",
+    "tags": [
+      "typography",
+      "3d",
+      "colourful",
+      "drift",
+      "needs-text"
+    ],
     "createdAt": "2026-05-20",
     "mtime": "2026-05-25T16:21:29.869Z",
     "ctime": "2026-05-20T12:32:21.509Z"
@@ -722,6 +1049,14 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "One voxel digit stamped on all six faces of a giant die, in red and teal blocks on black. The view tumbles from face to face, each arriving wall brightening while the last sinks into shadow.",
+    "tags": [
+      "typography",
+      "3d",
+      "noise",
+      "orbit",
+      "needs-text"
+    ],
     "createdAt": "2026-05-20",
     "mtime": "2026-05-25T16:21:29.869Z",
     "ctime": "2026-05-20T12:32:21.510Z"
@@ -738,6 +1073,12 @@
     "hiddenFromGallery": true,
     "favorite": false,
     "asyncDraw": false,
+    "description": "An empty canvas filled with a single background colour, black by default, and nothing else. The background can be a flat colour or a gradient. A blank starting point.",
+    "tags": [
+      "flat",
+      "monochrome",
+      "gradient"
+    ],
     "createdAt": "2025-11-12",
     "mtime": "2026-05-25T16:21:29.869Z",
     "ctime": "2026-05-20T12:32:21.514Z"
@@ -754,6 +1095,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Glowing concentric-ringed balls drift inside an invisible walled arena on warm cream paper. Your webcam hand is redrawn as a fat, hue-cycling ribbon that wades through and shoves the balls aside, each leaving a short fading trail. Needs a camera.",
+    "tags": [
+      "flat",
+      "colourful",
+      "neon",
+      "interactive",
+      "bounce"
+    ],
     "createdAt": "2025-07-17",
     "mtime": "2026-05-25T16:21:29.869Z",
     "ctime": "2026-05-20T12:32:21.515Z"
@@ -770,6 +1119,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A field of neon balls on cream paper where every ball leans toward your webcam hand and packs around the rainbow ribbon like filings on a magnet, following it when you move. Soft, clustered, a little greedy. Needs a camera.",
+    "tags": [
+      "flat",
+      "colourful",
+      "neon",
+      "interactive",
+      "particles"
+    ],
     "createdAt": "2025-07-19",
     "mtime": "2026-05-25T16:21:29.869Z",
     "ctime": "2026-05-20T12:32:21.516Z"
@@ -786,6 +1143,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Neon balls on cream paper that flee your webcam hand: those within reach are pushed away from the fingers, leaving a clean halo around the rainbow ribbon while the crowd piles up against the walls and in the corners. Needs a camera.",
+    "tags": [
+      "flat",
+      "colourful",
+      "neon",
+      "interactive",
+      "bounce"
+    ],
     "createdAt": "2025-07-24",
     "mtime": "2026-05-25T16:21:29.869Z",
     "ctime": "2026-05-20T12:32:21.516Z"
@@ -802,6 +1167,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A field of neon balls on cream paper that behaves like stretched fabric: your webcam hand ploughs through and deforms the pattern, then every ball glides back to the spot it started from. Crisp, with no trails. Needs a camera.",
+    "tags": [
+      "flat",
+      "colourful",
+      "neon",
+      "interactive",
+      "grid"
+    ],
     "createdAt": "2025-07-21",
     "mtime": "2026-05-25T16:21:29.869Z",
     "ctime": "2026-05-20T12:32:21.516Z"
@@ -818,6 +1191,14 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "Black letters and digits hang scattered at all angles on cream paper. Your webcam hand, drawn as a rainbow ribbon, knocks them into spins as it passes, and each character slowly rights itself and eases back toward its place. Needs a camera.",
+    "tags": [
+      "typography",
+      "flat",
+      "colourful",
+      "interactive",
+      "needs-text"
+    ],
     "createdAt": "2025-07-24",
     "mtime": "2026-05-25T16:21:29.869Z",
     "ctime": "2026-05-20T12:32:21.517Z"
@@ -834,6 +1215,12 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A near-black field where the input layer draws itself: each active pointer gets a ring and full-width crosshair lines in its source's colour, under a legend with live counts. Three amber orbiting pointers circle by default.",
+    "tags": [
+      "geometry",
+      "flat",
+      "interactive"
+    ],
     "createdAt": "2026-05-05",
     "mtime": "2026-05-25T16:21:29.869Z",
     "ctime": "2026-05-20T12:32:21.517Z"
@@ -850,6 +1237,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A wall of square columns seen face-on, tinted in rainbow patches. Six small spheres orbit above it and the columns beneath each one sink flat and pale, carving craters that follow it; tracked hands can add more.",
+    "tags": [
+      "3d",
+      "grid",
+      "colourful",
+      "interactive",
+      "noise"
+    ],
     "createdAt": "2025-12-08",
     "mtime": "2026-05-25T16:21:29.869Z",
     "ctime": "2026-05-20T12:32:21.518Z"
@@ -866,6 +1261,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A single photograph matted on warm cream like a museum label, captioned in small monospaced type read from the file itself: date top-left, GPS position top-right, while camera, lens and exposure settings cycle in a corner. Any corner can carry your own text.",
+    "tags": [
+      "photo",
+      "typography",
+      "flat",
+      "needs-photo",
+      "needs-text"
+    ],
     "createdAt": "2025-10-26",
     "mtime": "2026-05-25T16:21:29.869Z",
     "ctime": "2026-05-20T12:32:21.528Z"
@@ -882,6 +1285,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Photographs tiled into an even three-by-three grid on warm cream, each one cropped to fill its cell like a contact sheet, the set repeating when there are more cells than pictures. Rows, columns, border and fit are adjustable. A still composition with no motion.",
+    "tags": [
+      "photo",
+      "grid",
+      "flat",
+      "needs-photo"
+    ],
     "createdAt": "2026-01-12",
     "mtime": "2026-05-25T16:21:29.869Z",
     "ctime": "2026-05-20T12:32:21.530Z"
@@ -898,6 +1308,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A steady grid of small prints, three by four, hovers over a full-bleed backdrop made from one of the same photos, blurred and posterised into banded patches of its own colours. The backdrop changes photo as the loop runs while the grid stays put.",
+    "tags": [
+      "photo",
+      "grid",
+      "gradient",
+      "needs-photo"
+    ],
     "createdAt": "2025-04-25",
     "mtime": "2026-05-25T16:21:29.869Z",
     "ctime": "2026-05-20T12:32:21.529Z"
@@ -914,6 +1331,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A wall of cropped photographs fills the frame as still wallpaper, with one large print centred over it that keeps changing, the loop dealing each picture of the set to the centre in turn with a hard cut. Each cut briefly shows one image at two scales.",
+    "tags": [
+      "photo",
+      "grid",
+      "flat",
+      "needs-photo"
+    ],
     "createdAt": "2025-04-25",
     "mtime": "2026-05-25T16:21:29.869Z",
     "ctime": "2026-05-20T12:32:21.529Z"
@@ -930,6 +1354,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Prints fanned along an elliptical arc like a garland on warm cream, the first at the start of the sweep and the last at its end, spacing divided evenly between. By default a half-circle bows across the frame. Pure placement, no motion; the arc can become a fan or a ring.",
+    "tags": [
+      "photo",
+      "geometry",
+      "flat",
+      "needs-photo"
+    ],
     "createdAt": "2025-04-25",
     "mtime": "2026-05-25T16:21:29.869Z",
     "ctime": "2026-05-20T12:32:21.530Z"
@@ -946,6 +1377,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Each photograph in turn stands sharp at the centre of the frame in a warm cream mat, over a full-bleed copy of itself smeared into soft blocks of its own colour. Small captions around it give the shot's focal length, aperture, shutter speed, ISO and lens.",
+    "tags": [
+      "photo",
+      "typography",
+      "flat",
+      "needs-photo"
+    ],
     "createdAt": "2025-04-25",
     "mtime": "2026-05-25T16:21:29.869Z",
     "ctime": "2026-05-20T12:32:21.533Z"
@@ -962,6 +1400,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A slideshow that plunges into each photograph at a chosen spot and back out, a small ring marking the target, on warm cream. Clicking a picture moves its zoom point to exactly where you clicked, remembered for the next pass.",
+    "tags": [
+      "photo",
+      "flat",
+      "pulse",
+      "interactive",
+      "needs-photo"
+    ],
     "createdAt": "2025-12-22",
     "mtime": "2026-05-25T16:21:29.873Z",
     "ctime": "2026-05-20T12:32:21.534Z"
@@ -978,6 +1424,12 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A single white hairline grows from the left edge along the vertical middle of a black frame, reaching the far side exactly as the loop ends. A minimal starter that draws only the advancing line.",
+    "tags": [
+      "flat",
+      "monochrome",
+      "demo"
+    ],
     "createdAt": "2025-04-25",
     "mtime": "2026-05-25T16:21:29.873Z",
     "ctime": "2026-05-20T12:32:21.537Z"
@@ -994,6 +1446,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A single glyph reduced to a necklace of beads on warm cream paper: evenly spaced dots in shifting rainbow hues, joined by short links, trace its outline while the chain wobbles and pulses in weight. Shows the character you type.",
+    "tags": [
+      "typography",
+      "noise",
+      "colourful",
+      "pulse",
+      "needs-text"
+    ],
     "createdAt": "2025-12-08",
     "mtime": "2026-05-25T16:21:29.873Z",
     "ctime": "2026-05-20T12:32:21.537Z"
@@ -1010,6 +1470,12 @@
     "hiddenFromGallery": true,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A line of placeholder text broken into its words, each drawn in white with a blue outline inside its own thin box, the boxes piling on top of each other at the top left of a black frame. A static, overlapping type study.",
+    "tags": [
+      "typography",
+      "flat",
+      "monochrome"
+    ],
     "createdAt": "2026-02-11",
     "mtime": "2026-05-25T16:21:29.873Z",
     "ctime": "2026-05-20T12:32:21.538Z"
@@ -1026,6 +1492,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A cube with a different word on each coloured face tumbles on a cream ground, each roll landing one face square to the camera before the next begins. Faces carry their own colour, typeface and word, which you can edit; the die returns to its first face as the loop closes.",
+    "tags": [
+      "3d",
+      "typography",
+      "colourful",
+      "flip",
+      "needs-text"
+    ],
     "createdAt": "2026-05-23",
     "mtime": "2026-05-25T16:21:29.879Z",
     "ctime": "2026-05-25T16:21:29.873Z"
@@ -1042,6 +1516,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A diagnostic view of the microphone: seven white bars chart the frequency bands, a red ring swells on every kick, a fainter blue ripple flares on onsets, and a yellow line slides with the detected pitch. A small text block reports voice and spectral readings. Needs a microphone.",
+    "tags": [
+      "flat",
+      "pulse",
+      "interactive",
+      "sound"
+    ],
     "createdAt": "2026-05-25",
     "mtime": "2026-05-25T21:32:22.714Z",
     "ctime": "2026-05-25T21:31:44.018Z"
@@ -1058,6 +1539,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Eight rounded portrait photo cards stand around a slightly tilted ring on a near-black ground; the ring turns steadily so the front card faces you large and flat while the others angle away in perspective. Needs your photos.",
+    "tags": [
+      "3d",
+      "photo",
+      "needs-photo",
+      "orbit"
+    ],
     "createdAt": "2026-06-06",
     "mtime": "2026-06-17T19:40:45.225Z",
     "ctime": "2026-06-17T19:40:45.224Z"
@@ -1097,6 +1585,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A four-by-four grid of rounded photos on near-black in which a wave sweeps through the cells, pushing each toward and away from you while it swells and brightens, then darkens as it recedes. Needs your photos.",
+    "tags": [
+      "3d",
+      "photo",
+      "needs-photo",
+      "grid",
+      "pulse"
+    ],
     "createdAt": "2026-06-06",
     "mtime": "2026-06-17T19:40:45.225Z",
     "ctime": "2026-06-17T19:40:45.225Z"
@@ -1113,6 +1609,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A single photo inside a rounded frame on black, slowly zooming and drifting to a larger, shifted view by mid-loop and back again. An optional caption can sit in one of five spots. Needs your photo.",
+    "tags": [
+      "photo",
+      "needs-photo",
+      "flat",
+      "drift",
+      "needs-text"
+    ],
     "createdAt": "2026-06-06",
     "mtime": "2026-06-17T19:40:45.226Z",
     "ctime": "2026-06-17T19:40:45.225Z"
@@ -1129,6 +1633,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Four rows of rounded landscape photo tiles fill the frame and slide sideways in endless belts at a constant pace, neighbouring rows running in opposite directions. Needs your photos.",
+    "tags": [
+      "photo",
+      "needs-photo",
+      "grid",
+      "flat",
+      "drift"
+    ],
     "createdAt": "2026-06-06",
     "mtime": "2026-06-17T19:40:45.226Z",
     "ctime": "2026-06-17T19:40:45.226Z"
@@ -1145,6 +1657,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "One photo cut into a sixteen-by-fifteen mosaic of sharp tiles that scatter, turn and resize into a loose pile of fragments over the first half of the loop, then fly back to rebuild the picture. Needs your photo.",
+    "tags": [
+      "photo",
+      "needs-photo",
+      "grid",
+      "flat"
+    ],
     "createdAt": "2026-06-06",
     "mtime": "2026-06-17T19:40:45.227Z",
     "ctime": "2026-06-17T19:40:45.226Z"
@@ -1161,6 +1680,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Eight photo cards with soft shadows spaced around an invisible circle that turns once per loop, each card counter-rotating so every picture stays upright as it travels round, on near-black. Needs your photos.",
+    "tags": [
+      "photo",
+      "needs-photo",
+      "orbit",
+      "flat"
+    ],
     "createdAt": "2026-06-06",
     "mtime": "2026-06-17T19:40:45.227Z",
     "ctime": "2026-06-17T19:40:45.227Z"
@@ -1177,6 +1703,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Each photo in turn sits on a white page under its camera name and date, with focal length, aperture, shutter speed, ISO and lens in a strip below, revealed line by line from the file's own data. Needs your photos.",
+    "tags": [
+      "photo",
+      "needs-photo",
+      "typography",
+      "flat"
+    ],
     "createdAt": "2025-10-26",
     "mtime": "2026-06-17T19:40:45.227Z",
     "ctime": "2026-06-17T19:40:45.227Z"
@@ -1193,6 +1726,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A full-frame photo slideshow: each picture holds, then the next slides in from the right while fading in, as the whole frame swells slightly and relaxes once per loop. Needs your photos.",
+    "tags": [
+      "photo",
+      "needs-photo",
+      "flat",
+      "drift"
+    ],
     "createdAt": "2026-06-06",
     "mtime": "2026-06-17T19:40:45.227Z",
     "ctime": "2026-06-17T19:40:45.227Z"
@@ -1209,6 +1749,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Four columns of portrait photos fill the frame and scroll endlessly, neighbouring columns in opposite directions; the outer columns are smaller and dimmed so the middle carries the weight. Needs your photos.",
+    "tags": [
+      "photo",
+      "needs-photo",
+      "grid",
+      "flat",
+      "drift"
+    ],
     "createdAt": "2026-06-06",
     "mtime": "2026-06-17T19:40:45.228Z",
     "ctime": "2026-06-17T19:40:45.227Z"
@@ -1225,6 +1773,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A pile of portrait photo cards, seven by default, fans open around a shared bottom-centre pivot like a hand of cards, holds, then folds shut again. The tops spread while the bottoms stay together. Needs your photos.",
+    "tags": [
+      "photo",
+      "needs-photo",
+      "flat",
+      "pulse"
+    ],
     "createdAt": "2026-06-06",
     "mtime": "2026-06-17T19:40:45.228Z",
     "ctime": "2026-06-17T19:40:45.228Z"
@@ -1241,6 +1796,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A deck of portrait photo cards stacked down the frame in perspective, each smaller and darker than the one before; the front card swings up around its top edge and drops to the back as the rest advance. Needs your photos.",
+    "tags": [
+      "3d",
+      "photo",
+      "needs-photo",
+      "cascade"
+    ],
     "createdAt": "2026-06-06",
     "mtime": "2026-06-17T19:40:45.228Z",
     "ctime": "2026-06-17T19:40:45.228Z"
@@ -1257,6 +1819,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A diagonal pile of six tilted photo cards, dimmer and deeper the further down: the front card is thrown out to the left, then dropped at the back while the rest shuffle forward. Needs your photos.",
+    "tags": [
+      "3d",
+      "photo",
+      "needs-photo",
+      "cascade"
+    ],
     "createdAt": "2026-06-06",
     "mtime": "2026-06-17T19:40:45.229Z",
     "ctime": "2026-06-17T19:40:45.228Z"
@@ -1273,6 +1842,15 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "One thick glossy rope-letter, taken from a word you type, over a faint wall grid on black. The outline keeps melting into the next letter of the word with a springy ease while the rainbow slides along the stroke and a sheen pulses down the tube.",
+    "tags": [
+      "typography",
+      "needs-text",
+      "colourful",
+      "gradient",
+      "flat",
+      "pulse"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.232Z",
     "ctime": "2026-06-17T19:40:45.229Z"
@@ -1289,6 +1867,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A halftone letter on black: a fixed lattice of lavender dots, bright along the glyph's strokes and fading to near-black beside them. The dots never move; every couple of beats the lit pattern snaps to the next character of the text you type.",
+    "tags": [
+      "typography",
+      "needs-text",
+      "grid",
+      "flat",
+      "monochrome"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.232Z",
     "ctime": "2026-06-17T19:40:45.232Z"
@@ -1305,6 +1891,15 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A giant asterisk drawn as looping candy-striped tubes that twist around each other, in cyan, magenta, orange and violet on black. Bulges chase along each arm while other stretches pinch to nothing, with a bright sheen sliding over the surface. Text can be changed.",
+    "tags": [
+      "typography",
+      "needs-text",
+      "colourful",
+      "gradient",
+      "flat",
+      "pulse"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.232Z",
     "ctime": "2026-06-17T19:40:45.232Z"
@@ -1321,6 +1916,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A giant digit built as a wall of translucent glowing boxes in reds, blues and violets with yellow flashes, counting up from 0 to 9 on black. Thin white curtain lines sway behind it, their number growing with the count and fading in one by one.",
+    "tags": [
+      "typography",
+      "3d",
+      "noise",
+      "colourful",
+      "needs-text"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.232Z",
     "ctime": "2026-06-17T19:40:45.232Z"
@@ -1337,6 +1940,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Letters of a typed word, serif by default, built from deep square boxes that shear under two layers of travelling rotation waves. Each block is coloured by the way it faces, fronts blue, tops green and flanks red, on black.",
+    "tags": [
+      "typography",
+      "3d",
+      "noise",
+      "colourful",
+      "needs-text"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.232Z",
     "ctime": "2026-06-17T19:40:45.232Z"
@@ -1353,6 +1964,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Characters of a typed string take turns as a grid of cells on black, each dealt by noise as a flat ring or a prism leaning in perspective, in rainbow colours that cycle over time. The prism field tilts as one while stray outlined cells linger at the edges.",
+    "tags": [
+      "typography",
+      "3d",
+      "noise",
+      "colourful",
+      "needs-text"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.233Z",
     "ctime": "2026-06-17T19:40:45.232Z"
@@ -1369,6 +1988,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Each character of a typed string is a mosaic of neon outlined rings and long boxes splaying toward a vanishing point, on black in cycling rainbow colours. Stray cells flick on and off around the glyph in rows and columns like a failing signal.",
+    "tags": [
+      "typography",
+      "3d",
+      "noise",
+      "neon",
+      "needs-text"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.233Z",
     "ctime": "2026-06-17T19:40:45.233Z"
@@ -1385,6 +2012,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A glyph from a short equation is swarmed by shaded spheres, solid discs and thin rings in saturated reds, cyans, purples and yellows on black, laid on a plane tilted back like a table. Rows surge toward the viewer and sink back in sequence while the table sways.",
+    "tags": [
+      "typography",
+      "3d",
+      "noise",
+      "colourful",
+      "needs-text"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.233Z",
     "ctime": "2026-06-17T19:40:45.233Z"
@@ -1401,6 +2036,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A flat letterform stitched in blue crosshatch, with chains of red-orange to cyan spheres piled along parts of its outline and surging forward on a steep wave. The whole scene sways a few degrees on black; the text can be changed.",
+    "tags": [
+      "typography",
+      "3d",
+      "noise",
+      "colourful",
+      "needs-text"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.233Z",
     "ctime": "2026-06-17T19:40:45.233Z"
@@ -1417,6 +2060,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A letterform seen from a steep side angle as a bundle of long open boxes drawn only as coloured edges, like neon scaffolding in cyan, magenta, orange and yellow on black. Some carry a small ring on their front; the typeface alternates between serif and sans as characters change.",
+    "tags": [
+      "typography",
+      "3d",
+      "neon",
+      "colourful",
+      "needs-text"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.234Z",
     "ctime": "2026-06-17T19:40:45.233Z"
@@ -1433,6 +2084,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A pixelated letter on black whose every tile fires a very deep prism away from the camera, filling half the frame. Faces are coloured by their orientation alone: magenta fronts, blue and green flanks. Some cells drop to a flat cross; the text can be changed.",
+    "tags": [
+      "typography",
+      "3d",
+      "colourful",
+      "needs-text"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.234Z",
     "ctime": "2026-06-17T19:40:45.234Z"
@@ -1449,6 +2107,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Chunky mosaic letters of a typed word, one at a time on black, made of squat blocks in flat reds, blues, teals and golds. Waves of tilt shear the rows into striped fans at the edges before snapping legible again, colours drifting with noise.",
+    "tags": [
+      "typography",
+      "3d",
+      "noise",
+      "colourful",
+      "needs-text"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.234Z",
     "ctime": "2026-06-17T19:40:45.234Z"
@@ -1490,6 +2156,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A grid of small spinning asterisk marks on black, each tinted one step further along a rainbow that runs warm in one corner and cool in the opposite and drifts diagonally. Other palettes are available. A seamless looping backdrop.",
+    "tags": [
+      "flat",
+      "grid",
+      "colourful",
+      "drift"
+    ],
     "createdAt": "2026-06-07",
     "mtime": "2026-06-17T19:40:45.235Z",
     "ctime": "2026-06-17T19:40:45.234Z"
@@ -1506,6 +2179,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A pegboard field of small white dots in even rows and columns on black, the row count following the canvas shape. At rest it is still; raising the pulse makes the whole field swell and shrink together. A quiet backdrop.",
+    "tags": [
+      "flat",
+      "grid",
+      "monochrome",
+      "pulse"
+    ],
     "createdAt": "2026-06-07",
     "mtime": "2026-06-17T19:40:45.235Z",
     "ctime": "2026-06-17T19:40:45.235Z"
@@ -1522,6 +2202,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Hairline white rules cut a black canvas into even square cells, like graph paper. Nothing moves; the rows follow the canvas shape and an optional border can be switched on. A quiet backdrop for other work.",
+    "tags": [
+      "flat",
+      "grid",
+      "monochrome",
+      "geometry"
+    ],
     "createdAt": "2026-06-07",
     "mtime": "2026-06-17T19:40:45.235Z",
     "ctime": "2026-06-17T19:40:45.235Z"
@@ -1538,6 +2225,13 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "A few white lines run down a black canvas, each bowing into an S-curve and swaying out of phase so they split apart and rejoin. Their number swells and shrinks, new lines fading in from the edge. Sparse and calm.",
+    "tags": [
+      "flat",
+      "monochrome",
+      "drift",
+      "geometry"
+    ],
     "createdAt": "2026-06-07",
     "mtime": "2026-06-17T19:40:45.235Z",
     "ctime": "2026-06-17T19:40:45.235Z"
@@ -1554,6 +2248,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A ring drawn as one glossy piped stroke, the full rainbow running round it from red at the top through violet, blue, cyan and green to orange. The circle stays open at the bottom, its two ragged ends nearly meeting, while highlights chase around the tube. Bright on black.",
+    "tags": [
+      "flat",
+      "colourful",
+      "orbit",
+      "gradient"
+    ],
     "createdAt": "2026-05-26",
     "mtime": "2026-06-17T19:40:45.236Z",
     "ctime": "2026-06-17T19:40:45.235Z"
@@ -1570,6 +2271,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A thick red-to-teal strand arched across the frame, instrumented like a diagram: a blue crosshair pins one end, a red one the other, a pale circle sweeps along the body and a hairline traces its spine. The ends swing as the strand kneads, on black.",
+    "tags": [
+      "flat",
+      "colourful",
+      "gradient",
+      "drift"
+    ],
     "createdAt": "2026-05-26",
     "mtime": "2026-06-17T19:40:45.236Z",
     "ctime": "2026-06-17T19:40:45.236Z"
@@ -1586,6 +2294,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A short feathery strand with a blue lobe and an orange lobe whips around the centre of a faint lavender grid, marked by two crosshairs at its ends. Its length swells toward a full turn and collapses again, so the plumes bloom and shrink around the orbit.",
+    "tags": [
+      "flat",
+      "colourful",
+      "orbit",
+      "pulse"
+    ],
     "createdAt": "2026-05-26",
     "mtime": "2026-06-17T19:40:45.236Z",
     "ctime": "2026-06-17T19:40:45.236Z"
@@ -1602,6 +2317,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A glossy piped strand curled into a loose S, blue at the tail through green-cyan to yellow and red at the head, with dark patches where the tube turns away. A thin lavender grid slides behind it while the curl keeps re-knotting on black.",
+    "tags": [
+      "flat",
+      "colourful",
+      "gradient",
+      "drift"
+    ],
     "createdAt": "2026-05-26",
     "mtime": "2026-06-17T19:40:45.236Z",
     "ctime": "2026-06-17T19:40:45.236Z"
@@ -1618,6 +2340,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A fat C of piped colour, amber at one tip through dark red and teal to deep blue at the other, over a sliding lavender grid on black. The arc grows and retracts as it breathes, the colours crawl along it and the blue end splays into a star-shaped nozzle.",
+    "tags": [
+      "flat",
+      "colourful",
+      "gradient",
+      "pulse"
+    ],
     "createdAt": "2026-05-26",
     "mtime": "2026-06-17T19:40:45.237Z",
     "ctime": "2026-06-17T19:40:45.236Z"
@@ -1634,6 +2363,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A braided column of colour running straight down the middle of a sliding lavender grid, green and yellow at the top, red and violet in the middle, blue below. It cinches almost shut at intervals and swells between, twisting like wrung fabric, on black.",
+    "tags": [
+      "flat",
+      "colourful",
+      "gradient",
+      "pulse"
+    ],
     "createdAt": "2026-05-26",
     "mtime": "2026-06-17T19:40:45.237Z",
     "ctime": "2026-06-17T19:40:45.237Z"
@@ -1650,6 +2386,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Broad ribbons that fold and drape like poured silk, red-orange on one face and teal-cyan on the other with bright creases at the turns. Waves travel through the sheet and the edges feather and re-solidify, with no grid behind, on black.",
+    "tags": [
+      "flat",
+      "colourful",
+      "gradient",
+      "drift"
+    ],
     "createdAt": "2026-05-26",
     "mtime": "2026-06-17T19:40:45.237Z",
     "ctime": "2026-06-17T19:40:45.237Z"
@@ -1666,6 +2409,13 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "A two-faced band, yellow on one side and cyan on the other with near-black folds, lies crumpled in the lower half of a big lavender grid on black. It keeps kneading itself, its two ends sliding to different heights as folds roll through.",
+    "tags": [
+      "flat",
+      "colourful",
+      "gradient",
+      "drift"
+    ],
     "createdAt": "2026-05-26",
     "mtime": "2026-06-17T19:40:45.237Z",
     "ctime": "2026-06-17T19:40:45.237Z"
@@ -1682,6 +2432,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A soft airbrushed blob of dough in red, orange, cyan and green rests low in the frame and keeps folding over itself. Two lavender grids, one coarse and one fine, slide behind it at different speeds on black; most of the canvas stays empty.",
+    "tags": [
+      "flat",
+      "colourful",
+      "gradient",
+      "drift"
+    ],
     "createdAt": "2026-05-26",
     "mtime": "2026-06-17T19:40:45.238Z",
     "ctime": "2026-06-17T19:40:45.237Z"
@@ -1698,6 +2455,13 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "A soft red and cyan dough blob rolling over itself near the bottom of an otherwise bare black frame. Two full-frame lavender crosshairs follow it, each locked to a hidden end of the strand, so only the shape's endpoints are marked.",
+    "tags": [
+      "flat",
+      "colourful",
+      "gradient",
+      "drift"
+    ],
     "createdAt": "2026-05-26",
     "mtime": "2026-06-17T19:40:45.238Z",
     "ctime": "2026-06-17T19:40:45.238Z"
@@ -1714,6 +2478,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A strand of red and teal twists hangs down a white-gridded frame while a lavender crosshair cursor with a circle runs along it. Behind the cursor the ribbon lies smoother and brighter; ahead of it the twist is wound much tighter. On black.",
+    "tags": [
+      "flat",
+      "colourful",
+      "gradient",
+      "drift"
+    ],
     "createdAt": "2026-05-26",
     "mtime": "2026-06-17T19:40:45.238Z",
     "ctime": "2026-06-17T19:40:45.238Z"
@@ -1730,6 +2501,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A tall arch of ribbon in calm violet and ultramarine, ending in a crumpled tail of red, cyan and rust at a crosshair-and-circle marker. The marker eases to the end and back, recolouring what it has passed into violet and leaving the rest vivid, on black.",
+    "tags": [
+      "flat",
+      "colourful",
+      "gradient",
+      "drift"
+    ],
     "createdAt": "2026-05-26",
     "mtime": "2026-06-17T19:40:45.238Z",
     "ctime": "2026-06-17T19:40:45.238Z"
@@ -1746,6 +2524,13 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "A red, teal and cyan arch of dough kneading in the lower frame, its start pinned by a full-frame blue crosshair and its end by a red one. A pale circle scans stamp by stamp along the body between them, on black.",
+    "tags": [
+      "flat",
+      "colourful",
+      "gradient",
+      "drift"
+    ],
     "createdAt": "2026-05-26",
     "mtime": "2026-06-17T19:40:45.238Z",
     "ctime": "2026-06-17T19:40:45.238Z"
@@ -1762,6 +2547,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A blue bloom with a twisted rainbow blade climbing out of it, built from hundreds of rotating star-shaped strokes stacked along a vertical path. Petal count steps through a sequence, on a dark field flecked with faint dashes.",
+    "tags": [
+      "flat",
+      "noise",
+      "colourful",
+      "orbit",
+      "pulse"
+    ],
     "createdAt": "2026-05-26",
     "mtime": "2026-06-17T19:40:45.239Z",
     "ctime": "2026-06-17T19:40:45.238Z"
@@ -1778,6 +2571,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A single twisted bloom in glossy reds and cyans winds up the middle of a black frame, its edges finished with small scalloped fringes of smaller stars. It rotates as its lobes swell, pinch and hand over to one another.",
+    "tags": [
+      "flat",
+      "noise",
+      "colourful",
+      "orbit",
+      "pulse"
+    ],
     "createdAt": "2026-05-26",
     "mtime": "2026-06-17T19:40:45.239Z",
     "ctime": "2026-06-17T19:40:45.239Z"
@@ -1794,6 +2595,14 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "A garland of pom-pom blooms hangs across a black frame on a diagonal, pinched into clusters at regular intervals, with sparse aqua crosses behind it. The chain swings between anchor positions as the petals flicker.",
+    "tags": [
+      "flat",
+      "noise",
+      "colourful",
+      "drift",
+      "pulse"
+    ],
     "createdAt": "2026-05-26",
     "mtime": "2026-06-17T19:40:45.239Z",
     "ctime": "2026-06-17T19:40:45.239Z"
@@ -1810,6 +2619,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A single broad ribbon banded in spectral colour sweeps across a black frame like one petal caught mid-beat, folding over itself, opening into a fan and collapsing again while its anchors drift between corners.",
+    "tags": [
+      "flat",
+      "noise",
+      "colourful",
+      "drift",
+      "pulse"
+    ],
     "createdAt": "2026-05-26",
     "mtime": "2026-06-17T19:40:45.240Z",
     "ctime": "2026-06-17T19:40:45.239Z"
@@ -1826,6 +2643,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A horn of rainbow bands stretches between two corners of a black frame, thick in the middle and tapering to rounded tips. Its outline ripples as the profile is redrawn with different easing curves and the ends trade corners.",
+    "tags": [
+      "flat",
+      "noise",
+      "colourful",
+      "drift",
+      "pulse"
+    ],
     "createdAt": "2026-05-26",
     "mtime": "2026-06-17T19:40:45.240Z",
     "ctime": "2026-06-17T19:40:45.240Z"
@@ -1842,6 +2667,13 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "Two plaited ropes of outlined circles hang side by side in plain black on white, opaque discs burying one another into an engraved cable. The strands resolve into small bundles of circles at their ends and sway.",
+    "tags": [
+      "flat",
+      "monochrome",
+      "drift",
+      "geometry"
+    ],
     "createdAt": "2026-05-26",
     "mtime": "2026-06-17T19:40:45.240Z",
     "ctime": "2026-06-17T19:40:45.240Z"
@@ -1858,6 +2690,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Coloured drops fall in straight lanes on cream paper, each dragging a long fading streak. Your webcam hand snuffs out the drops it touches, while large numerals at the top count the catches and the misses. A small game. Needs a camera.",
+    "tags": [
+      "flat",
+      "colourful",
+      "interactive",
+      "typography",
+      "cascade"
+    ],
     "createdAt": "2026-06-14",
     "mtime": "2026-06-17T19:40:45.241Z",
     "ctime": "2026-06-17T19:40:45.240Z"
@@ -1874,6 +2714,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Glowing orbs are lobbed up and arc back down on cream paper. A fast swipe of your webcam fingertips, trailing a rainbow streak, slices an orb in two, and the halves stay sliceable down to small bits. Slice and miss tallies sit at the top. Needs a camera.",
+    "tags": [
+      "flat",
+      "colourful",
+      "neon",
+      "interactive",
+      "bounce"
+    ],
     "createdAt": "2026-06-14",
     "mtime": "2026-06-17T19:40:45.241Z",
     "ctime": "2026-06-17T19:40:45.241Z"
@@ -1890,6 +2738,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "On a near-black ground, your webcam hand is drawn as a neon ribbon in teal and magenta, followed by a queue of dimmer copies of its recent poses, so each gesture fans out into overlapping ghost hands. Needs a camera.",
+    "tags": [
+      "flat",
+      "neon",
+      "interactive",
+      "pulse"
+    ],
     "createdAt": "2026-06-15",
     "mtime": "2026-06-17T19:40:45.241Z",
     "ctime": "2026-06-17T19:40:45.241Z"
@@ -1906,6 +2761,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Glossy ribbons with white-hot rainbow cores trace your webcam fingers, and their past stacks up behind them in tight layers that drift or swell outward on a dark ground, filling the frame with combed, iridescent waves. Needs a camera.",
+    "tags": [
+      "iridescent",
+      "neon",
+      "interactive",
+      "drift",
+      "mesh"
+    ],
     "createdAt": "2026-06-16",
     "mtime": "2026-06-17T19:40:45.242Z",
     "ctime": "2026-06-17T19:40:45.241Z"
@@ -1922,6 +2785,12 @@
     "hiddenFromGallery": true,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A blank frame that draws nothing but its background, black by default (a flat colour or a gradient). Identical to the empty sketch, kept as a second blank starting point.",
+    "tags": [
+      "flat",
+      "monochrome",
+      "gradient"
+    ],
     "createdAt": "2026-05-26",
     "mtime": "2026-06-17T19:40:45.243Z",
     "ctime": "2026-06-17T19:40:45.242Z"
@@ -1938,6 +2807,14 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "A heavy rainbow cord writhes down the middle of a black frame, its loops tightening, sliding along the strand and releasing while colour runs the full spectrum along its length. The curl pattern slowly trades one knot shape for another, in a single bare pass without glow.",
+    "tags": [
+      "flat",
+      "colourful",
+      "neon",
+      "noise",
+      "drift"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.243Z",
     "ctime": "2026-06-17T19:40:45.243Z"
@@ -1954,6 +2831,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A spray-painted zigzag: a luminous full-spectrum stroke doubles back down a black frame, each pass ringed by wider, darker echoes like overspray. The figure folds and unfolds continuously within its vertical band, with harder kinks than a plain strand.",
+    "tags": [
+      "flat",
+      "colourful",
+      "neon",
+      "drift"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.244Z",
     "ctime": "2026-06-17T19:40:45.243Z"
@@ -1970,6 +2854,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A fat ring of light alone on black, rolling, squashing and folding onto itself, its rim sliding from blue to orange and yellow while wider, dimmer outlines stacked behind trace every deformation. The ring collapses and reopens slowly.",
+    "tags": [
+      "flat",
+      "colourful",
+      "neon",
+      "pulse"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.244Z",
     "ctime": "2026-06-17T19:40:45.244Z"
@@ -1986,6 +2877,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "One clean glowing ring floats on black like a freshly sprayed O, ringed by concentric dimmer outlines that read as overspray. It glides, pumps and squashes as a rigid whole instead of writhing, with the spectrum wrapped around its rim.",
+    "tags": [
+      "flat",
+      "colourful",
+      "neon",
+      "pulse"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.244Z",
     "ctime": "2026-06-17T19:40:45.244Z"
@@ -2002,6 +2900,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Ten glowing dots form a loose crown on black, each a bullseye of a saturated core inside larger, darker discs, its hue set by where it sits on the circle. The crown swells and shrinks as its carrying ring breathes.",
+    "tags": [
+      "flat",
+      "colourful",
+      "neon",
+      "pulse",
+      "orbit"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.244Z",
     "ctime": "2026-06-17T19:40:45.244Z"
@@ -2018,6 +2924,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Soft spheres of light with pinpoint cores drift in a slow orbit on black, swelling away from the centre, falling back through it and blooming out the opposite side while their hues slide around the spectrum. The glow fades smoothly, reading as volume.",
+    "tags": [
+      "flat",
+      "colourful",
+      "neon",
+      "orbit",
+      "pulse"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.244Z",
     "ctime": "2026-06-17T19:40:45.244Z"
@@ -2034,6 +2948,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Short, thick capsule-ended bars of light pinwheel around a pulsing ring on black, coloured around the spectrum, each bright bar dragging a fan of darker copies a few degrees behind it, like a shutter caught mid-turn.",
+    "tags": [
+      "flat",
+      "colourful",
+      "neon",
+      "orbit",
+      "pulse"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.244Z",
     "ctime": "2026-06-17T19:40:45.244Z"
@@ -2050,6 +2972,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A dense grid of small dots, each pushed off its cell centre by a flowing noise field and coloured by the direction it was pushed, in rainbow hues on black. The first and simplest of the noise grids: constant-size dots.",
+    "tags": [
+      "noise",
+      "shader",
+      "grid",
+      "colourful",
+      "particles"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.245Z",
     "ctime": "2026-06-17T19:40:45.244Z"
@@ -2066,6 +2996,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A grid of rainbow sticks on black whose length breathes in and out, with a snappy colour shift in the hue, so the bristling flow field gains a slow tide. Sticks cross into their neighbours.",
+    "tags": [
+      "noise",
+      "shader",
+      "grid",
+      "pulse",
+      "colourful"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.245Z",
     "ctime": "2026-06-17T19:40:45.245Z"
@@ -2082,6 +3020,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A fine grid of tiny dots in rainbow colours over a noise field, the whole field slowly turning as it flows, so the pattern shears and swirls across the frame.",
+    "tags": [
+      "noise",
+      "shader",
+      "grid",
+      "colourful",
+      "drift"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.245Z",
     "ctime": "2026-06-17T19:40:45.245Z"
@@ -2098,6 +3044,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Tall overlapping dots close into glowing sheets of cycling rainbow colour against black, eaten away by a drifting wave so bright rims, rings and holes open and close: the grid seems to burn.",
+    "tags": [
+      "noise",
+      "shader",
+      "grid",
+      "iridescent",
+      "colourful"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.246Z",
     "ctime": "2026-06-17T19:40:45.245Z"
@@ -2114,6 +3068,14 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "A dense grid of dots whose size is shaped by an easing curve over a flowing noise field, so the same pattern swells into soft rainbow blobs with oil-slick edges, bright rims and dark gaps on black.",
+    "tags": [
+      "noise",
+      "shader",
+      "grid",
+      "iridescent",
+      "colourful"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.246Z",
     "ctime": "2026-06-17T19:40:45.246Z"
@@ -2130,6 +3092,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A patchwork on black of heavy red dots massing into continents and thin yellow-outlined rings pooling in the hollows between them; as the noise scrolls, patches change from solid to ring and back.",
+    "tags": [
+      "noise",
+      "grid",
+      "flat",
+      "colourful"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.246Z",
     "ctime": "2026-06-17T19:40:45.246Z"
@@ -2146,6 +3115,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A patchwork of filled dots and open rings from a noise field, the whole field breathing in steps: marks swell and shrink together and their offsets stretch with them, clenching and relaxing like a heartbeat.",
+    "tags": [
+      "noise",
+      "grid",
+      "flat",
+      "pulse",
+      "colourful"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.246Z",
     "ctime": "2026-06-17T19:40:45.246Z"
@@ -2162,6 +3139,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A grid of short sticks, each turned to the local noise direction and long enough to cross into its neighbours, so the field reads as a bristling flow in rainbow colours on black rather than a dotted grid.",
+    "tags": [
+      "noise",
+      "shader",
+      "grid",
+      "colourful"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.246Z",
     "ctime": "2026-06-17T19:40:45.246Z"
@@ -2178,6 +3162,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A grid of dots that grow with distance from the centre and fade out against a drifting, noise-wobbled wave edge, so a rainbow field glows in the middle of a black frame and dissolves into a soft moving horizon.",
+    "tags": [
+      "noise",
+      "shader",
+      "grid",
+      "colourful"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.246Z",
     "ctime": "2026-06-17T19:40:45.246Z"
@@ -2194,6 +3185,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A dim grid of dots in muted rainbow tones that swells and relaxes on a steady pulse; the pulse drives both dot weight and the noise falloff, so the whole field breathes as one and neighbours overlap at full swell.",
+    "tags": [
+      "noise",
+      "shader",
+      "grid",
+      "pulse",
+      "colourful"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.246Z",
     "ctime": "2026-06-17T19:40:45.246Z"
@@ -2210,6 +3209,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Soft rainbow blobs with bright oil-slick rims drift on a dark ground, ringing and merging; on each pulse the dots overshoot their range and swell into large discs before collapsing back.",
+    "tags": [
+      "noise",
+      "shader",
+      "grid",
+      "pulse",
+      "iridescent"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.247Z",
     "ctime": "2026-06-17T19:40:45.246Z"
@@ -2226,6 +3233,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Rows of dots read as woven scanlines in oranges, cyans and blues, bulging and creasing like fabric seen through rippled glass while the whole weave slides in a direction that keeps changing. Never closes a loop.",
+    "tags": [
+      "noise",
+      "grid",
+      "flat",
+      "drift",
+      "colourful"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.247Z",
     "ctime": "2026-06-17T19:40:45.247Z"
@@ -2265,6 +3280,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Horizontal bands of overlapping dots ripple across the frame like cloth pushed into hills and hollows, in flat, poster-like reds, blues, yellows and greens on black. Every so often the whole relief lurches into a new configuration instead of easing there.",
+    "tags": [
+      "noise",
+      "flat",
+      "colourful",
+      "drift"
+    ],
     "createdAt": "2026-05-26",
     "mtime": "2026-06-17T19:40:45.248Z",
     "ctime": "2026-06-17T19:40:45.247Z"
@@ -2281,6 +3303,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Thick dotted bands melt into a full-frame crust: dark blue ridges snake over glowing orange and magenta hollows, with no black left between the rows. The surface creeps slowly sideways and lurches between states. Reads as cooling lava.",
+    "tags": [
+      "noise",
+      "flat",
+      "colourful",
+      "drift"
+    ],
     "createdAt": "2026-05-26",
     "mtime": "2026-06-17T19:40:45.248Z",
     "ctime": "2026-06-17T19:40:45.248Z"
@@ -2297,6 +3326,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A knot of glowing rainbow tubes writhing inside a dark, fleshy cloud on black, built from hundreds of stacked dots whose spoke count keeps shifting. It curls and uncurls like innards while the colours slide round the spectrum.",
+    "tags": [
+      "flat",
+      "colourful",
+      "pulse",
+      "noise"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.250Z",
     "ctime": "2026-06-17T19:40:45.250Z"
@@ -2313,6 +3349,13 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "Eight shaded tentacles curl up out of the black, each capped with a glowing bead, while the whole crown rolls slowly through the rainbow. The bases stay thick and murky, only the tips burn bright.",
+    "tags": [
+      "flat",
+      "colourful",
+      "pulse",
+      "orbit"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.250Z",
     "ctime": "2026-06-17T19:40:45.250Z"
@@ -2329,6 +3372,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Seven dark petals swell and shrink around a hub on black, each hiding a bright comet core. The shapes barely move; the light is what travels, rolling from hub to rim through the nested layers in waves.",
+    "tags": [
+      "flat",
+      "colourful",
+      "pulse",
+      "geometry"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.250Z",
     "ctime": "2026-06-17T19:40:45.250Z"
@@ -2345,6 +3395,13 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "Three heavy shaded lobes, one blue, one green, one red, lean into each other around a common centre on black and breathe as their layered shells slide past one another. Bright slivers flash where the thinnest strokes pinch through.",
+    "tags": [
+      "flat",
+      "colourful",
+      "pulse",
+      "geometry"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.250Z",
     "ctime": "2026-06-17T19:40:45.250Z"
@@ -2361,6 +3418,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A dense rosette of shaded petals corkscrews around its own centre on black, ember-bright tips poking out of the whorl while the body stays in half-light. The whole head turns slowly through the spectrum.",
+    "tags": [
+      "flat",
+      "colourful",
+      "pulse",
+      "orbit"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.250Z",
     "ctime": "2026-06-17T19:40:45.250Z"
@@ -2377,6 +3441,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Five fixed bullseyes sit in a ring on black, one per hue (blue, green, violet, yellow, red), and bands of light ripple outward through each like a sonar ping. Nothing else moves.",
+    "tags": [
+      "flat",
+      "colourful",
+      "pulse",
+      "geometry"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.251Z",
     "ctime": "2026-06-17T19:40:45.250Z"
@@ -2393,6 +3464,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A six-tipped star of green ribbon blades folds in on itself on black, bending and swinging around a molten orange core that never changes. The shading from dark green rims to the hot centre stays fixed however far the shape moves.",
+    "tags": [
+      "flat",
+      "colourful",
+      "pulse",
+      "geometry"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.251Z",
     "ctime": "2026-06-17T19:40:45.251Z"
@@ -2409,6 +3487,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Heavy orange slabs fold over one another like bent taffy on black, with a blue swirl underneath where the oldest layers trail behind. The whole mass swings as one body rather than radiating as spokes.",
+    "tags": [
+      "flat",
+      "colourful",
+      "pulse",
+      "drift"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.251Z",
     "ctime": "2026-06-17T19:40:45.251Z"
@@ -2425,6 +3510,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A single striped, ridged rope arcs across the black frame, frayed and chartreuse at its lower end, passing through white and cooling into violet where it curls over. It sweeps and rears like a hose under pressure.",
+    "tags": [
+      "flat",
+      "colourful",
+      "pulse",
+      "drift"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.251Z",
     "ctime": "2026-06-17T19:40:45.251Z"
@@ -2441,6 +3533,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Cyan light-bars of uneven height stand inside a dark red, lobed shell on black, stretching, shutting and shuttling up and down. It reads more like an instrument trace than a flower.",
+    "tags": [
+      "flat",
+      "colourful",
+      "pulse",
+      "geometry"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.252Z",
     "ctime": "2026-06-17T19:40:45.252Z"
@@ -2457,6 +3556,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Ghostly translucent cones and flat beams (a yellow pinch, a blue column, a red diagonal) cross the frame in near darkness, brightening only where they intersect. Most of the canvas stays black.",
+    "tags": [
+      "flat",
+      "colourful",
+      "pulse",
+      "geometry"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.252Z",
     "ctime": "2026-06-17T19:40:45.251Z"
@@ -2473,6 +3579,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Turquoise light-columns of staggered heights ride up and down inside a dark red bloom on black, each tip leaving a bright rail where it reverses. The red shell stays put while the bars do the travelling.",
+    "tags": [
+      "flat",
+      "colourful",
+      "pulse",
+      "geometry"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.252Z",
     "ctime": "2026-06-17T19:40:45.252Z"
@@ -2489,6 +3602,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A thick braid of rainbow strands curls into an S on black, violet fraying off the top and gold and red knotting at the waist. The rope keeps twisting on itself while its length pumps in and out.",
+    "tags": [
+      "flat",
+      "colourful",
+      "pulse",
+      "drift"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.252Z",
     "ctime": "2026-06-17T19:40:45.252Z"
@@ -2505,6 +3625,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "An hourglass of two shaded wings, one above and one below, pinches at a glowing yellow X on black. Rather than turning, the pair scissors open and closed against each other.",
+    "tags": [
+      "flat",
+      "colourful",
+      "pulse",
+      "geometry"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.253Z",
     "ctime": "2026-06-17T19:40:45.252Z"
@@ -2521,6 +3648,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A dense daisy of navy-tipped petals wheels around a yellow blaze on black, but its petal count will not settle: blades split into more blades, then fold back together as the flower re-divides while it turns.",
+    "tags": [
+      "flat",
+      "colourful",
+      "pulse",
+      "orbit"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.253Z",
     "ctime": "2026-06-17T19:40:45.253Z"
@@ -2537,6 +3671,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A chartreuse crown blazes at the top of the black frame while streaked arms pour downward and fade into violet murk, like a squid caught mid-dart and jetting away from the light.",
+    "tags": [
+      "flat",
+      "colourful",
+      "pulse",
+      "drift"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.253Z",
     "ctime": "2026-06-17T19:40:45.253Z"
@@ -2553,6 +3694,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Six cupped violet petals sit around a burning yellow cross on black, rocking gently between open and closed without leaving the hub. It reads as a bloom rather than a machine.",
+    "tags": [
+      "flat",
+      "colourful",
+      "pulse",
+      "geometry"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.254Z",
     "ctime": "2026-06-17T19:40:45.253Z"
@@ -2569,6 +3717,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Twelve miniature turbines dot a dark sheet in a 3-by-4 lattice, each in its own hue and at its own moment: tight rosettes, six-pointed ribbon stars and folded scraps mid-collapse, no two alike.",
+    "tags": [
+      "flat",
+      "colourful",
+      "pulse",
+      "grid"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.254Z",
     "ctime": "2026-06-17T19:40:45.254Z"
@@ -2585,6 +3740,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Six swept blades ride around a hub in half-lit violet and umber, with a yellow star burning at the centre where they join. The wheel rocks back and forth rather than spinning freely.",
+    "tags": [
+      "flat",
+      "colourful",
+      "pulse",
+      "orbit"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.255Z",
     "ctime": "2026-06-17T19:40:45.254Z"
@@ -2601,6 +3763,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Broad green arcs nest into one another like the whorl of a shell filling the black frame, with a run of neon-cyan chevrons burning along the inner edge where the bands converge. The coil swings slowly as one body.",
+    "tags": [
+      "flat",
+      "colourful",
+      "neon",
+      "pulse"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.255Z",
     "ctime": "2026-06-17T19:40:45.255Z"
@@ -2617,6 +3786,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Fat horizontal neon bars, cyan and yellow in the top half and violet and orange in the bottom, sit locked in bilateral symmetry inside a dark layered shell on black, like an emblem that breathes.",
+    "tags": [
+      "flat",
+      "neon",
+      "pulse",
+      "geometry"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.255Z",
     "ctime": "2026-06-17T19:40:45.255Z"
@@ -2633,6 +3809,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Four spiral-shaded rosettes hold the corners of a square, one teal, one yellow, one blue and one red, on black. Each keeps a single bright pin-dot at its rim while the arcs behind it churn.",
+    "tags": [
+      "flat",
+      "colourful",
+      "pulse",
+      "geometry"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.255Z",
     "ctime": "2026-06-17T19:40:45.255Z"
@@ -2649,6 +3832,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Seven ribbons hang the full height of the black frame, side by side in yellow, orange, magenta, blue, cyan and green. They sway out of phase, each pinching to a waist and bulging back out like fabric stirred by a draught.",
+    "tags": [
+      "flat",
+      "colourful",
+      "pulse",
+      "drift"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.255Z",
     "ctime": "2026-06-17T19:40:45.255Z"
@@ -2665,6 +3855,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A wide satin-like violet and blue ribbon coils in a widening spiral over a faint grid of breathing rounded rectangles on black. Wherever the spiral reaches the frame's edge it flattens into a straight run along the border before folding back in, as if pressing on invisible walls.",
+    "tags": [
+      "3d",
+      "geometry",
+      "orbit",
+      "gradient"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.256Z",
     "ctime": "2026-06-17T19:40:45.256Z"
@@ -2681,6 +3878,13 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "A broad ribbon coils in a widening spiral against the frame's edges, flattening into straight runs where it presses on the invisible walls, its ink cycling through the rainbow along the band, over a still grid of rounded rectangles on black. Other palettes are available.",
+    "tags": [
+      "3d",
+      "geometry",
+      "orbit",
+      "colourful"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.256Z",
     "ctime": "2026-06-17T19:40:45.256Z"
@@ -2697,6 +3901,13 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "A six-armed bloom of rainbow-coloured strokes turning over a dense starburst of rays on black, trailing a soft, chunky blurred afterimage in smudges of colour wherever the arms have just been. More silhouette than flower, with the smear as its signature.",
+    "tags": [
+      "flat",
+      "geometry",
+      "colourful",
+      "orbit"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.257Z",
     "ctime": "2026-06-17T19:40:45.256Z"
@@ -2713,6 +3924,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Chains of dark beads with glowing rainbow-coloured edges reach out from the centre of a ray tunnel on black. New arms grow in one fold at a time over long seconds, each chain brightening and dimming on its own, while a coarse blur smears each frame into the next.",
+    "tags": [
+      "flat",
+      "geometry",
+      "colourful",
+      "pulse"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.257Z",
     "ctime": "2026-06-17T19:40:45.257Z"
@@ -2729,6 +3947,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Arms lunge out of a dark hub and retreat again, each on its own beat and in its own rainbow hue, leaving blurred crescents of colour where they turned. Much of the figure sinks to near black until an arm's turn brings it back up, over a faint ray tunnel.",
+    "tags": [
+      "flat",
+      "geometry",
+      "colourful",
+      "pulse"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.257Z",
     "ctime": "2026-06-17T19:40:45.257Z"
@@ -2745,6 +3970,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A wheel of teardrop petals in the full rainbow, fat at the rim and pinched toward a dark hub, over a dim fan of rays on black. The petals reach in and out, and each blade tapers by a slightly different curve, so no two profiles quite match.",
+    "tags": [
+      "flat",
+      "geometry",
+      "colourful",
+      "pulse"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.257Z",
     "ctime": "2026-06-17T19:40:45.257Z"
@@ -2761,6 +3993,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Dark swept blades circle the hub of a ray tunnel on black, edged with rainbow-coloured glow. Each stroke is a true chord rather than a bead, so the arms read as blades; their count creeps upward in half steps while blurred ghosts trail each pass.",
+    "tags": [
+      "flat",
+      "geometry",
+      "colourful",
+      "orbit"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.258Z",
     "ctime": "2026-06-17T19:40:45.257Z"
@@ -2777,6 +4016,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Slender golden ribbon wings turn around a hot core inside a bristling starburst of rays, all gold on black. The ribbon and the halo behind it breathe together on one shared beat, and a very coarse blur softens every move.",
+    "tags": [
+      "flat",
+      "geometry",
+      "monochrome",
+      "pulse"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.258Z",
     "ctime": "2026-06-17T19:40:45.258Z"
@@ -2793,6 +4039,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A dark violet band corkscrews around an unseen oval, twisting like a satin strip seen edge-on and face-on by turns. Behind it, concentric circles ripple endlessly outward on black, growing heavier as they widen.",
+    "tags": [
+      "3d",
+      "geometry",
+      "orbit",
+      "pulse"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.258Z",
     "ctime": "2026-06-17T19:40:45.258Z"
@@ -2809,6 +4062,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A plump segmented creature inches around an oval track over a faint drifting grid on black, rainbow colour sliding along its body. The middle is fat and glossy, both ends taper to points, and the bulges seem to crawl along it as it circles.",
+    "tags": [
+      "flat",
+      "geometry",
+      "colourful",
+      "orbit"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.259Z",
     "ctime": "2026-06-17T19:40:45.258Z"
@@ -2825,6 +4085,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A segmented, rainbow-coloured caterpillar stretched over the full height of the frame, head near one margin and tail near the other, swaying side to side over a faint grid on black. Its bulges swell and shrink as they travel along the body.",
+    "tags": [
+      "flat",
+      "geometry",
+      "colourful",
+      "drift"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.259Z",
     "ctime": "2026-06-17T19:40:45.259Z"
@@ -2841,6 +4108,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A compact glossy bloom at the centre of a faintly drifting grid on black, rainbow-coloured, cyan at the tips and hot at the heart. It breathes: petals fold out, retract to almost nothing, then reappear split into a different count.",
+    "tags": [
+      "flat",
+      "geometry",
+      "colourful",
+      "pulse"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.259Z",
     "ctime": "2026-06-17T19:40:45.259Z"
@@ -2857,6 +4131,13 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "Five glossy petals pinwheel slowly around a fixed heart, red at the rims and cool blue-cyan at the cores, inside a tunnel of nested circles that stretches past the frame on black. A steady, hypnotic spin.",
+    "tags": [
+      "flat",
+      "geometry",
+      "colourful",
+      "orbit"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.259Z",
     "ctime": "2026-06-17T19:40:45.259Z"
@@ -2873,6 +4154,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A bloom that comes apart into soft separate beads, tracing petal paths that never close into a solid strip, warm and cool rainbow hues splitting across the cluster as it turns. The petal count flickers between values instead of settling.",
+    "tags": [
+      "flat",
+      "geometry",
+      "colourful",
+      "orbit"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.260Z",
     "ctime": "2026-06-17T19:40:45.259Z"
@@ -2889,6 +4177,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Chains of glossy red beads swirl around the centre of a fine starburst on black, gathering into one, two or three lobes. The figure snaps abruptly into each new arrangement while the whole bloom slowly precesses around the frame.",
+    "tags": [
+      "flat",
+      "geometry",
+      "monochrome",
+      "orbit"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.260Z",
     "ctime": "2026-06-17T19:40:45.260Z"
@@ -2905,6 +4200,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A tight knot of dark, glossy red satin turns at the heart of a thin red starburst on black, its lobes folding over one another. More clot than flower: the figure stays compact and self-contained.",
+    "tags": [
+      "3d",
+      "geometry",
+      "monochrome",
+      "orbit"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.261Z",
     "ctime": "2026-06-17T19:40:45.260Z"
@@ -2921,6 +4223,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Red loops cross through a shared centre like orbitals around a nucleus, their glossy surfaces faintly trembling, over a burst of fine red rays on black. The number of loops drifts, one splitting while another is absorbed.",
+    "tags": [
+      "3d",
+      "geometry",
+      "monochrome",
+      "orbit"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.261Z",
     "ctime": "2026-06-17T19:40:45.261Z"
@@ -2937,6 +4246,14 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "Huge soft-edged discs ringed like targets orbit a shared centre on black and eclipse one another. Over the loop each disc splits into a ring of orbiting dots and merges back, its colours sweeping around the rainbow.",
+    "tags": [
+      "geometry",
+      "flat",
+      "colourful",
+      "orbit",
+      "pulse"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.261Z",
     "ctime": "2026-06-17T19:40:45.261Z"
@@ -2953,6 +4270,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Fat round-capped strokes glow inside stacked, darker halos like an echo, swinging around hidden orbits on black. They stretch, tip over and shrink as the loop turns, with rainbow colour sweeping around each orbit.",
+    "tags": [
+      "geometry",
+      "flat",
+      "colourful",
+      "orbit",
+      "pulse"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.261Z",
     "ctime": "2026-06-17T19:40:45.261Z"
@@ -2969,6 +4294,15 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "A closed loop of glowing, rainbow-graded tube weaves through a scatter of marked points on black, rounded by corner-cutting rather than hand-placed handles, with the dashed control polygon and white markers left on show. The points drift, so the knot keeps re-tying itself.",
+    "tags": [
+      "flat",
+      "shader",
+      "noise",
+      "colourful",
+      "neon",
+      "drift"
+    ],
     "createdAt": "2026-06-06",
     "mtime": "2026-06-17T19:40:45.262Z",
     "ctime": "2026-06-17T19:40:45.261Z"
@@ -2985,6 +4319,14 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "Rounded rainbow neon splines on black, fitted each frame through live tracked points, one curve per hand, finger or pose, or as ribbons trailing behind a moving fingertip like drawing in the air. Needs a camera for hands, body or face tracking.",
+    "tags": [
+      "flat",
+      "shader",
+      "colourful",
+      "neon",
+      "interactive"
+    ],
     "createdAt": "2026-06-07",
     "mtime": "2026-06-17T19:40:45.262Z",
     "ctime": "2026-06-17T19:40:45.262Z"
@@ -3001,6 +4343,14 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "The control points of the rounded rainbow spline become draggable handles on black: grab one with mouse, touch or a webcam pinch, several pointers at once, and the neon curve re-rounds live. Point positions are kept with the piece.",
+    "tags": [
+      "flat",
+      "shader",
+      "colourful",
+      "neon",
+      "interactive"
+    ],
     "createdAt": "2026-06-14",
     "mtime": "2026-06-17T19:40:45.263Z",
     "ctime": "2026-06-17T19:40:45.262Z"
@@ -3017,6 +4367,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A glowing, colour-shifting coil loops across a word like a helix seen from the side, passing behind one letter and in front of the next so it weaves through the lettering. Pale letters on a near-black ground; the word is yours to type, a row of digits by default.",
+    "tags": [
+      "typography",
+      "geometry",
+      "colourful",
+      "orbit",
+      "needs-text"
+    ],
     "createdAt": "2026-06-14",
     "mtime": "2026-06-17T19:40:45.264Z",
     "ctime": "2026-06-17T19:40:45.263Z"
@@ -3033,6 +4391,14 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "A grid of thick molten double strands on black, the colour cycling like a soap bubble along each strand and across its width. Drawn per pixel on the GPU, with the layout of the grid set by count, spacing and axis.",
+    "tags": [
+      "shader",
+      "iridescent",
+      "gradient",
+      "drift",
+      "geometry"
+    ],
     "createdAt": "2026-06-14",
     "mtime": "2026-06-17T19:40:45.265Z",
     "ctime": "2026-06-17T19:40:45.264Z"
@@ -3049,6 +4415,14 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "A deep tunnel of concentric rings of dots, each turned a little further than the last, leaning into a drift you fall down. Hue shifts with depth through green, blue and magenta on black, bright at the rim.",
+    "tags": [
+      "shader",
+      "3d",
+      "colourful",
+      "orbit",
+      "noise"
+    ],
     "createdAt": "2026-06-14",
     "mtime": "2026-06-17T19:40:45.265Z",
     "ctime": "2026-06-17T19:40:45.265Z"
@@ -3065,6 +4439,13 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "A radial creature on black: tentacles reaching out in every direction, each a chain of spinning dot clusters that fatten toward a thin darkened tip, over a faint glow of concentric rings. Drawn on the GPU.",
+    "tags": [
+      "shader",
+      "colourful",
+      "orbit",
+      "geometry"
+    ],
     "createdAt": "2026-06-16",
     "mtime": "2026-06-17T19:40:45.265Z",
     "ctime": "2026-06-17T19:40:45.265Z"
@@ -3081,6 +4462,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A slim rainbow rope winds down a black frame while a heavier, dimmer twin keeps breaking into a handful of giant beads that tumble along the wave, then fuses back into a strand. Fluid, rhythmic.",
+    "tags": [
+      "flat",
+      "colourful",
+      "drift",
+      "pulse"
+    ],
     "createdAt": "2026-05-26",
     "mtime": "2026-06-17T19:40:45.266Z",
     "ctime": "2026-06-17T19:40:45.265Z"
@@ -3097,6 +4485,13 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "Vertical columns of twisted ribbon churn through reds, blues and golds on a near-black ground, thick satin folds shaded by the faint smear of their own previous frames. The twist changes character as each column turns.",
+    "tags": [
+      "flat",
+      "colourful",
+      "drift",
+      "noise"
+    ],
     "createdAt": "2026-05-26",
     "mtime": "2026-06-17T19:40:45.266Z",
     "ctime": "2026-06-17T19:40:45.266Z"
@@ -3113,6 +4508,13 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "Two flat-coloured strands wind around each other down the middle of a black frame, a rainbow gradient sliding along their length. A wave of twist travels through the pair so one stretch coils tight while another relaxes.",
+    "tags": [
+      "flat",
+      "colourful",
+      "drift",
+      "pulse"
+    ],
     "createdAt": "2026-05-26",
     "mtime": "2026-06-17T19:40:45.267Z",
     "ctime": "2026-06-17T19:40:45.266Z"
@@ -3129,6 +4531,13 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "Spoked arms of colour spiral into a dark centre like a funnel being stirred, bright at the rim and vanishing into the hole. The hues wheel around as the vortex spins and wobbles slightly off-centre, on black.",
+    "tags": [
+      "flat",
+      "colourful",
+      "orbit",
+      "geometry"
+    ],
     "createdAt": "2026-05-26",
     "mtime": "2026-06-17T19:40:45.267Z",
     "ctime": "2026-06-17T19:40:45.267Z"
@@ -3145,6 +4554,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A mirrored pair of thick strands ties itself into a loose knot that never settles, winding, crossing and re-knotting on black. Colour pools in patches of green, pink, blue and violet that migrate along the tubes.",
+    "tags": [
+      "flat",
+      "colourful",
+      "drift",
+      "geometry"
+    ],
     "createdAt": "2026-05-26",
     "mtime": "2026-06-17T19:40:45.267Z",
     "ctime": "2026-06-17T19:40:45.267Z"
@@ -3161,6 +4577,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Short glowing segments in orange, magenta, cyan and lime crawl along a corkscrew coil that is mostly swallowed by black, like worms of colour inching around an unseen spiral. The crawl surges and eases.",
+    "tags": [
+      "flat",
+      "colourful",
+      "drift",
+      "pulse"
+    ],
     "createdAt": "2026-05-26",
     "mtime": "2026-06-17T19:40:45.267Z",
     "ctime": "2026-06-17T19:40:45.267Z"
@@ -3177,6 +4600,13 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "A bundle of fat tentacles writhes out from the centre, each thickening toward a rounded, darker-capped tip, while thin concentric rings pulse behind it. Hues slide from teal through red to lime and violet on black.",
+    "tags": [
+      "flat",
+      "colourful",
+      "orbit",
+      "geometry"
+    ],
     "createdAt": "2026-05-26",
     "mtime": "2026-06-17T19:40:45.268Z",
     "ctime": "2026-06-17T19:40:45.267Z"
@@ -3193,6 +4623,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Horizontal ropes stack the black frame, each a plait of two rainbow strands chasing each other, neighbouring rows twisting opposite ways. The whole set winds tight, slackens to parallel bands, then winds back up.",
+    "tags": [
+      "flat",
+      "colourful",
+      "drift",
+      "pulse"
+    ],
     "createdAt": "2026-05-26",
     "mtime": "2026-06-17T19:40:45.268Z",
     "ctime": "2026-06-17T19:40:45.268Z"
@@ -3209,6 +4646,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A few broad ribbons of near-solid colour arc side by side across a black frame, each holding its own slice of the spectrum. As their shared wave swells they whip outward and vault over one another, then fall back.",
+    "tags": [
+      "flat",
+      "colourful",
+      "drift",
+      "pulse"
+    ],
     "createdAt": "2026-05-26",
     "mtime": "2026-06-17T19:40:45.268Z",
     "ctime": "2026-06-17T19:40:45.268Z"
@@ -3225,6 +4669,12 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Pairs of tapered strands drift in shallow, slow waves on black, swelling from a point to a thick band and back as one twin fattens while the other thins. They cross now and then in a long, quiet X. Unhurried.",
+    "tags": [
+      "flat",
+      "colourful",
+      "drift"
+    ],
     "createdAt": "2026-05-26",
     "mtime": "2026-06-17T19:40:45.268Z",
     "ctime": "2026-06-17T19:40:45.268Z"
@@ -3241,6 +4691,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Rows of plainly countable dots span a black frame, each row arcing and rippling like cloth in a light wind. Colour advances bead by bead, so every row carries a stretched slice of the spectrum that keeps sliding along it.",
+    "tags": [
+      "flat",
+      "colourful",
+      "drift",
+      "grid"
+    ],
     "createdAt": "2026-05-26",
     "mtime": "2026-06-17T19:40:45.269Z",
     "ctime": "2026-06-17T19:40:45.268Z"
@@ -3257,6 +4714,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A row of tapered horns hangs from the top of a black frame, thick at the root and curling to a fine point. They sway together as one body, bunching and fanning, with hues sliding along the curls.",
+    "tags": [
+      "flat",
+      "colourful",
+      "drift",
+      "pulse"
+    ],
     "createdAt": "2026-05-26",
     "mtime": "2026-06-17T19:40:45.269Z",
     "ctime": "2026-06-17T19:40:45.269Z"
@@ -3273,6 +4737,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A grid of thick molten double strands, bright on black, the colour shifting like a soap bubble along each strand and across its width. A thin-film shimmer instead of a flat rainbow.",
+    "tags": [
+      "shader",
+      "iridescent",
+      "gradient",
+      "drift",
+      "geometry"
+    ],
     "createdAt": "2026-05-26",
     "mtime": "2026-06-17T19:40:45.269Z",
     "ctime": "2026-06-17T19:40:45.269Z"
@@ -3289,6 +4761,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Four twisted ropes scroll across a black frame, each drawn a different way: tapering blades, lens-shaped beads, fat constant links and a doubled wobble. Twist direction alternates from one rope to the next.",
+    "tags": [
+      "flat",
+      "colourful",
+      "drift",
+      "geometry"
+    ],
     "createdAt": "2026-05-26",
     "mtime": "2026-06-17T19:40:45.270Z",
     "ctime": "2026-06-17T19:40:45.269Z"
@@ -3305,6 +4784,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A double helix runs down the middle of a black frame with a rainbow gradient along its length. The whole helix winds tight, slackens to two parallel strands, then rewinds the other way, breathing as one.",
+    "tags": [
+      "flat",
+      "colourful",
+      "pulse",
+      "geometry"
+    ],
     "createdAt": "2026-05-26",
     "mtime": "2026-06-17T19:40:45.270Z",
     "ctime": "2026-06-17T19:40:45.270Z"
@@ -3321,6 +4807,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Two large digits caught mid-morph on a sparse grid, bridged by a twisting green and magenta sheet that reads as one extruded solid, with dotted pale-blue outlines capping its ends and a row of glyphs along the bottom. Black ground; the digits can be replaced with your own text.",
+    "tags": [
+      "typography",
+      "3d",
+      "noise",
+      "colourful",
+      "needs-text"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.271Z",
     "ctime": "2026-06-17T19:40:45.271Z"
@@ -3337,6 +4831,15 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Two neighbouring lowercase letters drawn as chains of small coloured beads that crowd into near-solid lines and then spread loose, with faint rainbow strands between them and a ripple running through the pair. The letters step through the alphabet once per loop, on black.",
+    "tags": [
+      "typography",
+      "noise",
+      "colourful",
+      "flat",
+      "needs-text",
+      "pulse"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.271Z",
     "ctime": "2026-06-17T19:40:45.270Z"
@@ -3353,6 +4856,14 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "Pale letter outlines pin both ends of a word's morph while a full-spectrum sheet billows between them, bulging and folding like a flag in wind over a fine grid. The word is spelled out once per loop on black; you can type your own.",
+    "tags": [
+      "typography",
+      "3d",
+      "noise",
+      "colourful",
+      "needs-text"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.271Z",
     "ctime": "2026-06-17T19:40:45.271Z"
@@ -3369,6 +4880,15 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Three lilac letter outlines dragged from cell to cell of a faint grid by a thick diagonal tube striped with tight rainbow bands, its body smeared along the route just travelled, with a dotted itinerary behind. Black ground, editable text.",
+    "tags": [
+      "typography",
+      "3d",
+      "noise",
+      "colourful",
+      "needs-text",
+      "drift"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.271Z",
     "ctime": "2026-06-17T19:40:45.271Z"
@@ -3385,6 +4905,15 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "Lilac digits hang between the numbered cells of a three-by-three grid, joined by metallic red and cyan ribbons that fold as they travel. The journey freezes, then lurches forward in stepped bursts rather than gliding. Black ground; type your own text.",
+    "tags": [
+      "typography",
+      "3d",
+      "noise",
+      "colourful",
+      "needs-text",
+      "grid"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.272Z",
     "ctime": "2026-06-17T19:40:45.271Z"
@@ -3401,6 +4930,15 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Dotted glyph outlines circle the mid-edge cells of a grid in an endless square circuit, trailing tube-like folds shaded green to magenta, with tiny letters in the cells spelling the word. Each tube collapses to a dot between letters, then blooms again.",
+    "tags": [
+      "typography",
+      "3d",
+      "noise",
+      "grid",
+      "needs-text",
+      "orbit"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.272Z",
     "ctime": "2026-06-17T19:40:45.272Z"
@@ -3417,6 +4955,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A rainbow sheaf of strands sweeps diagonally across a labelled grid, dotted letter outlines crystallising at its head and tail while thin itinerary lines zigzag between the cells. A word is traced cell by cell once per loop, on black.",
+    "tags": [
+      "typography",
+      "3d",
+      "grid",
+      "colourful",
+      "needs-text"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.272Z",
     "ctime": "2026-06-17T19:40:45.272Z"
@@ -3433,6 +4979,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A faint itinerary of dotted lines zigzags between grid cells labelled with letters, while in one corner a dense thicket of green, crimson and black strands bridges two dotted glyphs. The cell order is shuffled, so the trace leaps across the grid and snaps taut on arrival.",
+    "tags": [
+      "typography",
+      "noise",
+      "grid",
+      "flat",
+      "needs-text"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.272Z",
     "ctime": "2026-06-17T19:40:45.272Z"
@@ -3449,6 +5003,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A squashed knot of layered orange, blue and magenta ribbons sits over a labelled grid with dotted letter outlines at its edges, surging, overshooting and stalling around it. A dotted gauge up the left side shows the speed, and the strands turn red as it rises.",
+    "tags": [
+      "typography",
+      "3d",
+      "noise",
+      "grid",
+      "needs-text"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.273Z",
     "ctime": "2026-06-17T19:40:45.272Z"
@@ -3465,6 +5027,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A curtain of fine pink, cream and blue strands pours across one corner of a numbered grid, the traced digits shuttling forwards, braking and rewinding. The strands blush red at full speed in either direction; a small gauge along the bottom shows the direction. Black ground.",
+    "tags": [
+      "typography",
+      "3d",
+      "noise",
+      "grid",
+      "needs-text"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.273Z",
     "ctime": "2026-06-17T19:40:45.273Z"
@@ -3481,6 +5051,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Ten digits bent around a ring and threaded into a woven ball of red, teal and green loops, like yarn, with one lilac digit outline still legible at its front face over a faint grid. Each strand takes a different hue, so neighbouring loops interleave colours on black.",
+    "tags": [
+      "typography",
+      "3d",
+      "noise",
+      "colourful",
+      "needs-text"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.273Z",
     "ctime": "2026-06-17T19:40:45.273Z"
@@ -3497,6 +5075,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Stacked digit outlines pile into a dense hatched mass of red and cyan strokes over a grid, snapping between plateaus rather than undulating; a purple stepped waveform runs along the top edge and a small digit in the corner names the digits in view.",
+    "tags": [
+      "typography",
+      "noise",
+      "grid",
+      "colourful",
+      "needs-text"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.274Z",
     "ctime": "2026-06-17T19:40:45.273Z"
@@ -3513,6 +5099,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Dotted digit outlines caught mid-morph over a three-panel backdrop, one collapsed into a scrawl and another still legible, each traced in beads whose hue runs the full spectrum along the chain like a colour wheel unrolled. The spectrum slides in lurching steps on black.",
+    "tags": [
+      "typography",
+      "flat",
+      "colourful",
+      "needs-text"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.274Z",
     "ctime": "2026-06-17T19:40:45.274Z"
@@ -3529,6 +5122,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Three lilac numerals in a row joined by flat rainbow streamers that gather into tight bundles at one glyph and fan wide at the next as the outline detail ripples. The first, middle and last outlines are re-stroked on top to stay readable, on black.",
+    "tags": [
+      "typography",
+      "flat",
+      "colourful",
+      "needs-text"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.274Z",
     "ctime": "2026-06-17T19:40:45.274Z"
@@ -3545,6 +5145,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "One dotted word at the top of the frame and another at the bottom, bridged by a curtain of violet strands folding in waves while a thin horizontal line slowly sweeps down. When the line finishes its pass, the whole curtain flares from violet into rainbow.",
+    "tags": [
+      "typography",
+      "3d",
+      "colourful",
+      "needs-text"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.274Z",
     "ctime": "2026-06-17T19:40:45.274Z"
@@ -3561,6 +5168,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A letter outline at the top of the frame and another at the bottom, with a thick braided rope of blue, gold and cream strands winding between them over a faint grid. Different depths of the rope lean at different moments as each glyph dissolves into the next.",
+    "tags": [
+      "typography",
+      "3d",
+      "noise",
+      "grid",
+      "needs-text"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.274Z",
     "ctime": "2026-06-17T19:40:45.274Z"
@@ -3577,6 +5192,14 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "Three lowercase letters pinned along a horizontal line, joined by a folded satin ribbon that shades from deep red to teal. The shape barely moves; the sheen flickers strand by strand like light raking foil, and the letter edges are filled and serrated.",
+    "tags": [
+      "typography",
+      "3d",
+      "colourful",
+      "needs-text",
+      "pulse"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.275Z",
     "ctime": "2026-06-17T19:40:45.274Z"
@@ -3593,6 +5216,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Three numeral outlines at the top, middle and bottom of the frame, chained by a loose bundle of multicoloured strands that whips left and right like a harness of cables, each strand lagging on its own schedule. The key outlines are filled with translucent colour on black.",
+    "tags": [
+      "typography",
+      "flat",
+      "colourful",
+      "needs-text"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.275Z",
     "ctime": "2026-06-17T19:40:45.275Z"
@@ -3609,6 +5239,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "The digits 1, 2 and 3 in a row, filled with fine diagonal spectrum stripes like holographic foil and joined by a twisting band. A vertical line sweeps across the frame; until it finishes, everything is violet, then the whole set flips to full rainbow.",
+    "tags": [
+      "typography",
+      "noise",
+      "flat",
+      "colourful",
+      "needs-text"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.275Z",
     "ctime": "2026-06-17T19:40:45.275Z"
@@ -3625,6 +5263,15 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A single thin numeral outline inside a three-by-three grid, gliding from cell to cell and redrawing itself into the next digit as it travels, taking a fresh rainbow hue from each stop. One contour changing shape, place and colour at once, drawn on black.",
+    "tags": [
+      "typography",
+      "flat",
+      "grid",
+      "colourful",
+      "needs-text",
+      "drift"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.275Z",
     "ctime": "2026-06-17T19:40:45.275Z"
@@ -3641,6 +5288,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Stacked letter outlines melt into a tall drapery of heavy red, green and blue pinstripes so close they moiré, folding over itself like creased fabric as it sways down the page. The top, middle and bottom outlines stay visible; black ground.",
+    "tags": [
+      "typography",
+      "3d",
+      "noise",
+      "colourful",
+      "needs-text"
+    ],
     "createdAt": "2026-05-27",
     "mtime": "2026-06-17T19:40:45.276Z",
     "ctime": "2026-06-17T19:40:45.275Z"
@@ -3657,6 +5312,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Three red and teal striped ribbon arms hang from one anchor at the top of a black frame with a faint dotted grid. They hang almost still there and lash harder the further down they reach, crossing before flaring into star-shaped tips.",
+    "tags": [
+      "flat",
+      "colourful",
+      "drift",
+      "grid"
+    ],
     "createdAt": "2026-05-26",
     "mtime": "2026-06-17T19:40:45.276Z",
     "ctime": "2026-06-17T19:40:45.276Z"
@@ -3673,6 +5335,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Six rainbow-banded strands fall from a thin spike at the top of the black frame, fan out and cross into a bell-shaped woven lattice, then fuse at the bottom into an orange mass of star tips. They sway only sideways, which plaits them flat.",
+    "tags": [
+      "flat",
+      "colourful",
+      "drift",
+      "geometry"
+    ],
     "createdAt": "2026-05-26",
     "mtime": "2026-06-17T19:40:45.276Z",
     "ctime": "2026-06-17T19:40:45.276Z"
@@ -3689,6 +5358,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A braided pagoda of ribbons on black: a needle tip at the top, latticed crossings widening below and an orange fringe where the strands melt together. Bands of red, blue and green travel along each ribbon as the braid sways in both directions.",
+    "tags": [
+      "flat",
+      "colourful",
+      "drift",
+      "geometry"
+    ],
     "createdAt": "2026-05-26",
     "mtime": "2026-06-17T19:40:45.276Z",
     "ctime": "2026-06-17T19:40:45.276Z"
@@ -3705,6 +5381,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Five thick doughy orange strands are tied to a point above and below, where the colour cools to blue-green. The body bows out into a knotted lantern that rolls round its own axis, trading strands like a knot turning over slowly.",
+    "tags": [
+      "flat",
+      "colourful",
+      "orbit",
+      "geometry"
+    ],
     "createdAt": "2026-05-26",
     "mtime": "2026-06-17T19:40:45.276Z",
     "ctime": "2026-06-17T19:40:45.276Z"
@@ -3721,6 +5404,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A handful of blue and gold striped cords twine from the top of the black frame to the bottom, splitting, merging and ending in small rosettes of petals. Dotted horizontal rules hang behind them and the strand count rises and falls with a beat.",
+    "tags": [
+      "flat",
+      "colourful",
+      "pulse",
+      "grid"
+    ],
     "createdAt": "2026-05-26",
     "mtime": "2026-06-17T19:40:45.277Z",
     "ctime": "2026-06-17T19:40:45.276Z"
@@ -3737,6 +5427,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Wide ribbons pinched to needle points at top and bottom swell into a slowly rolling sphere on black, in greens and teals with rainbow-flecked bands sweeping across the surface like weather.",
+    "tags": [
+      "flat",
+      "colourful",
+      "noise",
+      "orbit"
+    ],
     "createdAt": "2026-05-26",
     "mtime": "2026-06-17T19:40:45.277Z",
     "ctime": "2026-06-17T19:40:45.277Z"
@@ -3753,6 +5450,13 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "Three drooping fronds banded in zig-zag rainbow stripes hang from a single point on black, their tips paddling in slow loops while thin vertical rules glide leftward behind. It reads as a puppet walking on a treadmill.",
+    "tags": [
+      "flat",
+      "colourful",
+      "drift",
+      "grid"
+    ],
     "createdAt": "2026-05-26",
     "mtime": "2026-06-17T19:40:45.277Z",
     "ctime": "2026-06-17T19:40:45.277Z"
@@ -3769,6 +5473,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A webcam cutout of the person fanned into a stack of finned ribbons on a flat red ground: the newest silhouette stays warm and real in front while older copies fan out behind, shifting through magenta to blue. Standing still smooths the layers; moving ripples them.",
+    "tags": [
+      "photo",
+      "flat",
+      "colourful",
+      "interactive",
+      "needs-photo"
+    ],
     "createdAt": "2026-06-16",
     "mtime": "2026-06-17T19:40:45.278Z",
     "ctime": "2026-06-17T19:40:45.277Z"
@@ -3785,6 +5497,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A clip recedes down a tunnel of its own ghosts on near-black: each older copy sits a little smaller, turned and dimmer than the last until the trail fades away. With the default zoom and rotation, the trail twists into a receding square spiral.",
+    "tags": [
+      "photo",
+      "geometry",
+      "pulse",
+      "needs-photo"
+    ],
     "createdAt": "2026-06-05",
     "mtime": "2026-06-17T19:40:45.278Z",
     "ctime": "2026-06-17T19:40:45.278Z"
@@ -3801,6 +5520,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Several clips play at once as a wall of tiles on near-black, in a two-column grid with small gaps. Each video keeps its own framing inside its cell, one letterboxed, another cropped to fill, with optional backdrops behind each tile.",
+    "tags": [
+      "photo",
+      "grid",
+      "flat",
+      "needs-photo"
+    ],
     "createdAt": "2026-06-04",
     "mtime": "2026-06-17T19:40:45.278Z",
     "ctime": "2026-06-17T19:40:45.278Z"
@@ -3817,6 +5543,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A clip rescreened as a halftone: a lattice of pale dots on near-black that swell where the frame is bright and vanish in shadow, so the picture only resolves at a distance. Dots can become squares or ASCII characters, in one colour or the video's own.",
+    "tags": [
+      "photo",
+      "grid",
+      "monochrome",
+      "needs-photo"
+    ],
     "createdAt": "2026-06-05",
     "mtime": "2026-06-17T19:40:45.279Z",
     "ctime": "2026-06-17T19:40:45.278Z"
@@ -3833,6 +5566,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "One clip folded into a kaleidoscope on near-black: identical wedges of footage meet edge to edge around the centre, every other one mirrored so the seams vanish. The wheel turns once per loop while the video keeps playing inside every slice.",
+    "tags": [
+      "photo",
+      "geometry",
+      "orbit",
+      "needs-photo"
+    ],
     "createdAt": "2026-06-05",
     "mtime": "2026-06-17T19:40:45.279Z",
     "ctime": "2026-06-17T19:40:45.279Z"
@@ -3849,6 +5589,12 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A loose collage of video clips on near-black, each placed against the whole canvas with its own scale, position and fit, overlapping where frames cross and stacking in list order. No grid, no effect: each clip just plays in place.",
+    "tags": [
+      "photo",
+      "flat",
+      "needs-photo"
+    ],
     "createdAt": "2026-05-31",
     "mtime": "2026-06-17T19:40:45.280Z",
     "ctime": "2026-06-17T19:40:45.280Z"
@@ -3865,6 +5611,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Footage plays inside fat, razor-sharp letterforms centred on near-black, a phrase of three stacked words by default, while the video drifts inside the letters. The text can be filled or outlined, and inverted so the clips play around the letters instead.",
+    "tags": [
+      "photo",
+      "typography",
+      "flat",
+      "needs-photo",
+      "needs-text"
+    ],
     "createdAt": "2026-06-05",
     "mtime": "2026-06-17T19:40:45.281Z",
     "ctime": "2026-06-17T19:40:45.280Z"
@@ -3881,6 +5635,14 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "A noisy sea urchin on black: spikes of different lengths bristle from a ball, each a fat, glossy lobe running through a rainbow palette. The whole sphere turns slowly, so the spikes swing past each other and the colours shift.",
+    "tags": [
+      "3d",
+      "shader",
+      "noise",
+      "colourful",
+      "orbit"
+    ],
     "createdAt": "2026-06-17",
     "mtime": "2026-06-17T20:12:46.394Z",
     "ctime": "2026-06-17T20:11:27.094Z"
@@ -3897,6 +5659,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "The raw influence field of drifting metaballs: a coarse, smoothly scaled buffer colours each pixel by the summed pull of the balls, glowing orange and white cores on blue over a dark red ground. A pointer adds balls.",
+    "tags": [
+      "noise",
+      "gradient",
+      "colourful",
+      "interactive"
+    ],
     "createdAt": "2026-06-21",
     "mtime": "2026-06-21T17:20:37.227Z",
     "ctime": "2026-06-21T17:20:27.699Z"
@@ -3913,6 +5682,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A few drifting balls outlined by a single thin rainbow iso-line on near-black; optional overlays show the sampling grid, the inside and outside points and the source balls. A pointer adds balls.",
+    "tags": [
+      "geometry",
+      "flat",
+      "colourful",
+      "interactive"
+    ],
     "createdAt": "2026-06-21",
     "mtime": "2026-06-21T17:21:16.795Z",
     "ctime": "2026-06-21T17:21:08.123Z"
@@ -3929,6 +5705,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Smooth vector blobs filled with a vertical sunset gradient, from brown to blue and cream, and outlined in white with an optional glow, drifting on a near-black ground. A pointer adds blobs.",
+    "tags": [
+      "geometry",
+      "gradient",
+      "flat",
+      "interactive"
+    ],
     "createdAt": "2026-06-21",
     "mtime": "2026-06-21T17:21:59.523Z",
     "ctime": "2026-06-21T17:21:49.695Z"
@@ -3945,6 +5728,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "The metaball field contoured at several levels: nested rainbow iso-lines ring the drifting balls like a topographic map on near-black, with optional filled bands. A pointer adds balls.",
+    "tags": [
+      "geometry",
+      "flat",
+      "colourful",
+      "interactive"
+    ],
     "createdAt": "2026-06-21",
     "mtime": "2026-06-21T17:22:43.475Z",
     "ctime": "2026-06-21T17:22:33.607Z"
@@ -4009,6 +5799,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A stained-glass window of flat Voronoi cells in warm browns, blues and creams, separated by thick black lead lines, reshuffling as the seed points wander while the colours slowly rotate. A pointer can add sites.",
+    "tags": [
+      "geometry",
+      "flat",
+      "colourful",
+      "interactive"
+    ],
     "createdAt": "2026-06-21",
     "mtime": "2026-06-21T17:27:24.479Z",
     "ctime": "2026-06-21T17:27:05.111Z"
@@ -4025,6 +5822,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A tiled gallery of labelled shape gestures, such as growing, sliding, twisting and breaking, each looping through wind-up, hold and release on a dark ground. Staggered round the cycle, every shape plays a synthesised sound effect that follows its movement.",
+    "tags": [
+      "flat",
+      "colourful",
+      "pulse",
+      "sound"
+    ],
     "createdAt": "2026-06-21",
     "mtime": "2026-06-21T23:27:47.860Z",
     "ctime": "2026-06-21T23:25:47.360Z"
@@ -4041,6 +5845,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "One continuous neon line, rainbow-coloured with a soft glow, drifts across a black ground as a loose scribble, then gathers onto the outline of the word HELLO and writes it, all at once by default or letter by letter, before letting go again. The text is editable.",
+    "tags": [
+      "typography",
+      "neon",
+      "colourful",
+      "drift",
+      "needs-text"
+    ],
     "createdAt": "2026-06-21",
     "mtime": "2026-06-23T19:54:55.093Z",
     "ctime": "2026-06-23T19:51:39.329Z"
@@ -4057,6 +5869,14 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "A faint grey paragraph waits on black while a small rainbow neon line reads it like an eye: it rests on one word, shaped as that word's outline, then travels to the next, and the word under it lights up. The spline only ever exists as words. The text is editable.",
+    "tags": [
+      "typography",
+      "neon",
+      "colourful",
+      "drift",
+      "needs-text"
+    ],
     "createdAt": "2026-06-21",
     "mtime": "2026-06-23T19:54:57.597Z",
     "ctime": "2026-06-23T19:51:39.332Z"
@@ -4073,6 +5893,13 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "Hundreds of overlapping outlined discs fuse into layered, intricate petals that twist like a rope on black, lit like an oil slick with shifting pearly pinks, greens and blues. A flat-looking flower with a lot of depth in the overlaps.",
+    "tags": [
+      "shader",
+      "iridescent",
+      "noise",
+      "geometry"
+    ],
     "createdAt": "2026-06-23",
     "mtime": "2026-06-23T20:02:42.833Z",
     "ctime": "2026-06-23T20:02:23.797Z"
@@ -4089,6 +5916,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A small ring of white dots joined by thin lines on near-black, with a text readout in the corner. The mouse moves it and sets its line weight and dot count while oscillators swell its radius and turn it.",
+    "tags": [
+      "geometry",
+      "flat",
+      "monochrome",
+      "interactive",
+      "pulse"
+    ],
     "createdAt": "2026-06-24",
     "mtime": "2026-06-24T15:50:05.988Z",
     "ctime": "2026-06-24T15:50:05.983Z"
@@ -4105,6 +5940,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Your text, white on black, changes word by word through per-letter irises: a circle closes over each letter, eats it away to a point, then reopens holding the next word's character. The circle can be drawn as a thin outline. Needs a text.",
+    "tags": [
+      "typography",
+      "flat",
+      "monochrome",
+      "needs-text"
+    ],
     "createdAt": "2026-06-21",
     "mtime": "2026-06-25T07:01:12.728Z",
     "ctime": "2026-06-25T07:01:12.723Z"
@@ -4121,6 +5963,13 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "A bundle of solid glossy pipes winds helically around a shared axis on black and rotates around itself, like a twisted rope or a DNA braid. Their surface shifts colour like anodised metal or an oil slick.",
+    "tags": [
+      "3d",
+      "shader",
+      "iridescent",
+      "noise"
+    ],
     "createdAt": "2026-06-24",
     "mtime": "2026-06-25T07:01:49.608Z",
     "ctime": "2026-06-25T07:01:49.602Z"
@@ -4137,6 +5986,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A white pen dot crawls along the outline of each letter in turn, laying down a purple stroke while the view stays locked on the tip, then pulls back to reveal the whole word on black. Shows a text you type.",
+    "tags": [
+      "typography",
+      "flat",
+      "needs-text",
+      "drift"
+    ],
     "createdAt": "2026-06-26",
     "mtime": "2026-06-26T17:27:06.594Z",
     "ctime": "2026-06-26T17:26:56.142Z"
@@ -4153,6 +6009,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "The whole word fills the frame in thin outline: several pens per letter draw rainbow strokes from scattered start points until the arcs meet, hold, then retreat to black. Shows a text you type.",
+    "tags": [
+      "typography",
+      "flat",
+      "colourful",
+      "needs-text"
+    ],
     "createdAt": "2026-06-26",
     "mtime": "2026-06-26T17:27:35.606Z",
     "ctime": "2026-06-26T17:27:14.602Z"
@@ -4169,6 +6032,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A ribbon of fanning coloured line segments snakes down a black frame in green, blue and magenta, inside a monospace measuring frame that reads its amplitude and phase; a soft pitched tone sounds as it crosses the axis.",
+    "tags": [
+      "geometry",
+      "flat",
+      "colourful",
+      "sound",
+      "orbit"
+    ],
     "createdAt": "2026-06-26",
     "mtime": "2026-06-26T22:54:26.636Z",
     "ctime": "2026-06-26T22:53:14.200Z"
@@ -4185,6 +6056,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A bundle of ten thin pipes winding in a helix around a vertical axis, shaded in muted, low-saturation oil-slick tones on black and wrapped in a small monospace instrument frame. Reads as a woven column.",
+    "tags": [
+      "3d",
+      "raymarched",
+      "shader",
+      "iridescent",
+      "geometry"
+    ],
     "createdAt": "2026-06-26",
     "mtime": "2026-06-26T23:24:59.337Z",
     "ctime": "2026-06-26T23:24:07.045Z"
@@ -4201,6 +6080,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Three twisting double strands of pastel, low-saturation colour run down a black frame like fused molten rope, inside a monospace instrument frame with telemetry. Painterly rather than clean.",
+    "tags": [
+      "shader",
+      "noise",
+      "iridescent",
+      "drift"
+    ],
     "createdAt": "2026-06-27",
     "mtime": "2026-06-27T15:38:05.961Z",
     "ctime": "2026-06-27T15:36:48.073Z"
@@ -4217,6 +6103,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Scattered oscilloscope-like noise gathers, locks onto the neon outline of a word in muted iridescent colour, holds, then dissolves back, framed by a monospace instrument readout. Shows a text you type; makes a soft sound.",
+    "tags": [
+      "typography",
+      "noise",
+      "iridescent",
+      "needs-text",
+      "sound"
+    ],
     "createdAt": "2026-06-27",
     "mtime": "2026-06-27T18:39:34.648Z",
     "ctime": "2026-06-27T18:39:34.588Z"
@@ -4233,6 +6127,13 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "Stacked ridge-lines in muted green, pink and blue rise and fall over a looping noise terrain on black, each row blacked out beneath its crest so near ridges hide the ones behind; a small reticle scans across.",
+    "tags": [
+      "noise",
+      "flat",
+      "iridescent",
+      "drift"
+    ],
     "createdAt": "2026-06-27",
     "mtime": "2026-06-27T19:10:12.399Z",
     "ctime": "2026-06-27T19:07:19.279Z"
@@ -4249,6 +6150,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A single white pen writes a word letter by letter in thin white outlines on black, inside a viewfinder frame whose telemetry counts the glyphs, before the view pulls back on the whole word. Shows a text you type.",
+    "tags": [
+      "typography",
+      "monochrome",
+      "flat",
+      "needs-text"
+    ],
     "createdAt": "2026-06-27",
     "mtime": "2026-06-27T19:52:38.595Z",
     "ctime": "2026-06-27T19:51:50.819Z"
@@ -4265,6 +6173,15 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "A field of random letters and digits in grey on near-black, flat and monospaced, over which a camera glides and locks onto one matching letter after another until the word is spelled; the centre glyph glows blue. Your word.",
+    "tags": [
+      "typography",
+      "grid",
+      "flat",
+      "monochrome",
+      "needs-text",
+      "drift"
+    ],
     "createdAt": "2026-06-28",
     "mtime": "2026-06-28T09:43:57.577Z",
     "ctime": "2026-06-28T09:43:30.865Z"
@@ -4281,6 +6198,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Your text, white on black, morphs between words through giant outlined letters that descend on it: the incoming glyph shrinks over the current one, eating it away in its own shape, then grows back holding the new character. Needs a text.",
+    "tags": [
+      "typography",
+      "flat",
+      "monochrome",
+      "needs-text"
+    ],
     "createdAt": "2026-06-24",
     "mtime": "2026-06-28T12:15:44.469Z",
     "ctime": "2026-06-28T12:15:44.468Z"
@@ -4297,6 +6221,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A sea of letters lying flat on a dark ground, from which the glyphs under the reading head rise as lit 3D extrusions casting letter-shaped shadows, as the word is spelled. How many rise is a setting. Your word.",
+    "tags": [
+      "typography",
+      "grid",
+      "3d",
+      "needs-text",
+      "drift"
+    ],
     "createdAt": "2026-06-28",
     "mtime": "2026-06-28T13:10:47.333Z",
     "ctime": "2026-06-28T13:10:12.453Z"
@@ -4313,6 +6245,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A single extruded letter bounds across a flat sea of letters in parabolic hops, tumbling a full turn mid-air and landing flat on the next cell of its word, while the rest of the grid stays on the ground. Your word.",
+    "tags": [
+      "typography",
+      "grid",
+      "3d",
+      "needs-text",
+      "bounce"
+    ],
     "createdAt": "2026-06-29",
     "mtime": "2026-06-29T10:28:20.256Z",
     "ctime": "2026-06-29T10:27:43.584Z"
@@ -4329,6 +6269,14 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "Glossy ribbons with teal bodies and rainbow cores follow the fingers found in your webcam or a first-person clip, leaving a long drifting echo that melts away on a near-black ground. The video itself is hidden by default. Needs a camera or footage.",
+    "tags": [
+      "shader",
+      "iridescent",
+      "interactive",
+      "drift",
+      "neon"
+    ],
     "createdAt": "2026-06-17",
     "mtime": "2026-06-29T15:45:58.460Z",
     "ctime": "2026-06-29T15:45:58.460Z"
@@ -4345,6 +6293,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Only the patches of your webcam or clip where hands appear are cut out, stacked into dozens of offset, slowly twisting echoes tinted from cream through pink to blue, on a near-black ground. The rest of the picture stays hidden by default.",
+    "tags": [
+      "photo",
+      "needs-photo",
+      "interactive",
+      "drift"
+    ],
     "createdAt": "2026-06-17",
     "mtime": "2026-06-29T15:45:58.461Z",
     "ctime": "2026-06-29T15:45:58.461Z"
@@ -4361,6 +6316,15 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A blurred webcam image carved into a coarse grid of tiles, each showing a slightly displaced patch with thin colour fringes at the seams, like glass bricks. The tiles drift on their own, or lean toward a pointer, microphone level or tracked hand.",
+    "tags": [
+      "photo",
+      "needs-photo",
+      "grid",
+      "noise",
+      "interactive",
+      "drift"
+    ],
     "createdAt": "2026-06-16",
     "mtime": "2026-06-29T15:45:58.461Z",
     "ctime": "2026-06-29T15:45:58.461Z"
@@ -4377,6 +6341,15 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Your webcam image reduced to the person alone, rebuilt as a hovering cloud of small rainbow dots on near-black, their depth set by pixel value by default or by a wave, noise or motion, with a slight camera wobble. Needs a camera.",
+    "tags": [
+      "3d",
+      "particles",
+      "colourful",
+      "photo",
+      "needs-photo",
+      "interactive"
+    ],
     "createdAt": "2026-06-25",
     "mtime": "2026-06-29T15:45:58.462Z",
     "ctime": "2026-06-29T15:45:58.461Z"
@@ -4393,6 +6366,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "The webcam hides behind a grid of opaque black cells, and your hands wipe it open fingertip by fingertip. Cells fade shut again once a hand leaves, and the open blob is outlined in white on its outer edge. Needs a camera.",
+    "tags": [
+      "photo",
+      "needs-photo",
+      "grid",
+      "shader",
+      "interactive"
+    ],
     "createdAt": "2026-06-17",
     "mtime": "2026-06-29T15:45:58.463Z",
     "ctime": "2026-06-29T15:45:58.462Z"
@@ -4409,6 +6390,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Your webcam fingertips act as brushes loaded with the camera's own colours, smearing rounded daubs across a black canvas only where they travel, with a thin rainbow outline marking the live hand. At rest the strokes can rewind. Needs a camera.",
+    "tags": [
+      "photo",
+      "needs-photo",
+      "interactive",
+      "colourful",
+      "flat"
+    ],
     "createdAt": "2026-06-17",
     "mtime": "2026-06-29T15:45:58.463Z",
     "ctime": "2026-06-29T15:45:58.463Z"
@@ -4425,6 +6414,15 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "The hopping letter drags a translucent teal ribbon behind it, its silhouette lofted through the air, twisting with the tumble and fading over a set lifetime, above a dark sea of letters. Your word.",
+    "tags": [
+      "typography",
+      "grid",
+      "3d",
+      "needs-text",
+      "bounce",
+      "neon"
+    ],
     "createdAt": "2026-06-29",
     "mtime": "2026-06-29T16:53:41.070Z",
     "ctime": "2026-06-29T16:53:00.130Z"
@@ -4441,6 +6439,14 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "One pen traces a word in rainbow outline while the whole canvas turns around it, so the outline streams past like a road; a faint ghost marks the path ahead before the view pulls back. Shows a text you type.",
+    "tags": [
+      "typography",
+      "flat",
+      "colourful",
+      "needs-text",
+      "drift"
+    ],
     "createdAt": "2026-06-30",
     "mtime": "2026-06-30T11:20:39.073Z",
     "ctime": "2026-06-30T11:20:08.441Z"
@@ -4457,6 +6463,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A single iridescent tube grows along each finger the camera can see, so a hand wears a set of oil-slick pipes on black and each finger keeps its own hue as it moves. With no hand in view, a waving fan of tubes plays instead. Needs a camera.",
+    "tags": [
+      "3d",
+      "shader",
+      "iridescent",
+      "interactive"
+    ],
     "createdAt": "2026-06-30",
     "mtime": "2026-06-30T11:39:20.946Z",
     "ctime": "2026-06-30T11:38:45.050Z"
@@ -4496,6 +6509,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A white word on near-black that your hand puppeteers: a pinch drags the letters like taffy, an open hand blasts them apart, and a fist snaps the word back into place. The mouse stands in for a pinch without a camera.",
+    "tags": [
+      "typography",
+      "flat",
+      "interactive",
+      "needs-text",
+      "drift"
+    ],
     "createdAt": "2026-07-04",
     "mtime": "2026-07-04T04:03:55.190Z",
     "ctime": "2026-07-04T04:03:29.334Z"
@@ -4512,6 +6533,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Short words, starting with HOW? then LIKE and THIS, morph one into the next as glowing rainbow dots on black. Each word holds crisp, then its points scatter mid-flight and regroup as the next.",
+    "tags": [
+      "typography",
+      "particles",
+      "colourful",
+      "needs-text"
+    ],
     "createdAt": "2026-07-04",
     "mtime": "2026-07-04T04:04:48.282Z",
     "ctime": "2026-07-04T04:04:26.938Z"
@@ -4528,6 +6556,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A webcam portrait rebuilt from a coarse grid of dots in the camera's own colours on near-black. The microphone tears it apart: each word or beat scatters the dots along their own paths and swells them, then the face settles back in the pauses. Needs a camera and microphone.",
+    "tags": [
+      "particles",
+      "noise",
+      "colourful",
+      "interactive",
+      "sound"
+    ],
     "createdAt": "2026-07-04",
     "mtime": "2026-07-04T04:05:55.070Z",
     "ctime": "2026-07-04T04:05:34.646Z"
@@ -4544,6 +6580,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "An instrument with nothing to touch, drawn as horizontal lanes on near-black: the tracked hand, or the mouse, plays a step sequence, height choosing the pitch and openness the volume. Each note leaves a coloured ring and a glowing dot. Needs a camera, or a pointer.",
+    "tags": [
+      "flat",
+      "neon",
+      "interactive",
+      "sound"
+    ],
     "createdAt": "2026-07-04",
     "mtime": "2026-07-04T04:07:14.522Z",
     "ctime": "2026-07-04T04:06:56.402Z"
@@ -4560,6 +6603,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Your webcam face as a glowing constellation: 468 tracked landmarks drawn as additive dots on a dark navy ground, striped through the rainbow, swelling when the mouth opens and warming when you smile. Needs a camera.",
+    "tags": [
+      "particles",
+      "colourful",
+      "interactive",
+      "pulse"
+    ],
     "createdAt": "2026-07-06",
     "mtime": "2026-07-06T22:52:20.753Z",
     "ctime": "2026-07-06T22:51:51.741Z"
@@ -4576,6 +6626,14 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "A legless, wingless dragon of iridescent twisting tubes racing down an endless dark square corridor with glowing neon edges, weaving around smoked-glass obstacles. A rainbow-sheened head leads the way through the dim blue-black tunnel.",
+    "tags": [
+      "3d",
+      "shader",
+      "raymarched",
+      "iridescent",
+      "neon"
+    ],
     "createdAt": "2026-07-06",
     "mtime": "2026-07-06T23:32:58.864Z",
     "ctime": "2026-07-06T23:32:29.940Z"
@@ -4616,6 +6674,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A synth voice that is its own display: a receding stack of dim waveform frames on near-black, one bright green curve morphing through the pile and flashing on each note, a step lane for the pattern and a small readout. Dragging scrubs the visible curve.",
+    "tags": [
+      "flat",
+      "neon",
+      "pulse",
+      "interactive",
+      "sound"
+    ],
     "createdAt": "2026-07-07",
     "mtime": "2026-07-07T04:52:51.027Z",
     "ctime": "2026-07-07T04:52:22.927Z"
@@ -4632,6 +6698,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Two photos meet along a seam, and small square tiles across the seam show the opposite photo in exact register, like windows through to the other picture. Tile transitions are optional; it holds still by default. Needs your photos.",
+    "tags": [
+      "photo",
+      "needs-photo",
+      "grid",
+      "flat"
+    ],
     "createdAt": "2026-07-06",
     "mtime": "2026-07-07T06:55:11.198Z",
     "ctime": "2026-07-06T23:07:32.842Z"
@@ -4648,6 +6721,14 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "A thick rope seen being plaited: loose glossy strands enter as a fan, interlace at a fixed braiding front and scroll away already tied. The tubes shade like an oil slick in greens, purples and blues on black. Raymarched in a single shader.",
+    "tags": [
+      "3d",
+      "shader",
+      "raymarched",
+      "iridescent",
+      "flip"
+    ],
     "createdAt": "2026-07-09",
     "mtime": "2026-07-09T18:30:21.693Z",
     "ctime": "2026-07-09T18:29:47.837Z"
@@ -4664,6 +6745,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A loom that never stops: bright woven bands in rainbow colours, warp wires running straight and weft rows passing over and under them like a shuttle, the fabric scrolling upward over black. Glossy, tightly woven, full-frame.",
+    "tags": [
+      "3d",
+      "shader",
+      "raymarched",
+      "colourful",
+      "drift"
+    ],
     "createdAt": "2026-07-10",
     "mtime": "2026-07-10T06:21:11.987Z",
     "ctime": "2026-07-10T06:20:25.263Z"
@@ -4680,6 +6769,14 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "Chainmail assembling itself: glossy rings in shifting pearly pinks, greens and yellows on a half-offset lattice, each row tilted against its neighbours so every ring links four others, the sheet scrolling up over black.",
+    "tags": [
+      "3d",
+      "shader",
+      "raymarched",
+      "iridescent",
+      "drift"
+    ],
     "createdAt": "2026-07-10",
     "mtime": "2026-07-10T06:54:57.765Z",
     "ctime": "2026-07-10T06:54:26.097Z"
@@ -4696,6 +6793,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A closed ring of rope laid like a nautical grommet, glossy tubes winding strand over strand around a loop in rainbow colours on black. A finished object rather than an endless feed, it turns steadily in space.",
+    "tags": [
+      "3d",
+      "shader",
+      "raymarched",
+      "colourful",
+      "orbit"
+    ],
     "createdAt": "2026-07-10",
     "mtime": "2026-07-10T07:07:07.161Z",
     "ctime": "2026-07-10T07:06:41.357Z"
@@ -4712,6 +6817,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A rope knotted over and under itself into a dense diagonal basket weave around a ring, like a Turk's head collar, in glossy tubes shifting through the rainbow on black. A closed knot that turns in space.",
+    "tags": [
+      "3d",
+      "shader",
+      "raymarched",
+      "colourful",
+      "orbit"
+    ],
     "createdAt": "2026-07-10",
     "mtime": "2026-07-10T07:28:41.201Z",
     "ctime": "2026-07-10T07:28:13.661Z"
@@ -4728,6 +6841,14 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "An iridescent flying snake of twisting tubes racing down a dark neon-edged corridor: the obstacles are plates pierced by round holes, glowing in green and orange rings, and the dragon has to line up and thread through each hole instead of slipping past.",
+    "tags": [
+      "3d",
+      "shader",
+      "raymarched",
+      "iridescent",
+      "neon"
+    ],
     "createdAt": "2026-07-11",
     "mtime": "2026-07-11T21:39:40.720Z",
     "ctime": "2026-07-11T21:38:33.188Z"
@@ -4744,6 +6865,14 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "Glossy tori floating along a closed circuit on black, their surface shifting through oil-slick colours with the viewing angle. A first-person camera accelerates out of one ring, glides and settles into the next, forever.",
+    "tags": [
+      "3d",
+      "raymarched",
+      "shader",
+      "iridescent",
+      "orbit"
+    ],
     "createdAt": "2026-07-11",
     "mtime": "2026-07-11T22:07:56.073Z",
     "ctime": "2026-07-11T22:07:27.769Z"
@@ -4760,6 +6889,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Full-frame psychedelic wallpaper in saturated rainbow bands with a soft dark vignette: a zoom tunnel, a kaleidoscope mandala or two interfering ring fields, chosen by a setting. Built to loop without a seam.",
+    "tags": [
+      "shader",
+      "colourful",
+      "orbit",
+      "noise",
+      "gradient"
+    ],
     "createdAt": "2026-07-14",
     "mtime": "2026-07-14T21:59:02.570Z",
     "ctime": "2026-07-14T21:59:02.566Z"
@@ -4776,6 +6913,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "The letters of a word rain down one by one in rainbow colours, tumble under gravity and pile up on a floor line on a dark ground, then the frame clears and it drops again. Shows a text you type.",
+    "tags": [
+      "typography",
+      "flat",
+      "colourful",
+      "needs-text",
+      "bounce"
+    ],
     "createdAt": "2026-07-14",
     "mtime": "2026-07-14T21:59:02.576Z",
     "ctime": "2026-07-14T21:59:02.572Z"
@@ -4792,6 +6937,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A grid of monospace glyphs on black, grey with a red ring: on every beat the ring punches out from the centre and the grid thumps brighter, while a square-wave synth note plays on the same beat.",
+    "tags": [
+      "typography",
+      "grid",
+      "pulse",
+      "sound",
+      "flat"
+    ],
     "createdAt": "2026-07-14",
     "mtime": "2026-07-14T21:59:02.582Z",
     "ctime": "2026-07-14T21:59:02.578Z"
@@ -4808,6 +6961,15 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Each ring of the circuit becomes a letter: an iridescent tube follows a glyph outline on black while the camera threads the word letter by letter, so reading it is a journey through the typography. The text is yours.",
+    "tags": [
+      "3d",
+      "typography",
+      "shader",
+      "iridescent",
+      "needs-text",
+      "orbit"
+    ],
     "createdAt": "2026-07-15",
     "mtime": "2026-07-15T08:37:02.819Z",
     "ctime": "2026-07-15T08:36:18.431Z"
@@ -4824,6 +6986,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "No corridor here: one frosted plate pierced by a grid of round holes seen from below, against a dark blue ground. A striped iridescent dragon pops out of one hole, arcs through the air and dives into another, glimpsed as a blur beneath.",
+    "tags": [
+      "3d",
+      "shader",
+      "raymarched",
+      "iridescent",
+      "bounce"
+    ],
     "createdAt": "2026-07-15",
     "mtime": "2026-07-15T17:15:18.246Z",
     "ctime": "2026-07-15T17:11:00.754Z"
@@ -4840,6 +7010,15 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "A single letter, shown as a thin iridescent tube on black, stands still in the middle of the frame while the camera walks slowly around it. Nothing rushes past, so the oil-slick colour is easy to read. The text is yours.",
+    "tags": [
+      "3d",
+      "typography",
+      "shader",
+      "iridescent",
+      "needs-text",
+      "orbit"
+    ],
     "createdAt": "2026-07-22",
     "mtime": "2026-07-22T12:31:29.184Z",
     "ctime": "2026-07-22T12:30:59.480Z"
@@ -4856,6 +7035,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "One iridescent glyph melts into the next letter of a word on black, the tube behaving as a single piece of liquid that reshapes itself and lands back on the first glyph as the loop closes. The text is yours.",
+    "tags": [
+      "3d",
+      "typography",
+      "shader",
+      "iridescent",
+      "needs-text"
+    ],
     "createdAt": "2026-07-27",
     "mtime": "2026-07-27T21:52:25.851Z",
     "ctime": "2026-07-27T21:51:56.827Z"
@@ -4872,6 +7059,15 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "The letters of a word float scattered through a 3D cloud as iridescent tubes on black, and the camera flies a smooth closed path through every one in word order. A scatter setting tidies the cloud back into a circuit.",
+    "tags": [
+      "3d",
+      "typography",
+      "shader",
+      "iridescent",
+      "needs-text",
+      "orbit"
+    ],
     "createdAt": "2026-07-27",
     "mtime": "2026-07-27T23:25:23.580Z",
     "ctime": "2026-07-27T23:24:46.100Z"
@@ -4888,6 +7084,13 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "Glossy chrome spheres drop down the axis of a braid of iridescent pipes on black, and the braid bulges or pinches around each pearl as it passes, as if it pulled the tubes in.",
+    "tags": [
+      "3d",
+      "shader",
+      "iridescent",
+      "chrome"
+    ],
     "createdAt": "2026-07-30",
     "mtime": "2026-07-30T20:49:06.393Z",
     "ctime": "2026-07-30T20:48:37.701Z"
@@ -4904,6 +7107,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A woven knot of dark glossy rope with oil-slick sheen around a ring that you can bend: white handle points sit on its centreline and dragging them reshapes the loop, by mouse, touch or hand tracking. Black ground.",
+    "tags": [
+      "3d",
+      "shader",
+      "raymarched",
+      "iridescent",
+      "interactive"
+    ],
     "createdAt": "2026-07-30",
     "mtime": "2026-07-30T20:51:24.310Z",
     "ctime": "2026-07-30T20:49:40.698Z"
@@ -4920,6 +7131,14 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "Chrome pearls fall outside a braid of iridescent pipes on black, each orbiting at its own radius and corkscrewing around the structure, printing a travelling spiral wave onto the tubes as they pass.",
+    "tags": [
+      "3d",
+      "shader",
+      "iridescent",
+      "chrome",
+      "orbit"
+    ],
     "createdAt": "2026-07-31",
     "mtime": "2026-07-31T10:02:43.229Z",
     "ctime": "2026-07-31T10:02:05.389Z"
@@ -4936,6 +7155,15 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "One iridescent liquid letter on black that you deform by hand: every point of its outline can be pulled with a mouse, a finger or a camera-tracked pinch, and the tube re-fuses around wherever you leave it. No automatic motion.",
+    "tags": [
+      "3d",
+      "typography",
+      "shader",
+      "iridescent",
+      "needs-text",
+      "interactive"
+    ],
     "createdAt": "2026-07-31",
     "mtime": "2026-07-31T10:18:38.912Z",
     "ctime": "2026-07-31T10:17:48.772Z"
@@ -4952,6 +7180,15 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "A liquid iridescent letter on black, deformed by a troupe of drawn cursors that walk on from off-canvas, share the outline's handles between them, drag them outward and retreat. You can still sculpt it by hand mid-show.",
+    "tags": [
+      "3d",
+      "typography",
+      "shader",
+      "iridescent",
+      "needs-text",
+      "interactive"
+    ],
     "createdAt": "2026-07-31",
     "mtime": "2026-07-31T18:58:52.720Z",
     "ctime": "2026-07-31T12:57:43.303Z"
@@ -4968,6 +7205,16 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A troupe of drawn cursors retypes a list of letters or words on black, physically dragging the iridescent tube of each text into the next. Each finished text holds legible before the conversion begins.",
+    "tags": [
+      "3d",
+      "typography",
+      "shader",
+      "raymarched",
+      "iridescent",
+      "needs-text",
+      "interactive"
+    ],
     "createdAt": "2026-07-31",
     "mtime": "2026-07-31T20:43:21.901Z",
     "ctime": "2026-07-31T12:57:43.303Z"
@@ -4984,6 +7231,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Two photographs split the frame but trade places: each half wears an enlargement of the other, while a mirrored rectangle on each half shows the patch the opposite side hides. Clicking moves both windows at once. Pairs of photos take turns, on warm cream.",
+    "tags": [
+      "photo",
+      "flat",
+      "interactive",
+      "needs-photo"
+    ],
     "createdAt": "2026-08-01",
     "mtime": "2026-08-01T17:21:48.453Z",
     "ctime": "2026-08-01T17:21:43.133Z"
@@ -5000,6 +7254,13 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "Ribbons of colour pulled out of the photo itself stream off to either side of the subject as if the picture's paint were dragged, passing behind it while a cut-out keeps the subject sharp on top. Draggable handles shape the ribbons; click the photo to pick the subject. Uses your photo.",
+    "tags": [
+      "photo",
+      "needs-photo",
+      "flat",
+      "interactive"
+    ],
     "createdAt": "2026-08-08",
     "mtime": "2026-08-08T11:07:38.543Z",
     "ctime": "2026-08-08T11:06:51.039Z"
@@ -5016,6 +7277,12 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A photograph where clicking a point lifts the subject off it: a segmentation model cuts out what you picked, which floats pin-sharp with a drop shadow over a blurred copy of the same scene. A koala photo is the default. Needs a photo.",
+    "tags": [
+      "photo",
+      "needs-photo",
+      "interactive"
+    ],
     "createdAt": "2025-11-21",
     "mtime": "2026-08-08T11:21:04.407Z",
     "ctime": "2026-08-07T15:23:43.575Z"
@@ -5032,6 +7299,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A heavily blurred photograph in which regions snap into focus one after another, as a looping noise walk picks points and a segmentation model cuts out whatever sits there, a circle marking the pick. Clicks override it. Needs a photo.",
+    "tags": [
+      "photo",
+      "needs-photo",
+      "noise",
+      "interactive"
+    ],
     "createdAt": "2026-08-08",
     "mtime": "2026-08-08T11:51:07.033Z",
     "ctime": "2026-08-08T11:50:37.437Z"
@@ -5048,6 +7322,16 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "Drawn cursors pluck points of an iridescent liquid word on black, stretch them like elastics towards the canvas edge and let go, and each point springs across to its place in the next text. Several are in flight at once.",
+    "tags": [
+      "3d",
+      "typography",
+      "shader",
+      "raymarched",
+      "iridescent",
+      "needs-text",
+      "interactive"
+    ],
     "createdAt": "2026-08-09",
     "mtime": "2026-08-09T21:03:52.084Z",
     "ctime": "2026-08-09T21:00:07.104Z"
@@ -5064,6 +7348,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A fan of ghost copies of the cut-out subject arcs along a draggable curve, each copy fainter and smaller, optionally rotated or tinted, while the real subject stays crisp on top. The photo behind can stay sharp, blur or dim. Uses your photo; click it to pick the subject.",
+    "tags": [
+      "photo",
+      "needs-photo",
+      "flat",
+      "interactive"
+    ],
     "createdAt": "2026-08-09",
     "mtime": "2026-08-09T21:04:41.741Z",
     "ctime": "2026-08-09T21:03:57.429Z"
@@ -5080,6 +7371,16 @@
     "hiddenFromGallery": false,
     "favorite": true,
     "asyncDraw": false,
+    "description": "A formation of drawn cursors, by default a breathing circle of hands, flies over an iridescent liquid word on black without touching it; the letters lean toward each passing cursor and settle like jelly. Plays soft sounds as they pass.",
+    "tags": [
+      "3d",
+      "typography",
+      "shader",
+      "iridescent",
+      "needs-text",
+      "interactive",
+      "sound"
+    ],
     "createdAt": "2026-08-14",
     "mtime": "2026-08-14T13:44:00.678Z",
     "ctime": "2026-08-14T13:39:38.290Z"
@@ -5096,6 +7397,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A photograph fills the lower half of a speckled warm-paper ground while a perforated white postage stamp above shows a magnified detail of it, and a stamp-shaped hole is punched out of the photo. Clicking the photo re-aims the stamp; clicking the paper moves it.",
+    "tags": [
+      "photo",
+      "flat",
+      "interactive",
+      "needs-photo"
+    ],
     "createdAt": "2026-08-24",
     "mtime": "2026-08-24T23:30:46.893Z",
     "ctime": "2026-08-24T23:30:32.505Z"
@@ -5163,6 +7471,16 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A black board of tiles, each carrying a single letter in a wavy typeface drawn as a thick tube in shifting spectral colour, so highlights slide along the letter as the tile turns. Tiles flip edge-on and return as two, splitting outward from the centre up to five levels, unevenly, before restarting.",
+    "tags": [
+      "typography",
+      "3d",
+      "raymarched",
+      "colourful",
+      "grid",
+      "flip",
+      "cascade"
+    ],
     "createdAt": "2026-09-16",
     "mtime": "2026-09-16T22:59:45.759Z",
     "ctime": "2026-09-16T22:58:57.815Z"
@@ -5179,6 +7497,13 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A small lit scene on near-black: a pale sphere and a grey torus inside a wireframe box with a floor grid, and a white sun joined by a thin ray, seen by a camera that circles once per loop while the torus spins on a slanted axis.",
+    "tags": [
+      "3d",
+      "geometry",
+      "monochrome",
+      "orbit"
+    ],
     "createdAt": "2026-09-21",
     "mtime": "2026-09-21T17:47:29.746Z",
     "ctime": "2026-09-21T17:46:53.742Z"
@@ -5220,6 +7545,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A tilted hexagonal sheet of small, widely spaced beads, each its own hue, lifts under a hand-shaped silhouette that circles it, with tubes joining the raised beads into a patch of mesh that relaxes after it passes. Turn on the camera and tracked hands and faces take over.",
+    "tags": [
+      "3d",
+      "mesh",
+      "iridescent",
+      "interactive",
+      "raymarched"
+    ],
     "createdAt": "2026-09-21",
     "mtime": "2026-09-21T19:07:50.022Z",
     "ctime": "2026-09-21T19:06:48.610Z"
@@ -5261,6 +7594,15 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A ball of iridescent beads, half on its surface and half inside, linked by tubes that grow outward from the centre once per loop with tapering tips, so the volume reads as solid rather than a hollow shell. The far side sinks into fog; a pointer pulls nearby beads.",
+    "tags": [
+      "3d",
+      "iridescent",
+      "mesh",
+      "raymarched",
+      "interactive",
+      "pulse"
+    ],
     "createdAt": "2026-09-21",
     "mtime": "2026-09-21T20:47:22.877Z",
     "ctime": "2026-09-21T20:42:17.073Z"
@@ -5277,6 +7619,15 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A coarse, irregular net of beads and tubes tilted across the frame, pulled inward by the letters of a word: points slide to each glyph's outline, so the mesh bunches and fuses into a lifted knot in the letter's shape, then squeezes on to the next. A pointer attracts the sheet.",
+    "tags": [
+      "typography",
+      "3d",
+      "iridescent",
+      "mesh",
+      "raymarched",
+      "interactive"
+    ],
     "createdAt": "2026-09-23",
     "mtime": "2026-09-23T22:40:06.034Z",
     "ctime": "2026-09-23T22:39:37.414Z"
@@ -5318,6 +7669,15 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A sparse sheet of beads carrying a letter of raised, fused beads that never sits still: it is cut into strips that slide up and down past each other along a wave, so the glyph looks sliced and sheared. On each beat the strips slide out as the next letter's strips come in.",
+    "tags": [
+      "typography",
+      "3d",
+      "iridescent",
+      "mesh",
+      "raymarched",
+      "interactive"
+    ],
     "createdAt": "2026-09-23",
     "mtime": "2026-09-23T22:47:39.774Z",
     "ctime": "2026-09-23T22:47:08.578Z"
@@ -5334,6 +7694,12 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A 128 by 64 orange-backlit LCD of a pocket multi-tool in a dark bezel, cycling through its screens: an icon menu, a frequency analyzer, a signal capture, a card reader, a typed message with a blinking cursor and a dithered plasma. Dark square pixels dissolve from one screen to the next.",
+    "tags": [
+      "flat",
+      "grid",
+      "pulse"
+    ],
     "createdAt": "2026-09-23",
     "mtime": "2026-09-23T22:48:43.775Z",
     "ctime": "2026-09-23T22:47:04.607Z"
@@ -5350,6 +7716,15 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A grid of short horizontal dashes covers the sheet like compass needles; near each letter they turn along the stroke, lengthen and merge into continuous ribbons while the counters stay open. At each beat the dashes swing round to the next letter. A pointer turns nearby dashes to face it.",
+    "tags": [
+      "typography",
+      "3d",
+      "iridescent",
+      "raymarched",
+      "interactive",
+      "flip"
+    ],
     "createdAt": "2026-09-23",
     "mtime": "2026-09-23T22:49:34.434Z",
     "ctime": "2026-09-23T22:49:07.058Z"
@@ -5366,6 +7741,15 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "A dense tilted sheet of beads and thin tubes with a letter standing as a low plateau at its centre, from which ring-shaped crests spread outward, three per loop, raising and nudging the points as they pass. Each beat the plateau morphs to the next letter. The pointer adds rings.",
+    "tags": [
+      "typography",
+      "3d",
+      "iridescent",
+      "mesh",
+      "raymarched",
+      "interactive"
+    ],
     "createdAt": "2026-09-23",
     "mtime": "2026-09-23T22:51:18.994Z",
     "ctime": "2026-09-23T22:50:51.186Z"
@@ -5406,6 +7790,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "An upright cylinder bristling with thick solid spikes, twelve around and twelve along, turning on a pale blue-grey ground. Bands of blue, green, cream and pink slide over each spike, whose lengths are nearly uniform, and they overlap into ridges.",
+    "tags": [
+      "3d",
+      "shader",
+      "mesh",
+      "iridescent",
+      "orbit"
+    ],
     "createdAt": "2026-10-09",
     "mtime": "2026-10-09T04:00:57.983Z",
     "ctime": "2026-10-09T04:00:42.131Z"
@@ -5422,6 +7814,14 @@
     "hiddenFromGallery": false,
     "favorite": false,
     "asyncDraw": false,
+    "description": "Seen from inside a tube that narrows into the distance, rings of solid spikes point inward and shrink to nothing at the far end. Bands of blue, green, cream and pink wrap each spike and fog fades the depth into the pale ground while the tunnel sways.",
+    "tags": [
+      "3d",
+      "shader",
+      "mesh",
+      "iridescent",
+      "noise"
+    ],
     "createdAt": "2026-10-09",
     "mtime": "2026-10-09T04:01:44.687Z",
     "ctime": "2026-10-09T04:01:24.803Z"

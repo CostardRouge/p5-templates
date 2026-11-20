@@ -1,0 +1,11 @@
+{
+  "description": "A ball of iridescent beads, half on its surface and half inside, linked by tubes that grow outward from the centre once per loop with tapering tips, so the volume reads as solid rather than a hollow shell. The far side sinks into fog; a pointer pulls nearby beads.",
+  "tags": [
+    "3d",
+    "iridescent",
+    "mesh",
+    "raymarched",
+    "interactive",
+    "pulse"
+  ]
+}

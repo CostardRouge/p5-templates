@@ -1,3 +1,10 @@
 {
+  "description": "Photographs tiled into an even three-by-three grid on warm cream, each one cropped to fill its cell like a contact sheet, the set repeating when there are more cells than pictures. Rows, columns, border and fit are adjustable. A still composition with no motion.",
+  "tags": [
+    "photo",
+    "grid",
+    "flat",
+    "needs-photo"
+  ],
   "hiddenFromHome": true
 }

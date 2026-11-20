@@ -1,3 +1,11 @@
 {
+  "description": "Glossy tori floating along a closed circuit on black, their surface shifting through oil-slick colours with the viewing angle. A first-person camera accelerates out of one ring, glides and settles into the next, forever.",
+  "tags": [
+    "3d",
+    "raymarched",
+    "shader",
+    "iridescent",
+    "orbit"
+  ],
   "favorite": true
 }

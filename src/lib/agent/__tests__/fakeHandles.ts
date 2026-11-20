@@ -313,6 +313,7 @@ export function fakeHandles(
     },
     exports: {
       supported: () => true,
+      ready: () => true,
       presets: [
         {
           key: "square",

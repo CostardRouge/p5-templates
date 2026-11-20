@@ -1,3 +1,10 @@
 {
+  "description": "Ribbons of colour pulled out of the photo itself stream off to either side of the subject as if the picture's paint were dragged, passing behind it while a cut-out keeps the subject sharp on top. Draggable handles shape the ribbons; click the photo to pick the subject. Uses your photo.",
+  "tags": [
+    "photo",
+    "needs-photo",
+    "flat",
+    "interactive"
+  ],
   "favorite": true
 }

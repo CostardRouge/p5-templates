@@ -1,3 +1,11 @@
 {
+  "description": "A legless, wingless dragon of iridescent twisting tubes racing down an endless dark square corridor with glowing neon edges, weaving around smoked-glass obstacles. A rainbow-sheened head leads the way through the dim blue-black tunnel.",
+  "tags": [
+    "3d",
+    "shader",
+    "raymarched",
+    "iridescent",
+    "neon"
+  ],
   "favorite": true
 }

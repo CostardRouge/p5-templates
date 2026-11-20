@@ -1,0 +1,10 @@
+{
+  "description": "A grid of rainbow sticks on black whose length breathes in and out, with a snappy colour shift in the hue, so the bristling flow field gains a slow tide. Sticks cross into their neighbours.",
+  "tags": [
+    "noise",
+    "shader",
+    "grid",
+    "pulse",
+    "colourful"
+  ]
+}

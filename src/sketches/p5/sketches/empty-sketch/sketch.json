@@ -1,4 +1,10 @@
 {
+  "description": "An empty canvas filled with a single background colour, black by default, and nothing else. The background can be a flat colour or a gradient. A blank starting point.",
+  "tags": [
+    "flat",
+    "monochrome",
+    "gradient"
+  ],
   "hiddenFromHome": true,
   "hiddenFromGallery": true
 }

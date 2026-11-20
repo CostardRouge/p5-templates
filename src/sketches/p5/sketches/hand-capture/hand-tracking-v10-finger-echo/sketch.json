@@ -1,3 +1,11 @@
 {
+  "description": "Glossy ribbons with teal bodies and rainbow cores follow the fingers found in your webcam or a first-person clip, leaving a long drifting echo that melts away on a near-black ground. The video itself is hidden by default. Needs a camera or footage.",
+  "tags": [
+    "shader",
+    "iridescent",
+    "interactive",
+    "drift",
+    "neon"
+  ],
   "favorite": true
 }

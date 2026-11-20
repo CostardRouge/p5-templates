@@ -1,3 +1,11 @@
 {
+  "description": "A thick rope seen being plaited: loose glossy strands enter as a fan, interlace at a fixed braiding front and scroll away already tied. The tubes shade like an oil slick in greens, purples and blues on black. Raymarched in a single shader.",
+  "tags": [
+    "3d",
+    "shader",
+    "raymarched",
+    "iridescent",
+    "flip"
+  ],
   "favorite": true
 }

@@ -103,4 +103,4 @@ Claude Desktop and Claude Code each start their own `sketchbook-studio-mcp.mjs`,
 
 ## Plan commands (2026-11-20)
 
-`plan.*` read and steer the gallery's Plan — the calculation and the choices of `src/lib/planner/`, so the view and an agent see one plan. They only propose; the rules, and why there is no `plan.approve`, live in `publishing.md` («The Plan»).
+`plan.*` read and steer the gallery's Plan — the calculation and the choices of `src/lib/planner/`, so the view and an agent see one plan. They only propose, with one exception that still approves nothing: `plan.render` runs the render queue over the lines the PERSON approved in the Plan (and `plan.stop` stops it). The rules, and why there is no `plan.approve`, live in `publishing.md` («The Plan», «Pass 3»).
