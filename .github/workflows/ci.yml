@@ -132,8 +132,6 @@ jobs:
           # production. Mirrors the args used by the Docker build.
           BACKEND_RECORDING: "false"
           NOTIFICATIONS: "false"
-          LIVE_THUMBNAIL: "false"
-          PREVIEW_ON_HOVER: "false"
           # On so the build compiles the interaction-bindings plugin path
           # (matches the deployed image, which enables it).
           INTERACTION_BINDINGS: "true"

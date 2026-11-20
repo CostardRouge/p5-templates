@@ -126,7 +126,6 @@ jobs:
           build-args: |
             BACKEND_RECORDING=true
             NOTIFICATIONS=false
-            LIVE_THUMBNAIL=true
             INTERACTION_BINDINGS=true
             NEXT_PUBLIC_GITHUB_REPO_URL=${{ vars['NEXT_PUBLIC_GITHUB_REPO_URL'] }}
 

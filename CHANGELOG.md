@@ -41,6 +41,11 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
 
 ### Changed
 
+- The sketch previews have a three-way setting on the Sketches page: play while a card is in view, only on
+  hover, or never. A screen with a mouse starts on hover and a phone starts on still pictures; your choice is
+  remembered in this browser and the home page's cards follow it too. On a phone the switch stays an on/off.
+- The live thumbnail of the slide being played in the studio can be turned off from the menu, under Workspace
+  ("Live slide thumbnail"). It is on by default, now on the public site as well.
 - Self-hosting no longer needs Redis, MinIO or PostgreSQL: `docker compose up` starts the app alone, and the
   recording backend joins with `docker compose --profile backend up` (or `make dc-up-backend`). The app skips its
   database migrations unless backend recording or notifications are on.

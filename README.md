@@ -67,7 +67,7 @@ S3_BUCKET=recordings
 BACKEND_RECORDING=true
 ```
 
-> **Docker note:** `NEXT_PUBLIC_*` variables are baked in at build time. Set `BACKEND_RECORDING`, `NOTIFICATIONS`, `LIVE_THUMBNAIL`, and `NEXT_PUBLIC_*` vars as build args in CI/CD, not just runtime env vars.
+> **Docker note:** `NEXT_PUBLIC_*` variables are baked in at build time. Set `BACKEND_RECORDING`, `NOTIFICATIONS`, `INTERACTION_BINDINGS`, and `NEXT_PUBLIC_*` vars as build args in CI/CD, not just runtime env vars.
 
 ### Feature flags
 
@@ -76,8 +76,6 @@ flag in `next.config.ts`). All default **off** — set the var to `true` to enab
 
 | Var | Enables |
 |---|---|
-| `PREVIEW_ON_HOVER` | Animated template previews on hover |
-| `LIVE_THUMBNAIL` | Live thumbnail mirroring of the main canvas |
 | `NOTIFICATIONS` | Push notifications |
 | `INTERACTION_BINDINGS` | **Interaction bindings plugin** — the per-field modulation pastilles + the Interaction settings panel on every sketch (webcam, mic, orbit, perlin noise, gyroscope…). Off by default because it boots interaction handlers and samples channels every frame; turn it on to bind parameters to live inputs. |
 

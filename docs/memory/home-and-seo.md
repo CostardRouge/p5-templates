@@ -51,7 +51,7 @@ The tour is audited with `axe-core` (already a transitive dependency) driven fro
 
 ## Retaking the capture assets (2026-08-31)
 
-The screenshots in `public/assets/images/features/` were taken headlessly against a **production build with the plugin flags the published image uses** (`INTERACTION_BINDINGS=true LIVE_THUMBNAIL=true npm run build`, then `npm start`). That matters: `interactionBindingsEnabled()` is off by default, so a default build shows **no modulation affordance at all** and the `binding` / `mixer` captures cannot be taken. `.github/workflows/docker-build.yml` is the reference for which flags the deployed site really has.
+The screenshots in `public/assets/images/features/` were taken headlessly against a **production build with the plugin flags the published image uses** (`INTERACTION_BINDINGS=true npm run build`, then `npm start`; the live slide thumbnail they show is the default setting since 2026-11-20, no flag needed). That matters: `interactionBindingsEnabled()` is off by default, so a default build shows **no modulation affordance at all** and the `binding` / `mixer` captures cannot be taken. `.github/workflows/docker-build.yml` is the reference for which flags the deployed site really has.
 
 Traps hit while producing them, all still true:
 

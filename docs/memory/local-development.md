@@ -22,4 +22,4 @@ Read before setting up the app, changing `setup.sh`, or debugging "it does not s
 
 ## Feature-flagged work needs a rebuild, not a restart
 
-2026-08-20 — Optional features are compile-time `NEXT_PUBLIC_*` flags defaulting to off (`docs/memory/architecture.md`). **How to apply**: when a feature seems absent locally, check whether its flag was set *for the build* before debugging the feature itself — `INTERACTION_BINDINGS`, `PREVIEW_ON_HOVER`, `LIVE_THUMBNAIL`, `NOTIFICATIONS`, `BACKEND_RECORDING`. Push notifications additionally need VAPID keys (`npm run setup:notifications`).
+2026-08-20 — Optional features are compile-time `NEXT_PUBLIC_*` flags defaulting to off (`docs/memory/architecture.md`). **How to apply**: when a feature seems absent locally, check whether its flag was set *for the build* before debugging the feature itself — `INTERACTION_BINDINGS`, `NOTIFICATIONS`, `BACKEND_RECORDING`. Card previews and the live slide thumbnail are per-browser settings, not flags (`architecture.md`). Push notifications additionally need VAPID keys (`npm run setup:notifications`).
