@@ -1,3 +1,13 @@
 {
+  "description": "Drawn cursors pluck points of an iridescent liquid word on black, stretch them like elastics towards the canvas edge and let go, and each point springs across to its place in the next text. Several are in flight at once.",
+  "tags": [
+    "3d",
+    "typography",
+    "shader",
+    "raymarched",
+    "iridescent",
+    "needs-text",
+    "interactive"
+  ],
   "favorite": true
 }

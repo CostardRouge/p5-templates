@@ -1,0 +1,10 @@
+{
+  "description": "The webcam hides behind a grid of opaque black cells, and your hands wipe it open fingertip by fingertip. Cells fade shut again once a hand leaves, and the open blob is outlined in white on its outer edge. Needs a camera.",
+  "tags": [
+    "photo",
+    "needs-photo",
+    "grid",
+    "shader",
+    "interactive"
+  ]
+}

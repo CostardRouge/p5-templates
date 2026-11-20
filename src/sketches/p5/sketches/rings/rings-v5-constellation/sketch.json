@@ -1,3 +1,12 @@
 {
+  "description": "The letters of a word float scattered through a 3D cloud as iridescent tubes on black, and the camera flies a smooth closed path through every one in word order. A scatter setting tidies the cloud back into a circuit.",
+  "tags": [
+    "3d",
+    "typography",
+    "shader",
+    "iridescent",
+    "needs-text",
+    "orbit"
+  ],
   "favorite": true
 }

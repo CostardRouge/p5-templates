@@ -1,0 +1,11 @@
+{
+  "description": "One iridescent liquid letter on black that you deform by hand: every point of its outline can be pulled with a mouse, a finger or a camera-tracked pinch, and the tube re-fuses around wherever you leave it. No automatic motion.",
+  "tags": [
+    "3d",
+    "typography",
+    "shader",
+    "iridescent",
+    "needs-text",
+    "interactive"
+  ]
+}

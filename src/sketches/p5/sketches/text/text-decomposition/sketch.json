@@ -1,4 +1,10 @@
 {
+  "description": "A line of placeholder text broken into its words, each drawn in white with a blue outline inside its own thin box, the boxes piling on top of each other at the top left of a black frame. A static, overlapping type study.",
+  "tags": [
+    "typography",
+    "flat",
+    "monochrome"
+  ],
   "hiddenFromHome": true,
   "hiddenFromGallery": true
 }

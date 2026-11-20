@@ -1,3 +1,12 @@
 {
+  "description": "A liquid iridescent letter on black, deformed by a troupe of drawn cursors that walk on from off-canvas, share the outline's handles between them, drag them outward and retreat. You can still sculpt it by hand mid-show.",
+  "tags": [
+    "3d",
+    "typography",
+    "shader",
+    "iridescent",
+    "needs-text",
+    "interactive"
+  ],
   "favorite": true
 }

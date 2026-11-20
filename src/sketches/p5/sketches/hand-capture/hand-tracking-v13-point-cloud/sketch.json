@@ -1,0 +1,11 @@
+{
+  "description": "Your webcam image reduced to the person alone, rebuilt as a hovering cloud of small rainbow dots on near-black, their depth set by pixel value by default or by a wave, noise or motion, with a slight camera wobble. Needs a camera.",
+  "tags": [
+    "3d",
+    "particles",
+    "colourful",
+    "photo",
+    "needs-photo",
+    "interactive"
+  ]
+}

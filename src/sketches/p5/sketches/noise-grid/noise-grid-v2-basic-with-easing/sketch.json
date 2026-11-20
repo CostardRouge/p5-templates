@@ -1,3 +1,11 @@
 {
+  "description": "A dense grid of dots whose size is shaped by an easing curve over a flowing noise field, so the same pattern swells into soft rainbow blobs with oil-slick edges, bright rims and dark gaps on black.",
+  "tags": [
+    "noise",
+    "shader",
+    "grid",
+    "iridescent",
+    "colourful"
+  ],
   "favorite": true
 }

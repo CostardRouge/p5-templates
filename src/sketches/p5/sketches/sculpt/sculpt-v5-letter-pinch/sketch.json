@@ -1,0 +1,11 @@
+{
+  "description": "A coarse, irregular net of beads and tubes tilted across the frame, pulled inward by the letters of a word: points slide to each glyph's outline, so the mesh bunches and fuses into a lifted knot in the letter's shape, then squeezes on to the next. A pointer attracts the sheet.",
+  "tags": [
+    "typography",
+    "3d",
+    "iridescent",
+    "mesh",
+    "raymarched",
+    "interactive"
+  ]
+}

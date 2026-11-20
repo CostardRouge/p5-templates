@@ -1,3 +1,11 @@
 {
+  "description": "An iridescent flying snake of twisting tubes racing down a dark neon-edged corridor: the obstacles are plates pierced by round holes, glowing in green and orange rings, and the dragon has to line up and thread through each hole instead of slipping past.",
+  "tags": [
+    "3d",
+    "shader",
+    "raymarched",
+    "iridescent",
+    "neon"
+  ],
   "favorite": true
 }

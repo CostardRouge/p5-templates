@@ -1,3 +1,9 @@
 {
+  "description": "A single white hairline grows from the left edge along the vertical middle of a black frame, reaching the far side exactly as the loop ends. A minimal starter that draws only the advancing line.",
+  "tags": [
+    "flat",
+    "monochrome",
+    "demo"
+  ],
   "hiddenFromHome": true
 }

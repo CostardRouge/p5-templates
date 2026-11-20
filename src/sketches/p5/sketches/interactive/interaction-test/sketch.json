@@ -1,3 +1,9 @@
 {
+  "description": "A near-black field where the input layer draws itself: each active pointer gets a ring and full-width crosshair lines in its source's colour, under a legend with live counts. Three amber orbiting pointers circle by default.",
+  "tags": [
+    "geometry",
+    "flat",
+    "interactive"
+  ],
   "hiddenFromHome": true
 }

@@ -1,0 +1,10 @@
+{
+  "description": "A webcam portrait rebuilt from a coarse grid of dots in the camera's own colours on near-black. The microphone tears it apart: each word or beat scatters the dots along their own paths and swells them, then the face settles back in the pauses. Needs a camera and microphone.",
+  "tags": [
+    "particles",
+    "noise",
+    "colourful",
+    "interactive",
+    "sound"
+  ]
+}

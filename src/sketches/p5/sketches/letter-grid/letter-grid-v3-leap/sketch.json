@@ -1,0 +1,10 @@
+{
+  "description": "A single extruded letter bounds across a flat sea of letters in parabolic hops, tumbling a full turn mid-air and landing flat on the next cell of its word, while the rest of the grid stays on the ground. Your word.",
+  "tags": [
+    "typography",
+    "grid",
+    "3d",
+    "needs-text",
+    "bounce"
+  ]
+}

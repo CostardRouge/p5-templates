@@ -1,0 +1,9 @@
+{
+  "description": "A fan of ghost copies of the cut-out subject arcs along a draggable curve, each copy fainter and smaller, optionally rotated or tinted, while the real subject stays crisp on top. The photo behind can stay sharp, blur or dim. Uses your photo; click it to pick the subject.",
+  "tags": [
+    "photo",
+    "needs-photo",
+    "flat",
+    "interactive"
+  ]
+}

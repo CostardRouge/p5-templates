@@ -1,3 +1,12 @@
 {
+  "description": "A single letter, shown as a thin iridescent tube on black, stands still in the middle of the frame while the camera walks slowly around it. Nothing rushes past, so the oil-slick colour is easy to read. The text is yours.",
+  "tags": [
+    "3d",
+    "typography",
+    "shader",
+    "iridescent",
+    "needs-text",
+    "orbit"
+  ],
   "favorite": true
 }

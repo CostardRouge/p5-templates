@@ -1,0 +1,9 @@
+{
+  "description": "Eight photo cards with soft shadows spaced around an invisible circle that turns once per loop, each card counter-rotating so every picture stays upright as it travels round, on near-black. Needs your photos.",
+  "tags": [
+    "photo",
+    "needs-photo",
+    "orbit",
+    "flat"
+  ]
+}

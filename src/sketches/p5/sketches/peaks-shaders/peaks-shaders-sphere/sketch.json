@@ -1,3 +1,11 @@
 {
+  "description": "A noisy sea urchin on black: spikes of different lengths bristle from a ball, each a fat, glossy lobe running through a rainbow palette. The whole sphere turns slowly, so the spikes swing past each other and the colours shift.",
+  "tags": [
+    "3d",
+    "shader",
+    "noise",
+    "colourful",
+    "orbit"
+  ],
   "favorite": true
 }

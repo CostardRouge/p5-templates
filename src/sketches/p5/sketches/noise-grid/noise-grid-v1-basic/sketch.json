@@ -1,0 +1,10 @@
+{
+  "description": "A dense grid of small dots, each pushed off its cell centre by a flowing noise field and coloured by the direction it was pushed, in rainbow hues on black. The first and simplest of the noise grids: constant-size dots.",
+  "tags": [
+    "noise",
+    "shader",
+    "grid",
+    "colourful",
+    "particles"
+  ]
+}

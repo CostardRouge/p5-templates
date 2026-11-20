@@ -16,6 +16,9 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
 
 ### Added
 
+- Every sketch now says what it draws: a short description and a few tags for all 343 (about 25 had one). Captions
+  (the *description* and *first sentence* pills), the Plan and Claude's `sketches.list` read them. They are drafts
+  written in one pass — correct any of them in the sketch's `sketch.json`.
 - Claude can do more from a connected studio tab: cut any sketches into one reel — or every favourite of a series
   (`reel.build`) —, pin a reel or a recap of a given month to a slot of the Plan (`plan.propose`), list what you
   already posted (`plan.posted`), and filter sketches by series and by favourite (`sketches.list`).

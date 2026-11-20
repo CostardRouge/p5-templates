@@ -1,0 +1,9 @@
+{
+  "description": "A grid of short sticks, each turned to the local noise direction and long enough to cross into its neighbours, so the field reads as a bristling flow in rainbow colours on black rather than a dotted grid.",
+  "tags": [
+    "noise",
+    "shader",
+    "grid",
+    "colourful"
+  ]
+}

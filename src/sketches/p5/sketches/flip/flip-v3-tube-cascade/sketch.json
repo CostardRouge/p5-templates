@@ -1,0 +1,12 @@
+{
+  "description": "A black board of tiles, each carrying a single letter in a wavy typeface drawn as a thick tube in shifting spectral colour, so highlights slide along the letter as the tile turns. Tiles flip edge-on and return as two, splitting outward from the centre up to five levels, unevenly, before restarting.",
+  "tags": [
+    "typography",
+    "3d",
+    "raymarched",
+    "colourful",
+    "grid",
+    "flip",
+    "cascade"
+  ]
+}

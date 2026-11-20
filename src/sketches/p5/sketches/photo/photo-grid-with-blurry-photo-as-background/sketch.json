@@ -1,3 +1,10 @@
 {
+  "description": "A steady grid of small prints, three by four, hovers over a full-bleed backdrop made from one of the same photos, blurred and posterised into banded patches of its own colours. The backdrop changes photo as the loop runs while the grid stays put.",
+  "tags": [
+    "photo",
+    "grid",
+    "gradient",
+    "needs-photo"
+  ],
   "hiddenFromHome": true
 }

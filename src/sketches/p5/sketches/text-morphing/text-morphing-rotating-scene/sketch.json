@@ -1,3 +1,11 @@
 {
+  "description": "The dotted rainbow glyph tunnel on black, tipping over in space and easing to a new pitch and yaw with each letter change, so the cone of dots is seen from the side, edge-on, then face-on again.",
+  "tags": [
+    "typography",
+    "3d",
+    "colourful",
+    "orbit",
+    "needs-text"
+  ],
   "favorite": true
 }

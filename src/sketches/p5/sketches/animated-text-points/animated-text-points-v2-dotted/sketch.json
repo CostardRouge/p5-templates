@@ -1,0 +1,10 @@
+{
+  "description": "Characters of a typed string take turns as a grid of cells on black, each dealt by noise as a flat ring or a prism leaning in perspective, in rainbow colours that cycle over time. The prism field tilts as one while stray outlined cells linger at the edges.",
+  "tags": [
+    "typography",
+    "3d",
+    "noise",
+    "colourful",
+    "needs-text"
+  ]
+}
