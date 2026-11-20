@@ -1,18 +1,25 @@
 # Deploy — event-driven redeploy
 
-How a push to `main` ends up running on the NAS, instantly and without polling
-Docker Hub.
+How a release ends up running on the NAS, instantly and without polling
+Docker Hub. (The public front no longer goes through here: it is a static
+export Cloudflare deploys on every push to `main` — `docs/memory/deployment.md`,
+"The front is static".)
 
 ```
-push main ─▶ GitHub Actions ─▶ build + push image to GHCR
-                             └▶ POST /v1/update ─▶ Watchtower (on the NAS)
-                                                   └▶ re-pull image + recreate app
+release merged ─▶ Release workflow (tag vX.Y.Z)
+                   └▶ docker-build.yml ─▶ build + push image to GHCR
+                                         └▶ POST /v1/update ─▶ Watchtower (on the NAS)
+                                                               └▶ re-pull image + recreate app
 ```
+
+A push to `main` that is not a release builds no image; "Run workflow" on
+*Build & Push Docker Image* builds `main`'s head by hand.
 
 Two moving parts replace the old "Watchtower polls Docker Hub every minute":
 
 - **Registry:** images are published to **GHCR** (`ghcr.io/costardrouge/p5-templates`)
-  with a moving `:main` tag plus an immutable `:sha-<short>` tag for rollbacks.
+  with moving `:main` / `:latest` tags plus immutable `:X.Y.Z`, `:X.Y` and `:sha-<short>`
+  tags for rollbacks.
   No Docker Hub pull rate-limit.
 - **Trigger:** **Watchtower in HTTP API mode** — it waits for an authenticated
   POST instead of polling. The build calls it the moment the image is pushed.
