@@ -21,7 +21,6 @@ describe(
       status: string = "active"
     ): JobModel => ( {
       id: "test-job",
-      snapshotId: null,
       progress,
       status: status as any,
       sketch: "test-sketch",

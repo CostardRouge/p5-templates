@@ -1,4 +1,4 @@
-.PHONY: help dc-build dc-rebuild dc-up dc-down dc-stop redis minio postgres \
+.PHONY: help dc-build dc-rebuild dc-up dc-up-backend dc-down dc-stop redis minio postgres \
         app-dev app-bash-dev app-bash app-prod services-up clean
 
 HOST_APP_DIR := $(shell pwd)
@@ -6,6 +6,9 @@ DEV_NODE_MODULES := $(HOST_APP_DIR)/node_modules
 
 APPLICATION_CODE_NAME=app
 DOCKER_COMPOSE=docker-compose
+# The recording backend (Redis, MinIO, PostgreSQL) is the compose profile
+# `backend`; stop/down/clean name it so they reach those containers too.
+DOCKER_COMPOSE_ALL=$(DOCKER_COMPOSE) --profile backend
 DOCKER_COMPOSE_UP=$(DOCKER_COMPOSE) up
 DOCKER_COMPOSE_RUN=$(DOCKER_COMPOSE) run --rm
 DOCKER_COMPOSE_RUN_ENTRYPOINT=$(DOCKER_COMPOSE_RUN) --service-ports --entrypoint
@@ -23,7 +26,8 @@ help: ## Show this help message
 	@echo "Production:"
 	@echo "  make dc-build         - Build Docker images"
 	@echo "  make dc-rebuild       - Rebuild Docker images without cache"
-	@echo "  make dc-up            - Start all services (production mode)"
+	@echo "  make dc-up            - Start the app alone (no recording backend)"
+	@echo "  make dc-up-backend    - Start the app with Redis, MinIO and PostgreSQL"
 	@echo "  make app-prod         - Build and start production server"
 	@echo ""
 	@echo "Docker Services:"
@@ -46,14 +50,17 @@ dc-rebuild: ## Rebuild Docker images without cache
 	$(DOCKER_COMPOSE) build --no-cache
 
 # ─── Docker Services ───────────────────────────────────────────────────────
-dc-up: ## Start all services in production mode
+dc-up: ## Start the app alone (no recording backend)
 	$(DOCKER_COMPOSE_UP) -d
 
+dc-up-backend: ## Start the app with the recording backend (set BACKEND_RECORDING=true)
+	$(DOCKER_COMPOSE_ALL) up -d
+
 dc-stop: ## Stop services without removing containers
-	$(DOCKER_COMPOSE) stop
+	$(DOCKER_COMPOSE_ALL) stop
 
 dc-down: ## Stop and remove all containers
-	$(DOCKER_COMPOSE) down
+	$(DOCKER_COMPOSE_ALL) down
 
 services-up: ## Start only infrastructure services (Redis, MinIO, PostgreSQL)
 	$(DOCKER_COMPOSE_UP) -d redis minio postgres
@@ -92,7 +99,7 @@ app-prod: dc-rebuild dc-up ## Rebuild and start production server
 
 # ─── Cleanup ───────────────────────────────────────────────────────────────
 clean: ## Stop services and remove volumes
-	$(DOCKER_COMPOSE) down -v
+	$(DOCKER_COMPOSE_ALL) down -v
 	@echo "Cleaned up containers and volumes"
 
 # ─── Legacy Aliases ────────────────────────────────────────────────────────
