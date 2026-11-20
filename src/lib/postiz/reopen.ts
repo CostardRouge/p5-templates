@@ -81,3 +81,71 @@ export function takeSendAgain( sketchKey: string ): string[] | null {
 
   return ids;
 }
+
+const PLAN_KEY = "sketchbook.publish.planned";
+
+interface PlannedAsk {
+  sketchKey: string;
+  /** The slot the plan proposed, ISO. */
+  slot: string;
+  at: number;
+}
+
+/**
+ * The gallery's Plan (lab 7): ask the sketch `<engine>/<name>` to open Export
+ * › Publish on the slot the plan proposed for it — the same crossing as
+ * *Send again*, with a WHEN instead of accounts.
+ */
+export function askPlanned(
+  sketchKey: string, slot: string
+): boolean {
+  try {
+    session()?.setItem(
+      PLAN_KEY,
+      JSON.stringify( {
+        sketchKey,
+        slot,
+        at: Date.now()
+      } satisfies PlannedAsk )
+    );
+
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** A stored planned ask read back, whatever it holds: the slot, still ahead, or null. Pure. */
+export function readPlannedAsk(
+  raw: string | null, sketchKey: string, now: number
+): string | null {
+  try {
+    const ask = JSON.parse( raw ?? "null" ) as Partial<PlannedAsk> | null;
+
+    if ( !ask || ask.sketchKey !== sketchKey || typeof ask.at !== "number" || now - ask.at > FRESH_MS || typeof ask.slot !== "string" ) {
+      return null;
+    }
+
+    const when = Date.parse( ask.slot );
+
+    return Number.isFinite( when ) && when > now ? new Date( when ).toISOString() : null;
+  } catch {
+    return null;
+  }
+}
+
+/** The slot to schedule on, when the plan asked THIS sketch — taken once. */
+export function takePlanned( sketchKey: string ): string | null {
+  const store = session();
+  const slot = readPlannedAsk(
+    store?.getItem( PLAN_KEY ) ?? null,
+    sketchKey,
+    Date.now()
+  );
+
+  if ( slot ) {
+    store?.removeItem( PLAN_KEY );
+  }
+
+  return slot;
+}

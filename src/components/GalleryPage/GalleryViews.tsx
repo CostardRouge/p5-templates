@@ -5,7 +5,7 @@ import React, {
 } from "react";
 import clsx from "clsx";
 import {
-  CalendarDays, ChevronLeft, ChevronRight, ExternalLink, LayoutGrid, Rows3
+  CalendarDays, ChevronLeft, ChevronRight, ExternalLink, LayoutGrid, ListChecks, Rows3
 } from "lucide-react";
 
 import {
@@ -30,16 +30,18 @@ import {
 const VIEW_LABEL: Record<GalleryView, string> = {
   month: "Month",
   week: "Week",
-  grid: "Grid"
+  grid: "Grid",
+  plan: "Plan"
 };
 
 const VIEW_ICON: Record<GalleryView, React.ReactNode> = {
   month: <CalendarDays className="h-3.5 w-3.5" />,
   week: <Rows3 className="h-3.5 w-3.5 rotate-90" />,
-  grid: <LayoutGrid className="h-3.5 w-3.5" />
+  grid: <LayoutGrid className="h-3.5 w-3.5" />,
+  plan: <ListChecks className="h-3.5 w-3.5" />
 };
 
-/** Month · Week · Grid — ONE switcher (his hybrid of lab 3's G1 and G3). */
+/** Month · Week · Grid · Plan — ONE switcher (his hybrid of lab 3's G1 and G3; Plan is lab 7's). */
 export function ViewSwitcher( {
   view, onChange
 }: {
@@ -51,7 +53,8 @@ export function ViewSwitcher( {
       {( [
         "month",
         "week",
-        "grid"
+        "grid",
+        "plan"
       ] as const ).map( ( v ) => (
         <button
           key={ v }
@@ -61,12 +64,12 @@ export function ViewSwitcher( {
           data-gallery-view={ v }
           onClick={ () => onChange( v ) }
           className={ clsx(
-            "inline-flex h-full items-center gap-1.5 rounded-md px-2.5 text-xs font-medium transition-colors",
+            "inline-flex h-full items-center gap-1.5 rounded-md px-2 text-xs font-medium transition-colors sm:px-2.5",
             view === v ? "bg-background text-foreground shadow-[0_0_0_1px_var(--color-border)]" : "text-foreground/60 hover:text-foreground"
           ) }
         >
           {VIEW_ICON[ v ]}
-          {VIEW_LABEL[ v ]}
+          <span className={ view === v ? undefined : "max-sm:sr-only" }>{VIEW_LABEL[ v ]}</span>
         </button>
       ) )}
     </div>
