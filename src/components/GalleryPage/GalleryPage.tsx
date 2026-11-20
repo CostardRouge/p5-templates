@@ -52,6 +52,9 @@ import {
   askPlanned, askSendAgain
 } from "@/lib/postiz/reopen";
 import {
+  stageReel
+} from "@/lib/postiz/postKey";
+import {
   openPublishing
 } from "@/lib/postiz/usePostiz";
 import type {
@@ -523,6 +526,8 @@ export default function GalleryPage( {
         return;
       }
       markOpened( slot.proposal.key );
+      // Its words are its own, not the host's (`postKey.ts`).
+      stageReel( slot.proposal.key );
     }
     if ( gp.conn ) {
       askPlanned(
@@ -802,7 +807,7 @@ export default function GalleryPage( {
 
       {view === "plan" && (
         <PlanView
-          rhythm={ gp.conn?.rhythm ?? null }
+          conn={ gp.conn }
           posts={ gp.posts }
           posted={ posted }
           known={ sendsKnown && ( !gp.conn || gp.posts !== null ) }

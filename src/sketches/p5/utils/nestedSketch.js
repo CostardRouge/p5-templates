@@ -207,6 +207,21 @@ function ensureSketchLoaded( sketchPath ) {
     } );
 }
 
+/**
+ * Load these sketches' modules NOW rather than on the frame that first shows
+ * them, and resolve once every one is in (or has failed, which is said on the
+ * console as usual). A reel of several sketches is rendered frame by frame:
+ * without this, each scene's first frames are drawn while its module is still
+ * on its way, and the capture keeps them blank.
+ */
+export function preloadSketches( sketchPaths ) {
+  for ( const sketchPath of sketchPaths ) {
+    ensureSketchLoaded( sketchPath );
+  }
+
+  return loadQueue;
+}
+
 /* ------------------------------------------------------------------ */
 /*  The buffer proxy                                                   */
 /* ------------------------------------------------------------------ */

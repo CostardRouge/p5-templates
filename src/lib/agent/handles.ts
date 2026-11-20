@@ -112,6 +112,10 @@ export interface StudioHandles {
   exports: {
     /** True, or why this browser cannot export (no WebCodecs…). */
     supported: () => true | string;
+    /** The sketch's engine is running: a render can start. */
+    ready: () => boolean;
+    /** Load these sketches' modules ahead of a render that embeds them as scenes (`<category>/<name>` each). */
+    warm?: ( scenes: readonly string[] ) => Promise<void>;
     presets: ReadonlyArray<ExportVariantPreset>;
     list: () => ExportVariant[];
     /** Append a variant from a preset to the dialog's list; answers it. */

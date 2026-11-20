@@ -13,6 +13,9 @@
 import type {
   PostKind, TikTokPrivacy, YouTubeVisibility
 } from "./client";
+import {
+  sketchOfPostKey
+} from "./postKey";
 
 export type DeliverMode = "save" | "publish";
 
@@ -374,13 +377,19 @@ export function setWhen(
   );
 }
 
-export function getPublications( key: string ): Publication[] {
-  return entry( key ).publications;
+/*
+ * What was SENT is kept by sketch: a reel's draft has a key of its own
+ * (`postKey.ts`), but its sends are the host sketch's, where the gallery, the
+ * counters and the plan look for them. Every function below takes either key.
+ */
+export function getPublications( postKey: string ): Publication[] {
+  return entry( sketchOfPostKey( postKey ) ).publications;
 }
 
 export function addPublication(
-  key: string, publication: Publication
+  postKey: string, publication: Publication
 ): void {
+  const key = sketchOfPostKey( postKey );
   const current = entry( key );
 
   commit(
@@ -397,8 +406,9 @@ export function addPublication(
 
 /** A post taken back: forgotten here once Postiz deleted it. */
 export function dropPublication(
-  key: string, postId: string
+  postKey: string, postId: string
 ): void {
+  const key = sketchOfPostKey( postKey );
   const current = entry( key );
 
   commit(
@@ -416,9 +426,10 @@ export function dropPublication(
  * is forgotten.
  */
 export function forgetPosts(
-  key: string, postIds: readonly string[]
+  postKey: string, postIds: readonly string[]
 ): void {
   const gone = new Set( postIds );
+  const key = sketchOfPostKey( postKey );
   const current = entry( key );
 
   commit(
@@ -515,11 +526,53 @@ export function allPublications(): { key: string;
   } ) ) );
 }
 
+/**
+ * Another tab wrote a post (an agent rewording a caption in the studio's tab
+ * while the gallery's Plan shows it): the copy held here is stale. Its draft
+ * and sends are read again; the WHEN, which is this tab's alone, stays.
+ */
+function onStorage( event: StorageEvent ): void {
+  if ( event.key === null ) {
+    entries.clear();
+  } else if ( event.key.startsWith( `${ PREFIX }:` ) ) {
+    const key = event.key.slice( PREFIX.length + 1 );
+    const held = entries.get( key );
+
+    if ( held ) {
+      entries.set(
+        key,
+        {
+          ...load( key ),
+          when: held.when
+        }
+      );
+    }
+  } else {
+    return;
+  }
+
+  for ( const listener of listeners ) {
+    listener();
+  }
+}
+
 export function subscribePublish( listener: () => void ): () => void {
+  if ( listeners.size === 0 && typeof window !== "undefined" ) {
+    window.addEventListener(
+      "storage",
+      onStorage
+    );
+  }
   listeners.add( listener );
 
   return () => {
     listeners.delete( listener );
+    if ( listeners.size === 0 && typeof window !== "undefined" ) {
+      window.removeEventListener(
+        "storage",
+        onStorage
+      );
+    }
   };
 }
 
