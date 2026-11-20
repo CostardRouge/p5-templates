@@ -7,6 +7,7 @@ import {
   useRouter, useSearchParams
 } from "next/navigation";
 import React, {
+  useMemo,
   useEffect, useRef, useState
 } from "react";
 import {
@@ -17,6 +18,12 @@ import type {
 } from "@/app/sketches/getSketchesData";
 
 import Link from "next/link";
+import {
+  FavoriteStar, FavoritesProvider, useFavorite
+} from "@/components/Favorites/FavoritesEditor";
+import {
+  sketchKeyOfHref
+} from "@/lib/favorites/changes";
 import AnimatedPreview from "@/components/AnimatedPreview";
 import PreviewPlaybackControl from "@/components/PreviewPlaybackControl";
 import Toast from "@/components/Toast";
@@ -76,7 +83,29 @@ interface SketchesListProps {
   activeEngine: string; // "all" | engine id
 }
 
-export default function SketchesList( {
+/**
+ * The sketch grid, inside the favourites editor's provider: every card reads
+ * its star from it, and in a development build E turns the grid into the
+ * editor (`Favorites/FavoritesEditor.tsx`).
+ */
+export default function SketchesList( props: SketchesListProps ) {
+  const saved = useMemo(
+    () => Object.values( props.sketches ).flatMap( ( items ) => items.filter( ( item ) => item.favorite )
+      .map( ( item ) => sketchKeyOfHref( item.href ) )
+      .filter( ( key ): key is string => key !== null ) ),
+    [
+      props.sketches
+    ]
+  );
+
+  return (
+    <FavoritesProvider saved={ saved }>
+      <SketchesGrid { ...props } />
+    </FavoritesProvider>
+  );
+}
+
+function SketchesGrid( {
   sketches,
   engineLabels,
   activeEngine
@@ -689,7 +718,7 @@ export default function SketchesList( {
                     >
                       { uncategorized.map( (
                         {
-                          href, name, thumbnail, preview, hasSketchForm, hiddenFromGallery
+                          href, name, thumbnail, preview, hasSketchForm, hiddenFromGallery, favorite
                         }, index
                       ) => (
                         <SketchCard
@@ -700,6 +729,7 @@ export default function SketchesList( {
                           preview={ preview }
                           hasSketchForm={ hasSketchForm }
                           hiddenFromGallery={ hiddenFromGallery }
+                          favorite={ favorite }
                           view={ view }
                           eager={ index === 0 }
                         />
@@ -810,6 +840,7 @@ function CategorySection( {
       preview={ item.preview }
       hasSketchForm={ item.hasSketchForm }
       hiddenFromGallery={ item.hiddenFromGallery }
+      favorite={ item.favorite }
       view={ view }
       eager={ index === 0 }
     />
@@ -876,6 +907,7 @@ function SketchCard( {
   thumbnail,
   preview,
   hiddenFromGallery = false,
+  favorite = false,
   view,
   eager = false
 }: {
@@ -885,6 +917,7 @@ function SketchCard( {
   preview: string | null;
   hasSketchForm: boolean;
   hiddenFromGallery?: boolean;
+  favorite?: boolean;
   view: "grid" | "list";
   eager?: boolean;
 } ) {
@@ -895,15 +928,29 @@ function SketchCard( {
     isActive: marqueeActive,
     style: marqueeStyle
   } = useMarqueeOnHover<HTMLParagraphElement>();
+  // In the favourites editor (E, a development build) a click stars the card instead of opening it.
+  const star = useFavorite(
+    sketchKeyOfHref( href ),
+    favorite
+  );
+  const onCardClick = star.editing ? ( event: React.MouseEvent ) => {
+    event.preventDefault();
+    star.toggle();
+  } : undefined;
+  const editClass = star.editing ? ` cursor-copy${ star.dirty ? " outline-2 outline-dashed outline-offset-2 outline-foreground" : "" }` : "";
 
   if ( view === "grid" ) {
     return (
       <Link
         href={ href }
+        onClick={ onCardClick }
+        aria-pressed={ star.editing ? star.on : undefined }
+        data-favorite={ star.on ? "true" : undefined }
         className={ `group relative w-full bg-background rounded-xl sm:rounded-2xl overflow-hidden border border-border hover:border-foreground/20 transition duration-300 hover:shadow-lg hover:shadow-active/10 hover:-translate-y-0.5 ${
           hiddenFromGallery ? "opacity-40 grayscale hover:opacity-100 hover:grayscale-0" : ""
-        }` }
+        }${ editClass }` }
       >
+        { star.on ? <FavoriteStar /> : star.editing ? <FavoriteStar ghost /> : null }
         { hiddenFromGallery ? (
           <span className="absolute top-2 right-2 z-20 font-mono text-[9px] uppercase tracking-[0.18em] bg-foreground text-background px-1.5 py-0.5 rounded-xs pointer-events-none">
             hidden
@@ -972,13 +1019,17 @@ function SketchCard( {
   return (
     <Link
       href={ href }
+      onClick={ onCardClick }
+      aria-pressed={ star.editing ? star.on : undefined }
+      data-favorite={ star.on ? "true" : undefined }
       className={ `group flex items-center gap-2 sm:gap-3 bg-background border border-border hover:border-foreground/20 rounded-xl sm:rounded-2xl p-1.5 sm:p-2 hover:bg-hover/50 transition duration-300 hover:shadow-md hover:shadow-foreground/5 ${
         hiddenFromGallery ? "opacity-40 grayscale hover:opacity-100 hover:grayscale-0" : ""
-      }` }
+      }${ editClass }` }
     >
       <div
-        className="w-12 sm:w-16 aspect-4/5 shrink-0 relative rounded-lg sm:rounded-xl overflow-hidden border border-border"
+        className="group w-12 sm:w-16 aspect-4/5 shrink-0 relative rounded-lg sm:rounded-xl overflow-hidden border border-border"
       >
+        { star.on ? <FavoriteStar className="!left-0.5 !top-0.5 !h-4 !w-4 [&>svg]:!h-2.5 [&>svg]:!w-2.5" /> : null }
         { preview ? (
           <AnimatedPreview
             previewUrl={ preview }

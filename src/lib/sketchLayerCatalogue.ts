@@ -28,6 +28,8 @@ export type SketchChoice = {
   path: string;
   name: string;
   category: string | null;
+  /** The maintainer's star (`sketch.json`). */
+  favorite: boolean;
   thumbnail: string;
   /**
    * Why this sketch cannot be a layer, or null when it can. Offered but
@@ -65,6 +67,7 @@ export function listEmbeddableSketches(): SketchChoice[] {
       path: meta.category ? `${ meta.category }/${ meta.name }` : meta.name,
       name: meta.name,
       category: meta.category ?? null,
+      favorite: Boolean( meta.favorite ),
       thumbnail: getSketchThumbnailURL(
         EMBEDDABLE_ENGINE,
         meta.name

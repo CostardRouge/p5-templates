@@ -2,6 +2,9 @@
 
 import Link from "next/link";
 import {
+  FavoriteStar
+} from "@/components/Favorites/FavoritesEditor";
+import {
   useEffect, useMemo, useRef, useState
 } from "react";
 import {
@@ -215,6 +218,7 @@ function SketchCard( {
           paddingTop: "125%"
         } }
       >
+        { sketch.favorite ? <FavoriteStar /> : null }
         {/* The picture is decorative: the card prints the sketch's name right
             under it, inside the same link, so alt text repeating it would make
             a screen reader say the name twice (axe `image-redundant-alt`). */}

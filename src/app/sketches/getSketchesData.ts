@@ -15,6 +15,8 @@ export type SketchItem = {
   category?: string | null;
   hiddenFromHome?: boolean;
   hiddenFromGallery?: boolean;
+  /** The maintainer's star (`sketch.json`). */
+  favorite?: boolean;
   mtime?: string;
 };
 
@@ -34,6 +36,7 @@ export async function getSketchesData() {
       hasPreview,
       hiddenFromHome,
       hiddenFromGallery,
+      favorite,
       mtime
     } ) => {
       if ( !sketchesByEngine[ engine ] ) {
@@ -62,6 +65,7 @@ export async function getSketchesData() {
         category,
         hiddenFromHome,
         hiddenFromGallery,
+        favorite,
         mtime
       } );
     } );

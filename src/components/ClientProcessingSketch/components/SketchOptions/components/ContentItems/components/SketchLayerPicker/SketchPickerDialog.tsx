@@ -2,6 +2,10 @@
 
 import React from "react";
 import clsx from "clsx";
+
+import {
+  FavoriteStar
+} from "@/components/Favorites/FavoritesEditor";
 import {
   Search, X
 } from "lucide-react";
@@ -225,7 +229,7 @@ function SketchPickerBody( {
                       ? `${ choice.path } — ${ choice.unavailable }`
                       : choice.path }
                     className={ clsx(
-                      "group flex flex-col overflow-hidden rounded-lg border text-left transition",
+                      "group relative flex flex-col overflow-hidden rounded-lg border text-left transition",
                       "focus:outline-hidden focus:ring-1 focus:ring-focus",
                       choice.unavailable
                         ? "cursor-not-allowed border-theme opacity-40"
@@ -235,6 +239,7 @@ function SketchPickerBody( {
                         : "border-theme"
                     ) }
                   >
+                    {choice.favorite && <FavoriteStar />}
                     <img
                       src={ choice.thumbnail }
                       alt=""
