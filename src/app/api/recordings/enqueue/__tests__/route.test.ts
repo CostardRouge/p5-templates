@@ -4,7 +4,7 @@ import {
 
 import {
   POST
-} from "../route";
+} from "../route.server";
 import {
   RecordingService
 } from "@/services/RecordingService";

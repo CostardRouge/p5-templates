@@ -1,6 +1,6 @@
 import {
   GET
-} from "../route";
+} from "../route.server";
 import {
   getObjectStream
 } from "@/lib/connections/s3";

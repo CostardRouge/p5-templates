@@ -17,7 +17,7 @@ import type {
  * The list is free — `@/engines/metadata` already reads `metadata.json` in the
  * browser bundle (`P5Engine` resolves sketch paths through it). The form is
  * not: `options.ts` modules are server-only, so they come over the wire from
- * `/api/sketches/form`, cached here per sketch for the life of the page.
+ * `/api/sketches/form/<engine>/<name>.json`, cached here per sketch for the life of the page.
  */
 
 /** Only p5 sketches can be embedded — the layer renders into a p5 buffer. */
@@ -104,9 +104,9 @@ export function loadSketchForm( path: string ): Promise<SketchForm> {
     return cached;
   }
 
-  const pending = fetch( `/api/sketches/form?engine=${ EMBEDDABLE_ENGINE }&sketch=${
+  const pending = fetch( `/api/sketches/form/${ EMBEDDABLE_ENGINE }/${
     encodeURIComponent( sketchNameFromPath( path ) )
-  }` )
+  }.json` )
     .then( async( response ) => {
       if ( !response.ok ) {
         throw new Error( `Failed to load the form for "${ path }" (${ response.status })` );

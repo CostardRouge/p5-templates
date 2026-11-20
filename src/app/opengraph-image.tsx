@@ -10,6 +10,9 @@ import {
 // Read the project icon from disk and embed it as a data URL so the OG card
 // always shows the real project mark, even when generated offline.
 export const runtime = "nodejs";
+// Rendered once at build (the static export requires it; the card never changes
+// between deploys).
+export const dynamic = "force-static";
 
 export const alt = `${ SITE_NAME } — ${ SITE_TAGLINE }`;
 export const size = {

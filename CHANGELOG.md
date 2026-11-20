@@ -41,6 +41,12 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
 
 ### Changed
 
+- The studio is served from Cloudflare's network as a static site: pages, stills and preview loops load from the
+  data centre nearest you, and the site no longer depends on a home server being up. Recording and the recordings
+  page are not part of it; the gallery restores its saved layout once the page has loaded.
+- The heavy body-tracking model is downloaded from Google's model library instead of this site (it is larger than
+  what Cloudflare serves per file); the other tracking models are unchanged.
+
 - In Publish, the Export dialog widens and shows the variants and the Post panel side by side, each scrolling on
   its own; the table keeps Posts as and leaves Rate and Slides to Save. On a phone, Publish has two tabs under the
   title, Variants and Post (Post first). Save is the dialog it always was.

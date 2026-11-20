@@ -9,6 +9,10 @@ import {
   THEME_COLOR_LIGHT
 } from "@/lib/seo";
 
+// Written once at build: the static export requires it, and the content
+// only changes with a deploy anyway.
+export const dynamic = "force-static";
+
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: SITE_NAME,
