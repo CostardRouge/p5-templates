@@ -28,6 +28,9 @@ import {
 import {
   usePostiz
 } from "@/lib/postiz/usePostiz";
+import {
+  useStats
+} from "@/components/Stats/useStats";
 import SketchSheet from "./SketchSheet";
 
 /**
@@ -130,8 +133,19 @@ export default function SketchSheetLoader( {
     ]
   );
 
+  // Statistics (`docs/memory/statistics.md`): off, this asks nothing and draws nothing.
+  const stats = useStats( {
+    sends,
+    client,
+    rhythm: conn?.rhythm ?? null,
+    known: !conn || posts !== null,
+    now,
+    looking: sketchKey
+  } );
+
   return (
     <SketchSheet
+      figures={ stats.figures }
       target={ {
         sketchKey,
         pieceId: null,

@@ -83,6 +83,11 @@ import {
 } from "./items";
 import PlanView from "./PlanView";
 import SketchSheet from "./SketchSheet";
+// Statistics (`docs/memory/statistics.md`): these two imports and the `stats` uses below are its whole hold on this page.
+import {
+  useStats
+} from "@/components/Stats/useStats";
+import WhatWorks from "@/components/Stats/WhatWorks";
 import {
   useGallery
 } from "./useGallery";
@@ -326,6 +331,14 @@ export default function GalleryPage( {
   // Without a Postiz the calendars are the archive's: each piece on the day it was kept.
   const piecesMode = !gp.conn;
   const sendsKnown = entries !== null && ( !gp.conn || gp.posts !== null || gp.error !== null );
+  const stats = useStats( {
+    sends,
+    client: gp.client,
+    rhythm: gp.conn?.rhythm ?? null,
+    known: sendsKnown && ( !gp.conn || gp.posts !== null ),
+    now,
+    looking: sheet?.sketchKey ?? null
+  } );
   // Nothing is laid on a day before everything it depends on is read: what
   // lands then lands as NEW tiles, and a tile never changes its state words
   // (and so its width) under the eye.
@@ -793,6 +806,7 @@ export default function GalleryPage( {
                     title
                   ) }
                   onRemove={ ( target ) => void handleRemove( target ) }
+                  stat={ sendsKnown ? stats.cardLine( byPiece.get( entry.id )?.[ 0 ] ) : null }
                 />
               ) )}
             </div>
@@ -817,7 +831,12 @@ export default function GalleryPage( {
           search={ needle }
           sketchFilter={ sketchFilter }
           onSketches={ setPlanSketches }
+          signalFor={ stats.signalFor }
         />
+      )}
+
+      {view === "plan" && (
+        <WhatWorks stats={ stats } sends={ sends } now={ now } onSettings={ openPublishing } />
       )}
 
       {sheet && (
@@ -832,6 +851,7 @@ export default function GalleryPage( {
           onOpenSketch={ ( sketchKey ) => router.push( `/sketches/${ sketchKey }` ) }
           onTakeBack={ takeBack }
           onSendAgain={ sendAgain }
+          figures={ stats.figures }
         />
       )}
 

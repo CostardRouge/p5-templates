@@ -179,8 +179,10 @@ export interface Proposal {
   /** `engine/category/name`, the sketch's route tail and `studio.open`'s id. */
   path: string;
   title: string;
-  /** Why this sketch, here: read by the person, never a metric. */
+  /** Why this sketch, here: read by the person — facts of the calendar, then what a signal moved (`heard`). */
   why: string;
+  /** What a signal moved, with its figures — the tail of `why`, by itself. Absent when nothing moved the line. */
+  heard?: string;
   favorite: boolean;
   /** Set when the slot was pinned rather than drawn. */
   pin?: Pin;
@@ -218,6 +220,70 @@ export interface PlanInput {
   now: number;
   /** The rhythm's zone: a month ends at ITS midnight. UTC when absent. */
   timeZone?: string;
+  /** What measured results may move (`src/lib/stats/signal.ts`). Absent, the plan is what it always was. */
+  signal?: PlanSignal;
+}
+
+/** A slot the mix's pattern gives a pillar to: every free slot but a skipped, a pinned or a recap's. */
+export interface PlanTurn {
+  at: Date;
+  pillar: Pillar;
+}
+
+/**
+ * The ONE door through which anything outside the calendar reaches the plan —
+ * today, post statistics. The plan stays the planner's: a signal may only
+ * hand back the SAME sketches or pillars in another order (anything else is
+ * ignored), it picks nothing, pins nothing and schedules nothing, and what it
+ * moved is said in the line's `why`. Pure functions, as everything here.
+ */
+export interface PlanSignal {
+  /** A pillar's pool in another order. */
+  order?: ( pillar: "drop" | "favourite", pool: readonly PlanSketch[] ) => readonly PlanSketch[];
+  /** The pillars of the pattern's turns in another order. */
+  pillars?: ( turns: readonly PlanTurn[] ) => readonly Pillar[];
+  /**
+   * What moved a line, in words with their figures: `moved` is how many places
+   * its sketch went up (+) or down (−) in its pool, `pattern` the pillar the
+   * mix had given the slot before `pillars` rearranged them.
+   */
+  why?: ( line: { sketchKey: string;
+    pillar: Pillar;
+    at: Date;
+    moved: number;
+    pattern: Pillar; } ) => string | null;
+}
+
+/** True when `b` holds exactly the items of `a`, each as many times. */
+function sameItems<T>(
+  a: readonly T[], b: readonly T[]
+): boolean {
+  if ( a.length !== b.length ) {
+    return false;
+  }
+
+  const count = new Map<T, number>();
+
+  for ( const item of a ) {
+    count.set(
+      item,
+      ( count.get( item ) ?? 0 ) + 1
+    );
+  }
+
+  for ( const item of b ) {
+    const left = count.get( item ) ?? 0;
+
+    if ( !left ) {
+      return false;
+    }
+    count.set(
+      item,
+      left - 1
+    );
+  }
+
+  return true;
 }
 
 export function sketchKeyOf( s: Pick<PlanSketch, "engine" | "name"> ): string {
@@ -788,6 +854,34 @@ export function planSlots( input: PlanInput ): PlanSlot[] {
       lastPosted
     )
   };
+  const signal = input.signal;
+  // How many places the signal moved each sketch up (+) or down (−) in its pool.
+  const moved = new Map<string, number>();
+
+  for ( const pillar of [
+    "drop",
+    "favourite"
+  ] as const ) {
+    const reordered = signal?.order?.(
+      pillar,
+      pools[ pillar ]
+    );
+
+    if ( reordered && sameItems(
+      pools[ pillar ],
+      reordered
+    ) ) {
+      pools[ pillar ].forEach( (
+        s, i
+      ) => moved.set(
+        `${ pillar }:${ sketchKeyOf( s ) }`,
+        i - reordered.indexOf( s )
+      ) );
+      pools[ pillar ] = [
+        ...reordered
+      ];
+    }
+  }
   const slots = [
     ...input.slots
   ].filter( ( at ) => at.getTime() > now ).sort( (
@@ -850,7 +944,31 @@ export function planSlots( input: PlanInput ): PlanSlot[] {
   );
   const series = seriesPool( catalogue ).filter( reelFree );
   const out: PlanSlot[] = [];
-  let turn = 0;
+  // The slots the pattern gives a pillar to, in turn: every one but a skipped, a pinned and a recap's.
+  const turns: PlanTurn[] = slots.filter( ( at ) => {
+    const slot = at.toISOString();
+    const date = dates.get( slot );
+
+    return !choices.skipped[ slot ] && !pinnedReels.has( slot ) && !pinned.has( slot ) && !( date && reelFree( date ) );
+  } ).map( (
+    at, i
+  ) => ( {
+    at,
+    pillar: pattern[ i % pattern.length ]
+  } ) );
+  const arranged = signal?.pillars?.( turns );
+  const wantedAt = new Map( turns.map( (
+    t, i
+  ) => [
+    t.at.toISOString(),
+    {
+      pattern: t.pillar,
+      wanted: arranged && sameItems(
+        turns.map( ( x ) => x.pillar ),
+        arranged
+      ) ? arranged[ i ] : t.pillar
+    }
+  ] ) );
   let previous: string | null = null;
 
   for ( const at of slots ) {
@@ -911,7 +1029,11 @@ export function planSlots( input: PlanInput ): PlanSlot[] {
       continue;
     }
 
-    const wanted = pattern[ turn++ % pattern.length ];
+    const turn = wantedAt.get( slot ) ?? {
+      pattern: pattern[ 0 ],
+      wanted: pattern[ 0 ]
+    };
+    const wanted = turn.wanted;
     const order: ( "drop" | "favourite" )[] = wanted === "favourite" ? [
       "favourite",
       "drop"
@@ -945,6 +1067,23 @@ export function planSlots( input: PlanInput ): PlanSlot[] {
           catalogue,
           lastPosted.get( sketchKeyOf( pick ) )
         );
+
+        const said = signal?.why?.( {
+          sketchKey: proposal.sketchKey,
+          pillar,
+          at,
+          moved: moved.get( proposal.key ) ?? 0,
+          // A pillar the slot only fell back on was not put there by the signal.
+          pattern: pillar === wanted ? turn.pattern : pillar
+        } );
+
+        if ( said ) {
+          proposal = {
+            ...proposal,
+            why: `${ proposal.why } · ${ said }`,
+            heard: said
+          };
+        }
         break;
       }
     }

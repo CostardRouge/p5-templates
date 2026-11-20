@@ -103,4 +103,6 @@ Claude Desktop and Claude Code each start their own `sketchbook-studio-mcp.mjs`,
 
 ## Plan commands (2026-11-20)
 
+`stats.*` (2026-11-20) read each post's figures and what the Plan listens to, from the readings the gallery keeps — off unless the person turned Results on; the floors, and why an answer says «too few» instead of a number, live in `statistics.md`.
+
 `plan.*` read and steer the gallery's Plan — the calculation and the choices of `src/lib/planner/`, so the view and an agent see one plan. They only propose; the rules, and why there is no `plan.approve`, live in `publishing.md` («The Plan»).

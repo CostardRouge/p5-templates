@@ -27,7 +27,14 @@
  *
  * The request builders and readers are pure; `PostizClient` only wires them
  * to a `fetch`, so the specs drive it with a stub.
+ *
+ * Sketchbook's own addition (not in Atelier's copy): `GET /analytics/post/:id`
+ * and `GET /analytics/:integration`, read in `analytics.ts`.
  */
+
+import {
+  readAnalytics, readPostAnalytics, type AnalyticsSeries, type PostAnalytics
+} from "./analytics";
 
 /** What an Instagram account receives the files as. TikTok and YouTube take a video (TikTok also pictures). */
 export type PostKind = "reel" | "post" | "carousel" | "story";
@@ -834,6 +841,30 @@ export class PostizClient {
         method: "DELETE"
       }
     );
+  }
+
+  /** One post's numbers as its network gives them today (`analytics.ts`). A Postiz without the route answers 404. */
+  async postAnalytics(
+    postId: string, days = 7, signal?: AbortSignal
+  ): Promise<PostAnalytics> {
+    return readPostAnalytics( await this.call(
+      `/analytics/post/${ encodeURIComponent( postId ) }?date=${ days }`,
+      {
+        signal
+      }
+    ) );
+  }
+
+  /** An account's numbers over the last `days` (`analytics.ts`); empty when its network gives Postiz none. */
+  async channelAnalytics(
+    channelId: string, days = 7, signal?: AbortSignal
+  ): Promise<AnalyticsSeries[]> {
+    return readAnalytics( await this.call(
+      `/analytics/${ encodeURIComponent( channelId ) }?date=${ days }`,
+      {
+        signal
+      }
+    ) );
   }
 }
 
