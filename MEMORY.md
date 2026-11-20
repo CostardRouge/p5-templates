@@ -129,6 +129,7 @@ This file is the **always-loaded index**. The detail lives in `docs/memory/<topi
 
 ## Open items (dated; remove when done)
 
+- 2026-11-20 — **Autonomous publishing is designed, not decided**: lab 7 (https://claude.ai/artifact/4kp2o5iJgFkk1ExRuyCh6C) proposes a planner inside the app, a Plan view in the gallery as the approval inbox, campaigns as data and `plan.*` commands on top; ten questions wait for him, the first three block the first pass. Nothing is built → `publishing.md`, « Lab 7 ».
 - 2026-11-10 — **Publishing through his Postiz is built (lab 1, P1–P5), driven headless against a stub Postiz only, never his instance.** Before he uses it: his Postiz must list `https://p5.steeve.website` (and `http://localhost:3000`) in its CORS origins, as Atelier's had to. Left his: seeing the Post band on his phone. (The gallery's Planned strip, P6, became lab 3's Week view, 2026-11-13; the tag «Sketchbook» exists in his Postiz since 2026-11-13.) → `publishing.md`, `gallery.md`.
 - 2026-10-24 — **Node 26 waits on Playwright**: the repo stays on Node 24 by a written exception (CLAUDE.md, Other rules) because the Playwright base image installs Node 24. Close it when a Playwright release ships 26: `playwright`, the three `FROM` tags, `.nvmrc` and `@types/node` together (`tooling.md`).
 
