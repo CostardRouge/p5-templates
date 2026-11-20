@@ -9,6 +9,8 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-11-20 — Quadratrix
+
 ### Added
 
 - A fourth Materials sketch, Sand: a sea of dunes under a low sun, their crests cutting lit slopes from shaded
