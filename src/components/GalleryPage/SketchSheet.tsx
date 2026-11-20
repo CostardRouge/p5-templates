@@ -365,7 +365,7 @@ export default function SketchSheet( {
                     aspectRatio: `${ piece.width } / ${ piece.height }`
                   } }
                 >
-                  <Vignette blob={ piece.thumbnail } />
+                  <Vignette blob={ piece.thumbnail } src={ catalogueThumbnail( target.sketchKey ) } />
                 </button>
               ) )}
             </div>
