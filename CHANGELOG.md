@@ -14,6 +14,16 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
 - Self-hosting: the Docker image `ghcr.io/costardrouge/p5-templates` is no longer published with each release.
   1.4.0 is the last one built automatically; build your own from the repository, or ask for a build of a release.
 
+### Added
+
+- The Plan proposes two more kinds of post: a whole **series** as one Reel (every fifth post) and a **recap** — the
+  month just ended on the first slot of the next one, the year month by month on December's last. Opening one
+  builds the Reel for you on the empty sketch: an opening card, then each sketch in turn, cut together, with words
+  to start from. A series or recap you opened waits before it is proposed again.
+- The gallery's search and its sketch filter now narrow the Plan too; on the Plan the filter lists the plan's own
+  sketches.
+
+
 ## [1.4.0] - 2026-11-20 — Quadratrix
 
 ### Added

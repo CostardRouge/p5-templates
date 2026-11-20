@@ -18,9 +18,16 @@
 import {
   sketchTitle
 } from "../postiz/caption";
+import {
+  localDay
+} from "../postiz/rhythm";
 
-/** What a slot is for: a sketch made lately, or a favourite brought back. */
-export type Pillar = "drop" | "favourite";
+/**
+ * What a slot is for: a sketch made lately, a favourite brought back, a whole
+ * SERIES in one Reel, or a RECAP of a month or of the year. The last two are
+ * not a sketch but a reel of several (`reel.ts`), opened on the empty host.
+ */
+export type Pillar = "drop" | "favourite" | "series" | "recap";
 
 /** How the pillars alternate over the slots. */
 export type Mix = "balanced" | "favourites" | "fresh";
@@ -31,34 +38,41 @@ export const MIXES: readonly { id: Mix;
   {
     id: "balanced",
     label: "Balanced",
-    title: "One new sketch, one favourite, in turn"
+    title: "One new sketch, one favourite, in turn, and a series every fifth post"
   },
   {
     id: "favourites",
     label: "Favourites first",
-    title: "Two favourites for one new sketch"
+    title: "Three favourites for one new sketch, and a series every fifth post"
   },
   {
     id: "fresh",
     label: "New work first",
-    title: "Two new sketches for one favourite"
+    title: "Three new sketches for one favourite, and a series every fifth post"
   }
 ];
 
 const PATTERN: Record<Mix, Pillar[]> = {
   balanced: [
     "drop",
-    "favourite"
+    "favourite",
+    "drop",
+    "favourite",
+    "series"
   ],
   favourites: [
     "favourite",
     "favourite",
-    "drop"
+    "drop",
+    "favourite",
+    "series"
   ],
   fresh: [
     "drop",
     "drop",
-    "favourite"
+    "favourite",
+    "drop",
+    "series"
   ]
 };
 
@@ -74,6 +88,24 @@ export const PLAN_WEEKS = 5;
 /** A sketch is «new» for this long after it was made. */
 export const FRESH_DAYS = 120;
 
+/** The sketch a reel of several sketches is built on: it draws nothing of its own. */
+export const REEL_HOST: Pick<PlanSketch, "engine" | "name" | "category"> = {
+  engine: "p5",
+  name: "empty-sketch",
+  category: null
+};
+/** A reel holds this many sketches at most; a longer series is sampled, first and last kept. */
+export const REEL_MAX = 8;
+/** Fewer than this is not a series, nor a month worth a recap. */
+export const REEL_MIN = 3;
+/** A month's recap is proposed on the first free slot of the next month, if that comes within this many days. */
+const RECAP_WITHIN_DAYS = 14;
+/**
+ * Series that cannot play as a scene by themselves: they wait for a camera, a
+ * microphone, a file or a hand. Nothing in the catalogue says so, hence names.
+ */
+const NEEDS_INPUT = /^(photo|video|audio|hand-capture|face-capture|interactive)/;
+
 const DAY_MS = 86_400_000;
 const WEEK_MS = 7 * DAY_MS;
 
@@ -87,6 +119,8 @@ export interface PlanSketch {
   favorite?: boolean;
   hasPreview?: boolean;
   hiddenFromGallery?: boolean;
+  /** Draws asynchronously: cannot run as a scene of a reel. */
+  asyncDraw?: boolean;
   description?: string;
 }
 
@@ -108,6 +142,12 @@ export interface PlanChoices {
   skipped: Record<string, number>;
   /** Slots given a sketch on purpose, by ISO instant. */
   pins: Record<string, Pin>;
+  /**
+   * Series and recaps OPENED on Export › Publish, by proposal key, with when.
+   * A reel is posted from the host sketch, so no post names its series: having
+   * opened it is the only trace, and it keeps the reel away for the gap.
+   */
+  opened: Record<string, number>;
 }
 
 export const EMPTY_CHOICES: PlanChoices = {
@@ -115,11 +155,12 @@ export const EMPTY_CHOICES: PlanChoices = {
   gapWeeks: DEFAULT_GAP_WEEKS,
   passed: {},
   skipped: {},
-  pins: {}
+  pins: {},
+  opened: {}
 };
 
 export interface Proposal {
-  /** `<pillar>:<engine>/<name>` — what «Another» passes over. */
+  /** `<pillar>:<engine>/<name>`, `series:<engine>/<category>`, `recap:2026-11`, `recap:2026` — what «Another» passes over. */
   key: string;
   pillar: Pillar;
   sketchKey: string;
@@ -131,6 +172,19 @@ export interface Proposal {
   favorite: boolean;
   /** Set when the slot was pinned rather than drawn. */
   pin?: Pin;
+  /** A series or a recap: the sketches of its reel, in order, `<engine>/<name>` each. */
+  reel?: Reel;
+}
+
+/** Several sketches cut together in one Reel on the empty host (`reel.ts`). */
+export interface Reel {
+  /** The opening card's words. */
+  title: string;
+  subtitle: string;
+  /** `<engine>/<name>` of each scene, in order — also the thumbnails. */
+  sketches: string[];
+  /** The `sequence` item's own ids, `<category>/<name>` or `<name>`. */
+  scenes: string[];
 }
 
 export interface PlanSlot {
@@ -150,6 +204,8 @@ export interface PlanInput {
     at: number }[];
   choices: PlanChoices;
   now: number;
+  /** The rhythm's zone: a month ends at ITS midnight. UTC when absent. */
+  timeZone?: string;
 }
 
 export function sketchKeyOf( s: Pick<PlanSketch, "engine" | "name"> ): string {
@@ -295,6 +351,338 @@ export function tooSoon(
   return posted.some( ( p ) => p.sketchKey === sketchKey && Math.abs( p.at - at ) < gapWeeks * WEEK_MS );
 }
 
+/** A sketch that can be a scene of a reel: p5, shown, drawing by itself. */
+function playable( s: PlanSketch ): boolean {
+  return s.engine === REEL_HOST.engine && !s.hiddenFromGallery && !s.asyncDraw && s.name !== REEL_HOST.name && !NEEDS_INPUT.test( seriesOf( s ) );
+}
+
+/** At most `REEL_MAX` of `list`, spread evenly, the first and the last kept. */
+export function sampleReel<T>( list: readonly T[] ): T[] {
+  if ( list.length <= REEL_MAX ) {
+    return [
+      ...list
+    ];
+  }
+
+  return Array.from(
+    {
+      length: REEL_MAX
+    },
+    (
+      _, i
+    ) => list[ Math.round( i * ( list.length - 1 ) / ( REEL_MAX - 1 ) ) ]
+  );
+}
+
+function reelOf(
+  title: string, subtitle: string, sketches: readonly PlanSketch[]
+): Reel {
+  const picked = sampleReel( sketches );
+
+  return {
+    title,
+    subtitle,
+    sketches: picked.map( sketchKeyOf ),
+    scenes: picked.map( ( s ) => s.category ? `${ s.category }/${ s.name }` : s.name )
+  };
+}
+
+function reelProposal(
+  key: string, pillar: "series" | "recap", title: string, why: string, reel: Reel
+): Proposal {
+  return {
+    key,
+    pillar,
+    sketchKey: sketchKeyOf( REEL_HOST ),
+    path: sketchPath( REEL_HOST ),
+    title,
+    why,
+    favorite: false,
+    reel
+  };
+}
+
+const capital = ( text: string ) => text.charAt( 0 ).toUpperCase() + text.slice( 1 );
+
+/**
+ * The series worth a Reel of their own: a category of three playable sketches
+ * or more, the one touched last first. A series opened within the gap waits.
+ */
+export function seriesPool( catalogue: readonly PlanSketch[] ): Proposal[] {
+  const groups = new Map<string, PlanSketch[]>();
+
+  for ( const s of catalogue ) {
+    if ( s.category && playable( s ) ) {
+      groups.set(
+        s.category,
+        [
+          ...( groups.get( s.category ) ?? [] ),
+          s
+        ]
+      );
+    }
+  }
+
+  return [
+    ...groups.entries()
+  ].filter( ( [
+    , list
+  ] ) => list.length >= REEL_MIN )
+    .map( ( [
+      category,
+      list
+    ] ) => {
+      const ordered = [
+        ...list
+      ].sort( (
+        a, b
+      ) => versionOf( a.name ) - versionOf( b.name ) || ( a.createdAt ?? "" ).localeCompare( b.createdAt ?? "" ) || a.name.localeCompare( b.name ) );
+      const name = capital( category.replace(
+        /-/g,
+        " "
+      ) );
+      const reel = reelOf(
+        name.toUpperCase(),
+        `${ ordered.length } SKETCHES`,
+        ordered
+      );
+
+      return {
+        newest: ordered.reduce(
+          (
+            m, s
+          ) => ( s.createdAt ?? "" ) > m ? s.createdAt ?? "" : m,
+          ""
+        ),
+        proposal: reelProposal(
+          `series:${ REEL_HOST.engine }/${ category }`,
+          "series",
+          `${ name } · the series`,
+          `${ ordered.length } sketches in one Reel${ reel.sketches.length < ordered.length ? `, ${ reel.sketches.length } of them shown` : "" } · built on the empty sketch as a sequence`,
+          reel
+        )
+      };
+    } )
+    .sort( (
+      a, b
+    ) => b.newest.localeCompare( a.newest ) || a.proposal.key.localeCompare( b.proposal.key ) )
+    .map( ( entry ) => entry.proposal );
+}
+
+const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December"
+];
+
+/**
+ * The recap of the month `month` (`YYYY-MM`): what was POSTED in it, in the
+ * order it went out, when that makes three; else what was MADE in it; else
+ * nothing — a recap never pads.
+ */
+export function monthRecap(
+  catalogue: readonly PlanSketch[], posted: readonly { sketchKey: string;
+    at: number }[], month: string, timeZone: string
+): Proposal | null {
+  const byKey = new Map( catalogue.map( ( s ) => [
+    sketchKeyOf( s ),
+    s
+  ] ) );
+  const sent = [
+    ...posted
+  ].sort( (
+    a, b
+  ) => a.at - b.at ).filter( ( p ) => localDay(
+    new Date( p.at ),
+    timeZone
+  ).startsWith( month ) )
+    .map( ( p ) => byKey.get( p.sketchKey ) )
+    .filter( ( s ): s is PlanSketch => Boolean( s && playable( s ) ) );
+  const posts = [
+    ...new Set( sent )
+  ];
+  const made = catalogue.filter( ( s ) => playable( s ) && ( s.createdAt ?? "" ).startsWith( month ) )
+    .sort( (
+      a, b
+    ) => ( a.createdAt ?? "" ).localeCompare( b.createdAt ?? "" ) || versionOf( a.name ) - versionOf( b.name ) || a.name.localeCompare( b.name ) );
+  const from = posts.length >= REEL_MIN ? posts : made;
+
+  if ( from.length < REEL_MIN ) {
+    return null;
+  }
+
+  const name = MONTHS[ Number( month.slice( 5 ) ) - 1 ] ?? month;
+  const reel = reelOf(
+    name.toUpperCase(),
+    `${ month.slice(
+      0,
+      4
+    ) } IN SKETCHES`,
+    from
+  );
+
+  return reelProposal(
+    `recap:${ month }`,
+    "recap",
+    `${ name } in sketches`,
+    `${ from.length } ${ from === posts ? "sketches posted" : "sketches made" } in ${ name }${ reel.sketches.length < from.length ? `, ${ reel.sketches.length } of them shown` : "" } · the month is over`,
+    reel
+  );
+}
+
+/** The year, month by month: for each month a favourite made in it, else the last sketch made in it. */
+export function yearRecap(
+  catalogue: readonly PlanSketch[], year: string
+): Proposal | null {
+  const picks: PlanSketch[] = [];
+
+  for ( let m = 1; m <= 12; m++ ) {
+    const month = `${ year }-${ String( m ).padStart(
+      2,
+      "0"
+    ) }`;
+    const made = catalogue.filter( ( s ) => playable( s ) && ( s.createdAt ?? "" ).startsWith( month ) )
+      .sort( (
+        a, b
+      ) => Number( Boolean( b.favorite ) ) - Number( Boolean( a.favorite ) ) || ( b.createdAt ?? "" ).localeCompare( a.createdAt ?? "" ) || a.name.localeCompare( b.name ) );
+
+    if ( made[ 0 ] ) {
+      picks.push( made[ 0 ] );
+    }
+  }
+
+  if ( picks.length < REEL_MIN ) {
+    return null;
+  }
+
+  const picked = picks.length > REEL_MAX + 4 ? sampleReel( picks ) : picks;
+
+  return reelProposal(
+    `recap:${ year }`,
+    "recap",
+    `${ year }, month by month`,
+    `One sketch for each of ${ picks.length } months of ${ year } — a favourite made that month, else the last one made`,
+    {
+      title: year,
+      subtitle: "MONTH BY MONTH",
+      sketches: picked.map( sketchKeyOf ),
+      scenes: picked.map( ( s ) => s.category ? `${ s.category }/${ s.name }` : s.name )
+    }
+  );
+}
+
+/** `2026-12` → `2026-11`. */
+function monthBefore( month: string ): string {
+  const y = Number( month.slice(
+    0,
+    4
+  ) );
+  const m = Number( month.slice( 5 ) );
+
+  return m === 1 ? `${ y - 1 }-12` : `${ y }-${ String( m - 1 ).padStart(
+    2,
+    "0"
+  ) }`;
+}
+
+/**
+ * The fixed rendezvous among `slots` (time order): the first slot of a month,
+ * within two weeks of its start, recaps the month before; the last slot of
+ * December, or failing that the first of January, recaps the year.
+ */
+export function rendezvous(
+  slots: readonly Date[], catalogue: readonly PlanSketch[], posted: readonly { sketchKey: string;
+    at: number }[], timeZone: string
+): Map<string, Proposal> {
+  const out = new Map<string, Proposal>();
+  const days = slots.map( ( at ) => localDay(
+    at,
+    timeZone
+  ) );
+  const seen = new Set<string>();
+
+  slots.forEach( (
+    at, i
+  ) => {
+    const month = days[ i ].slice(
+      0,
+      7
+    );
+
+    if ( seen.has( month ) ) {
+      return;
+    }
+    seen.add( month );
+
+    // The first slot of a month in the plan — but only when the plan saw the month begin.
+    if ( i > 0 && Number( days[ i ].slice( 8 ) ) <= RECAP_WITHIN_DAYS ) {
+      const recap = monthRecap(
+        catalogue,
+        posted,
+        monthBefore( month ),
+        timeZone
+      );
+
+      if ( recap ) {
+        out.set(
+          at.toISOString(),
+          recap
+        );
+      }
+    }
+  } );
+
+  const december = slots.filter( (
+    _, i
+  ) => days[ i ].slice(
+    5,
+    7
+  ) === "12" && Number( days[ i ].slice( 8 ) ) >= 15 ).pop();
+  const january = slots.find( (
+    _, i
+  ) => days[ i ].slice(
+    5,
+    7
+  ) === "01" && Number( days[ i ].slice( 8 ) ) <= 15 );
+  const closing = december ?? january;
+
+  if ( closing && !out.has( closing.toISOString() ) ) {
+    const day = localDay(
+      closing,
+      timeZone
+    );
+    const year = december ? day.slice(
+      0,
+      4
+    ) : String( Number( day.slice(
+      0,
+      4
+    ) ) - 1 );
+    const recap = yearRecap(
+      catalogue,
+      year
+    );
+
+    if ( recap ) {
+      out.set(
+        closing.toISOString(),
+        recap
+      );
+    }
+  }
+
+  return out;
+}
+
 function whyOf(
   s: PlanSketch, pillar: Pillar, catalogue: readonly PlanSketch[], last: number | undefined
 ): string {
@@ -374,7 +762,7 @@ export function planSlots( input: PlanInput ): PlanSlot[] {
   }
 
   const everPosted = new Set( input.posted.map( ( p ) => p.sketchKey ) );
-  const pools: Record<Pillar, PlanSketch[]> = {
+  const pools: Record<"drop" | "favourite", PlanSketch[]> = {
     drop: dropPool(
       catalogue,
       everPosted,
@@ -408,6 +796,16 @@ export function planSlots( input: PlanInput ): PlanSlot[] {
     ...pinned.values()
   ].map( sketchKeyOf ) );
   const pattern = PATTERN[ choices.mix ] ?? PATTERN[ DEFAULT_MIX ];
+  const gapMs = choices.gapWeeks * WEEK_MS;
+  // A reel passed over, or opened within the gap, waits.
+  const reelFree = ( p: Proposal ) => !choices.passed[ p.key ] && !( now - ( choices.opened?.[ p.key ] ?? -Infinity ) < gapMs );
+  const dates = rendezvous(
+    slots,
+    catalogue,
+    input.posted,
+    input.timeZone ?? "UTC"
+  );
+  const series = seriesPool( catalogue ).filter( reelFree );
   const out: PlanSlot[] = [];
   let turn = 0;
   let previous: string | null = null;
@@ -444,17 +842,34 @@ export function planSlots( input: PlanInput ): PlanSlot[] {
       continue;
     }
 
+    const date = dates.get( slot );
+
+    if ( date && reelFree( date ) ) {
+      out.push( {
+        slot,
+        at,
+        proposal: date,
+        skipped: false
+      } );
+      previous = null;
+      continue;
+    }
+
     const wanted = pattern[ turn++ % pattern.length ];
-    const order: Pillar[] = wanted === "drop" ? [
-      "drop",
-      "favourite"
-    ] : [
+    const order: ( "drop" | "favourite" )[] = wanted === "favourite" ? [
       "favourite",
       "drop"
+    ] : [
+      "drop",
+      "favourite"
     ];
-    let proposal: Proposal | null = null;
+    let proposal: Proposal | null = wanted === "series" ? series.shift() ?? null : null;
 
-    for ( const pillar of order ) {
+    if ( proposal ) {
+      previous = null;
+    }
+
+    for ( const pillar of proposal ? [] : order ) {
       const free = ( s: PlanSketch ) => !used.has( sketchKeyOf( s ) ) &&
         !choices.passed[ `${ pillar }:${ sketchKeyOf( s ) }` ] &&
         !tooSoon(

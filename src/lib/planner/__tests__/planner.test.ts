@@ -1,6 +1,10 @@
 import {
-  dropPool, EMPTY_CHOICES, favouritePool, planSlots, tooSoon, versionOf, type PlanChoices, type PlanSketch
+  dropPool, EMPTY_CHOICES, favouritePool, monthRecap, planSlots, rendezvous, sampleReel, seriesPool, tooSoon, versionOf, yearRecap, type PlanChoices, type PlanSketch
 } from "../planner";
+import {
+  reelCaption, reelDocument, reelSeconds
+} from "../reel";
+import parseImportedOptions from "../../../utils/parseImportedOptions";
 import {
   readChoices
 } from "../planStore";
@@ -93,7 +97,7 @@ const slots = ( n: number ) => Array.from(
   },
   (
     _, i
-  ) => new Date( NOW + ( i + 1 ) * 2 * 86_400_000 )
+  ) => new Date( NOW + ( i + 1 ) * 86_400_000 )
 );
 
 const plan = (
@@ -186,13 +190,14 @@ describe(
       () => {
         const out = plan();
 
+        // The fifth slot asks for a series; this catalogue has none of three sketches, so a new sketch takes it.
         expect( out.map( ( s ) => s.proposal?.pillar ) ).toEqual( [
           "drop",
           "favourite",
           "drop",
           "favourite",
           "drop",
-          "favourite"
+          "drop"
         ] );
 
         const keys = out.map( ( s ) => s.proposal?.sketchKey );
@@ -222,6 +227,7 @@ describe(
         );
 
         expect( out.filter( ( s ) => s.proposal ).length ).toBe( 7 );
+        expect( out[ 7 ].proposal ).toBeNull();
         expect( out[ 8 ].proposal ).toBeNull();
         expect( out[ 8 ].skipped ).toBe( false );
       }
@@ -328,7 +334,8 @@ describe(
               sketchKey: "p5/rings-v10-magnetic-flyby",
               at: NOW - 20 * WEEK
             }
-          ]
+          ],
+          8
         );
         const drop = out.find( ( s ) => s.proposal?.sketchKey === "p5/materials-v1-flame" )!.proposal!;
         const favourite = out.find( ( s ) => s.proposal?.sketchKey === "p5/rings-v10-magnetic-flyby" )!.proposal!;
@@ -363,6 +370,10 @@ describe(
               [ ahead ]: NOW,
               [ gone ]: NOW
             },
+            opened: {
+              "series:p5/materials": NOW - 1000,
+              "recap:2024": NOW - 400 * 86_400_000
+            },
             pins: {
               [ ahead ]: {
                 sketchKey: "p5/torsade-v0",
@@ -388,6 +399,9 @@ describe(
         expect( Object.keys( read.skipped ) ).toEqual( [
           ahead
         ] );
+        expect( read.opened ).toEqual( {
+          "series:p5/materials": NOW - 1000
+        } );
         expect( read.pins ).toEqual( {
           [ ahead ]: {
             sketchKey: "p5/torsade-v0",
@@ -437,6 +451,342 @@ describe(
           now,
           2
         ).length ).toBe( 4 );
+      }
+    );
+  }
+);
+
+const SERIES: PlanSketch[] = [
+  ...[
+    1,
+    2,
+    3,
+    4
+  ].map( ( v ) => sketch(
+    `materials-v${ v }-x`,
+    "materials",
+    `2026-11-${ String( 9 + v ).padStart(
+      2,
+      "0"
+    ) }`
+  ) ),
+  ...Array.from(
+    {
+      length: 11
+    },
+    (
+      _, i
+    ) => sketch(
+      `churros-v${ i + 1 }-x`,
+      "churros",
+      "2026-05-26",
+      {
+        favorite: i === 3
+      }
+    )
+  ),
+  sketch(
+    "photo-a",
+    "photo",
+    "2026-11-01"
+  ),
+  sketch(
+    "photo-b",
+    "photo",
+    "2026-11-02"
+  ),
+  sketch(
+    "photo-c",
+    "photo",
+    "2026-11-03"
+  ),
+  sketch(
+    "slow-v1",
+    "slow",
+    "2026-11-04",
+    {
+      asyncDraw: true
+    }
+  ),
+  sketch(
+    "rings-v1-a",
+    "rings",
+    "2026-07-11",
+    {
+      favorite: true
+    }
+  )
+];
+
+describe(
+  "series and recaps",
+  () => {
+    it(
+      "samples a long reel evenly, the first and the last kept",
+      () => {
+        expect( sampleReel( [
+          1,
+          2,
+          3
+        ] ) ).toEqual( [
+          1,
+          2,
+          3
+        ] );
+
+        const eleven = sampleReel( Array.from(
+          {
+            length: 11
+          },
+          (
+            _, i
+          ) => i + 1
+        ) );
+
+        expect( eleven.length ).toBe( 8 );
+        expect( eleven[ 0 ] ).toBe( 1 );
+        expect( eleven[ 7 ] ).toBe( 11 );
+        expect( new Set( eleven ).size ).toBe( 8 );
+      }
+    );
+
+    it(
+      "offers a series of three playable sketches or more, the one touched last first",
+      () => {
+        const pool = seriesPool( SERIES );
+
+        expect( pool.map( ( p ) => p.key ) ).toEqual( [
+          "series:p5/materials",
+          "series:p5/churros"
+        ] );
+        expect( pool[ 0 ] ).toMatchObject( {
+          pillar: "series",
+          title: "Materials · the series",
+          path: "p5/empty-sketch",
+          sketchKey: "p5/empty-sketch"
+        } );
+        expect( pool[ 0 ].reel ).toEqual( {
+          title: "MATERIALS",
+          subtitle: "4 SKETCHES",
+          sketches: [
+            "p5/materials-v1-x",
+            "p5/materials-v2-x",
+            "p5/materials-v3-x",
+            "p5/materials-v4-x"
+          ],
+          scenes: [
+            "materials/materials-v1-x",
+            "materials/materials-v2-x",
+            "materials/materials-v3-x",
+            "materials/materials-v4-x"
+          ]
+        } );
+        expect( pool[ 1 ].reel!.sketches.length ).toBe( 8 );
+        expect( pool[ 1 ].why ).toContain( "11 sketches in one Reel, 8 of them shown" );
+      }
+    );
+
+    it(
+      "recaps a month from what was posted in it, else from what was made in it, else not at all",
+      () => {
+        const made = monthRecap(
+          SERIES,
+          [],
+          "2026-11",
+          "Europe/Paris"
+        )!;
+
+        expect( made.key ).toBe( "recap:2026-11" );
+        expect( made.title ).toBe( "November in sketches" );
+        expect( made.reel!.sketches ).toEqual( [
+          "p5/materials-v1-x",
+          "p5/materials-v2-x",
+          "p5/materials-v3-x",
+          "p5/materials-v4-x"
+        ] );
+        expect( made.why ).toContain( "4 sketches made in November" );
+
+        const sent = monthRecap(
+          SERIES,
+          [
+            {
+              sketchKey: "p5/churros-v2-x",
+              at: Date.parse( "2026-11-12T09:00:00Z" )
+            },
+            {
+              sketchKey: "p5/rings-v1-a",
+              at: Date.parse( "2026-11-03T09:00:00Z" )
+            },
+            {
+              sketchKey: "p5/churros-v1-x",
+              at: Date.parse( "2026-11-08T09:00:00Z" )
+            },
+            {
+              sketchKey: "p5/churros-v1-x",
+              at: Date.parse( "2026-11-18T09:00:00Z" )
+            }
+          ],
+          "2026-11",
+          "Europe/Paris"
+        )!;
+
+        expect( sent.reel!.sketches ).toEqual( [
+          "p5/rings-v1-a",
+          "p5/churros-v1-x",
+          "p5/churros-v2-x"
+        ] );
+        expect( sent.why ).toContain( "3 sketches posted in November" );
+        expect( monthRecap(
+          SERIES,
+          [],
+          "2026-10",
+          "Europe/Paris"
+        ) ).toBeNull();
+      }
+    );
+
+    it(
+      "recaps the year with one sketch a month, a favourite first",
+      () => {
+        const year = yearRecap(
+          SERIES,
+          "2026"
+        )!;
+
+        expect( year.key ).toBe( "recap:2026" );
+        expect( year.reel!.sketches ).toEqual( [
+          "p5/churros-v4-x",
+          "p5/rings-v1-a",
+          "p5/materials-v4-x"
+        ] );
+        expect( yearRecap(
+          SERIES,
+          "2025"
+        ) ).toBeNull();
+      }
+    );
+
+    it(
+      "puts the month's recap on the first slot of the next month and the year's on December's last",
+      () => {
+        const at = ( day: string ) => new Date( `${ day }T09:00:00Z` );
+        const dates = rendezvous(
+          [
+            at( "2026-11-24" ),
+            at( "2026-11-29" ),
+            at( "2026-12-01" ),
+            at( "2026-12-04" ),
+            at( "2026-12-18" ),
+            at( "2026-12-20" )
+          ],
+          SERIES,
+          [],
+          "Europe/Paris"
+        );
+
+        expect( [
+          ...dates.entries()
+        ].map( ( [
+          slot,
+          p
+        ] ) => `${ slot.slice(
+          0,
+          10
+        ) } ${ p.key }` ) ).toEqual( [
+          "2026-12-01 recap:2026-11",
+          "2026-12-20 recap:2026"
+        ] );
+        // A plan that opens mid-December did not see the month begin: no stale recap of November.
+        expect( rendezvous(
+          [
+            at( "2026-12-22" ),
+            at( "2026-12-25" )
+          ],
+          SERIES,
+          [],
+          "Europe/Paris"
+        ).size ).toBe( 1 );
+      }
+    );
+
+    it(
+      "lays series and recaps into the plan, and lets them be passed over or wait once opened",
+      () => {
+        const at = ( day: string ) => new Date( `${ day }T09:00:00Z` );
+        const days = [
+          "2026-11-22",
+          "2026-11-24",
+          "2026-11-27",
+          "2026-11-29",
+          "2026-12-01",
+          "2026-12-04",
+          "2026-12-06"
+        ].map( at );
+        const run = ( choices: Partial<PlanChoices> = {} ) => planSlots( {
+          catalogue: SERIES,
+          slots: days,
+          posted: [],
+          choices: {
+            ...EMPTY_CHOICES,
+            ...choices
+          },
+          now: NOW,
+          timeZone: "Europe/Paris"
+        } ).map( ( s ) => s.proposal?.key );
+
+        const plain = run();
+
+        expect( plain[ 4 ] ).toBe( "recap:2026-11" );
+        // The fifth slot the PATTERN fills (the recap's slot is not one) is the series'.
+        expect( plain[ 5 ] ).toBe( "series:p5/materials" );
+        expect( run( {
+          passed: {
+            "recap:2026-11": NOW
+          }
+        } )[ 4 ] ).toBe( "series:p5/materials" );
+        expect( run( {
+          opened: {
+            "series:p5/materials": NOW - 86_400_000
+          }
+        } )[ 5 ] ).toBe( "series:p5/churros" );
+      }
+    );
+
+    it(
+      "builds a reel the app itself accepts: an opening card, then each sketch",
+      () => {
+        const proposal = seriesPool( SERIES )[ 0 ];
+        const document = reelDocument( proposal )!;
+        const parsed = parseImportedOptions( document );
+
+        expect( parsed.ok ).toBe( true );
+        if ( !parsed.ok ) {
+          return;
+        }
+
+        expect( parsed.options.name ).toBe( "empty-sketch" );
+        expect( parsed.options.animation.duration ).toBe( reelSeconds( 4 ) );
+        expect( reelSeconds( 4 ) ).toBe( 12 );
+        expect( reelSeconds( 40 ) ).toBe( 60 );
+
+        const item = parsed.options.content[ 0 ] as { type: string;
+          scenes: { kind: string;
+            sketch?: string;
+            title?: string }[]; };
+
+        expect( item.type ).toBe( "sequence" );
+        expect( item.scenes.map( ( scene ) => scene.kind ) ).toEqual( [
+          "splash",
+          "sketch",
+          "sketch",
+          "sketch",
+          "sketch"
+        ] );
+        expect( item.scenes[ 0 ].title ).toBe( "MATERIALS" );
+        expect( item.scenes[ 1 ].sketch ).toBe( "materials/materials-v1-x" );
+        expect( reelCaption( proposal ) ).toContain( "Materials · the series" );
+        expect( reelCaption( proposal ) ).not.toContain( "{link}" );
+        expect( reelDocument( {} ) ).toBeNull();
       }
     );
   }

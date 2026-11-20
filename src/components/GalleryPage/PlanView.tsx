@@ -12,7 +12,7 @@ import {
   weekLabel
 } from "@/lib/gallery/calendar";
 import {
-  DEFAULT_GAP_WEEKS, EMPTY_CHOICES, GAP_WEEKS, MIXES, planSlots, type PlanSketch, type PlanSlot
+  DEFAULT_GAP_WEEKS, EMPTY_CHOICES, GAP_WEEKS, MIXES, planSlots, sketchKeyOf, sketchPath, type Pillar, type PlanSketch, type PlanSlot
 } from "@/lib/planner/planner";
 import {
   getChoices, passProposal, resetPlan, skipSlot, subscribeChoices, updateChoices
@@ -30,10 +30,12 @@ import {
   Vignette
 } from "./marks";
 
-const PILLAR_LABEL = {
+const PILLAR_LABEL: Record<Pillar, string> = {
   drop: "New",
-  favourite: "Favourite"
-} as const;
+  favourite: "Favourite",
+  series: "Series",
+  recap: "Recap"
+};
 
 const BUTTON = "inline-flex h-8 items-center justify-center rounded-lg border border-border bg-background px-3 text-xs font-medium text-foreground transition-colors hover:bg-hover disabled:opacity-40";
 const INK_BUTTON = "inline-flex h-8 items-center justify-center rounded-lg bg-foreground px-3 text-xs font-semibold text-background transition-opacity hover:opacity-90";
@@ -93,6 +95,62 @@ function useCatalogue(): PlanSketch[] | null {
   );
 
   return catalogue;
+}
+
+/** The picture of a proposal: its sketch, or — for a reel — its first sketch with how many follow. */
+function Cover( {
+  slot, className
+}: {
+  slot: PlanSlot;
+  className: string;
+} ) {
+  const p = slot.proposal;
+  const reel = p?.reel;
+
+  return (
+    <span className={ clsx(
+      "relative block aspect-[4/5] shrink-0 overflow-hidden bg-hover/60",
+      className
+    ) }
+    >
+      {p && <Vignette src={ catalogueThumbnail( reel ? reel.sketches[ 0 ] : p.sketchKey ) } />}
+      {reel && (
+        <span className="absolute bottom-0.5 right-0.5 rounded-sm bg-foreground px-1 font-mono text-[9px] font-semibold leading-tight text-background">
+          {reel.sketches.length}
+        </span>
+      )}
+    </span>
+  );
+}
+
+/** True when a slot answers the gallery's search and its sketch filter. */
+export function slotMatches(
+  slot: PlanSlot, needle: string, sketchFilter: string
+): boolean {
+  const p = slot.proposal;
+
+  if ( !needle && !sketchFilter ) {
+    return true;
+  }
+  if ( !p ) {
+    return false;
+  }
+
+  const keys = p.reel ? p.reel.sketches : [
+    p.sketchKey
+  ];
+  const name = sketchFilter.split( "/" ).pop() ?? "";
+
+  if ( sketchFilter && !keys.some( ( key ) => key.endsWith( `/${ name }` ) ) ) {
+    return false;
+  }
+
+  return !needle || [
+    p.title,
+    p.path,
+    p.why,
+    ...keys
+  ].some( ( text ) => text.toLowerCase().includes( needle ) );
 }
 
 function PillarChip( {
@@ -163,9 +221,7 @@ function Detail( {
     ) } data-plan-detail
     >
       <div className="flex items-start gap-3">
-        <div className="relative aspect-[4/5] w-20 shrink-0 overflow-hidden rounded-md bg-hover/60">
-          {p && <Vignette src={ catalogueThumbnail( p.sketchKey ) } />}
-        </div>
+        <Cover slot={ slot } className="w-20 rounded-md" />
         <div className="flex min-w-0 flex-col gap-1.5">
           <h3 className="text-sm font-semibold text-foreground [overflow-wrap:anywhere]">
             {p ? p.title : slot.skipped ? "Left empty" : "Nothing left to propose"}
@@ -184,8 +240,25 @@ function Detail( {
           <>
             <dt className={ EYEBROW }>Why</dt>
             <dd className="text-foreground/70 [overflow-wrap:anywhere]">{p.why}</dd>
-            <dt className={ EYEBROW }>Sketch</dt>
-            <dd className="font-mono text-[11px] text-foreground/70 [overflow-wrap:anywhere]">{p.path}</dd>
+            {p.reel
+              ? (
+                <>
+                  <dt className={ EYEBROW }>Reel</dt>
+                  <dd className="flex flex-wrap gap-1" data-plan-reel>
+                    {p.reel.sketches.map( ( key ) => (
+                      <span key={ key } title={ key } className="relative block aspect-[4/5] w-8 overflow-hidden rounded-sm bg-hover/60">
+                        <Vignette src={ catalogueThumbnail( key ) } />
+                      </span>
+                    ) )}
+                  </dd>
+                </>
+              )
+              : (
+                <>
+                  <dt className={ EYEBROW }>Sketch</dt>
+                  <dd className="font-mono text-[11px] text-foreground/70 [overflow-wrap:anywhere]">{p.path}</dd>
+                </>
+              )}
           </>
         )}
         {!p && !slot.skipped && (
@@ -203,10 +276,12 @@ function Detail( {
               type="button"
               className={ INK_BUTTON }
               data-plan-open
-              title={ connected ? "Open the sketch on Export › Publish, on this slot" : "Open the sketch — connect your Postiz (menu › Publishing) to schedule it" }
+              title={ p.reel
+                ? ( connected ? "Build this reel on the empty sketch and open Export › Publish on this slot" : "Build this reel on the empty sketch — connect your Postiz (menu › Publishing) to schedule it" )
+                : ( connected ? "Open the sketch on Export › Publish, on this slot" : "Open the sketch — connect your Postiz (menu › Publishing) to schedule it" ) }
               onClick={ () => onOpen( slot ) }
             >
-              {connected ? "Open in Publish" : "Open the sketch"}
+              {connected ? "Open in Publish" : p.reel ? "Build the reel" : "Open the sketch"}
             </button>
             <button
               type="button"
@@ -234,7 +309,7 @@ function Detail( {
         >
           {slot.skipped ? "Propose again" : "Skip"}
         </button>
-        {p && (
+        {p && !p.reel && (
           <button type="button" className={ `${ BUTTON } border-transparent text-foreground/60` } onClick={ () => onSheet( p.sketchKey ) }>
             Its posts
           </button>
@@ -256,7 +331,7 @@ function Detail( {
  * loads late (the catalogue, Postiz) lands in place and moves nothing.
  */
 export default function PlanView( {
-  rhythm, posts, posted, known, now, onOpen, onSheet, onRhythm
+  rhythm, posts, posted, known, now, onOpen, onSheet, onRhythm, search = "", sketchFilter = "", onSketches
 }: {
   /** The kept Postiz's rhythm; null without a Postiz (the default rhythm is drawn). */
   rhythm: Rhythm | null;
@@ -272,6 +347,11 @@ export default function PlanView( {
   onOpen: ( slot: PlanSlot ) => void;
   onSheet: ( sketchKey: string ) => void;
   onRhythm: () => void;
+  /** The gallery's search, lower-cased, and its sketch filter: they narrow what is SHOWN, never what is planned. */
+  search?: string;
+  sketchFilter?: string;
+  /** The sketches the plan proposes, `engine/category/name`, for the gallery's sketch filter. */
+  onSketches?: ( paths: string[] ) => void;
 } ) {
   const catalogue = useCatalogue();
   const choices = useSyncExternalStore(
@@ -296,7 +376,8 @@ export default function PlanView( {
       ),
       posted,
       choices,
-      now
+      now,
+      timeZone: tz
     } ),
     [
       known,
@@ -305,16 +386,60 @@ export default function PlanView( {
       posts,
       posted,
       choices,
-      now
+      now,
+      tz
     ]
   );
 
-  const selected = slots?.find( ( s ) => s.slot === picked ) ?? slots?.find( ( s ) => s.proposal ) ?? slots?.[ 0 ] ?? null;
+  const shown = useMemo(
+    () => slots?.filter( ( s ) => slotMatches(
+      s,
+      search,
+      sketchFilter
+    ) ) ?? null,
+    [
+      slots,
+      search,
+      sketchFilter
+    ]
+  );
+  const paths = useMemo(
+    () => {
+      if ( !slots || !catalogue ) {
+        return [];
+      }
+
+      const pathOf = new Map( catalogue.map( ( s ) => [
+        sketchKeyOf( s ),
+        sketchPath( s )
+      ] ) );
+
+      return [
+        ...new Set( slots.flatMap( ( s ) => !s.proposal ? [] : s.proposal.reel ? s.proposal.reel.sketches.map( ( key ) => pathOf.get( key ) ?? key ) : [
+          s.proposal.path
+        ] ) )
+      ].sort();
+    },
+    [
+      slots,
+      catalogue
+    ]
+  );
+
+  useEffect(
+    () => onSketches?.( paths ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- told when the plan's sketches change, not when the callback does
+    [
+      paths
+    ]
+  );
+
+  const selected = shown?.find( ( s ) => s.slot === picked ) ?? shown?.find( ( s ) => s.proposal ) ?? shown?.[ 0 ] ?? null;
   const weeks = useMemo(
     () => {
       const out = new Map<string, PlanSlot[]>();
 
-      for ( const s of slots ?? [] ) {
+      for ( const s of shown ?? [] ) {
         const monday = weekOf(
           s.at,
           tz
@@ -334,7 +459,7 @@ export default function PlanView( {
       ];
     },
     [
-      slots,
+      shown,
       tz
     ]
   );
@@ -343,7 +468,42 @@ export default function PlanView( {
   const touched = Object.keys( choices.passed ).length + Object.keys( choices.skipped ).length + Object.keys( choices.pins ).length > 0;
   const summary = slots === null
     ? "Reading the catalogue…"
-    : `${ proposed.length } of ${ slots.length } free ${ slots.length === 1 ? "slot" : "slots" } proposed · ${ proposed.filter( ( s ) => s.proposal!.pillar === "drop" ).length } new · ${ proposed.filter( ( s ) => s.proposal!.pillar === "favourite" ).length } favourites`;
+    : [
+      `${ proposed.length } of ${ slots.length } free ${ slots.length === 1 ? "slot" : "slots" } proposed`,
+      ...( [
+        [
+          "drop",
+          "new"
+        ],
+        [
+          "favourite",
+          "favourites"
+        ],
+        [
+          "series",
+          "series"
+        ],
+        [
+          "recap",
+          "recaps"
+        ]
+      ] as const ).map( ( [
+        pillar,
+        word
+      ] ) => [
+        proposed.filter( ( s ) => s.proposal!.pillar === pillar ).length,
+        word
+      ] as const ).filter( ( [
+        count
+      ] ) => count > 0 )
+        .map( ( [
+          count,
+          word
+        ] ) => `${ count } ${ word }` ),
+      ...( shown && shown.length !== slots.length ? [
+        `${ shown.length } shown`
+      ] : [] )
+    ].join( " · " );
 
   return (
     <section aria-label="Plan" className="flex flex-col gap-3" data-plan-ready={ slots ? "true" : "false" }>
@@ -406,6 +566,11 @@ export default function PlanView( {
 
       <div className="grid min-h-[36rem] items-start gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="overflow-hidden rounded-xl border border-border">
+          {slots !== null && slots.length > 0 && shown?.length === 0 && (
+            <p className="px-3 py-6 text-center text-xs text-foreground/60">
+              Nothing in the plan matches — clear the search or pick another sketch.
+            </p>
+          )}
           {slots !== null && slots.length === 0 && (
             <p className="px-3 py-6 text-center text-xs text-foreground/60">
               No free slot in the next five weeks: every slot of your rhythm already has a post.
@@ -437,9 +602,7 @@ export default function PlanView( {
                       ) }
                     >
                       <span className="font-mono text-[11px] leading-tight tabular-nums text-foreground/70">{when.day}<br />{when.time}</span>
-                      <span className="relative block aspect-[4/5] w-10 overflow-hidden rounded bg-hover/60">
-                        {s.proposal && <Vignette src={ catalogueThumbnail( s.proposal.sketchKey ) } />}
-                      </span>
+                      <Cover slot={ s } className="w-10 rounded" />
                       <span className="flex min-w-0 flex-col gap-1">
                         <span className={ clsx(
                           "truncate text-sm font-semibold",

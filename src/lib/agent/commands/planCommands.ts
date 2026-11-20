@@ -28,8 +28,11 @@ import {
   GAP_WEEKS, MIXES, PLAN_WEEKS, planSlots, sketchKeyOf, sketchPath, tooSoon, type PlanSketch, type PlanSlot
 } from "../../planner/planner";
 import {
-  getChoices, passProposal, pinSlot, resetPlan, skipSlot, updateChoices
+  getChoices, markOpened, passProposal, pinSlot, resetPlan, skipSlot, updateChoices
 } from "../../planner/planStore";
+import {
+  reelCaption, reelDocument, reelSeconds
+} from "../../planner/reel";
 import {
   postedFrom, type Posted
 } from "../../planner/posted";
@@ -102,7 +105,8 @@ async function readPlan( h: StudioHandles ): Promise<Reading> {
       ),
       posted,
       choices: getChoices(),
-      now
+      now,
+      timeZone: rhythm.timeZone
     } )
   };
 }
@@ -125,7 +129,11 @@ function describe(
       pillar: p.pillar,
       favorite: p.favorite,
       why: p.why,
-      key: p.key
+      key: p.key,
+      ...( p.reel ? {
+        reel: p.reel.scenes.map( ( scene ) => `p5/${ scene }` ),
+        seconds: reelSeconds( p.reel.scenes.length )
+      } : {} )
     } : {} )
   };
 }
@@ -186,7 +194,7 @@ export function planCommands( h: StudioHandles ): CommandSpec[] {
     {
       id: "plan.get",
       title: "Read the plan",
-      description: "What to post next: one line per FREE slot of the person's rhythm over the next five weeks, each with the sketch proposed for it — a new sketch in the order of its series, or a favourite not posted recently — and why. The same plan as the gallery's Plan view. Answers { rhythm, mix, gapWeeks, slots: [{ at, when, state, sketch, title, pillar, why, key }] }. It reads the calendar; it sends nothing.",
+      description: "What to post next: one line per FREE slot of the person's rhythm over the next five weeks, each with what is proposed for it and why — a new sketch in the order of its series, a favourite not posted recently, a whole SERIES as one Reel, or a RECAP of the month or the year. The same plan as the gallery's Plan view. Answers { rhythm, mix, gapWeeks, slots: [{ at, when, state, sketch, title, pillar, why, key, reel?, seconds? }] }; a series or a recap has `reel` (its sketches in order) and its `sketch` is the empty host it is built on. It reads the calendar; it sends nothing.",
       run: () => answer( h )
     },
     {
@@ -371,7 +379,7 @@ export function planCommands( h: StudioHandles ): CommandSpec[] {
     {
       id: "plan.open",
       title: "Open a proposal on Export › Publish",
-      description: "Open the sketch proposed on this slot, on Export › Publish, with the slot as its When — the gallery's «Open in Publish». From there publish.status shows the post, publish.compose and publish.caption shape it, and publish.schedule sends it once the person approved the words (publish.approve, on their word only). Needs a connected Postiz. Leaves this tab's unsaved changes behind only with discard: true.",
+      description: "Open the sketch proposed on this slot, on Export › Publish, with the slot as its When — the gallery's «Open in Publish». A series or a recap is BUILT first: the empty sketch receives a sequence of its sketches behind an opening card (content.list shows it, content.update changes a scene), with words to start from that are not approved. From there publish.status shows the post, publish.compose and publish.caption shape it, and publish.schedule sends it once the person approved the words (publish.approve, on their word only). Needs a connected Postiz. Leaves this tab's unsaved changes behind only with discard: true.",
       params: {
         ...AT_PARAM,
         discard: {
@@ -397,11 +405,28 @@ export function planCommands( h: StudioHandles ): CommandSpec[] {
           );
         }
 
+        const reel = reelDocument( p );
+        const caption = reelCaption( p );
+
         if ( p.path === h.sketchId ) {
+          if ( reel ) {
+            const applied = h.gallery.importDocument( reel );
+
+            if ( !applied.ok ) {
+              throw new CommandError(
+                "failed",
+                `the reel could not be built: ${ applied.reason }`
+              );
+            }
+            markOpened( p.key );
+          }
           patchDraft(
             p.sketchKey,
             {
-              mode: "publish"
+              mode: "publish",
+              ...( caption ? {
+                caption
+              } : {} )
             }
           );
           setWhen(
@@ -426,9 +451,19 @@ export function planCommands( h: StudioHandles ): CommandSpec[] {
           );
         }
 
+        if ( reel ) {
+          if ( !h.gallery.stageImport( reel ) ) {
+            throw new CommandError(
+              "failed",
+              "the reel could not be handed over (this browser's storage is unavailable)"
+            );
+          }
+          markOpened( p.key );
+        }
         askPlanned(
           p.sketchKey,
-          slot.slot
+          slot.slot,
+          caption
         );
         h.navigation.open( `/sketches/${ p.path }` );
 

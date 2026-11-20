@@ -17,6 +17,9 @@ import {
   postedFrom
 } from "../../planner/posted";
 import {
+  DEFAULT_RHYTHM
+} from "../../postiz/rhythm";
+import {
   fakeHandles
 } from "./fakeHandles";
 
@@ -215,6 +218,88 @@ describe(
           mix: "favourites",
           gapWeeks: 12
         } );
+      }
+    );
+
+    it(
+      "build a series' reel on the empty sketch when its proposal is opened",
+      async() => {
+        const fake = fakeHandles( {} );
+        const staged: unknown[] = [];
+        const opened: string[] = [];
+
+        fake.handles.navigation.catalogue = () => [
+          ...CATALOGUE,
+          {
+            engine: "p5",
+            category: "materials",
+            name: "materials-v3-caustics",
+            createdAt: day( -8 )
+          }
+        ];
+        fake.handles.publish.connection = () => ( {
+          rhythm: DEFAULT_RHYTHM
+        } ) as ReturnType<typeof fake.handles.publish.connection>;
+        fake.handles.gallery.stageImport = ( options ) => {
+          staged.push( options );
+
+          return true;
+        };
+        fake.handles.navigation.open = ( href ) => {
+          opened.push( href );
+        };
+        fake.handles.navigation.currentSketch = () => opened.length ? "p5/empty-sketch" : "p5/voronoi/voronoi-v1-cells";
+        clearPlanStore();
+
+        const registry = createCommandRegistry();
+
+        registry.register( planCommands( fake.handles ) );
+
+        const plan = await registry.execute(
+          "plan.get",
+          {}
+        ) as Plan & { slots: { reel?: string[];
+          seconds?: number;
+          key?: string }[]; };
+        const series = plan.slots.find( ( s ) => s.pillar === "series" )!;
+
+        expect( series ).toMatchObject( {
+          sketch: "p5/empty-sketch",
+          key: "series:p5/materials",
+          reel: [
+            "p5/materials/materials-v1-flame",
+            "p5/materials/materials-v2-water",
+            "p5/materials/materials-v3-caustics"
+          ],
+          seconds: 9
+        } );
+        expect( await registry.execute(
+          "plan.open",
+          {
+            at: series.at,
+            discard: true
+          }
+        ) ).toMatchObject( {
+          sketch: "p5/empty-sketch",
+          opened: true
+        } );
+        expect( opened ).toEqual( [
+          "/sketches/p5/empty-sketch"
+        ] );
+        expect( staged[ 0 ] ).toMatchObject( {
+          name: "empty-sketch",
+          content: [
+            {
+              type: "sequence"
+            }
+          ]
+        } );
+        // Opened, so it waits for the gap: the next plan proposes no series (there is only this one).
+        expect( getChoices().opened[ "series:p5/materials" ] ).toBeGreaterThan( 0 );
+        expect( ( await registry.execute(
+          "plan.get",
+          {}
+        ) as Plan ).slots.some( ( s ) => s.pillar === "series" ) ).toBe( false );
       }
     );
 

@@ -88,6 +88,8 @@ interface PlannedAsk {
   sketchKey: string;
   /** The slot the plan proposed, ISO. */
   slot: string;
+  /** The words the post starts from, for a reel (a series, a recap) — never approved. */
+  caption?: string;
   at: number;
 }
 
@@ -97,7 +99,7 @@ interface PlannedAsk {
  * *Send again*, with a WHEN instead of accounts.
  */
 export function askPlanned(
-  sketchKey: string, slot: string
+  sketchKey: string, slot: string, caption?: string | null
 ): boolean {
   try {
     session()?.setItem(
@@ -105,6 +107,9 @@ export function askPlanned(
       JSON.stringify( {
         sketchKey,
         slot,
+        ...( caption ? {
+          caption
+        } : {} ),
         at: Date.now()
       } satisfies PlannedAsk )
     );
@@ -115,10 +120,11 @@ export function askPlanned(
   }
 }
 
-/** A stored planned ask read back, whatever it holds: the slot, still ahead, or null. Pure. */
+/** A stored planned ask read back, whatever it holds: the slot, still ahead (and its words, if any), or null. Pure. */
 export function readPlannedAsk(
   raw: string | null, sketchKey: string, now: number
-): string | null {
+): { slot: string;
+  caption: string | null } | null {
   try {
     const ask = JSON.parse( raw ?? "null" ) as Partial<PlannedAsk> | null;
 
@@ -128,14 +134,23 @@ export function readPlannedAsk(
 
     const when = Date.parse( ask.slot );
 
-    return Number.isFinite( when ) && when > now ? new Date( when ).toISOString() : null;
+    return Number.isFinite( when ) && when > now
+      ? {
+        slot: new Date( when ).toISOString(),
+        caption: typeof ask.caption === "string" && ask.caption.trim() ? ask.caption.slice(
+          0,
+          2200
+        ) : null
+      }
+      : null;
   } catch {
     return null;
   }
 }
 
 /** The slot to schedule on, when the plan asked THIS sketch — taken once. */
-export function takePlanned( sketchKey: string ): string | null {
+export function takePlanned( sketchKey: string ): { slot: string;
+  caption: string | null } | null {
   const store = session();
   const slot = readPlannedAsk(
     store?.getItem( PLAN_KEY ) ?? null,

@@ -40,7 +40,8 @@ const PROMPTS = [
   "Open the voronoi-v1-cells sketch in Sketchbook, tell me what I can adjust, and show me a snapshot.",
   "Give this sketch a sunset palette, put the title “Hello” in the top third, add a HUD gauge for the hue speed, and show me the result.",
   "Make three slides from this sketch with different palettes, then export each one as a square 1080 × 1080 video.",
-  "Write a caption for this sketch’s Reel, show it to me, and once I say yes, schedule it on my next free slot."
+  "Write a caption for this sketch’s Reel, show it to me, and once I say yes, schedule it on my next free slot.",
+  "Read my plan for the next weeks, tell me what you would change and why, and open the first proposal on Export › Publish."
 ];
 
 function readClient(): Client {
@@ -478,7 +479,8 @@ export default function AgentGuideDialog( {
                     images and HUD widgets, moving items, playback, snapshots it can look at, and exports — and open
                     another sketch from the gallery. Values outside a control’s range are refused, never bent. With
                     your Postiz connected (Menu › Publishing), it can also schedule an export — only with a caption
-                    you approved.
+                    you approved — and read or steer the gallery’s Plan: what it pins there is marked as its own, and
+                    it never approves a post for you.
                   </p>
                 </Faq>
                 <Faq q="Where do exported files go?">

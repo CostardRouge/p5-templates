@@ -79,7 +79,14 @@ export function readChoices(
       r.skipped,
       ( slot ) => ahead( slot )
     ),
-    pins
+    pins,
+    // Kept a year: the longest gap is twelve weeks, and the year's recap must not come back in January.
+    opened: stamps(
+      r.opened,
+      (
+        _key, at
+      ) => now - at < 366 * 86_400_000
+    )
   };
 }
 
@@ -225,6 +232,17 @@ export function skipSlot(
   } );
 }
 
+/** A series or a recap was opened on Export › Publish: it waits for the gap before coming back. */
+export function markOpened( key: string ): PlanChoices {
+  return updateChoices( ( c ) => ( {
+    ...c,
+    opened: {
+      ...c.opened,
+      [ key ]: Date.now()
+    }
+  } ) );
+}
+
 /** Give a slot a sketch on purpose; null takes the pin back. */
 export function pinSlot(
   slot: string, pin: Pin | null
@@ -269,6 +287,7 @@ export function resetPlan(): PlanChoices {
     ...c,
     passed: {},
     skipped: {},
-    pins: {}
+    pins: {},
+    opened: {}
   } ) );
 }
