@@ -211,6 +211,36 @@ async function waitForSurface(
  * The `finally` is not optional. A run that throws or is cancelled half-way
  * must never leave the user's canvas at 1080x1920.
  */
+/** How long the restore waits for the canvas to leave the export's size. */
+const RESTORE_CEILING_MS = 2_000;
+
+/**
+ * After a run at another size than the sketch's: wait until the surface has
+ * left the export size and held its new one for {@link STABLE_FRAMES} polls.
+ * When a slide override keeps the surface at the export size, the short
+ * ceiling ends the wait.
+ */
+async function waitForRestore(
+  engine: SketchEngine,
+  exported: ExportSize
+): Promise<void> {
+  const deadline = Date.now() + RESTORE_CEILING_MS;
+  let stable = 0;
+
+  while ( Date.now() < deadline ) {
+    const surface = readSurface( engine );
+    const left = Boolean( surface && ( surface.width !== exported.width || surface.height !== exported.height ) );
+
+    stable = left ? stable + 1 : 0;
+
+    if ( stable >= STABLE_FRAMES ) {
+      return;
+    }
+
+    await nextFrame();
+  }
+}
+
 export async function applyExportOverrides(
   engine: SketchEngine,
   options: SketchOption,
@@ -306,6 +336,30 @@ export async function applyExportOverrides(
         // Resuming replays whatever the form tried to push during the run, so
         // an edit made mid-export lands rather than being dropped.
         resumeReactSketchOptionsSync();
+      }
+
+      // The resize back is the same blanking reallocation as the push: until
+      // something draws, the canvas is EMPTY. A paused sketch stayed blank,
+      // and the gallery's keep — which reads the canvas right after the run —
+      // stored a black thumbnail for every export at another size than the
+      // sketch's (every Publish to a 9:16 or 4:5 account). Wait for the
+      // surface to come back, then draw it, as the push does. Never throws:
+      // the run is over and the files are made.
+      const own = baseline.size as ExportSize | undefined;
+
+      if ( !own || ( own.width === override.size.width && own.height === override.size.height ) ) {
+        return;
+      }
+
+      try {
+        await waitForRestore(
+          engine,
+          override.size
+        );
+        // Synchronous on p5: the canvas holds the frame once this returns.
+        engine.redraw();
+      } catch {
+        // A canvas that never settles is not worth failing a finished run over.
       }
     }
   };

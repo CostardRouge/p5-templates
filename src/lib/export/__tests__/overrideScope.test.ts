@@ -363,5 +363,53 @@ describe(
         );
       }
     );
+
+    it(
+      "redraws the canvas once it is back at the sketch's size, so nothing reads it blank after a run",
+      async() => {
+        // The surface the engine reports, moved by the test as the store's resize would.
+        const surface = {
+          width: 1080,
+          height: 1350
+        };
+        const redraw = jest.fn( () => undefined );
+        const engine = {
+          ...makeEngine( surface ),
+          getCaptureSource: () => ( {
+            width: surface.width,
+            height: surface.height,
+            getStreamCanvas: () => null,
+            readFrame: async() => ( {} as unknown as CanvasImageSource ),
+            beginRealtime: () => undefined,
+            endRealtime: () => undefined
+          } ),
+          redraw
+        } as unknown as SketchEngine;
+
+        const pending = applyExportOverrides(
+          engine,
+          OPTIONS,
+          {
+            size: {
+              width: 1080,
+              height: 1920
+            },
+            framerate: 30
+          }
+        );
+
+        surface.height = 1920;
+
+        const handle = await pending;
+        const pushes = redraw.mock.calls.length;
+
+        surface.height = 1350;
+        await handle.restore();
+
+        // The gallery keeps the piece right after the run: an empty canvas there was a black thumbnail.
+        expect( redraw.mock.calls.length ).toBe( pushes + 1 );
+        expect( isReactSketchOptionsSyncSuspended() ).toBe( false );
+      }
+    );
   }
 );

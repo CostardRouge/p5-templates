@@ -11,6 +11,9 @@ import {
 import {
   PROVIDER_LABEL, type Provider
 } from "@/lib/postiz/client";
+import {
+  isBlankThumbnail
+} from "@/lib/gallery/blankThumbnail";
 import type {
   AccountState, GallerySend, SendAccount, SendState
 } from "@/lib/gallery/sends";
@@ -159,12 +162,25 @@ export function Vignette( {
 
   useEffect(
     () => {
-      const next = blob ? URL.createObjectURL( blob ) : null;
+      let live = true;
+      let next: string | null = null;
 
       // eslint-disable-next-line react-hooks/set-state-in-effect -- the URL's lifetime is this effect's
-      setUrl( next );
+      setUrl( null );
+
+      // A blank (black) kept thumbnail shows the catalogue picture instead (`blankThumbnail.ts`).
+      if ( blob ) {
+        void isBlankThumbnail( blob ).then( ( blank ) => {
+          if ( live && !blank ) {
+            next = URL.createObjectURL( blob );
+            setUrl( next );
+          }
+        } );
+      }
 
       return () => {
+        live = false;
+
         if ( next ) {
           URL.revokeObjectURL( next );
         }
