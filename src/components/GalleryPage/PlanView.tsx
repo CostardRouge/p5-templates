@@ -11,9 +11,21 @@ import {
 import {
   weekLabel
 } from "@/lib/gallery/calendar";
+import type {
+  GalleryEntry
+} from "@/lib/gallery/types";
 import {
-  DEFAULT_GAP_WEEKS, EMPTY_CHOICES, GAP_WEEKS, MIXES, planSlots, sketchKeyOf, sketchPath, type Pillar, type PlanSketch, type PlanSlot
+  beatOf, CAMPAIGN_WEEKS, planWithCampaigns
+} from "@/lib/planner/campaign";
+import {
+  getCampaigns, noCampaigns, passBeat, subscribeCampaigns
+} from "@/lib/planner/campaignStore";
+import {
+  DEFAULT_GAP_WEEKS, EMPTY_CHOICES, GAP_WEEKS, MIXES, sketchKeyOf, sketchPath, type Pillar, type PlanSketch, type PlanSlot
 } from "@/lib/planner/planner";
+import {
+  acceptedCounts
+} from "@/lib/variations/kept";
 import {
   getChoices, passProposal, resetPlan, skipSlot, subscribeChoices, updateChoices
 } from "@/lib/planner/planStore";
@@ -23,6 +35,9 @@ import {
 import {
   DEFAULT_RHYTHM, slotHead, weekOf, type Rhythm
 } from "@/lib/postiz/rhythm";
+import {
+  BeatDetail, CampaignMaker, CampaignTag, type CampaignContext
+} from "./CampaignPanel";
 import {
   catalogueThumbnail
 } from "./items";
@@ -38,7 +53,7 @@ const PILLAR_LABEL: Record<Pillar, string> = {
 };
 
 const BUTTON = "inline-flex h-8 items-center justify-center rounded-lg border border-border bg-background px-3 text-xs font-medium text-foreground transition-colors hover:bg-hover disabled:opacity-40";
-const INK_BUTTON = "inline-flex h-8 items-center justify-center rounded-lg bg-foreground px-3 text-xs font-semibold text-background transition-opacity hover:opacity-90";
+const INK_BUTTON = "inline-flex h-8 items-center justify-center rounded-lg bg-foreground px-3 text-xs font-semibold text-background transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40";
 const EYEBROW = "font-mono text-[10.5px] uppercase tracking-[0.08em] text-foreground/50";
 
 /** `Tue 24 Nov` and `09:00`, in the rhythm's zone. */
@@ -69,6 +84,8 @@ function whenParts(
     )
   };
 }
+
+const NO_ENTRIES: readonly GalleryEntry[] = [];
 
 /** The catalogue, asked for only when the Plan opens: 150 KB the other views never load. */
 function useCatalogue(): PlanSketch[] | null {
@@ -113,7 +130,8 @@ function Cover( {
       className
     ) }
     >
-      {p && <Vignette src={ catalogueThumbnail( reel ? reel.sketches[ 0 ] : p.sketchKey ) } />}
+      {/* A reel shows its first sketch; a campaign's words card (built on the empty host) its own sketch. */}
+      {p && <Vignette src={ catalogueThumbnail( reel ? reel.sketches[ 0 ] : beatOf( p )?.sketchKey ?? p.sketchKey ) } />}
       {reel && (
         <span className="absolute bottom-0.5 right-0.5 rounded-sm bg-foreground px-1 font-mono text-[9px] font-semibold leading-tight text-background">
           {reel.sketches.length}
@@ -159,9 +177,13 @@ function PillarChip( {
   slot: PlanSlot;
 } ) {
   const p = slot.proposal;
+  const beat = beatOf( p );
 
   if ( !p ) {
     return null;
+  }
+  if ( beat ) {
+    return <CampaignTag tag={ beat } />;
   }
 
   return (
@@ -177,7 +199,7 @@ function StateWord( {
 }: {
   slot: PlanSlot;
 } ) {
-  const words = slot.skipped ? "Skipped" : !slot.proposal ? "Nothing left" : slot.proposal.pin ? ( slot.proposal.pin.by === "agent" ? "Pinned by Claude" : "Pinned" ) : "Proposed";
+  const words = slot.skipped ? "Skipped" : !slot.proposal ? "Nothing left" : beatOf( slot.proposal ) ? ( beatOf( slot.proposal )!.needs ? "Waiting" : "Campaign" ) : slot.proposal.pin ? ( slot.proposal.pin.by === "agent" ? "Pinned by Claude" : "Pinned" ) : "Proposed";
 
   return (
     <span className={ clsx(
@@ -199,7 +221,7 @@ function StateWord( {
 
 /** What a slot proposes, and the three gestures on it. */
 function Detail( {
-  slot, tz, connected, onOpen, onSheet, className
+  slot, tz, connected, onOpen, onSheet, className, campaign
 }: {
   slot: PlanSlot;
   tz: string;
@@ -207,12 +229,17 @@ function Detail( {
   onOpen: ( slot: PlanSlot ) => void;
   onSheet: ( sketchKey: string ) => void;
   className?: string;
+  /** The calendar and the pieces a campaign reads; null until the plan is read. */
+  campaign: CampaignContext | null;
 } ) {
   const when = whenParts(
     slot.at,
     tz
   );
   const p = slot.proposal;
+  const beat = beatOf( p );
+  // The variations wait for accepted pieces; the words are typed once the card is open.
+  const waits = beat?.kind === "variations" && beat.needs ? beat.needs : null;
 
   return (
     <div className={ clsx(
@@ -276,24 +303,32 @@ function Detail( {
               type="button"
               className={ INK_BUTTON }
               data-plan-open
-              title={ p.reel
-                ? ( connected ? "Build this reel on the empty sketch and open Export › Publish on this slot" : "Build this reel on the empty sketch — connect your Postiz (menu › Publishing) to schedule it" )
-                : ( connected ? "Open the sketch on Export › Publish, on this slot" : "Open the sketch — connect your Postiz (menu › Publishing) to schedule it" ) }
+              disabled={ Boolean( waits ) }
+              title={ waits
+                ? `It waits for ${ waits }`
+                : p.reel
+                  ? ( connected ? "Build this reel on the empty sketch and open Export › Publish on this slot" : "Build this reel on the empty sketch — connect your Postiz (menu › Publishing) to schedule it" )
+                  : ( connected ? "Open the sketch on Export › Publish, on this slot" : "Open the sketch — connect your Postiz (menu › Publishing) to schedule it" ) }
               onClick={ () => onOpen( slot ) }
             >
-              {connected ? "Open in Publish" : p.reel ? "Build the reel" : "Open the sketch"}
+              {waits ? "Waiting for variations" : connected ? "Open in Publish" : p.reel ? "Build the reel" : "Open the sketch"}
             </button>
             <button
               type="button"
               className={ BUTTON }
               data-plan-another
-              title="Pass this sketch over and propose the next one"
-              onClick={ () => passProposal(
-                p.key,
-                slot.slot
-              ) }
+              title={ beat ? "Leave this beat out of its campaign; the slot goes back to the plan" : "Pass this sketch over and propose the next one" }
+              onClick={ () => beat
+                ? passBeat(
+                  beat.id,
+                  beat.beat
+                )
+                : passProposal(
+                  p.key,
+                  slot.slot
+                ) }
             >
-              Another
+              {beat ? "Leave out" : "Another"}
             </button>
           </>
         )}
@@ -309,12 +344,16 @@ function Detail( {
         >
           {slot.skipped ? "Propose again" : "Skip"}
         </button>
-        {p && !p.reel && (
+        {p && !p.reel && beat?.kind !== "words" && (
           <button type="button" className={ `${ BUTTON } border-transparent text-foreground/60` } onClick={ () => onSheet( p.sketchKey ) }>
             Its posts
           </button>
         )}
       </div>
+
+      {p && campaign && ( beat
+        ? <BeatDetail slot={ slot } tag={ beat } ctx={ campaign } />
+        : !p.reel && <CampaignMaker key={ slot.slot } slot={ slot } ctx={ campaign } /> )}
     </div>
   );
 }
@@ -331,8 +370,10 @@ function Detail( {
  * loads late (the catalogue, Postiz) lands in place and moves nothing.
  */
 export default function PlanView( {
-  rhythm, posts, posted, known, now, onOpen, onSheet, onRhythm, search = "", sketchFilter = "", onSketches
+  rhythm, posts, posted, known, now, onOpen, onSheet, onRhythm, search = "", sketchFilter = "", onSketches, entries = NO_ENTRIES
 }: {
+  /** The gallery's pieces: a campaign's variations are the accepted ones among them. */
+  entries?: readonly GalleryEntry[];
   /** The kept Postiz's rhythm; null without a Postiz (the default rhythm is drawn). */
   rhythm: Rhythm | null;
   /** Every post Postiz lists (any app's); null until read or without a Postiz. */
@@ -366,19 +407,67 @@ export default function PlanView( {
   const active = rhythm ?? DEFAULT_RHYTHM;
   const tz = active.timeZone;
 
-  const slots = useMemo(
-    () => !known || !catalogue ? null : planSlots( {
-      catalogue,
-      slots: planFreeSlots(
-        active,
-        posts ?? [],
-        new Date( now )
-      ),
-      posted,
-      choices,
-      now,
-      timeZone: tz
-    } ),
+  const campaigns = useSyncExternalStore(
+    subscribeCampaigns,
+    getCampaigns,
+    noCampaigns
+  );
+
+  // The plan and its campaigns (lab 9): the beats are laid first, each one a
+  // line wearing its tag; with no campaign this is `planSlots` itself.
+  const reading = useMemo(
+    () => {
+      if ( !known || !catalogue ) {
+        return null;
+      }
+
+      const plan = {
+        catalogue,
+        slots: planFreeSlots(
+          active,
+          posts ?? [],
+          new Date( now )
+        ),
+        posted,
+        choices,
+        now,
+        timeZone: tz
+      };
+      const lay = {
+        slots: planFreeSlots(
+          active,
+          posts ?? [],
+          new Date( now ),
+          CAMPAIGN_WEEKS
+        ),
+        posted,
+        catalogue,
+        accepted: acceptedCounts( entries ),
+        now,
+        timeZone: tz
+      };
+      const out = planWithCampaigns(
+        {
+          ...plan,
+          farSlots: lay.slots,
+          accepted: lay.accepted
+        },
+        campaigns
+      );
+      const context: CampaignContext = {
+        plan,
+        lay,
+        campaigns,
+        laid: out.campaigns,
+        entries,
+        tz
+      };
+
+      return {
+        slots: out.slots,
+        context
+      };
+    },
     [
       known,
       catalogue,
@@ -386,10 +475,14 @@ export default function PlanView( {
       posts,
       posted,
       choices,
+      campaigns,
+      entries,
       now,
       tz
     ]
   );
+  const slots = reading?.slots ?? null;
+  const context = reading?.context ?? null;
 
   const shown = useMemo(
     () => slots?.filter( ( s ) => slotMatches(
@@ -491,7 +584,8 @@ export default function PlanView( {
         pillar,
         word
       ] ) => [
-        proposed.filter( ( s ) => s.proposal!.pillar === pillar ).length,
+        // A campaign's beats are counted once, as the campaign's.
+        proposed.filter( ( s ) => s.proposal!.pillar === pillar && !beatOf( s.proposal ) ).length,
         word
       ] as const ).filter( ( [
         count
@@ -500,6 +594,9 @@ export default function PlanView( {
           count,
           word
         ] ) => `${ count } ${ word }` ),
+      ...( proposed.some( ( s ) => beatOf( s.proposal ) ) ? [
+        `${ proposed.filter( ( s ) => beatOf( s.proposal ) ).length } of a campaign`
+      ] : [] ),
       ...( shown && shown.length !== slots.length ? [
         `${ shown.length } shown`
       ] : [] )
@@ -625,6 +722,7 @@ export default function PlanView( {
                         connected={ Boolean( rhythm ) }
                         onOpen={ onOpen }
                         onSheet={ onSheet }
+                        campaign={ context }
                         className="border-t border-border bg-hover/30 p-3 lg:hidden"
                       />
                     )}
@@ -635,7 +733,7 @@ export default function PlanView( {
           ) )}
         </div>
 
-        <aside aria-label="The proposal" className="sticky top-3 rounded-xl border border-border p-3 max-lg:hidden">
+        <aside aria-label="The proposal" className="sticky top-3 max-h-[calc(100dvh-1.5rem)] overflow-y-auto rounded-xl border border-border p-3 max-lg:hidden">
           {selected
             ? (
               <Detail
@@ -644,6 +742,7 @@ export default function PlanView( {
                 connected={ Boolean( rhythm ) }
                 onOpen={ onOpen }
                 onSheet={ onSheet }
+                campaign={ context }
               />
             )
             : <p className="text-xs text-foreground/50">{slots === null ? "" : "Nothing to propose."}</p>}

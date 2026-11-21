@@ -5,7 +5,7 @@ import {
   galleryId, type GalleryStore
 } from "./store";
 import type {
-  GalleryEntry, GalleryOrigin
+  GalleryEntry, GalleryOrigin, VariationMark
 } from "./types";
 
 export interface KeepInput {
@@ -19,6 +19,8 @@ export interface KeepInput {
   thumbnail: Blob | null;
   /** Override the clock (tests). */
   at?: number;
+  /** Keep it as a variation of its sketch (a candidate until the person accepts it). */
+  variation?: VariationMark;
 }
 
 export interface KeepResult {
@@ -77,12 +79,19 @@ export async function keepPiece(
   const latest = await store.latestOf( sketch );
 
   if ( latest && latest.fingerprint === fingerprint ) {
-    const entry = title && title !== latest.title
+    const renamed = title && title !== latest.title
       ? await store.rename(
         latest.id,
         title
       ) ?? latest
       : latest;
+    // The same piece proposed as a variation takes the mark — never over one the person already accepted.
+    const entry = input.variation && !renamed.variation
+      ? await store.mark(
+        renamed.id,
+        input.variation
+      ) ?? renamed
+      : renamed;
 
     return {
       entry,
@@ -103,7 +112,12 @@ export async function keepPiece(
     fingerprint,
     hadAssets: documentHasAssets( options ),
     ...sizeOf( options ),
-    thumbnail: input.thumbnail
+    thumbnail: input.thumbnail,
+    ...( input.variation
+      ? {
+        variation: input.variation
+      }
+      : {} )
   };
   const pruned = await store.add( entry );
 

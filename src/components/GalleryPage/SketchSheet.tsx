@@ -27,6 +27,9 @@ import {
   catalogueThumbnail, type SheetTarget
 } from "./items";
 import {
+  VariationControl
+} from "./CampaignPanel";
+import {
   accountPillState, NetworkMark, StatePill, STATE_WORD, Vignette
 } from "./marks";
 
@@ -350,23 +353,26 @@ export default function SketchSheet( {
 
           <p className="m-0 font-mono text-[10.5px] uppercase tracking-wider text-label">Pieces kept · {pieces.length}</p>
           {pieces.length ? (
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(72px,1fr))] gap-1.5">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(84px,1fr))] gap-1.5">
               {pieces.map( ( piece ) => (
-                <button
-                  key={ piece.id }
-                  type="button"
-                  onClick={ () => onOpenPiece( piece ) }
-                  title={ `Open ${ piece.title || title } (${ new Date( piece.at ).toLocaleDateString() }) in the studio` }
-                  className={ clsx(
-                    "relative overflow-hidden rounded-md bg-hover/60 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-focus",
-                    piece.id === focusedPiece?.id && "ring-2 ring-foreground"
-                  ) }
-                  style={ {
-                    aspectRatio: `${ piece.width } / ${ piece.height }`
-                  } }
-                >
-                  <Vignette blob={ piece.thumbnail } src={ catalogueThumbnail( target.sketchKey ) } />
-                </button>
+                <div key={ piece.id } className="flex min-w-0 flex-col gap-1" data-piece-variation={ piece.variation?.state ?? "none" }>
+                  <button
+                    type="button"
+                    onClick={ () => onOpenPiece( piece ) }
+                    title={ `Open ${ piece.variation?.label || piece.title || title } (${ new Date( piece.at ).toLocaleDateString() }) in the studio` }
+                    className={ clsx(
+                      "relative overflow-hidden rounded-md bg-hover/60 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-focus",
+                      piece.id === focusedPiece?.id && "ring-2 ring-foreground"
+                    ) }
+                    style={ {
+                      aspectRatio: `${ piece.width } / ${ piece.height }`
+                    } }
+                  >
+                    <Vignette blob={ piece.thumbnail } src={ catalogueThumbnail( target.sketchKey ) } />
+                  </button>
+                  {/* Another look of the sketch, for a campaign's Variations post: a candidate waits for a yes. */}
+                  <VariationControl entry={ piece } />
+                </div>
               ) )}
             </div>
           ) : (
