@@ -40,6 +40,12 @@ import {
   planCommands
 } from "@/lib/agent/commands/planCommands";
 import {
+  campaignCommands
+} from "@/lib/agent/commands/campaignCommands";
+import {
+  variationCommands
+} from "@/lib/agent/commands/variationCommands";
+import {
   favoriteCommands
 } from "@/lib/agent/commands/favoriteCommands";
 import {
@@ -852,6 +858,8 @@ export default function StudioCommands( {
           ...exportCommands( handles ),
           ...publishCommands( handles ),
           ...planCommands( handles ),
+          ...campaignCommands( handles ),
+          ...variationCommands( handles ),
           ...favoriteCommands( handles ),
           ...statsCommands( handles ),
           ...assetCommands( handles ),

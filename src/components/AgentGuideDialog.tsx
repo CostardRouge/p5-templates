@@ -43,6 +43,8 @@ const PROMPTS = [
   "Write a caption for this sketch’s Reel, show it to me, and once I say yes, schedule it on my next free slot.",
   "Read my plan for the next weeks, tell me what you would change and why, and open the first proposal on Export › Publish.",
   "Take every favourite of the rings series and cut them into one reel, then show me a snapshot.",
+  "Propose variations of this sketch, look at them side by side, and keep the three best as candidates for me to accept.",
+  "Show me what a campaign for this sketch would put on my calendar, and create it if I say yes.",
   "Read what my posts did, tell me which figures the plan is listening to, and what you cannot say yet for lack of posts."
 ];
 
@@ -482,7 +484,10 @@ export default function AgentGuideDialog( {
                     another sketch from the gallery. Values outside a control’s range are refused, never bent. With
                     your Postiz connected (Menu › Publishing), it can also schedule an export — only with a caption
                     you approved — and read or steer the gallery’s Plan: what it pins there is marked as its own, and
-                    it never approves a post for you. If you turned Results on (Menu › Publishing › Results), it can
+                    it never approves a post for you. It can propose a sketch’s campaign (its release, then what
+                    prolongs it), stage «how it’s made» with the sketch’s dials showing, and propose variations: it
+                    looks at other settings of the sketch and keeps the good ones in your gallery as candidates —
+                    accepting one is yours alone, and only accepted pieces go in a Variations post. If you turned Results on (Menu › Publishing › Results), it can
                     read each post’s figures as your Postiz gives them and say what the Plan listens to; a
                     comparison resting on too few posts is said to be too few.
                   </p>

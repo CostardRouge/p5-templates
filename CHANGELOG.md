@@ -16,6 +16,22 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
 
 ### Added
 
+- **A campaign per sketch.** On a line of the Plan, *Create its campaign* shows the posts that sketch would get
+  over the coming weeks — its release, variations three days later, how it is made a week later, a comeback eight
+  weeks later (a favourite and the last sketch of a series have their own lists) — each on a free slot of your
+  rhythm, two a week at most. Untick what you do not want, confirm, and each one becomes a line of the Plan wearing
+  the campaign's tag, that you open, leave out or skip like any other. Nothing starts a campaign by itself, and
+  *Drop the campaign* takes it back.
+- **Variations you choose.** A kept piece can be another look of its sketch: mark one yourself (*+ Variation* on
+  the sketch's sheet), or let Claude propose some from a connected studio tab — it reads the sketch's own
+  controls, looks at other settings side by side, and keeps the good ones in your gallery as candidates. You
+  accept or discard each; only accepted pieces go in a Variations post, which opens as a carousel, one slide per
+  piece.
+- **How it's made.** That line of a campaign opens the sketch with its parameters named and settling one group
+  after another over the loop, ready to export.
+- Claude can read and propose campaigns (`campaign.get`, `.preview`, `.create`, `.beat`, `.drop`), stage how a
+  sketch is made (`process.build`) and propose variations (`variations.propose`, `.sheet`, `.keep`, `.list`,
+  `.build`). It never accepts a variation, approves words or schedules a post for you.
 - **Results**, off unless you turn them on (Menu › Publishing › Results): Sketchbook can read what each post did
   from your Postiz — reach or views, likes, comments, shares, saves, as each network gives them — and show it where
   the post already is: under each account in a sketch's sheet, on the piece's card, and in «What works» under the

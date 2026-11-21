@@ -2,7 +2,7 @@ import type {
   GalleryStore
 } from "./store";
 import {
-  GALLERY_ORIGINS, type GalleryEntry, type GalleryOrigin
+  GALLERY_ORIGINS, readVariationMark, type GalleryEntry, type GalleryOrigin
 } from "./types";
 
 /**
@@ -119,8 +119,14 @@ function readEntry(
   }
 
   const origin = raw.origin;
+  const variation = readVariationMark( raw.variation );
 
   return {
+    ...( variation
+      ? {
+        variation
+      }
+      : {} ),
     id: text( "id" ),
     at,
     sketch: text( "sketch" ),
