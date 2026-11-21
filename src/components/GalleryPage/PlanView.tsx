@@ -21,7 +21,7 @@ import {
   getCampaigns, noCampaigns, passBeat, subscribeCampaigns
 } from "@/lib/planner/campaignStore";
 import {
-  DEFAULT_GAP_WEEKS, EMPTY_CHOICES, GAP_WEEKS, MIXES, sketchKeyOf, sketchPath, type Pillar, type PlanSketch, type PlanSlot
+  DEFAULT_GAP_WEEKS, EMPTY_CHOICES, GAP_WEEKS, MIXES, sketchKeyOf, sketchPath, type Pillar, type PlanSignal, type PlanSketch, type PlanSlot
 } from "@/lib/planner/planner";
 import {
   acceptedCounts
@@ -370,7 +370,7 @@ function Detail( {
  * loads late (the catalogue, Postiz) lands in place and moves nothing.
  */
 export default function PlanView( {
-  rhythm, posts, posted, known, now, onOpen, onSheet, onRhythm, search = "", sketchFilter = "", onSketches, entries = NO_ENTRIES
+  rhythm, posts, posted, known, now, onOpen, onSheet, onRhythm, search = "", sketchFilter = "", onSketches, entries = NO_ENTRIES, signalFor
 }: {
   /** The gallery's pieces: a campaign's variations are the accepted ones among them. */
   entries?: readonly GalleryEntry[];
@@ -393,6 +393,8 @@ export default function PlanView( {
   sketchFilter?: string;
   /** The sketches the plan proposes, `engine/category/name`, for the gallery's sketch filter. */
   onSketches?: ( paths: string[] ) => void;
+  /** What measured results may move in the plan (`PlanSignal`); absent, the plan is drawn from the calendar alone. */
+  signalFor?: ( catalogue: readonly PlanSketch[] ) => PlanSignal | undefined;
 } ) {
   const catalogue = useCatalogue();
   const choices = useSyncExternalStore(
@@ -431,7 +433,8 @@ export default function PlanView( {
         posted,
         choices,
         now,
-        timeZone: tz
+        timeZone: tz,
+        signal: signalFor?.( catalogue )
       };
       const lay = {
         slots: planFreeSlots(
@@ -478,7 +481,8 @@ export default function PlanView( {
       campaigns,
       entries,
       now,
-      tz
+      tz,
+      signalFor
     ]
   );
   const slots = reading?.slots ?? null;
@@ -710,6 +714,15 @@ export default function PlanView( {
                         </span>
                         <span className="flex min-w-0 items-center gap-2">
                           <PillarChip slot={ s } />
+                          {s.proposal?.heard && (
+                            <span
+                              data-plan-heard
+                              title={ `Moved by your results: ${ s.proposal.heard }` }
+                              className="shrink-0 rounded border border-dashed border-foreground/50 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.06em] text-foreground/70"
+                            >
+                              Results
+                            </span>
+                          )}
                           <span className="truncate font-mono text-[11px] text-foreground/50">{s.proposal?.why ?? ""}</span>
                         </span>
                       </span>

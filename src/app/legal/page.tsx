@@ -296,6 +296,15 @@ export default function LegalPage() {
             connected to), uploading the exported files and the caption.
           </p>
           <p className={ P_CLASS }>
+            Results are off unless you turn them on (Menu › Publishing ›
+            Results). On, your browser also asks that Postiz for the figures
+            of your posts that are out — views, reach, likes and the like, as
+            each network gives them — when you open the Gallery or a sketch’s
+            sheet, a few posts at a time, and keeps what it read in your
+            browser’s storage, on this device only, until you press Forget the
+            readings.
+          </p>
+          <p className={ P_CLASS }>
             { SITE_NAME }’s server is never on that path: it never receives the
             key, the files or the caption. What happens to them next is between
             you, your Postiz and the networks it posts to.

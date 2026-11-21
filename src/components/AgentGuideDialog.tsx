@@ -44,7 +44,8 @@ const PROMPTS = [
   "Read my plan for the next weeks, tell me what you would change and why, and open the first proposal on Export › Publish.",
   "Take every favourite of the rings series and cut them into one reel, then show me a snapshot.",
   "Propose variations of this sketch, look at them side by side, and keep the three best as candidates for me to accept.",
-  "Show me what a campaign for this sketch would put on my calendar, and create it if I say yes."
+  "Show me what a campaign for this sketch would put on my calendar, and create it if I say yes.",
+  "Read what my posts did, tell me which figures the plan is listening to, and what you cannot say yet for lack of posts."
 ];
 
 function readClient(): Client {
@@ -486,7 +487,9 @@ export default function AgentGuideDialog( {
                     it never approves a post for you. It can propose a sketch’s campaign (its release, then what
                     prolongs it), stage «how it’s made» with the sketch’s dials showing, and propose variations: it
                     looks at other settings of the sketch and keeps the good ones in your gallery as candidates —
-                    accepting one is yours alone, and only accepted pieces go in a Variations post.
+                    accepting one is yours alone, and only accepted pieces go in a Variations post. If you turned Results on (Menu › Publishing › Results), it can
+                    read each post’s figures as your Postiz gives them and say what the Plan listens to; a
+                    comparison resting on too few posts is said to be too few.
                   </p>
                 </Faq>
                 <Faq q="Where do exported files go?">

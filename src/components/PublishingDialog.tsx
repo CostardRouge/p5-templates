@@ -28,6 +28,7 @@ import {
 import {
   usePostiz
 } from "@/lib/postiz/usePostiz";
+import ResultsSettings from "@/components/Stats/ResultsSettings";
 
 /**
  * Menu › Publishing: the person's own Postiz — its address and the API key
@@ -809,6 +810,8 @@ export default function PublishingDialog( {
                       dayStart={ conn.dayStart }
                       onChange={ ( patch ) => updatePostiz( patch ) }
                     />
+                    {/* Statistics' switch (`docs/memory/statistics.md`). */}
+                    <ResultsSettings apiBase={ conn.apiBase } apiKey={ conn.apiKey } channels={ conn.channels } />
                   </>
                 )}
               </Step>
@@ -826,7 +829,8 @@ export default function PublishingDialog( {
                 <Faq q="What does Sketchbook send, and when?">
                   <p className="m-0">
                     Nothing at load. Opening this window asks your Postiz which accounts it has; opening Export reads the
-                    coming weeks’ posts, to mark the slots taken. Files and the caption leave only when you press Schedule,
+                    coming weeks’ posts, to mark the slots taken. With Results on (off by default), opening the Gallery
+                    or a sketch’s sheet also asks it for the figures of your posts that are out — a few posts at a time. Files and the caption leave only when you press Schedule,
                     Publish now or Send as a draft — or when you ask Claude to.
                   </p>
                 </Faq>
