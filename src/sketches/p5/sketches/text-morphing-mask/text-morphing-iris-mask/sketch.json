@@ -1,0 +1,9 @@
+{
+  "description": "Your text, white on black, changes word by word through per-letter irises: a circle closes over each letter, eats it away to a point, then reopens holding the next word's character. The circle can be drawn as a thin outline. Needs a text.",
+  "tags": [
+    "typography",
+    "flat",
+    "monochrome",
+    "needs-text"
+  ]
+}

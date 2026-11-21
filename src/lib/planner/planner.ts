@@ -160,6 +160,47 @@ export interface PlanChoices {
    * opened it is the only trace, and it keeps the reel away for the gap.
    */
   opened: Record<string, number>;
+  /**
+   * Lines APPROVED in place (lab 7, pass 3), by ISO instant. An approved line
+   * is a fixed thing — its slot, its sketch or reel, where its words live —
+   * and no longer a calculation: nothing recomputed around it can move it.
+   */
+  held: Record<string, HeldLine>;
+}
+
+/** Where an approved line stands in the render queue. */
+export type LineState = "waiting" | "rendering" | "planned" | "failed";
+
+/** A proposal the person approved in place: frozen on its slot until it is sent, released or the slot goes by. */
+export interface HeldLine {
+  /** The proposal as it was approved — never recomputed. */
+  proposal: Proposal;
+  /** The post draft its words live in (`publishStore`): the sketch's, or a reel's own (`postKey.ts`). */
+  postKey: string;
+  /**
+   * What the approval covers: a stamp of the words' templates, the note and
+   * the accounts (`approval.ts`). Null once the words changed — the line stays
+   * on its slot and waits to be approved again.
+   */
+  stamp: string | null;
+  approvedAt: number;
+  state: LineState;
+  /** Why it failed, said to the person. */
+  error?: string;
+  /** Set right before the post request leaves: a run cut there may have sent it. */
+  sending?: boolean;
+  /** Postiz's ids, once planned. */
+  postIds?: string[];
+  /** How long its render and send took, ms. */
+  ms?: number;
+  /**
+   * The line is a campaign's beat (`campaign.ts`) — only one that posts the
+   * sketch as it stands is ever approved in place. Kept as plain ids so the
+   * planner knows nothing of campaigns.
+   */
+  beat?: { id: string;
+    beat: string;
+    trial: boolean; };
 }
 
 export const EMPTY_CHOICES: PlanChoices = {
@@ -168,7 +209,8 @@ export const EMPTY_CHOICES: PlanChoices = {
   passed: {},
   skipped: {},
   pins: {},
-  opened: {}
+  opened: {},
+  held: {}
 };
 
 export interface Proposal {
@@ -207,6 +249,10 @@ export interface PlanSlot {
   at: Date;
   proposal: Proposal | null;
   skipped: boolean;
+  /** The line was approved in place: it is fixed here (`PlanChoices.held`). */
+  held?: HeldLine;
+  /** An approved line whose slot is no longer free — another post took it. */
+  taken?: boolean;
 }
 
 export interface PlanInput {
@@ -882,16 +928,32 @@ export function planSlots( input: PlanInput ): PlanSlot[] {
       ];
     }
   }
+  // An approved line stays in the plan whether or not its slot is still free:
+  // once planned its own post holds the slot, and a slot another post took
+  // must be SAID, not silently dropped.
+  const held = choices.held ?? {};
+  const stillFree = new Set( input.slots.map( ( at ) => at.toISOString() ) );
   const slots = [
-    ...input.slots
-  ].filter( ( at ) => at.getTime() > now ).sort( (
+    ...new Map( [
+      ...input.slots,
+      ...Object.keys( held ).map( ( slot ) => new Date( slot ) )
+    ].filter( ( at ) => at.getTime() > now ).map( ( at ) => [
+      at.toISOString(),
+      at
+    ] ) ).values()
+  ].sort( (
     a, b
   ) => a.getTime() - b.getTime() );
+  const heldKeys = new Set( Object.values( held ).map( ( line ) => line.proposal.key ) );
   const pinned = new Map<string, PlanSketch>();
 
   const pinnedReels = new Map<string, Proposal>();
 
   for ( const at of slots ) {
+    if ( held[ at.toISOString() ] ) {
+      continue;
+    }
+
     const pin = choices.pins[ at.toISOString() ];
     const sketch = pin ? byKey.get( pin.sketchKey ) : undefined;
 
@@ -930,12 +992,17 @@ export function planSlots( input: PlanInput ): PlanSlot[] {
   }
 
   const used = new Set( [
-    ...pinned.values()
-  ].map( sketchKeyOf ) );
+    ...[
+      ...pinned.values()
+    ].map( sketchKeyOf ),
+    // A sketch approved on one slot is not proposed on another.
+    ...Object.values( held ).filter( ( line ) => !line.proposal.reel )
+      .map( ( line ) => line.proposal.sketchKey )
+  ] );
   const pattern = PATTERN[ choices.mix ] ?? PATTERN[ DEFAULT_MIX ];
   const gapMs = choices.gapWeeks * WEEK_MS;
   // A reel passed over, or opened within the gap, waits.
-  const reelFree = ( p: Proposal ) => !choices.passed[ p.key ] && !( now - ( choices.opened?.[ p.key ] ?? -Infinity ) < gapMs );
+  const reelFree = ( p: Proposal ) => !choices.passed[ p.key ] && !heldKeys.has( p.key ) && !( now - ( choices.opened?.[ p.key ] ?? -Infinity ) < gapMs );
   const dates = rendezvous(
     slots,
     catalogue,
@@ -973,6 +1040,24 @@ export function planSlots( input: PlanInput ): PlanSlot[] {
 
   for ( const at of slots ) {
     const slot = at.toISOString();
+    const line = held[ slot ];
+
+    if ( line ) {
+      out.push( {
+        slot,
+        at,
+        proposal: line.proposal,
+        skipped: false,
+        held: line,
+        ...( !stillFree.has( slot ) && line.state !== "planned" ? {
+          taken: true
+        } : {} )
+      } );
+      const kept = line.proposal.reel ? undefined : byKey.get( line.proposal.sketchKey );
+
+      previous = kept ? seriesOf( kept ) : null;
+      continue;
+    }
 
     if ( choices.skipped[ slot ] ) {
       out.push( {

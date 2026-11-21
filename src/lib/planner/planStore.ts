@@ -7,7 +7,7 @@
  */
 
 import {
-  DEFAULT_GAP_WEEKS, DEFAULT_MIX, EMPTY_CHOICES, GAP_WEEKS, MIXES, PIN_REEL_MAX, type Mix, type Pin, type PlanChoices
+  DEFAULT_GAP_WEEKS, DEFAULT_MIX, EMPTY_CHOICES, GAP_WEEKS, MIXES, PIN_REEL_MAX, type HeldLine, type LineState, type Mix, type Pin, type PlanChoices, type Proposal
 } from "./planner";
 
 const KEY = "sketchbook.plan.v1";
@@ -27,6 +27,75 @@ function storage(): Storage | null {
 
 function record( raw: unknown ): Record<string, unknown> {
   return raw && typeof raw === "object" && !Array.isArray( raw ) ? raw as Record<string, unknown> : {};
+}
+
+const LINE_STATES: readonly LineState[] = [
+  "waiting",
+  "rendering",
+  "planned",
+  "failed"
+];
+
+/** A stored approved line read back, or null when it is not one. Pure. */
+export function readHeld( raw: unknown ): HeldLine | null {
+  const line = record( raw );
+  const p = record( line.proposal );
+  const reel = record( p.reel );
+  const beat = record( line.beat );
+  const strings = ( value: unknown ) => Array.isArray( value ) ? value.filter( ( s ): s is string => typeof s === "string" ) : [];
+
+  if ( typeof p.key !== "string" || typeof p.sketchKey !== "string" || !SKETCH_KEY.test( p.sketchKey ) || typeof p.path !== "string" || typeof p.title !== "string" || typeof line.postKey !== "string" ) {
+    return null;
+  }
+
+  const scenes = strings( reel.scenes );
+  const proposal: Proposal = {
+    key: p.key,
+    pillar: p.pillar === "favourite" || p.pillar === "series" || p.pillar === "recap" ? p.pillar : "drop",
+    sketchKey: p.sketchKey,
+    path: p.path,
+    title: p.title,
+    why: typeof p.why === "string" ? p.why : "",
+    favorite: p.favorite === true,
+    ...( scenes.length && typeof reel.title === "string" ? {
+      reel: {
+        title: reel.title,
+        subtitle: typeof reel.subtitle === "string" ? reel.subtitle : "",
+        sketches: strings( reel.sketches ).filter( ( key ) => SKETCH_KEY.test( key ) ),
+        scenes
+      }
+    } : {} )
+  };
+
+  return {
+    proposal,
+    postKey: line.postKey,
+    stamp: typeof line.stamp === "string" ? line.stamp : null,
+    approvedAt: typeof line.approvedAt === "number" ? line.approvedAt : 0,
+    state: LINE_STATES.includes( line.state as LineState ) ? line.state as LineState : "waiting",
+    ...( typeof line.error === "string" && line.error ? {
+      error: line.error.slice(
+        0,
+        400
+      )
+    } : {} ),
+    ...( line.sending === true ? {
+      sending: true
+    } : {} ),
+    ...( strings( line.postIds ).length ? {
+      postIds: strings( line.postIds )
+    } : {} ),
+    ...( typeof line.ms === "number" ? {
+      ms: line.ms
+    } : {} ),
+    ...( typeof beat.id === "string" && typeof beat.beat === "string" ? {
+      beat: {
+        id: beat.id,
+        beat: beat.beat,
+        trial: beat.trial === true
+      }
+    } : {} )
+  };
 }
 
 /** Stored choices read back, whatever they hold; what went stale by `now` is dropped. Pure. */
@@ -87,7 +156,21 @@ export function readChoices(
     }
   }
 
+  const held: Record<string, HeldLine> = {};
+
+  for ( const [
+    slot,
+    value
+  ] of Object.entries( record( r.held ) ) ) {
+    const line = ahead( slot ) ? readHeld( value ) : null;
+
+    if ( line ) {
+      held[ slot ] = line;
+    }
+  }
+
   return {
+    held,
     mix: MIXES.some( ( m ) => m.id === r.mix ) ? r.mix as Mix : DEFAULT_MIX,
     gapWeeks: ( GAP_WEEKS as readonly number[] ).includes( r.gapWeeks as number ) ? r.gapWeeks as number : DEFAULT_GAP_WEEKS,
     passed: stamps(
@@ -209,6 +292,84 @@ export function subscribeChoices( listener: () => void ): () => void {
   };
 }
 
+function without(
+  held: Record<string, HeldLine>, slot: string
+): Record<string, HeldLine> {
+  // A line already in Postiz is not un-sent by a gesture on the plan.
+  if ( !held[ slot ] || held[ slot ].state === "planned" ) {
+    return held;
+  }
+
+  const next = {
+    ...held
+  };
+
+  delete next[ slot ];
+
+  return next;
+}
+
+/** «Approve»: fix this proposal on its slot, with the stamp of the words approved. */
+export function holdLine(
+  slot: string, line: Pick<HeldLine, "proposal" | "postKey" | "stamp" | "beat">
+): PlanChoices {
+  return updateChoices( ( c ) => ( {
+    ...c,
+    held: {
+      ...c.held,
+      [ slot ]: {
+        ...line,
+        approvedAt: Date.now(),
+        state: "waiting"
+      }
+    }
+  } ) );
+}
+
+/** Take the approval back and let the slot be proposed for again (a planned line stays: its post is in Postiz). */
+export function releaseLine( slot: string ): PlanChoices {
+  return updateChoices( ( c ) => ( {
+    ...c,
+    held: without(
+      c.held,
+      slot
+    )
+  } ) );
+}
+
+/** Change an approved line's standing (the queue's own writes); nothing when the line is gone. */
+export function patchLine(
+  slot: string, patch: Partial<Omit<HeldLine, "proposal" | "postKey">>
+): PlanChoices {
+  return updateChoices( ( c ) => {
+    const line = c.held[ slot ];
+
+    if ( !line ) {
+      return c;
+    }
+
+    const next: HeldLine = {
+      ...line,
+      ...patch
+    };
+
+    // `undefined` in a patch clears the key (an error, the sending mark).
+    for ( const key of Object.keys( patch ) as ( keyof typeof patch )[] ) {
+      if ( patch[ key ] === undefined ) {
+        delete next[ key ];
+      }
+    }
+
+    return {
+      ...c,
+      held: {
+        ...c.held,
+        [ slot ]: next
+      }
+    };
+  } );
+}
+
 /** «Another»: pass this proposal over, and unpin the slot it sat on. */
 export function passProposal(
   key: string, slot: string
@@ -223,6 +384,10 @@ export function passProposal(
     return {
       ...c,
       pins,
+      held: without(
+        c.held,
+        slot
+      ),
       passed: {
         ...c.passed,
         [ key ]: Date.now()
@@ -248,7 +413,11 @@ export function skipSlot(
 
     return {
       ...c,
-      skipped
+      skipped,
+      held: on ? without(
+        c.held,
+        slot
+      ) : c.held
     };
   } );
 }
@@ -286,7 +455,11 @@ export function pinSlot(
     return {
       ...c,
       pins,
-      skipped
+      skipped,
+      held: pin ? without(
+        c.held,
+        slot
+      ) : c.held
     };
   } );
 }
@@ -309,6 +482,10 @@ export function resetPlan(): PlanChoices {
     passed: {},
     skipped: {},
     pins: {},
-    opened: {}
+    opened: {},
+    // What is already in Postiz stays in the plan until its slot goes by.
+    held: Object.fromEntries( Object.entries( c.held ).filter( ( [
+      , line
+    ] ) => line.state === "planned" ) )
   } ) );
 }

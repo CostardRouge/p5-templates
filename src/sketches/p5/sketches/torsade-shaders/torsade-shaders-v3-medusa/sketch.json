@@ -1,3 +1,10 @@
 {
+  "description": "A radial creature on black: tentacles reaching out in every direction, each a chain of spinning dot clusters that fatten toward a thin darkened tip, over a faint glow of concentric rings. Drawn on the GPU.",
+  "tags": [
+    "shader",
+    "colourful",
+    "orbit",
+    "geometry"
+  ],
   "favorite": true
 }

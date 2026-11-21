@@ -52,6 +52,9 @@ import {
   askPlanned, askSendAgain
 } from "@/lib/postiz/reopen";
 import {
+  postKeyOfProposal, REEL_HOST_KEY, stageReel
+} from "@/lib/postiz/postKey";
+import {
   openPublishing
 } from "@/lib/postiz/usePostiz";
 import type {
@@ -570,6 +573,11 @@ export default function GalleryPage( {
       if ( !beat ) {
         markOpened( slot.proposal.key );
       }
+      // On the empty host, its words are its own — a reel's, a recap's, a
+      // campaign's reel or words card (`postKey.ts`).
+      if ( slot.proposal.sketchKey === REEL_HOST_KEY ) {
+        stageReel( slot.proposal.key );
+      }
     }
     if ( beat && staged?.ok ) {
       if ( staged.staged.stage ) {
@@ -585,7 +593,7 @@ export default function GalleryPage( {
         slot.slot
       );
       patchDraft(
-        slot.proposal.sketchKey,
+        postKeyOfProposal( slot.proposal ),
         {
           trial: beat.trial
         }
@@ -878,8 +886,8 @@ export default function GalleryPage( {
 
       {view === "plan" && (
         <PlanView
+          conn={ gp.conn }
           entries={ entries ?? undefined }
-          rhythm={ gp.conn?.rhythm ?? null }
           posts={ gp.posts }
           posted={ posted }
           known={ sendsKnown && ( !gp.conn || gp.posts !== null ) }

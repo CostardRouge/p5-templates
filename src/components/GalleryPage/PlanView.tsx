@@ -3,6 +3,9 @@
 import React, {
   useEffect, useMemo, useState, useSyncExternalStore
 } from "react";
+import {
+  useRouter
+} from "next/navigation";
 import clsx from "clsx";
 import {
   Star
@@ -27,8 +30,26 @@ import {
   acceptedCounts
 } from "@/lib/variations/kept";
 import {
-  getChoices, passProposal, resetPlan, skipSlot, subscribeChoices, updateChoices
+  getChoices, holdLine, passProposal, patchLine, releaseLine, resetPlan, skipSlot, subscribeChoices, updateChoices
 } from "@/lib/planner/planStore";
+import {
+  lineStatus, queueable, type LineStatus
+} from "@/lib/planner/approval";
+import {
+  reelCaption
+} from "@/lib/planner/reel";
+import {
+  cancelRun, claimRun, clearRun, getRun, runAlive, runInterrupted, startRun, subscribeRun, updateRun
+} from "@/lib/planner/runStore";
+import {
+  plannedInstants
+} from "@/lib/postiz/plan";
+import {
+  getDraft, patchDraft, subscribePublish
+} from "@/lib/postiz/publishStore";
+import type {
+  PostizConnection
+} from "@/lib/postiz/store";
 import {
   planFreeSlots
 } from "@/lib/planner/slots";
@@ -44,6 +65,11 @@ import {
 import {
   Vignette
 } from "./marks";
+import type {
+  LinePost
+} from "./PlanLines";
+
+type Lines = typeof import( "./PlanLines" );
 
 const PILLAR_LABEL: Record<Pillar, string> = {
   drop: "New",
@@ -130,8 +156,7 @@ function Cover( {
       className
     ) }
     >
-      {/* A reel shows its first sketch; a campaign's words card (built on the empty host) its own sketch. */}
-      {p && <Vignette src={ catalogueThumbnail( reel ? reel.sketches[ 0 ] : beatOf( p )?.sketchKey ?? p.sketchKey ) } />}
+      {p && <Vignette src={ catalogueThumbnail( reel ? reel.sketches[ 0 ] : p.sketchKey ) } />}
       {reel && (
         <span className="absolute bottom-0.5 right-0.5 rounded-sm bg-foreground px-1 font-mono text-[9px] font-semibold leading-tight text-background">
           {reel.sketches.length}
@@ -194,52 +219,139 @@ function PillarChip( {
   );
 }
 
+const STATUS: Record<LineStatus, { words: string;
+  dot: string;
+  tone: string }> = {
+  empty: {
+    words: "Nothing left",
+    dot: "border-dashed border-foreground/60",
+    tone: "text-foreground/45"
+  },
+  skipped: {
+    words: "Skipped",
+    dot: "border-dashed border-foreground/60",
+    tone: "text-foreground/45"
+  },
+  proposed: {
+    words: "Proposed",
+    dot: "border-dashed border-foreground/60",
+    tone: "text-foreground/80"
+  },
+  pinned: {
+    words: "Pinned",
+    dot: "border-foreground bg-foreground",
+    tone: "text-foreground/80"
+  },
+  approved: {
+    words: "Approved",
+    dot: "border-blue-500 bg-blue-500",
+    tone: "text-blue-600 dark:text-blue-300"
+  },
+  reworded: {
+    words: "Approve again",
+    dot: "border-amber-500",
+    tone: "text-amber-700 dark:text-amber-400"
+  },
+  taken: {
+    words: "Slot taken",
+    dot: "border-amber-500",
+    tone: "text-amber-700 dark:text-amber-400"
+  },
+  rendering: {
+    words: "Rendering",
+    dot: "border-2 border-blue-500 border-r-transparent motion-safe:animate-spin",
+    tone: "text-blue-600 dark:text-blue-300"
+  },
+  planned: {
+    words: "Planned",
+    dot: "border-2 border-blue-500",
+    tone: "text-blue-600 dark:text-blue-300"
+  },
+  failed: {
+    words: "Failed",
+    dot: "border-2 border-red-500",
+    tone: "text-red-600 dark:text-red-400"
+  }
+};
+
 function StateWord( {
-  slot
+  slot, status
 }: {
   slot: PlanSlot;
+  status: LineStatus;
 } ) {
-  const words = slot.skipped ? "Skipped" : !slot.proposal ? "Nothing left" : beatOf( slot.proposal ) ? ( beatOf( slot.proposal )!.needs ? "Waiting" : "Campaign" ) : slot.proposal.pin ? ( slot.proposal.pin.by === "agent" ? "Pinned by Claude" : "Pinned" ) : "Proposed";
+  const s = STATUS[ status ];
+  const beat = beatOf( slot.proposal );
 
   return (
-    <span className={ clsx(
-      "inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap font-mono text-[11px]",
-      slot.skipped || !slot.proposal ? "text-foreground/45" : "text-foreground/80"
-    ) }
+    <span
+      className={ clsx(
+        "inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap font-mono text-[11px]",
+        s.tone
+      ) }
+      data-plan-state={ status }
     >
       <i
         aria-hidden
         className={ clsx(
           "inline-block h-2 w-2 rounded-full border",
-          slot.proposal?.pin ? "border-foreground bg-foreground" : "border-dashed border-foreground/60"
+          s.dot
         ) }
       />
-      {words}
+      {beat && ( status === "proposed" || status === "pinned" ) ? ( beat.needs ? "Waiting" : "Campaign" ) : status === "pinned" && slot.proposal?.pin?.by === "agent" ? "Pinned by Claude" : s.words}
     </span>
   );
 }
 
-/** What a slot proposes, and the three gestures on it. */
+/**
+ * Why a campaign's beat cannot be approved in place, or null. The queue
+ * renders a sketch as it stands (a release, a comeback); a beat that must be
+ * STAGED first — the carousel of accepted variations, the breakdown, the
+ * series' reel, the words card that waits for his words — is opened in
+ * Export › Publish, where he sees the staged piece before anything is sent.
+ * Never rendered as a plain sketch post.
+ */
+function beatBlock( slot: PlanSlot ): string | null {
+  const beat = beatOf( slot.proposal );
+
+  return beat && beat.kind !== "sketch"
+    ? `«${ beat.label }» is staged on the sketch’s page before it is sent — open it in Publish. Only a campaign’s release and comeback are approved here.`
+    : null;
+}
+
+/** What a slot proposes, its words, and the gestures on it. */
 function Detail( {
-  slot, tz, connected, onOpen, onSheet, className, campaign
+  slot, tz, conn, status, post, lines, running, onApprove, onOpen, onSheet, className, campaign
 }: {
+  /** The calendar and the pieces a campaign reads; null until the plan is read. */
+  campaign: CampaignContext | null;
   slot: PlanSlot;
   tz: string;
-  connected: boolean;
+  conn: PostizConnection | null;
+  status: LineStatus;
+  /** The line's post as it stands; null without a Postiz or before it is read. */
+  post: LinePost | null;
+  lines: Lines | null;
+  /** A render queue is at work: nothing is approved or released under it. */
+  running: boolean;
+  onApprove: ( slot: PlanSlot ) => void;
   onOpen: ( slot: PlanSlot ) => void;
   onSheet: ( sketchKey: string ) => void;
   className?: string;
-  /** The calendar and the pieces a campaign reads; null until the plan is read. */
-  campaign: CampaignContext | null;
 } ) {
   const when = whenParts(
     slot.at,
     tz
   );
   const p = slot.proposal;
+  const connected = Boolean( conn );
+  const held = slot.held;
+  const locked = status === "planned" || status === "rendering";
   const beat = beatOf( p );
   // The variations wait for accepted pieces; the words are typed once the card is open.
   const waits = beat?.kind === "variations" && beat.needs ? beat.needs : null;
+  const blocked = beatBlock( slot ) ?? ( post ? ( post.plan.blocked ?? ( post.plan.routes.length ? null : "No account takes this post." ) ) : null );
+  const approvable = Boolean( p && post && !blocked && !running && ( status === "proposed" || status === "pinned" || status === "reworded" ) );
 
   return (
     <div className={ clsx(
@@ -255,10 +367,27 @@ function Detail( {
           </h3>
           <div className="flex flex-wrap items-center gap-2">
             <PillarChip slot={ slot } />
-            <StateWord slot={ slot } />
+            <StateWord slot={ slot } status={ status } />
           </div>
         </div>
       </div>
+
+      {held && ( status === "failed" || status === "taken" || status === "reworded" ) && (
+        <p
+          role="status"
+          data-plan-reason
+          className={ clsx(
+            "rounded-lg border px-2.5 py-2 text-xs [overflow-wrap:anywhere]",
+            status === "failed" ? "border-red-500/40 bg-red-500/10 text-red-700 dark:text-red-300" : "border-amber-500/40 bg-amber-500/10 text-amber-800 dark:text-amber-300"
+          ) }
+        >
+          {status === "taken"
+            ? "Another post took this slot since you approved — nothing will be sent on it. Skip the line, or ask for another."
+            : status === "reworded"
+              ? ( held.error ?? "Its words changed after you approved them — read them and approve again." )
+              : ( held.error ?? "It could not be sent." )}
+        </p>
+      )}
 
       <dl className="grid grid-cols-[4.5rem_minmax(0,1fr)] gap-x-3 gap-y-1.5 text-xs">
         <dt className={ EYEBROW }>When</dt>
@@ -296,19 +425,50 @@ function Detail( {
         )}
       </dl>
 
+      {p && conn && post && lines && (
+        <lines.PlanWords conn={ conn } post={ post } locked={ locked || running } />
+      )}
+
       <div className="flex flex-wrap gap-2">
-        {p && (
+        {p && connected && status !== "planned" && status !== "rendering" && (
+          status === "approved" || status === "failed" || status === "taken"
+            ? (
+              <button
+                type="button"
+                className={ BUTTON }
+                data-plan-unapprove
+                disabled={ running }
+                title="Take the approval back: the slot is proposed for again"
+                onClick={ () => releaseLine( slot.slot ) }
+              >
+                Take approval back
+              </button>
+            )
+            : (
+              <button
+                type="button"
+                className={ INK_BUTTON }
+                data-plan-approve
+                disabled={ !approvable }
+                title={ blocked ?? ( post ? "Approve these words for this slot: the line stays as it is until it is rendered and scheduled" : "Reading the words…" ) }
+                onClick={ () => onApprove( slot ) }
+              >
+                {status === "reworded" ? "Approve again" : "Approve"}
+              </button>
+            )
+        )}
+        {p && !locked && (
           <>
             <button
               type="button"
-              className={ INK_BUTTON }
+              className={ connected ? BUTTON : INK_BUTTON }
               data-plan-open
-              disabled={ Boolean( waits ) }
+              disabled={ running || Boolean( waits ) }
               title={ waits
                 ? `It waits for ${ waits }`
                 : p.reel
-                  ? ( connected ? "Build this reel on the empty sketch and open Export › Publish on this slot" : "Build this reel on the empty sketch — connect your Postiz (menu › Publishing) to schedule it" )
-                  : ( connected ? "Open the sketch on Export › Publish, on this slot" : "Open the sketch — connect your Postiz (menu › Publishing) to schedule it" ) }
+                  ? ( connected ? "Build this reel on the empty sketch and open Export › Publish on this slot — its accounts, formats and each account’s own words" : "Build this reel on the empty sketch — connect your Postiz (menu › Publishing) to schedule it" )
+                  : ( connected ? "Open the sketch on Export › Publish, on this slot — its accounts, formats and each account’s own words" : "Open the sketch — connect your Postiz (menu › Publishing) to schedule it" ) }
               onClick={ () => onOpen( slot ) }
             >
               {waits ? "Waiting for variations" : connected ? "Open in Publish" : p.reel ? "Build the reel" : "Open the sketch"}
@@ -317,33 +477,43 @@ function Detail( {
               type="button"
               className={ BUTTON }
               data-plan-another
+              disabled={ running }
               title={ beat ? "Leave this beat out of its campaign; the slot goes back to the plan" : "Pass this sketch over and propose the next one" }
-              onClick={ () => beat
-                ? passBeat(
-                  beat.id,
-                  beat.beat
-                )
-                : passProposal(
-                  p.key,
-                  slot.slot
-                ) }
+              onClick={ () => {
+                if ( beat ) {
+                  // An approved beat left out is no longer approved either.
+                  releaseLine( slot.slot );
+                  passBeat(
+                    beat.id,
+                    beat.beat
+                  );
+                } else {
+                  passProposal(
+                    p.key,
+                    slot.slot
+                  );
+                }
+              } }
             >
               {beat ? "Leave out" : "Another"}
             </button>
           </>
         )}
-        <button
-          type="button"
-          className={ BUTTON }
-          data-plan-skip
-          title={ slot.skipped ? "Propose for this slot again" : "Leave this slot empty" }
-          onClick={ () => skipSlot(
-            slot.slot,
-            !slot.skipped
-          ) }
-        >
-          {slot.skipped ? "Propose again" : "Skip"}
-        </button>
+        {!locked && (
+          <button
+            type="button"
+            className={ BUTTON }
+            data-plan-skip
+            disabled={ running }
+            title={ slot.skipped ? "Propose for this slot again" : "Leave this slot empty" }
+            onClick={ () => skipSlot(
+              slot.slot,
+              !slot.skipped
+            ) }
+          >
+            {slot.skipped ? "Propose again" : "Skip"}
+          </button>
+        )}
         {p && !p.reel && beat?.kind !== "words" && (
           <button type="button" className={ `${ BUTTON } border-transparent text-foreground/60` } onClick={ () => onSheet( p.sketchKey ) }>
             Its posts
@@ -353,29 +523,59 @@ function Detail( {
 
       {p && campaign && ( beat
         ? <BeatDetail slot={ slot } tag={ beat } ctx={ campaign } />
-        : !p.reel && <CampaignMaker key={ slot.slot } slot={ slot } ctx={ campaign } /> )}
+        : !p.reel && !slot.held && <CampaignMaker key={ slot.slot } slot={ slot } ctx={ campaign } /> )}
     </div>
   );
 }
 
+/** Something that changes outside React (the publish store, a clock), as a number that moves. */
+function useRevision( subscribe: ( tell: () => void ) => () => void ): number {
+  const [
+    revision,
+    setRevision
+  ] = useState( 0 );
+
+  useEffect(
+    () => subscribe( () => setRevision( ( n ) => n + 1 ) ),
+    [
+      subscribe
+    ]
+  );
+
+  return revision;
+}
+
+const everyThreeSeconds = ( tell: () => void ) => {
+  const timer = setInterval(
+    tell,
+    3_000
+  );
+
+  return () => clearInterval( timer );
+};
+
 /**
  * The gallery's PLAN (lab 7, `docs/memory/publishing.md`): what to post on
  * each free slot of the rhythm over the coming weeks, proposed from the
- * catalogue — new sketches in the order of their series, favourites never
- * posted too recently (`planner.ts`). Three gestures per line: open it on
- * Export › Publish with its slot, ask for another, skip the slot. Nothing is
- * sent from here.
+ * catalogue (`planner.ts`). Each line shows the words its post will carry,
+ * fitted per account, editable there; the person approves lines in place —
+ * one, a week, all shown — and ONE gesture then renders and schedules every
+ * approved line (`runner.ts`): the tab walks the studio from sketch to sketch.
+ * Nothing is sent from this page itself.
  *
  * It is the page's last block and its lines have a fixed height, so what
- * loads late (the catalogue, Postiz) lands in place and moves nothing.
+ * loads late (the catalogue, Postiz, the words) lands in place and moves
+ * nothing above it.
  */
 export default function PlanView( {
-  rhythm, posts, posted, known, now, onOpen, onSheet, onRhythm, search = "", sketchFilter = "", onSketches, entries = NO_ENTRIES, signalFor
+  conn, posts, posted, known, now, onOpen, onSheet, onRhythm, search = "", sketchFilter = "", onSketches, entries = NO_ENTRIES, signalFor
 }: {
   /** The gallery's pieces: a campaign's variations are the accepted ones among them. */
   entries?: readonly GalleryEntry[];
-  /** The kept Postiz's rhythm; null without a Postiz (the default rhythm is drawn). */
-  rhythm: Rhythm | null;
+  /** What measured results may move in the plan (`PlanSignal`); absent, the plan is drawn from the calendar alone. */
+  signalFor?: ( catalogue: readonly PlanSketch[] ) => PlanSignal | undefined;
+  /** The kept Postiz; null without one (the default rhythm is drawn, nothing can be approved). */
+  conn: PostizConnection | null;
   /** Every post Postiz lists (any app's); null until read or without a Postiz. */
   posts: readonly { publishDate: string;
     state: string }[] | null;
@@ -393,21 +593,55 @@ export default function PlanView( {
   sketchFilter?: string;
   /** The sketches the plan proposes, `engine/category/name`, for the gallery's sketch filter. */
   onSketches?: ( paths: string[] ) => void;
-  /** What measured results may move in the plan (`PlanSignal`); absent, the plan is drawn from the calendar alone. */
-  signalFor?: ( catalogue: readonly PlanSketch[] ) => PlanSignal | undefined;
 } ) {
+  const router = useRouter();
+  const rhythm = conn?.rhythm ?? null;
   const catalogue = useCatalogue();
   const choices = useSyncExternalStore(
     subscribeChoices,
     getChoices,
     () => EMPTY_CHOICES
   );
+  const run = useSyncExternalStore(
+    subscribeRun,
+    getRun,
+    () => null
+  );
+  // A post reworded in another tab (an agent's), and the queue's heartbeat going quiet.
+  const published = useRevision( subscribePublish );
+  const clock = useRevision( everyThreeSeconds );
   const [
     picked,
     setPicked
   ] = useState<string | null>( null );
+  const [
+    lines,
+    setLines
+  ] = useState<Lines | null>( null );
   const active = rhythm ?? DEFAULT_RHYTHM;
   const tz = active.timeZone;
+
+  useEffect(
+    () => {
+      let live = true;
+
+      if ( conn && !lines ) {
+        void import( "./PlanLines" ).then( ( mod ) => {
+          if ( live ) {
+            setLines( mod );
+          }
+        } );
+      }
+
+      return () => {
+        live = false;
+      };
+    },
+    [
+      conn,
+      lines
+    ]
+  );
 
   const campaigns = useSyncExternalStore(
     subscribeCampaigns,
@@ -488,6 +722,128 @@ export default function PlanView( {
   const slots = reading?.slots ?? null;
   const context = reading?.context ?? null;
 
+  const wall = useMemo(
+    () => Date.now(),
+    [
+      clock,
+      run
+    ]
+  );
+  const running = runAlive(
+    run,
+    wall
+  );
+  const interrupted = runInterrupted(
+    run,
+    wall
+  );
+
+  /** Each line's post as it stands, by slot. */
+  const linePosts = useMemo(
+    () => {
+      const out = new Map<string, LinePost>();
+
+      if ( slots && conn && lines ) {
+        const planned = plannedInstants( posts ?? [] );
+
+        for ( const s of slots ) {
+          const post = lines.readLinePost(
+            conn,
+            s,
+            planned,
+            now
+          );
+
+          if ( post ) {
+            out.set(
+              s.slot,
+              post
+            );
+          }
+        }
+      }
+
+      return out;
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `published` is the publish store changing under the same slots
+    [
+      slots,
+      conn,
+      lines,
+      posts,
+      now,
+      published
+    ]
+  );
+  const statusOf = ( s: PlanSlot ): LineStatus => lineStatus(
+    s,
+    linePosts.get( s.slot )?.stamp ?? null,
+    running
+  );
+
+  // Words changed since an approval: it is taken back for good, not only for
+  // as long as they stay changed (`approval.ts`).
+  useEffect(
+    () => {
+      for ( const s of slots ?? [] ) {
+        const stamp = linePosts.get( s.slot )?.stamp;
+
+        if ( s.held && s.held.stamp !== null && stamp !== undefined && stamp !== s.held.stamp && s.held.state !== "planned" ) {
+          patchLine(
+            s.slot,
+            {
+              stamp: null
+            }
+          );
+        }
+      }
+    },
+    [
+      slots,
+      linePosts
+    ]
+  );
+
+  const approvable = ( s: PlanSlot ): boolean => {
+    const post = linePosts.get( s.slot );
+    const status = statusOf( s );
+
+    return Boolean( s.proposal && post && !beatBlock( s ) && !post.plan.blocked && post.plan.routes.length && ( status === "proposed" || status === "pinned" || status === "reworded" ) );
+  };
+  /** «Approve»: the words as they are shown now, on this slot. */
+  const approve = ( s: PlanSlot ) => {
+    const p = s.proposal;
+    const post = linePosts.get( s.slot );
+
+    if ( !p || !post || !conn || !lines || running || !approvable( s ) ) {
+      return;
+    }
+    // A reel's starting words become its own, so Export › Publish reads the same.
+    if ( p.reel && getDraft( post.postKey ).caption === null ) {
+      patchDraft(
+        post.postKey,
+        {
+          caption: reelCaption( p ) ?? ""
+        }
+      );
+    }
+    holdLine(
+      s.slot,
+      {
+        proposal: p,
+        postKey: post.postKey,
+        stamp: post.stamp,
+        ...( beatOf( p ) ? {
+          beat: {
+            id: beatOf( p )!.id,
+            beat: beatOf( p )!.beat,
+            trial: beatOf( p )!.trial
+          }
+        } : {} )
+      }
+    );
+  };
+
   const shown = useMemo(
     () => slots?.filter( ( s ) => slotMatches(
       s,
@@ -562,7 +918,7 @@ export default function PlanView( {
   );
 
   const proposed = slots?.filter( ( s ) => s.proposal ) ?? [];
-  const touched = Object.keys( choices.passed ).length + Object.keys( choices.skipped ).length + Object.keys( choices.pins ).length > 0;
+  const touched = Object.keys( choices.passed ).length + Object.keys( choices.skipped ).length + Object.keys( choices.pins ).length + Object.keys( choices.held ?? {} ).length > 0;
   const summary = slots === null
     ? "Reading the catalogue…"
     : [
@@ -606,8 +962,61 @@ export default function PlanView( {
       ] : [] )
     ].join( " · " );
 
+  // ---- The batch (lab 7, pass 3) ----
+  const real = slots?.filter( ( s ) => s.proposal || s.skipped ) ?? [];
+  const decided = real.filter( ( s ) => s.skipped || s.held ).length;
+  const plannedCount = real.filter( ( s ) => s.held?.state === "planned" ).length;
+  const queue = ( slots ?? [] ).filter( ( s ) => s.held && queueable( statusOf( s ) ) );
+  const toApprove = ( shown ?? [] ).filter( approvable );
+  const runLines = run?.slots.length ?? 0;
+  const current = run && run.state === "running" ? ( slots ?? [] ).find( ( s ) => s.slot === run.slots[ run.index ] ) : undefined;
+
+  const start = () => {
+    const first = queue[ 0 ]?.proposal;
+
+    if ( !first || running ) {
+      return;
+    }
+    startRun(
+      queue.map( ( s ) => s.slot ),
+      "/gallery"
+    );
+    router.push( `/sketches/${ first.path }` );
+  };
+  /** A run whose tab went away: this tab takes it over where it stopped. */
+  const resume = () => {
+    const next = run?.slots.slice( run.index ).map( ( slot ) => choices.held?.[ slot ] )
+      .find( ( line ) => line && line.state !== "planned" );
+
+    if ( !run ) {
+      return;
+    }
+    if ( !next ) {
+      updateRun(
+        run.id,
+        ( r ) => ( {
+          ...r,
+          state: "done",
+          phase: "done"
+        } )
+      );
+
+      return;
+    }
+    claimRun( run.id );
+    updateRun(
+      run.id,
+      ( r ) => ( {
+        ...r,
+        beat: Date.now(),
+        phase: "resuming"
+      } )
+    );
+    router.push( `/sketches/${ next.proposal.path }` );
+  };
+
   return (
-    <section aria-label="Plan" className="flex flex-col gap-3" data-plan-ready={ slots ? "true" : "false" }>
+    <section aria-label="Plan" className="flex flex-col gap-3" data-plan-ready={ slots ? "true" : "false" } data-plan-words-ready={ !conn || ( lines && slots ) ? "true" : "false" }>
       {/* Every width here is fixed or flexed; the summary truncates. */}
       <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
         <div role="radiogroup" aria-label="Mix" className="inline-flex h-9 shrink-0 items-center gap-0.5 self-start rounded-lg border border-border bg-hover/40 p-0.5">
@@ -656,7 +1065,7 @@ export default function PlanView( {
             {active.slots.map( slotHead ).join( " · " )}{rhythm ? "" : " · default rhythm"}
           </button>
           {touched && (
-            <button type="button" className={ `${ BUTTON } ml-auto shrink-0` } onClick={ () => resetPlan() } title="Forget what was passed over, skipped and pinned">
+            <button type="button" className={ `${ BUTTON } ml-auto shrink-0` } disabled={ running } onClick={ () => resetPlan() } title="Forget what was passed over, skipped, pinned and approved — what is already in Postiz stays">
               Reset
             </button>
           )}
@@ -665,7 +1074,7 @@ export default function PlanView( {
 
       <p className="truncate font-mono text-[11px] text-foreground/55" data-plan-summary title={ summary }>{summary}</p>
 
-      <div className="grid min-h-[36rem] items-start gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
+      <div className="grid min-h-[36rem] items-start gap-4 lg:grid-cols-[minmax(0,1fr)_24rem]">
         <div className="overflow-hidden rounded-xl border border-border">
           {slots !== null && slots.length > 0 && shown?.length === 0 && (
             <p className="px-3 py-6 text-center text-xs text-foreground/60">
@@ -680,70 +1089,168 @@ export default function PlanView( {
           {weeks.map( ( [
             monday,
             list
-          ] ) => (
-            <div key={ monday }>
-              <div className={ `${ EYEBROW } border-b border-border bg-hover/50 px-3 py-2` }>Week of {weekLabel( monday )}</div>
-              {list.map( ( s ) => {
-                const when = whenParts(
-                  s.at,
-                  tz
-                );
-                const on = selected?.slot === s.slot;
+          ] ) => {
+            const week = list.filter( approvable );
 
-                return (
-                  <div key={ s.slot } className="border-b border-border last:border-b-0">
+            return (
+              <div key={ monday }>
+                <div className={ `${ EYEBROW } flex h-9 items-center gap-2 border-b border-border bg-hover/50 px-3` }>
+                  <span className="min-w-0 truncate">Week of {weekLabel( monday )}</span>
+                  {conn && (
                     <button
                       type="button"
-                      aria-expanded={ on }
-                      data-plan-slot={ s.slot }
-                      onClick={ () => setPicked( s.slot ) }
-                      className={ clsx(
-                        "grid h-16 w-full grid-cols-[4.75rem_2.5rem_minmax(0,1fr)] items-center gap-3 px-3 text-left transition-colors sm:grid-cols-[5.5rem_2.5rem_minmax(0,1fr)_auto]",
-                        on ? "bg-hover" : "hover:bg-hover/50"
-                      ) }
+                      data-plan-approve-week={ monday }
+                      disabled={ running || week.length === 0 }
+                      title="Approve every line of this week whose words are shown here"
+                      onClick={ () => week.forEach( approve ) }
+                      className="ml-auto inline-flex h-6 shrink-0 items-center rounded-md border border-border bg-background px-2 font-sans text-[11px] font-medium normal-case tracking-normal text-foreground transition-colors hover:bg-hover disabled:opacity-40"
                     >
-                      <span className="font-mono text-[11px] leading-tight tabular-nums text-foreground/70">{when.day}<br />{when.time}</span>
-                      <Cover slot={ s } className="w-10 rounded" />
-                      <span className="flex min-w-0 flex-col gap-1">
-                        <span className={ clsx(
-                          "truncate text-sm font-semibold",
-                          s.proposal ? "text-foreground" : "text-foreground/45"
-                        ) }
-                        >
-                          {s.proposal ? s.proposal.title : s.skipped ? "Left empty" : "Nothing left to propose"}
-                        </span>
-                        <span className="flex min-w-0 items-center gap-2">
-                          <PillarChip slot={ s } />
-                          {s.proposal?.heard && (
-                            <span
-                              data-plan-heard
-                              title={ `Moved by your results: ${ s.proposal.heard }` }
-                              className="shrink-0 rounded border border-dashed border-foreground/50 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.06em] text-foreground/70"
-                            >
-                              Results
-                            </span>
-                          )}
-                          <span className="truncate font-mono text-[11px] text-foreground/50">{s.proposal?.why ?? ""}</span>
-                        </span>
-                      </span>
-                      <span className="max-sm:hidden"><StateWord slot={ s } /></span>
+                      Approve the week
                     </button>
-                    {on && (
-                      <Detail
-                        slot={ s }
-                        tz={ tz }
-                        connected={ Boolean( rhythm ) }
-                        onOpen={ onOpen }
-                        onSheet={ onSheet }
-                        campaign={ context }
-                        className="border-t border-border bg-hover/30 p-3 lg:hidden"
+                  )}
+                </div>
+                {list.map( ( s ) => {
+                  const when = whenParts(
+                    s.at,
+                    tz
+                  );
+                  const on = selected?.slot === s.slot;
+                  const status = statusOf( s );
+                  const post = linePosts.get( s.slot ) ?? null;
+                  // The words in the line itself: an approval covers what is shown.
+                  const firstLine = post?.plan.caption.text.split( "\n" ).find( ( text ) => text.trim() ) ?? null;
+
+                  return (
+                    <div key={ s.slot } className="border-b border-border last:border-b-0">
+                      <button
+                        type="button"
+                        aria-expanded={ on }
+                        data-plan-slot={ s.slot }
+                        data-plan-status={ status }
+                        onClick={ () => setPicked( s.slot ) }
+                        className={ clsx(
+                          "grid h-16 w-full grid-cols-[4.75rem_2.5rem_minmax(0,1fr)] items-center gap-3 px-3 text-left transition-colors sm:grid-cols-[5.5rem_2.5rem_minmax(0,1fr)_auto]",
+                          on ? "bg-hover" : "hover:bg-hover/50"
+                        ) }
+                      >
+                        <span className="font-mono text-[11px] leading-tight tabular-nums text-foreground/70">{when.day}<br />{when.time}</span>
+                        <Cover slot={ s } className="w-10 rounded" />
+                        <span className="flex min-w-0 flex-col gap-1">
+                          <span className={ clsx(
+                            "truncate text-sm font-semibold",
+                            s.proposal ? "text-foreground" : "text-foreground/45"
+                          ) }
+                          >
+                            {s.proposal ? s.proposal.title : s.skipped ? "Left empty" : "Nothing left to propose"}
+                          </span>
+                          <span className="flex min-w-0 items-center gap-2">
+                            <PillarChip slot={ s } />
+                            {s.proposal?.heard && (
+                              <span
+                                data-plan-heard
+                                title={ `Moved by your results: ${ s.proposal.heard }` }
+                                className="shrink-0 rounded border border-dashed border-foreground/50 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.06em] text-foreground/70"
+                              >
+                                Results
+                              </span>
+                            )}
+                            <span className="truncate font-mono text-[11px] text-foreground/50" data-plan-line-words>{firstLine ?? s.proposal?.why ?? ""}</span>
+                          </span>
+                        </span>
+                        <span className="max-sm:hidden"><StateWord slot={ s } status={ status } /></span>
+                      </button>
+                      {on && (
+                        <Detail
+                          slot={ s }
+                          tz={ tz }
+                          conn={ conn }
+                          status={ status }
+                          post={ post }
+                          lines={ lines }
+                          running={ running }
+                          onApprove={ approve }
+                          onOpen={ onOpen }
+                          onSheet={ onSheet }
+                          campaign={ context }
+                          className="border-t border-border bg-hover/30 p-3 lg:hidden"
+                        />
+                      )}
+                    </div>
+                  );
+                } )}
+              </div>
+            );
+          } )}
+
+          {/* The batch: how far the plan is decided, and the one gesture that renders and schedules it. */}
+          {conn && slots !== null && slots.length > 0 && (
+            <div className="flex min-h-12 flex-wrap items-center gap-x-3 gap-y-2 border-t border-border bg-hover/50 px-3 py-2" data-plan-foot>
+              {running || interrupted
+                ? (
+                  <>
+                    <span className="font-mono text-[11px] text-foreground/70" data-plan-run={ running ? "running" : "interrupted" }>
+                      {running
+                        ? `Line ${ Math.min(
+                          ( run?.index ?? 0 ) + 1,
+                          runLines
+                        ) } of ${ runLines }${ current?.proposal ? ` · ${ current.proposal.title }` : "" } · ${ run?.phase ?? "" }${ run?.progress !== null && run?.progress !== undefined ? ` ${ Math.round( run.progress * 100 ) } %` : "" }`
+                        : `Stopped at line ${ Math.min(
+                          ( run?.index ?? 0 ) + 1,
+                          runLines
+                        ) } of ${ runLines } — the tab that rendered it is gone`}
+                    </span>
+                    <span className="ml-auto flex gap-2">
+                      {interrupted && (
+                        <button type="button" className={ INK_BUTTON } data-plan-resume onClick={ resume } title="Carry on in this tab from the line it stopped on — what is already scheduled stays scheduled">
+                          Resume
+                        </button>
+                      )}
+                      <button type="button" className={ BUTTON } data-plan-cancel onClick={ () => cancelRun() } title="Stop the queue: the line being rendered is dropped and stays approved, what is already scheduled stays scheduled">
+                        {interrupted ? "Drop the run" : "Stop"}
+                      </button>
+                    </span>
+                  </>
+                )
+                : (
+                  <>
+                    <span className="font-mono text-[11px] text-foreground/70" data-plan-progress>
+                      {decided} of {real.length} decided{plannedCount ? ` · ${ plannedCount } planned` : ""}
+                    </span>
+                    <span className="h-1.5 min-w-16 max-w-52 flex-1 overflow-hidden rounded-full bg-border" aria-hidden>
+                      <b className="block h-full bg-blue-500" style={ {
+                        width: `${ real.length ? ( 100 * decided ) / real.length : 0 }%`
+                      } }
                       />
-                    )}
-                  </div>
-                );
-              } )}
+                    </span>
+                    <span className="ml-auto flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        className={ BUTTON }
+                        data-plan-approve-all
+                        disabled={ toApprove.length === 0 }
+                        title="Approve every line shown here whose words can go as they read"
+                        onClick={ () => toApprove.forEach( approve ) }
+                      >
+                        Approve all shown
+                      </button>
+                      <button
+                        type="button"
+                        className={ INK_BUTTON }
+                        data-plan-run-start
+                        disabled={ queue.length === 0 }
+                        title={ queue.length ? "Render each approved line in this tab, one after another, and schedule it on its slot in your Postiz. The tab opens each sketch in turn and must stay open and visible." : "Approve a line first" }
+                        onClick={ () => {
+                          clearRun();
+                          start();
+                        } }
+                      >
+                        Render &amp; schedule{queue.length ? ` · ${ queue.length } approved` : ""}
+                      </button>
+                    </span>
+                  </>
+                )}
             </div>
-          ) )}
+          )}
         </div>
 
         <aside aria-label="The proposal" className="sticky top-3 max-h-[calc(100dvh-1.5rem)] overflow-y-auto rounded-xl border border-border p-3 max-lg:hidden">
@@ -752,7 +1259,12 @@ export default function PlanView( {
               <Detail
                 slot={ selected }
                 tz={ tz }
-                connected={ Boolean( rhythm ) }
+                conn={ conn }
+                status={ statusOf( selected ) }
+                post={ linePosts.get( selected.slot ) ?? null }
+                lines={ lines }
+                running={ running }
+                onApprove={ approve }
                 onOpen={ onOpen }
                 onSheet={ onSheet }
                 campaign={ context }

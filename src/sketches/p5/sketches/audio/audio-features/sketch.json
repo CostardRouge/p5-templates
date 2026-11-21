@@ -1,0 +1,9 @@
+{
+  "description": "A diagnostic view of the microphone: seven white bars chart the frequency bands, a red ring swells on every kick, a fainter blue ripple flares on onsets, and a yellow line slides with the detected pitch. A small text block reports voice and spectral readings. Needs a microphone.",
+  "tags": [
+    "flat",
+    "pulse",
+    "interactive",
+    "sound"
+  ]
+}

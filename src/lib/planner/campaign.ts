@@ -649,6 +649,14 @@ export function blockedSlots(
     ] ) => slot );
 
   return new Set( [
+    // A line he approved in place is fixed on its slot (`PlanChoices.held`):
+    // no beat lands on it — but a beat approved there keeps its own slot.
+    ...Object.entries( choices.held ?? {} ).filter( ( [
+      , line
+    ] ) => !line.beat )
+      .map( ( [
+        slot
+      ] ) => slot ),
     ...Object.keys( choices.skipped ),
     ...Object.keys( choices.pins ).filter( ( slot ) => slot !== except ),
     ...recaps
@@ -775,6 +783,19 @@ export function planWithCampaigns(
 
     if ( !found || !slot.proposal ) {
       return slot;
+    }
+    // An approved line is frozen as it was approved: it only gets its tag
+    // back when it IS this beat, and is never rewritten into another.
+    if ( slot.held ) {
+      return slot.held.beat?.id === found.tag.id && slot.held.beat.beat === found.tag.beat
+        ? {
+          ...slot,
+          proposal: {
+            ...slot.proposal,
+            campaign: found.tag
+          } as BeatProposal
+        }
+        : slot;
     }
 
     const {

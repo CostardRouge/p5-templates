@@ -1,0 +1,9 @@
+{
+  "description": "A full-frame photo slideshow: each picture holds, then the next slides in from the right while fading in, as the whole frame swells slightly and relaxes once per loop. Needs your photos.",
+  "tags": [
+    "photo",
+    "needs-photo",
+    "flat",
+    "drift"
+  ]
+}

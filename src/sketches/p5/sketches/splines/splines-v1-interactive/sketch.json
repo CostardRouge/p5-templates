@@ -1,3 +1,11 @@
 {
+  "description": "Rounded rainbow neon splines on black, fitted each frame through live tracked points, one curve per hand, finger or pose, or as ribbons trailing behind a moving fingertip like drawing in the air. Needs a camera for hands, body or face tracking.",
+  "tags": [
+    "flat",
+    "shader",
+    "colourful",
+    "neon",
+    "interactive"
+  ],
   "favorite": true
 }

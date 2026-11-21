@@ -1,3 +1,10 @@
 {
+  "description": "A segmented snake of overlapping circles in colour-cycling teal, orange and magenta crawls across black, while a thin blue outlined window drifts over the frame. Inside the window the scene becomes a chunky pixelated copy; outside it stays sharp.",
+  "tags": [
+    "flat",
+    "geometry",
+    "colourful",
+    "drift"
+  ],
   "favorite": true
 }

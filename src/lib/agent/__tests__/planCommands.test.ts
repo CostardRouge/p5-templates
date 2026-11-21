@@ -20,6 +20,27 @@ import {
   DEFAULT_RHYTHM
 } from "../../postiz/rhythm";
 import {
+  wordsStamp
+} from "../../planner/approval";
+import {
+  planSlots
+} from "../../planner/planner";
+import {
+  holdLine
+} from "../../planner/planStore";
+import {
+  getRun, resetRunStore
+} from "../../planner/runStore";
+import {
+  DEFAULT_PHRASES
+} from "../../postiz/pills";
+import {
+  getDraft, patchDraft, resetPublishStore
+} from "../../postiz/publishStore";
+import type {
+  PostizConnection
+} from "../../postiz/store";
+import {
   fakeHandles
 } from "./fakeHandles";
 
@@ -503,13 +524,158 @@ describe(
           "plan.open",
           "plan.posted",
           "plan.propose",
+          "plan.render",
           "plan.reset",
           "plan.set",
-          "plan.skip"
+          "plan.skip",
+          "plan.stop"
         ] );
+        // Nothing approves: an agent proposes, the person's gesture in the Plan approves.
+        expect( ids.some( ( id ) => /approve/.test( id ) ) ).toBe( false );
         expect( listed.find( ( c ) => c.id === "plan.open" ) ).toMatchObject( {
           available: false
         } );
+        expect( listed.find( ( c ) => c.id === "plan.render" ) ).toMatchObject( {
+          available: false
+        } );
+      }
+    );
+
+    it(
+      "render only what the person approved, and say where each line stands",
+      async() => {
+        const fake = setup();
+        const conn: PostizConnection = {
+          apiBase: "https://postiz.example/api/public/v1",
+          apiKey: "KEY",
+          channels: [
+            {
+              id: "ig",
+              name: "Steeve Pommier",
+              identifier: "instagram",
+              picture: null,
+              disabled: false,
+              handle: null
+            }
+          ],
+          defaultChannelIds: [
+            "ig"
+          ],
+          collaborator: "",
+          handles: {},
+          usual: {},
+          rhythm: DEFAULT_RHYTHM,
+          phrases: DEFAULT_PHRASES,
+          dayStart: null,
+          connectedAt: 0
+        };
+
+        fake.handles.publish.connection = () => conn;
+        resetRunStore();
+        resetPublishStore();
+
+        // Nothing approved: refused, and told that no command approves.
+        await expect( fake.registry.execute(
+          "plan.render",
+          {}
+        ) ).rejects.toThrow( /nothing is approved.*No command approves/ );
+
+        // The person approves the first line (the gallery's gesture, `holdLine`).
+        const first = ( await fake.get() ).slots[ 0 ];
+        const proposal = planSlots( {
+          catalogue: CATALOGUE,
+          slots: [
+            new Date( first.at )
+          ],
+          posted: [],
+          choices: getChoices(),
+          now: Date.now()
+        } )[ 0 ].proposal!;
+
+        holdLine(
+          first.at,
+          {
+            proposal,
+            postKey: proposal.sketchKey,
+            stamp: wordsStamp(
+              getDraft( proposal.sketchKey ),
+              conn
+            )
+          }
+        );
+        expect( ( await fake.get() ).slots[ 0 ] ).toMatchObject( {
+          state: expect.stringMatching( /^approved by the person/ ),
+          approved: true
+        } );
+
+        // An agent rewords the post: the approval is gone, and stays gone.
+        patchDraft(
+          proposal.sketchKey,
+          {
+            caption: "{title}\nReworded by an agent"
+          }
+        );
+        expect( ( await fake.get() ).slots[ 0 ] ).toMatchObject( {
+          state: expect.stringMatching( /words changed/ ),
+          approved: false
+        } );
+        patchDraft(
+          proposal.sketchKey,
+          {
+            caption: null
+          }
+        );
+        expect( getChoices().held[ first.at ].stamp ).toBeNull();
+        await expect( fake.registry.execute(
+          "plan.render",
+          {}
+        ) ).rejects.toThrow( /nothing is approved/ );
+
+        // Approved again by the person: the queue starts, and the answer says on which lines.
+        holdLine(
+          first.at,
+          {
+            proposal,
+            postKey: proposal.sketchKey,
+            stamp: wordsStamp(
+              getDraft( proposal.sketchKey ),
+              conn
+            )
+          }
+        );
+
+        const out = await fake.registry.execute(
+          "plan.render",
+          {
+            discard: true
+          }
+        ) as { started: boolean;
+          lines: { at: string }[]; };
+
+        expect( out ).toMatchObject( {
+          started: true,
+          lines: [
+            {
+              at: first.at
+            }
+          ]
+        } );
+        await new Promise( ( resolve ) => setTimeout(
+          resolve,
+          80
+        ) );
+        expect( getRun() ).toMatchObject( {
+          state: "running",
+          slots: [
+            first.at
+          ]
+        } );
+        await fake.registry.execute(
+          "plan.stop",
+          {}
+        );
+        expect( getRun()?.state ).toBe( "cancelled" );
+        resetRunStore();
       }
     );
 

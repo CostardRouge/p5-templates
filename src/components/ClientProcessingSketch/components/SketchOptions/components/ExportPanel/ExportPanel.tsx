@@ -86,6 +86,9 @@ import {
   type When
 } from "@/lib/postiz/publishStore";
 import {
+  activePostKey, subscribeReel
+} from "@/lib/postiz/postKey";
+import {
   mimeOf, postableFile, sendRoutes
 } from "@/lib/postiz/send";
 import {
@@ -225,6 +228,13 @@ export default function ExportPanel( {
   ] = useSketch();
 
   const sketchKey = `${ engineId }/${ name }`;
+  // A reel's words live under its own key (`postKey.ts`): the empty host
+  // sketch is shared by every series and recap.
+  const postKey = useSyncExternalStore(
+    subscribeReel,
+    () => activePostKey( sketchKey ),
+    () => sketchKey
+  );
 
   // Seed before the first subscription read so the table is never momentarily
   // empty on open.
@@ -311,18 +321,18 @@ export default function ExportPanel( {
   const canPublish = Boolean( postiz && postiz.channels.length > 0 );
   const draft = useSyncExternalStore(
     subscribePublish,
-    () => getDraft( sketchKey ),
+    () => getDraft( postKey ),
     () => DEFAULT_DRAFT
   );
   const when = useSyncExternalStore(
     subscribePublish,
-    () => getWhen( sketchKey ),
+    () => getWhen( postKey ),
     () => NEXT
   );
   const publishMode = canPublish && draft.mode === "publish";
   const publications = useSyncExternalStore(
     subscribePublish,
-    () => getPublications( sketchKey ),
+    () => getPublications( postKey ),
     () => NO_PUBLICATIONS
   );
   const postedWords = postiz ? postedLine(
@@ -870,11 +880,11 @@ export default function ExportPanel( {
       };
 
       addPublication(
-        sketchKey,
+        postKey,
         publication
       );
       setWhen(
-        sketchKey,
+        postKey,
         NEXT
       );
       // Each account's format becomes what it usually takes.
@@ -933,7 +943,7 @@ export default function ExportPanel( {
     };
 
     patchDraft(
-      sketchKey,
+      postKey,
       {
         approved: true
       }
@@ -1019,7 +1029,7 @@ export default function ExportPanel( {
     for ( const id of publication.postIds ) {
       await client.deletePost( id );
       dropPublication(
-        sketchKey,
+        postKey,
         id
       );
     }
@@ -1069,7 +1079,7 @@ export default function ExportPanel( {
     };
 
     addPublication(
-      sketchKey,
+      postKey,
       resent
     );
 
@@ -1081,7 +1091,7 @@ export default function ExportPanel( {
       }
 
       dropPublication(
-        sketchKey,
+        postKey,
         post.postId
       );
     }
@@ -1171,7 +1181,7 @@ export default function ExportPanel( {
           ) : null }
           onChooseAgain={ ( channelIds ) => {
             patchDraft(
-              sketchKey,
+              postKey,
               {
                 channelIds
               }
@@ -1447,11 +1457,11 @@ export default function ExportPanel( {
               facts={ facts }
               disabled={ running }
               onPatch={ ( patch ) => patchDraft(
-                sketchKey,
+                postKey,
                 patch
               ) }
               onWhen={ ( next ) => setWhen(
-                sketchKey,
+                postKey,
                 next
               ) }
               onRemember={ (
@@ -1511,7 +1521,7 @@ export default function ExportPanel( {
                 role="radio"
                 aria-checked={ draft.mode === id }
                 onClick={ () => patchDraft(
-                  sketchKey,
+                  postKey,
                   {
                     mode: id
                   }
@@ -1602,7 +1612,7 @@ export default function ExportPanel( {
                     role="menuitem"
                     onClick={ () => {
                       setWhen(
-                        sketchKey,
+                        postKey,
                         NEXT
                       );
                       setVerbMenu( false );

@@ -1,0 +1,10 @@
+{
+  "description": "A dim grid of dots in muted rainbow tones that swells and relaxes on a steady pulse; the pulse drives both dot weight and the noise falloff, so the whole field breathes as one and neighbours overlap at full swell.",
+  "tags": [
+    "noise",
+    "shader",
+    "grid",
+    "pulse",
+    "colourful"
+  ]
+}

@@ -1,3 +1,10 @@
 {
+  "description": "Prints fanned along an elliptical arc like a garland on warm cream, the first at the start of the sweep and the last at its end, spacing divided evenly between. By default a half-circle bows across the frame. Pure placement, no motion; the arc can become a fan or a ring.",
+  "tags": [
+    "photo",
+    "geometry",
+    "flat",
+    "needs-photo"
+  ],
   "hiddenFromHome": true
 }

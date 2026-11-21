@@ -1,0 +1,9 @@
+{
+  "description": "Several clips play at once as a wall of tiles on near-black, in a two-column grid with small gaps. Each video keeps its own framing inside its cell, one letterboxed, another cropped to fill, with optional backdrops behind each tile.",
+  "tags": [
+    "photo",
+    "grid",
+    "flat",
+    "needs-photo"
+  ]
+}

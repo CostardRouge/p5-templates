@@ -11,6 +11,8 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
 
 ### Changed
 
+- Each series or recap reel keeps its own words: opening another reel no longer overwrites the caption of the one
+  before.
 - Self-hosting: the Docker image `ghcr.io/costardrouge/p5-templates` is no longer published with each release.
   1.4.0 is the last one built automatically; build your own from the repository, or ask for a build of a release.
 
@@ -45,6 +47,18 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
   with the figures. Turn it off and the Plan is exactly what it was.
 - Claude can read those figures from a connected studio tab (`stats.status`, `stats.read`, `stats.sketch`,
   `stats.post`, `stats.summary`, `stats.accounts`), and `plan.get` says what the Plan listened to.
+- The Plan can do a whole week in one go. Each line now shows the words its post will carry, account by account,
+  and you can rewrite them there. **Approve** a line, a week or everything shown, then press **Render & schedule**:
+  the tab opens each approved sketch in turn (or builds each reel), renders what its accounts take and schedules it
+  on its slot in your Postiz. It never publishes at once. A line that fails says why and the others go on; changing
+  a line's words takes its approval back; a slot another post took meanwhile is refused instead of doubled; if you
+  close the tab, the run waits and resumes from the gallery. Approved lines stay where they are while the rest of
+  the plan moves.
+- Claude can start that run from a connected studio tab (`plan.render`) and stop it (`plan.stop`) — only over
+  lines you approved yourself: no command approves a line.
+- Every sketch now says what it draws: a short description and a few tags for all 343 (about 25 had one). Captions
+  (the *description* and *first sentence* pills), the Plan and Claude's `sketches.list` read them. They are drafts
+  written in one pass — correct any of them in the sketch's `sketch.json`.
 - Claude can do more from a connected studio tab: cut any sketches into one reel — or every favourite of a series
   (`reel.build`) —, pin a reel or a recap of a given month to a slot of the Plan (`plan.propose`), list what you
   already posted (`plan.posted`), and filter sketches by series and by favourite (`sketches.list`).

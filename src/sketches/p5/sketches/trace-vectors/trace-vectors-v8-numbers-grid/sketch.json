@@ -1,0 +1,11 @@
+{
+  "description": "A single thin numeral outline inside a three-by-three grid, gliding from cell to cell and redrawing itself into the next digit as it travels, taking a fresh rainbow hue from each stop. One contour changing shape, place and colour at once, drawn on black.",
+  "tags": [
+    "typography",
+    "flat",
+    "grid",
+    "colourful",
+    "needs-text",
+    "drift"
+  ]
+}

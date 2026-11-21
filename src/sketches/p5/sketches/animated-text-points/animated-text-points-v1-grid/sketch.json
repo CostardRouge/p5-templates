@@ -1,0 +1,10 @@
+{
+  "description": "A halftone letter on black: a fixed lattice of lavender dots, bright along the glyph's strokes and fading to near-black beside them. The dots never move; every couple of beats the lit pattern snaps to the next character of the text you type.",
+  "tags": [
+    "typography",
+    "needs-text",
+    "grid",
+    "flat",
+    "monochrome"
+  ]
+}

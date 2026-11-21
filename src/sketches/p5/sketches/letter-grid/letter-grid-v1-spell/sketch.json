@@ -1,3 +1,12 @@
 {
+  "description": "A field of random letters and digits in grey on near-black, flat and monospaced, over which a camera glides and locks onto one matching letter after another until the word is spelled; the centre glyph glows blue. Your word.",
+  "tags": [
+    "typography",
+    "grid",
+    "flat",
+    "monochrome",
+    "needs-text",
+    "drift"
+  ],
   "favorite": true
 }

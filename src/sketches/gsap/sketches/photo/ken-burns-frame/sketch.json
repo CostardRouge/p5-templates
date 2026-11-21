@@ -1,0 +1,10 @@
+{
+  "description": "A single photo inside a rounded frame on black, slowly zooming and drifting to a larger, shifted view by mid-loop and back again. An optional caption can sit in one of five spots. Needs your photo.",
+  "tags": [
+    "photo",
+    "needs-photo",
+    "flat",
+    "drift",
+    "needs-text"
+  ]
+}

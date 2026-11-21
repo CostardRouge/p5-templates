@@ -1,3 +1,11 @@
 {
+  "description": "One voxel digit stamped on all six faces of a giant die, in red and teal blocks on black. The view tumbles from face to face, each arriving wall brightening while the last sinks into shadow.",
+  "tags": [
+    "typography",
+    "3d",
+    "noise",
+    "orbit",
+    "needs-text"
+  ],
   "favorite": true
 }

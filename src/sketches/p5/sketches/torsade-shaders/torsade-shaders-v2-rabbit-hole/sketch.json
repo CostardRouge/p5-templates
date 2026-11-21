@@ -1,3 +1,11 @@
 {
+  "description": "A deep tunnel of concentric rings of dots, each turned a little further than the last, leaning into a drift you fall down. Hue shifts with depth through green, blue and magenta on black, bright at the rim.",
+  "tags": [
+    "shader",
+    "3d",
+    "colourful",
+    "orbit",
+    "noise"
+  ],
   "favorite": true
 }

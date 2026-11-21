@@ -1,3 +1,9 @@
 {
+  "description": "A photograph where clicking a point lifts the subject off it: a segmentation model cuts out what you picked, which floats pin-sharp with a drop shadow over a blurred copy of the same scene. A koala photo is the default. Needs a photo.",
+  "tags": [
+    "photo",
+    "needs-photo",
+    "interactive"
+  ],
   "hiddenFromHome": true
 }

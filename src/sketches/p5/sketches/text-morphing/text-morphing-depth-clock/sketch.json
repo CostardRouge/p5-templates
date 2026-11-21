@@ -1,3 +1,11 @@
 {
+  "description": "Digits count from 1 to 11 as rainbow dot bursts on black while the formation hops between points around the frame, each depth layer lagging the last so every move stretches into a comet before snapping back.",
+  "tags": [
+    "typography",
+    "3d",
+    "colourful",
+    "orbit",
+    "needs-text"
+  ],
   "favorite": true
 }

@@ -1,3 +1,11 @@
 {
+  "description": "The control points of the rounded rainbow spline become draggable handles on black: grab one with mouse, touch or a webcam pinch, several pointers at once, and the neon curve re-rounds live. Point positions are kept with the piece.",
+  "tags": [
+    "flat",
+    "shader",
+    "colourful",
+    "neon",
+    "interactive"
+  ],
   "favorite": true
 }

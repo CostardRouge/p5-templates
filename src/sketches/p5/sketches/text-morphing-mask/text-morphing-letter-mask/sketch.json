@@ -1,0 +1,9 @@
+{
+  "description": "Your text, white on black, morphs between words through giant outlined letters that descend on it: the incoming glyph shrinks over the current one, eating it away in its own shape, then grows back holding the new character. Needs a text.",
+  "tags": [
+    "typography",
+    "flat",
+    "monochrome",
+    "needs-text"
+  ]
+}

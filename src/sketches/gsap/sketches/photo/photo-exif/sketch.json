@@ -1,0 +1,9 @@
+{
+  "description": "Each photo in turn sits on a white page under its camera name and date, with focal length, aperture, shutter speed, ISO and lens in a strip below, revealed line by line from the file's own data. Needs your photos.",
+  "tags": [
+    "photo",
+    "needs-photo",
+    "typography",
+    "flat"
+  ]
+}

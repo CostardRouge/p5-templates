@@ -1,0 +1,10 @@
+{
+  "description": "A white wireframe rectangle with crop-mark ticks at its corners sits centred on black, snapping elastically between three sizes with overshoot. Its top-left corner prints a rotated readout of its own changing coordinate, like a technical drawing annotating itself.",
+  "tags": [
+    "typography",
+    "geometry",
+    "flat",
+    "monochrome",
+    "pulse"
+  ]
+}

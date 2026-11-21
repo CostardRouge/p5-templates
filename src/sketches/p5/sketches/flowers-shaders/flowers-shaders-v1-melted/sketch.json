@@ -1,3 +1,10 @@
 {
+  "description": "Hundreds of overlapping outlined discs fuse into layered, intricate petals that twist like a rope on black, lit like an oil slick with shifting pearly pinks, greens and blues. A flat-looking flower with a lot of depth in the overlaps.",
+  "tags": [
+    "shader",
+    "iridescent",
+    "noise",
+    "geometry"
+  ],
   "favorite": true
 }

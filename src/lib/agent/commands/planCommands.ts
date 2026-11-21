@@ -16,8 +16,17 @@ import {
   DEFAULT_RHYTHM, slotHead, slotLabel
 } from "../../postiz/rhythm";
 import {
-  allPublications, patchDraft, setWhen
+  allPublications, getDraft, patchDraft, setWhen
 } from "../../postiz/publishStore";
+import {
+  postKeyOfProposal, REEL_HOST_KEY, setCurrentReel, stageReel
+} from "../../postiz/postKey";
+import {
+  lineDraft, lineStatus, queueable, wordsStamp, type LineStatus
+} from "../../planner/approval";
+import {
+  cancelRun, claimRun, getRun, runAlive, runInterrupted, startRun, updateRun
+} from "../../planner/runStore";
 import {
   recentPosts
 } from "../../postiz/recentPosts";
@@ -34,7 +43,7 @@ import {
   localDay
 } from "../../postiz/rhythm";
 import {
-  getChoices, markOpened, passProposal, pinSlot, resetPlan, skipSlot, updateChoices
+  getChoices, markOpened, passProposal, patchLine, pinSlot, resetPlan, skipSlot, updateChoices
 } from "../../planner/planStore";
 import {
   reelCaption, reelDocument, reelSeconds
@@ -98,6 +107,8 @@ export interface Reading {
   rhythm: string;
   /** Why Postiz's calendar could not be read, when it could not. */
   calendarError: string | null;
+  /** Where each line stands (`approval.ts`), by slot. */
+  status: Map<string, LineStatus>;
   /** Whether measured results moved anything, and on which figures. */
   listening: PlanListening;
 }
@@ -161,6 +172,44 @@ export async function readPlan( h: StudioHandles ): Promise<Reading> {
     getCampaigns()
   );
 
+  const slots = plan.slots;
+  const running = runAlive(
+    getRun(),
+    now
+  );
+  const status = new Map<string, LineStatus>();
+
+  for ( const slot of slots ) {
+    const line = slot.held;
+    const stamp = line && conn ? wordsStamp(
+      lineDraft(
+        line.proposal,
+        getDraft( line.postKey )
+      ),
+      conn
+    ) : null;
+    const standing = lineStatus(
+      slot,
+      stamp,
+      running
+    );
+
+    // Words changed since the approval: it is taken back for good, not only
+    // for as long as they stay changed.
+    if ( line && standing === "reworded" && line.stamp !== null ) {
+      patchLine(
+        slot.slot,
+        {
+          stamp: null
+        }
+      );
+    }
+    status.set(
+      slot.slot,
+      standing
+    );
+  }
+
   return {
     catalogue,
     posted,
@@ -171,14 +220,29 @@ export async function readPlan( h: StudioHandles ): Promise<Reading> {
     listening: heard.listening,
     farSlots,
     now,
-    ...plan
+    ...plan,
+    status
   };
 }
 
+const STATUS_WORDS: Record<LineStatus, string> = {
+  empty: "nothing left",
+  skipped: "skipped",
+  proposed: "proposed",
+  pinned: "pinned",
+  approved: "approved by the person — waits for the render queue",
+  reworded: "its words changed after the person approved — it waits for THEIR approval again",
+  taken: "approved, but another post took its slot",
+  rendering: "rendering",
+  planned: "planned in Postiz",
+  failed: "failed"
+};
+
 function describe(
-  slot: PlanSlot, timeZone: string
+  slot: PlanSlot, timeZone: string, standing?: LineStatus
 ) {
   const p = slot.proposal;
+  const line = slot.held;
   const beat = beatOf( p );
 
   return {
@@ -187,7 +251,19 @@ function describe(
       slot.at,
       timeZone
     ),
-    state: slot.skipped ? "skipped" : !p ? "nothing left" : beat ? "a campaign's beat" : p.pin ? `pinned by ${ p.pin.by === "agent" ? "an agent" : "the person" }` : "proposed",
+    state: line && standing ? STATUS_WORDS[ standing ] : slot.skipped ? "skipped" : !p ? "nothing left" : beat ? "a campaign's beat" : p.pin ? `pinned by ${ p.pin.by === "agent" ? "an agent" : "the person" }` : "proposed",
+    ...( line ? {
+      approved: standing === "approved" || standing === "failed" || standing === "rendering" || standing === "planned",
+      ...( line.error ? {
+        error: line.error
+      } : {} ),
+      ...( line.postIds ? {
+        postIds: line.postIds
+      } : {} ),
+      ...( line.ms ? {
+        seconds_taken: Math.round( line.ms / 1000 )
+      } : {} )
+    } : {} ),
     ...( beat ? {
       campaign: {
         id: beat.id,
@@ -217,6 +293,43 @@ function describe(
   };
 }
 
+/** The render queue as it stands, or null when none was started. */
+function describeRun() {
+  const run = getRun();
+
+  if ( !run ) {
+    return null;
+  }
+
+  const now = Date.now();
+  const held = getChoices().held;
+
+  return {
+    state: run.state === "running" ? ( runAlive(
+      run,
+      now
+    ) ? "running" : "interrupted — its tab went away; plan.render resumes it" ) : run.state,
+    line: Math.min(
+      run.index + 1,
+      run.slots.length
+    ),
+    of: run.slots.length,
+    ...( run.state === "running" ? {
+      phase: run.phase,
+      ...( run.progress !== null ? {
+        progress: Math.round( run.progress * 100 ) / 100
+      } : {} )
+    } : {} ),
+    lines: run.slots.map( ( slot ) => ( {
+      at: slot,
+      state: held[ slot ]?.state ?? "gone",
+      ...( held[ slot ]?.error ? {
+        error: held[ slot ].error
+      } : {} )
+    } ) )
+  };
+}
+
 async function answer( h: StudioHandles ) {
   const reading = await readPlan( h );
   const choices = getChoices();
@@ -230,12 +343,14 @@ async function answer( h: StudioHandles ) {
     listening: reading.listening,
     slots: reading.slots.map( ( slot ) => describe(
       slot,
-      reading.timeZone
+      reading.timeZone,
+      reading.status.get( slot.slot )
     ) ),
+    run: describeRun(),
     note: [
       reading.connected ? null : "No Postiz is connected in this browser: the default rhythm is drawn and only this browser's sends are known.",
       reading.calendarError ? `The person's Postiz did not answer (${ reading.calendarError }): taken slots are not known.` : null,
-      "A proposal is not a post. plan.open puts one on Export › Publish; publish.approve stays the person's word."
+      "A proposal is not a post. The person approves lines in the gallery's Plan — no command does; plan.render then renders and schedules what THEY approved. plan.open puts one line on Export › Publish; publish.approve stays the person's word."
     ].filter( Boolean ).join( " " )
   };
 }
@@ -797,6 +912,8 @@ export function planCommands( h: StudioHandles ): CommandSpec[] {
               `the reel could not be built: ${ applied.reason }`
             );
           }
+          // A reel cut on the spot belongs to no line of the plan: the host's own post.
+          setCurrentReel( null );
 
           return {
             ...built,
@@ -831,6 +948,109 @@ export function planCommands( h: StudioHandles ): CommandSpec[] {
         return {
           ...built,
           opened: true
+        };
+      }
+    },
+    {
+      id: "plan.render",
+      title: "Render and schedule what the person approved",
+      description: "Run the Plan's render queue: every line the PERSON approved in the gallery's Plan (plan.get: state «approved») is rendered and SCHEDULED on its slot, one after another — the tab opens each sketch (or builds each reel), renders the variants its accounts take, checks the slot against Postiz again and sends through the same path as Export › Publish. Refused when nothing is approved: there is no command that approves a line, only the person's gesture. It never publishes now. It returns at once; plan.get's `run` and each slot's `state` say how it goes (a Reel takes minutes; the tab must stay open and visible). A line that fails says why and the next ones go on. An interrupted run is resumed by calling it again. Leaves this tab's unsaved changes behind only with discard: true.",
+      params: {
+        discard: {
+          type: "boolean",
+          description: "Leave this tab's unsaved changes behind",
+          optional: true
+        }
+      },
+      available: () => {
+        if ( !h.publish.connection() ) {
+          return "no Postiz is connected in this browser — the person connects one in Menu › Publishing";
+        }
+
+        const exportable = h.exports.supported();
+
+        if ( exportable !== true ) {
+          return exportable;
+        }
+
+        return runAlive(
+          getRun(),
+          Date.now()
+        ) ? "the render queue is already running — plan.get shows where it is, plan.stop stops it" : true;
+      },
+      async run( params ) {
+        const reading = await readPlan( h );
+        const lines = reading.slots.filter( ( slot ) => slot.held && queueable( reading.status.get( slot.slot ) ?? "empty" ) );
+
+        if ( !lines.length ) {
+          throw new CommandError(
+            "unavailable",
+            "nothing is approved — the person approves lines in the gallery's Plan (Gallery › Plan › Approve). No command approves a line: propose (plan.propose), then ask them to read and approve"
+          );
+        }
+        if ( h.history.canUndo() && !params.discard ) {
+          throw new CommandError(
+            "invalid",
+            "this tab has changes that are not saved — the queue opens other sketches and leaves them behind; pass discard: true to go anyway"
+          );
+        }
+
+        const current = getRun();
+        const resumed = runInterrupted(
+          current,
+          Date.now()
+        ) && current !== null;
+
+        // The answer leaves before the tab starts moving from sketch to sketch.
+        setTimeout(
+          () => {
+            if ( resumed ) {
+              claimRun( current.id );
+              updateRun(
+                current.id,
+                ( r ) => ( {
+                  ...r,
+                  beat: Date.now(),
+                  phase: "resuming"
+                } )
+              );
+            } else {
+              startRun(
+                lines.map( ( slot ) => slot.slot ),
+                `/sketches/${ h.sketchId }`
+              );
+            }
+          },
+          50
+        );
+
+        return {
+          started: !resumed,
+          resumed,
+          lines: lines.map( ( slot ) => ( {
+            at: slot.slot,
+            when: slotLabel(
+              slot.at,
+              reading.timeZone
+            ),
+            sketch: slot.proposal?.path,
+            title: slot.proposal?.title
+          } ) ),
+          note: "The queue is running in this tab: it will open each sketch in turn. plan.get shows `run` and each line's state — planned, or failed with why."
+        };
+      }
+    },
+    {
+      id: "plan.stop",
+      title: "Stop the render queue",
+      description: "Stop the Plan's render queue: the line being rendered is dropped and stays approved, the lines already scheduled stay scheduled (publish.unschedule or the gallery takes one back).",
+      available: () => getRun()?.state === "running" ? true : "no render queue is running",
+      run() {
+        cancelRun();
+
+        return {
+          stopped: true,
+          run: describeRun()
         };
       }
     },
@@ -904,7 +1124,7 @@ export function planCommands( h: StudioHandles ): CommandSpec[] {
 
         if ( beat ) {
           patchDraft(
-            p.sketchKey,
+            postKeyOfProposal( p ),
             {
               trial: beat.trial
             }
@@ -947,17 +1167,25 @@ export function planCommands( h: StudioHandles ): CommandSpec[] {
             }
           }
           opened();
+
+          const postKey = postKeyOfProposal( p );
+
+          // On the host, the page now shows THIS reel or card: its words are its own.
+          if ( reel && p.sketchKey === REEL_HOST_KEY ) {
+            setCurrentReel( p.key );
+          }
           patchDraft(
-            p.sketchKey,
+            postKey,
             {
               mode: "publish",
-              ...( caption ? {
+              // A reel's starting words, unless it already has some.
+              ...( caption && getDraft( postKey ).caption === null ? {
                 caption
               } : {} )
             }
           );
           setWhen(
-            p.sketchKey,
+            postKey,
             {
               kind: "at",
               at: slot.slot
@@ -983,6 +1211,9 @@ export function planCommands( h: StudioHandles ): CommandSpec[] {
             "failed",
             "the piece could not be handed over (this browser's storage is unavailable)"
           );
+        }
+        if ( reel && p.sketchKey === REEL_HOST_KEY ) {
+          stageReel( p.key );
         }
         if ( stage ) {
           askStage(

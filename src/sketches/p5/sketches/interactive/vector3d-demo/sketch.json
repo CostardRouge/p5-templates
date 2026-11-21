@@ -1,3 +1,10 @@
 {
+  "description": "A small lit scene on near-black: a pale sphere and a grey torus inside a wireframe box with a floor grid, and a white sun joined by a thin ray, seen by a camera that circles once per loop while the torus spins on a slanted axis.",
+  "tags": [
+    "3d",
+    "geometry",
+    "monochrome",
+    "orbit"
+  ],
   "hiddenFromHome": true
 }

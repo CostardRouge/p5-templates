@@ -1,3 +1,11 @@
 {
+  "description": "A flat sheet of thin black triangles on white that bulges toward the viewer wherever a pointer passes. Six pointers orbit on their own, raising bumps that glide across and relax. A photo or webcam can be stretched over it.",
+  "tags": [
+    "3d",
+    "mesh",
+    "monochrome",
+    "interactive",
+    "orbit"
+  ],
   "favorite": true
 }

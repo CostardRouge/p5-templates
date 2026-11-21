@@ -1,0 +1,12 @@
+{
+  "description": "A troupe of drawn cursors retypes a list of letters or words on black, physically dragging the iridescent tube of each text into the next. Each finished text holds legible before the conversion begins.",
+  "tags": [
+    "3d",
+    "typography",
+    "shader",
+    "raymarched",
+    "iridescent",
+    "needs-text",
+    "interactive"
+  ]
+}

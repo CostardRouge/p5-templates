@@ -1,3 +1,12 @@
 {
+  "description": "A photograph cut into a tall grid of small tiles, each one flickering between its own crop of the picture and a flat block of that crop's dominant colour. The flips travel across the frame in waves on black, so the image keeps dissolving into paint chips and reassembling.",
+  "tags": [
+    "photo",
+    "grid",
+    "noise",
+    "flat",
+    "colourful",
+    "needs-photo"
+  ],
   "favorite": true
 }

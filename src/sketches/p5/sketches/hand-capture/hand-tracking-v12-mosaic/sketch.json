@@ -1,0 +1,11 @@
+{
+  "description": "A blurred webcam image carved into a coarse grid of tiles, each showing a slightly displaced patch with thin colour fringes at the seams, like glass bricks. The tiles drift on their own, or lean toward a pointer, microphone level or tracked hand.",
+  "tags": [
+    "photo",
+    "needs-photo",
+    "grid",
+    "noise",
+    "interactive",
+    "drift"
+  ]
+}

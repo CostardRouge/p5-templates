@@ -1,3 +1,10 @@
 {
+  "description": "A bundle of solid glossy pipes winds helically around a shared axis on black and rotates around itself, like a twisted rope or a DNA braid. Their surface shifts colour like anodised metal or an oil slick.",
+  "tags": [
+    "3d",
+    "shader",
+    "iridescent",
+    "noise"
+  ],
   "favorite": true
 }

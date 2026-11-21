@@ -1,3 +1,10 @@
 {
+  "description": "A wall of cropped photographs fills the frame as still wallpaper, with one large print centred over it that keeps changing, the loop dealing each picture of the set to the centre in turn with a hard cut. Each cut briefly shows one image at two scales.",
+  "tags": [
+    "photo",
+    "grid",
+    "flat",
+    "needs-photo"
+  ],
   "hiddenFromHome": true
 }

@@ -1,0 +1,11 @@
+{
+  "description": "A grid of short horizontal dashes covers the sheet like compass needles; near each letter they turn along the stroke, lengthen and merge into continuous ribbons while the counters stay open. At each beat the dashes swing round to the next letter. A pointer turns nearby dashes to face it.",
+  "tags": [
+    "typography",
+    "3d",
+    "iridescent",
+    "raymarched",
+    "interactive",
+    "flip"
+  ]
+}

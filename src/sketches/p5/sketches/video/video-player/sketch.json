@@ -1,0 +1,8 @@
+{
+  "description": "A loose collage of video clips on near-black, each placed against the whole canvas with its own scale, position and fit, overlapping where frames cross and stacking in list order. No grid, no effect: each clip just plays in place.",
+  "tags": [
+    "photo",
+    "flat",
+    "needs-photo"
+  ]
+}

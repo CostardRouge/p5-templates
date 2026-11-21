@@ -1,0 +1,10 @@
+{
+  "description": "A slideshow that plunges into each photograph at a chosen spot and back out, a small ring marking the target, on warm cream. Clicking a picture moves its zoom point to exactly where you clicked, remembered for the next pass.",
+  "tags": [
+    "photo",
+    "flat",
+    "pulse",
+    "interactive",
+    "needs-photo"
+  ]
+}

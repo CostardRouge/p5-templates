@@ -40,6 +40,13 @@ import {
   planCommands
 } from "@/lib/agent/commands/planCommands";
 import {
+  attachPlanRunner
+} from "@/lib/planner/runner";
+import PlanRunBanner from "./PlanRunBanner";
+import {
+  activePostKey
+} from "@/lib/postiz/postKey";
+import {
   campaignCommands
 } from "@/lib/agent/commands/campaignCommands";
 import {
@@ -547,6 +554,14 @@ export default function StudioCommands( {
           return null;
         },
         exports: {
+          ready: () => Boolean( now().state.engine ),
+          warm: async( scenes ) => {
+            if ( now().state.engineId === "p5" ) {
+              const nested = await import( "@/p5/utils/nestedSketch" );
+
+              await nested.preloadSketches( scenes );
+            }
+          },
           supported: () => now().exportSupported || "this browser cannot export (no WebCodecs encoder) — use a recent Chrome, Edge or Safari",
           presets: VARIANT_PRESETS,
           list: () => ensureVariants( variantKey ).variants,
@@ -596,7 +611,7 @@ export default function StudioCommands( {
           }
         },
         publish: {
-          key: () => variantKey,
+          key: () => activePostKey( variantKey ),
           connection: getPostiz,
           client: () => {
             const conn = getPostiz();
@@ -618,7 +633,7 @@ export default function StudioCommands( {
                 slideCount( values )
               ),
               variantKey,
-              getDraft( variantKey ).note,
+              getDraft( activePostKey( variantKey ) ).note,
               allPublications()
             );
           },
@@ -874,7 +889,14 @@ export default function StudioCommands( {
       setBridgeSketch( sketchId );
       resumeBridge();
 
-      return off;
+      // The Plan's render queue (lab 7, pass 3): when this tab owns a run,
+      // this page renders and schedules the line it is on, then moves on.
+      const stopRunner = attachPlanRunner( handles );
+
+      return () => {
+        stopRunner();
+        off();
+      };
     },
     [
       sketchId,
@@ -884,5 +906,5 @@ export default function StudioCommands( {
     ]
   );
 
-  return null;
+  return <PlanRunBanner />;
 }

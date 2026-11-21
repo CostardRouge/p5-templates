@@ -1,0 +1,9 @@
+{
+  "description": "A pixelated letter on black whose every tile fires a very deep prism away from the camera, filling half the frame. Faces are coloured by their orientation alone: magenta fronts, blue and green flanks. Some cells drop to a flat cross; the text can be changed.",
+  "tags": [
+    "typography",
+    "3d",
+    "colourful",
+    "needs-text"
+  ]
+}

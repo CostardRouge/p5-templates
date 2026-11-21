@@ -1,0 +1,9 @@
+{
+  "description": "A grid of dots that grow with distance from the centre and fade out against a drifting, noise-wobbled wave edge, so a rainbow field glows in the middle of a black frame and dissolves into a soft moving horizon.",
+  "tags": [
+    "noise",
+    "shader",
+    "grid",
+    "colourful"
+  ]
+}
