@@ -47,8 +47,17 @@ import {
   activePostKey
 } from "@/lib/postiz/postKey";
 import {
+  campaignCommands
+} from "@/lib/agent/commands/campaignCommands";
+import {
+  variationCommands
+} from "@/lib/agent/commands/variationCommands";
+import {
   favoriteCommands
 } from "@/lib/agent/commands/favoriteCommands";
+import {
+  statsCommands
+} from "@/lib/agent/commands/statsCommands";
 import {
   PostizClient
 } from "@/lib/postiz/client";
@@ -864,7 +873,10 @@ export default function StudioCommands( {
           ...exportCommands( handles ),
           ...publishCommands( handles ),
           ...planCommands( handles ),
+          ...campaignCommands( handles ),
+          ...variationCommands( handles ),
           ...favoriteCommands( handles ),
+          ...statsCommands( handles ),
           ...assetCommands( handles ),
           ...navigationCommands( handles ),
           ...galleryCommands( handles ),

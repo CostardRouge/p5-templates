@@ -41,6 +41,7 @@ export function readHeld( raw: unknown ): HeldLine | null {
   const line = record( raw );
   const p = record( line.proposal );
   const reel = record( p.reel );
+  const beat = record( line.beat );
   const strings = ( value: unknown ) => Array.isArray( value ) ? value.filter( ( s ): s is string => typeof s === "string" ) : [];
 
   if ( typeof p.key !== "string" || typeof p.sketchKey !== "string" || !SKETCH_KEY.test( p.sketchKey ) || typeof p.path !== "string" || typeof p.title !== "string" || typeof line.postKey !== "string" ) {
@@ -86,6 +87,13 @@ export function readHeld( raw: unknown ): HeldLine | null {
     } : {} ),
     ...( typeof line.ms === "number" ? {
       ms: line.ms
+    } : {} ),
+    ...( typeof beat.id === "string" && typeof beat.beat === "string" ? {
+      beat: {
+        id: beat.id,
+        beat: beat.beat,
+        trial: beat.trial === true
+      }
     } : {} )
   };
 }
@@ -303,7 +311,7 @@ function without(
 
 /** «Approve»: fix this proposal on its slot, with the stamp of the words approved. */
 export function holdLine(
-  slot: string, line: Pick<HeldLine, "proposal" | "postKey" | "stamp">
+  slot: string, line: Pick<HeldLine, "proposal" | "postKey" | "stamp" | "beat">
 ): PlanChoices {
   return updateChoices( ( c ) => ( {
     ...c,

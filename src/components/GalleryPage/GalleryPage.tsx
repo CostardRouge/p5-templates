@@ -46,13 +46,13 @@ import {
   postizHome
 } from "@/lib/postiz/client";
 import {
-  forgetPosts
+  forgetPosts, patchDraft
 } from "@/lib/postiz/publishStore";
 import {
   askPlanned, askSendAgain
 } from "@/lib/postiz/reopen";
 import {
-  stageReel
+  postKeyOfProposal, REEL_HOST_KEY, stageReel
 } from "@/lib/postiz/postKey";
 import {
   openPublishing
@@ -85,7 +85,24 @@ import {
   itemTarget, type CalendarItem, type SheetTarget
 } from "./items";
 import PlanView from "./PlanView";
+import {
+  askStage, stageBeat
+} from "@/lib/planner/beatStage";
+import {
+  routeBeat
+} from "@/lib/planner/beatVariant";
+import {
+  beatOf
+} from "@/lib/planner/campaign";
+import {
+  markBeatOpened
+} from "@/lib/planner/campaignStore";
 import SketchSheet from "./SketchSheet";
+// Statistics (`docs/memory/statistics.md`): these two imports and the `stats` uses below are its whole hold on this page.
+import {
+  useStats
+} from "@/components/Stats/useStats";
+import WhatWorks from "@/components/Stats/WhatWorks";
 import {
   useGallery
 } from "./useGallery";
@@ -329,6 +346,14 @@ export default function GalleryPage( {
   // Without a Postiz the calendars are the archive's: each piece on the day it was kept.
   const piecesMode = !gp.conn;
   const sendsKnown = entries !== null && ( !gp.conn || gp.posts !== null || gp.error !== null );
+  const stats = useStats( {
+    sends,
+    client: gp.client,
+    rhythm: gp.conn?.rhythm ?? null,
+    known: sendsKnown && ( !gp.conn || gp.posts !== null ),
+    now,
+    looking: sheet?.sketchKey ?? null
+  } );
   // Nothing is laid on a day before everything it depends on is read: what
   // lands then lands as NEW tiles, and a tile never changes its state words
   // (and so its width) under the eye.
@@ -514,26 +539,79 @@ export default function GalleryPage( {
     }
     // A series or a recap is a document of its own (`reel.ts`), handed to the
     // empty sketch through the gallery's crossing, with the words it starts from.
-    const reel = reelDocument( slot.proposal );
+    // A campaign's beat stages its own piece (`beatStage.ts`): the carousel of
+    // accepted variations, the breakdown, the series' reel, the words card.
+    const beat = beatOf( slot.proposal );
+    const staged = beat
+      ? stageBeat(
+        slot.proposal,
+        beat,
+        entries ?? []
+      )
+      : null;
+
+    if ( staged && !staged.ok ) {
+      setToast( {
+        message: staged.reason,
+        type: "error"
+      } );
+
+      return;
+    }
+
+    const reel = staged?.ok ? staged.staged.document : reelDocument( slot.proposal );
 
     if ( reel ) {
       if ( !writePendingImport( reel ) ) {
         setToast( {
-          message: "Could not hand the reel over (storage unavailable) — nothing was opened.",
+          message: "Could not hand the piece over (storage unavailable) — nothing was opened.",
           type: "error"
         } );
 
         return;
       }
-      markOpened( slot.proposal.key );
-      // Its words are its own, not the host's (`postKey.ts`).
-      stageReel( slot.proposal.key );
+      if ( !beat ) {
+        markOpened( slot.proposal.key );
+      }
+      // On the empty host, its words are its own — a reel's, a recap's, a
+      // campaign's reel or words card (`postKey.ts`).
+      if ( slot.proposal.sketchKey === REEL_HOST_KEY ) {
+        stageReel( slot.proposal.key );
+      }
+    }
+    if ( beat && staged?.ok ) {
+      if ( staged.staged.stage ) {
+        askStage(
+          slot.proposal.sketchKey,
+          staged.staged.stage
+        );
+      }
+      // Opened is not posted: the post made on this slot's day will be this beat's.
+      markBeatOpened(
+        beat.id,
+        beat.beat,
+        slot.slot
+      );
+      patchDraft(
+        postKeyOfProposal( slot.proposal ),
+        {
+          trial: beat.trial
+        }
+      );
+      // The variations go out as a carousel; any other beat of the sketch as it usually does.
+      if ( beat.kind === "sketch" || beat.kind === "variations" || beat.kind === "process" ) {
+        routeBeat(
+          slot.proposal.sketchKey,
+          Array.isArray( reel?.slides ) && reel.slides.length > 1,
+          gp.conn?.channels.map( ( channel ) => channel.id ) ?? []
+        );
+      }
     }
     if ( gp.conn ) {
       askPlanned(
         slot.proposal.sketchKey,
         slot.slot,
-        reelCaption( slot.proposal )
+        staged?.ok ? staged.staged.caption : reelCaption( slot.proposal )
       );
     }
     router.push( `/sketches/${ slot.proposal.path }` );
@@ -798,6 +876,7 @@ export default function GalleryPage( {
                     title
                   ) }
                   onRemove={ ( target ) => void handleRemove( target ) }
+                  stat={ sendsKnown ? stats.cardLine( byPiece.get( entry.id )?.[ 0 ] ) : null }
                 />
               ) )}
             </div>
@@ -808,6 +887,7 @@ export default function GalleryPage( {
       {view === "plan" && (
         <PlanView
           conn={ gp.conn }
+          entries={ entries ?? undefined }
           posts={ gp.posts }
           posted={ posted }
           known={ sendsKnown && ( !gp.conn || gp.posts !== null ) }
@@ -822,7 +902,12 @@ export default function GalleryPage( {
           search={ needle }
           sketchFilter={ sketchFilter }
           onSketches={ setPlanSketches }
+          signalFor={ stats.signalFor }
         />
+      )}
+
+      {view === "plan" && (
+        <WhatWorks stats={ stats } sends={ sends } now={ now } onSettings={ openPublishing } />
       )}
 
       {sheet && (
@@ -837,6 +922,7 @@ export default function GalleryPage( {
           onOpenSketch={ ( sketchKey ) => router.push( `/sketches/${ sketchKey }` ) }
           onTakeBack={ takeBack }
           onSendAgain={ sendAgain }
+          figures={ stats.figures }
         />
       )}
 

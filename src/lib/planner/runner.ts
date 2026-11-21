@@ -41,8 +41,14 @@ import {
   setCurrentReel
 } from "../postiz/postKey";
 import {
-  addPublication, getDraft
+  addPublication, getDraft, patchDraft
 } from "../postiz/publishStore";
+import {
+  routeBeat
+} from "./beatVariant";
+import {
+  markBeatOpened
+} from "./campaignStore";
 import {
   slotLabel
 } from "../postiz/rhythm";
@@ -253,6 +259,28 @@ export async function runLine(
     throw new LineError(
       "Its words changed after you approved them — read them and approve again.",
       true
+    );
+  }
+  // A campaign's release or comeback: the sketch as it stands, with the
+  // beat's own routing (`beatVariant.ts`) and its Trial Reel — what opening
+  // it from the Plan does. Marked opened so the post made on this slot is
+  // known as this beat's (`campaigns.md`, «Which post is which beat»).
+  if ( line.beat ) {
+    patchDraft(
+      line.postKey,
+      {
+        trial: line.beat.trial
+      }
+    );
+    routeBeat(
+      line.proposal.sketchKey,
+      false,
+      conn.channels.map( ( channel ) => channel.id )
+    );
+    markBeatOpened(
+      line.beat.id,
+      line.beat.beat,
+      slot
     );
   }
   if ( !tickedAccounts(

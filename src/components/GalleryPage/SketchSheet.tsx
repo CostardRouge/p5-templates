@@ -27,6 +27,9 @@ import {
   catalogueThumbnail, type SheetTarget
 } from "./items";
 import {
+  VariationControl
+} from "./CampaignPanel";
+import {
   accountPillState, NetworkMark, StatePill, STATE_WORD, Vignette
 } from "./marks";
 
@@ -74,12 +77,13 @@ function Failure( {
 
 /** One send: when, its state, each account with its link or its failure, and what can be done. */
 function SendBlock( {
-  send, tz, postizUrl, focused, onTakeBack, onSendAgain
+  send, tz, postizUrl, focused, onTakeBack, onSendAgain, figures
 }: {
   send: GallerySend;
   tz: string;
   postizUrl: string | null;
   focused: boolean;
+  figures?: ( send: GallerySend ) => React.ReactNode;
   onTakeBack: ( ( send: GallerySend, postIds: string[] ) => Promise<void> ) | null;
   onSendAgain: ( ( send: GallerySend ) => void ) | null;
 } ) {
@@ -180,6 +184,7 @@ function SendBlock( {
           </li>
         ) )}
       </ul>
+      {figures?.( send )}
       {send.foreign && (
         <p className="m-0 border-t border-dashed border-border px-3 py-2 text-[11.5px] text-label">
           Sent from another device: recognised by the sketch’s link in its caption. No piece of it in this browser.
@@ -238,7 +243,7 @@ function SendBlock( {
  * sheet on a wide screen, the whole screen on a phone.
  */
 export default function SketchSheet( {
-  target, entries, sends, tz, postizUrl, onClose, onOpenPiece, onOpenSketch, onTakeBack, onSendAgain
+  target, entries, sends, tz, postizUrl, onClose, onOpenPiece, onOpenSketch, onTakeBack, onSendAgain, figures
 }: {
   target: SheetTarget;
   entries: readonly GalleryEntry[];
@@ -250,6 +255,8 @@ export default function SketchSheet( {
   onOpenSketch: ( sketchKey: string ) => void;
   onTakeBack: ( ( send: GallerySend, postIds: string[] ) => Promise<void> ) | null;
   onSendAgain: ( ( send: GallerySend ) => void ) | null;
+  /** What each send did, under its accounts — statistics' (`components/Stats`), absent when they are off. */
+  figures?: ( send: GallerySend ) => React.ReactNode;
 } ) {
   const pieces = entries.filter( ( e ) => `${ e.engine }/${ e.name }` === target.sketchKey );
   const mine = sends.filter( ( s ) => s.sketchKey === target.sketchKey );
@@ -343,6 +350,7 @@ export default function SketchSheet( {
               focused={ send.key === target.sendKey }
               onTakeBack={ onTakeBack }
               onSendAgain={ onSendAgain }
+              figures={ figures }
             />
           ) ) : (
             <p className="m-0 text-xs text-label">Never posted. Open the sketch, then Export › Publish.</p>
@@ -350,23 +358,26 @@ export default function SketchSheet( {
 
           <p className="m-0 font-mono text-[10.5px] uppercase tracking-wider text-label">Pieces kept · {pieces.length}</p>
           {pieces.length ? (
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(72px,1fr))] gap-1.5">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(84px,1fr))] gap-1.5">
               {pieces.map( ( piece ) => (
-                <button
-                  key={ piece.id }
-                  type="button"
-                  onClick={ () => onOpenPiece( piece ) }
-                  title={ `Open ${ piece.title || title } (${ new Date( piece.at ).toLocaleDateString() }) in the studio` }
-                  className={ clsx(
-                    "relative overflow-hidden rounded-md bg-hover/60 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-focus",
-                    piece.id === focusedPiece?.id && "ring-2 ring-foreground"
-                  ) }
-                  style={ {
-                    aspectRatio: `${ piece.width } / ${ piece.height }`
-                  } }
-                >
-                  <Vignette blob={ piece.thumbnail } src={ catalogueThumbnail( target.sketchKey ) } />
-                </button>
+                <div key={ piece.id } className="flex min-w-0 flex-col gap-1" data-piece-variation={ piece.variation?.state ?? "none" }>
+                  <button
+                    type="button"
+                    onClick={ () => onOpenPiece( piece ) }
+                    title={ `Open ${ piece.variation?.label || piece.title || title } (${ new Date( piece.at ).toLocaleDateString() }) in the studio` }
+                    className={ clsx(
+                      "relative overflow-hidden rounded-md bg-hover/60 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-focus",
+                      piece.id === focusedPiece?.id && "ring-2 ring-foreground"
+                    ) }
+                    style={ {
+                      aspectRatio: `${ piece.width } / ${ piece.height }`
+                    } }
+                  >
+                    <Vignette blob={ piece.thumbnail } src={ catalogueThumbnail( target.sketchKey ) } />
+                  </button>
+                  {/* Another look of the sketch, for a campaign's Variations post: a candidate waits for a yes. */}
+                  <VariationControl entry={ piece } />
+                </div>
               ) )}
             </div>
           ) : (

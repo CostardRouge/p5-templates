@@ -34,11 +34,15 @@ export function sketchOfPostKey( key: string ): string {
   );
 }
 
-/** Where a plan proposal's post lives: the sketch's own, or — for a reel — the reel's. Pure. */
+/**
+ * Where a plan proposal's post lives: the sketch's own, or — for anything
+ * built on the empty host (a reel, a recap, a campaign's reel or its words
+ * card) — one of its own. Pure.
+ */
 export function postKeyOfProposal( proposal: { key: string;
   sketchKey: string;
   reel?: unknown } ): string {
-  return proposal.reel ? reelPostKey( proposal.key ) : proposal.sketchKey;
+  return proposal.reel || proposal.sketchKey === REEL_HOST_KEY ? reelPostKey( proposal.key ) : proposal.sketchKey;
 }
 
 let current: string | null = null;

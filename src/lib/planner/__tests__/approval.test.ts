@@ -2,6 +2,9 @@ import {
   lineStatus, queueable, quotesPiece, tickedAccounts, wordsStamp
 } from "../approval";
 import {
+  blockedSlots
+} from "../campaign";
+import {
   EMPTY_CHOICES, planSlots, type HeldLine, type PlanChoices, type PlanSketch, type Proposal
 } from "../planner";
 import {
@@ -286,6 +289,56 @@ describe(
           planned[ 0 ],
           "other"
         ) ).toBe( "planned" );
+      }
+    );
+
+    it(
+      "keeps a campaign's beats off an approved line's slot, and an approved beat on its own",
+      () => {
+        const first = plan( {} )[ 0 ].proposal!;
+        const input = ( held: PlanChoices[ "held" ] ) => ( {
+          catalogue: CATALOGUE,
+          slots: SLOTS,
+          posted: [],
+          choices: {
+            ...EMPTY_CHOICES,
+            held
+          },
+          now: NOW
+        } );
+
+        // An ordinary approved line: no beat may be laid on its slot.
+        expect( blockedSlots( input( {
+          [ TUE ]: hold( first )
+        } ) ).has( TUE ) ).toBe( true );
+        // A beat approved there holds the slot FOR its campaign: laying must still find it.
+        expect( blockedSlots( input( {
+          [ TUE ]: hold(
+            first,
+            {
+              beat: {
+                id: "c1",
+                beat: "release",
+                trial: false
+              }
+            }
+          )
+        } ) ).has( TUE ) ).toBe( false );
+        // …and it comes back from storage with what it is.
+        expect( readHeld( JSON.parse( JSON.stringify( hold(
+          first,
+          {
+            beat: {
+              id: "c1",
+              beat: "release",
+              trial: true
+            }
+          }
+        ) ) ) )?.beat ).toEqual( {
+          id: "c1",
+          beat: "release",
+          trial: true
+        } );
       }
     );
 

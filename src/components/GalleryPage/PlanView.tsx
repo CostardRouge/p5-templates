@@ -14,9 +14,21 @@ import {
 import {
   weekLabel
 } from "@/lib/gallery/calendar";
+import type {
+  GalleryEntry
+} from "@/lib/gallery/types";
 import {
-  DEFAULT_GAP_WEEKS, EMPTY_CHOICES, GAP_WEEKS, MIXES, planSlots, sketchKeyOf, sketchPath, type Pillar, type PlanSketch, type PlanSlot
+  beatOf, CAMPAIGN_WEEKS, planWithCampaigns
+} from "@/lib/planner/campaign";
+import {
+  getCampaigns, noCampaigns, passBeat, subscribeCampaigns
+} from "@/lib/planner/campaignStore";
+import {
+  DEFAULT_GAP_WEEKS, EMPTY_CHOICES, GAP_WEEKS, MIXES, sketchKeyOf, sketchPath, type Pillar, type PlanSignal, type PlanSketch, type PlanSlot
 } from "@/lib/planner/planner";
+import {
+  acceptedCounts
+} from "@/lib/variations/kept";
 import {
   getChoices, holdLine, passProposal, patchLine, releaseLine, resetPlan, skipSlot, subscribeChoices, updateChoices
 } from "@/lib/planner/planStore";
@@ -45,6 +57,9 @@ import {
   DEFAULT_RHYTHM, slotHead, weekOf, type Rhythm
 } from "@/lib/postiz/rhythm";
 import {
+  BeatDetail, CampaignMaker, CampaignTag, type CampaignContext
+} from "./CampaignPanel";
+import {
   catalogueThumbnail
 } from "./items";
 import {
@@ -64,7 +79,7 @@ const PILLAR_LABEL: Record<Pillar, string> = {
 };
 
 const BUTTON = "inline-flex h-8 items-center justify-center rounded-lg border border-border bg-background px-3 text-xs font-medium text-foreground transition-colors hover:bg-hover disabled:opacity-40";
-const INK_BUTTON = "inline-flex h-8 items-center justify-center rounded-lg bg-foreground px-3 text-xs font-semibold text-background transition-opacity hover:opacity-90";
+const INK_BUTTON = "inline-flex h-8 items-center justify-center rounded-lg bg-foreground px-3 text-xs font-semibold text-background transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40";
 const EYEBROW = "font-mono text-[10.5px] uppercase tracking-[0.08em] text-foreground/50";
 
 /** `Tue 24 Nov` and `09:00`, in the rhythm's zone. */
@@ -95,6 +110,8 @@ function whenParts(
     )
   };
 }
+
+const NO_ENTRIES: readonly GalleryEntry[] = [];
 
 /** The catalogue, asked for only when the Plan opens: 150 KB the other views never load. */
 function useCatalogue(): PlanSketch[] | null {
@@ -185,9 +202,13 @@ function PillarChip( {
   slot: PlanSlot;
 } ) {
   const p = slot.proposal;
+  const beat = beatOf( p );
 
   if ( !p ) {
     return null;
+  }
+  if ( beat ) {
+    return <CampaignTag tag={ beat } />;
   }
 
   return (
@@ -260,6 +281,7 @@ function StateWord( {
   status: LineStatus;
 } ) {
   const s = STATUS[ status ];
+  const beat = beatOf( slot.proposal );
 
   return (
     <span
@@ -276,15 +298,33 @@ function StateWord( {
           s.dot
         ) }
       />
-      {status === "pinned" && slot.proposal?.pin?.by === "agent" ? "Pinned by Claude" : s.words}
+      {beat && ( status === "proposed" || status === "pinned" ) ? ( beat.needs ? "Waiting" : "Campaign" ) : status === "pinned" && slot.proposal?.pin?.by === "agent" ? "Pinned by Claude" : s.words}
     </span>
   );
 }
 
+/**
+ * Why a campaign's beat cannot be approved in place, or null. The queue
+ * renders a sketch as it stands (a release, a comeback); a beat that must be
+ * STAGED first — the carousel of accepted variations, the breakdown, the
+ * series' reel, the words card that waits for his words — is opened in
+ * Export › Publish, where he sees the staged piece before anything is sent.
+ * Never rendered as a plain sketch post.
+ */
+function beatBlock( slot: PlanSlot ): string | null {
+  const beat = beatOf( slot.proposal );
+
+  return beat && beat.kind !== "sketch"
+    ? `«${ beat.label }» is staged on the sketch’s page before it is sent — open it in Publish. Only a campaign’s release and comeback are approved here.`
+    : null;
+}
+
 /** What a slot proposes, its words, and the gestures on it. */
 function Detail( {
-  slot, tz, conn, status, post, lines, running, onApprove, onOpen, onSheet, className
+  slot, tz, conn, status, post, lines, running, onApprove, onOpen, onSheet, className, campaign
 }: {
+  /** The calendar and the pieces a campaign reads; null until the plan is read. */
+  campaign: CampaignContext | null;
   slot: PlanSlot;
   tz: string;
   conn: PostizConnection | null;
@@ -307,7 +347,10 @@ function Detail( {
   const connected = Boolean( conn );
   const held = slot.held;
   const locked = status === "planned" || status === "rendering";
-  const blocked = post ? ( post.plan.blocked ?? ( post.plan.routes.length ? null : "No account takes this post." ) ) : null;
+  const beat = beatOf( p );
+  // The variations wait for accepted pieces; the words are typed once the card is open.
+  const waits = beat?.kind === "variations" && beat.needs ? beat.needs : null;
+  const blocked = beatBlock( slot ) ?? ( post ? ( post.plan.blocked ?? ( post.plan.routes.length ? null : "No account takes this post." ) ) : null );
   const approvable = Boolean( p && post && !blocked && !running && ( status === "proposed" || status === "pinned" || status === "reworded" ) );
 
   return (
@@ -420,26 +463,39 @@ function Detail( {
               type="button"
               className={ connected ? BUTTON : INK_BUTTON }
               data-plan-open
-              disabled={ running }
-              title={ p.reel
-                ? ( connected ? "Build this reel on the empty sketch and open Export › Publish on this slot — its accounts, formats and each account’s own words" : "Build this reel on the empty sketch — connect your Postiz (menu › Publishing) to schedule it" )
-                : ( connected ? "Open the sketch on Export › Publish, on this slot — its accounts, formats and each account’s own words" : "Open the sketch — connect your Postiz (menu › Publishing) to schedule it" ) }
+              disabled={ running || Boolean( waits ) }
+              title={ waits
+                ? `It waits for ${ waits }`
+                : p.reel
+                  ? ( connected ? "Build this reel on the empty sketch and open Export › Publish on this slot — its accounts, formats and each account’s own words" : "Build this reel on the empty sketch — connect your Postiz (menu › Publishing) to schedule it" )
+                  : ( connected ? "Open the sketch on Export › Publish, on this slot — its accounts, formats and each account’s own words" : "Open the sketch — connect your Postiz (menu › Publishing) to schedule it" ) }
               onClick={ () => onOpen( slot ) }
             >
-              {connected ? "Open in Publish" : p.reel ? "Build the reel" : "Open the sketch"}
+              {waits ? "Waiting for variations" : connected ? "Open in Publish" : p.reel ? "Build the reel" : "Open the sketch"}
             </button>
             <button
               type="button"
               className={ BUTTON }
               data-plan-another
               disabled={ running }
-              title="Pass this sketch over and propose the next one"
-              onClick={ () => passProposal(
-                p.key,
-                slot.slot
-              ) }
+              title={ beat ? "Leave this beat out of its campaign; the slot goes back to the plan" : "Pass this sketch over and propose the next one" }
+              onClick={ () => {
+                if ( beat ) {
+                  // An approved beat left out is no longer approved either.
+                  releaseLine( slot.slot );
+                  passBeat(
+                    beat.id,
+                    beat.beat
+                  );
+                } else {
+                  passProposal(
+                    p.key,
+                    slot.slot
+                  );
+                }
+              } }
             >
-              Another
+              {beat ? "Leave out" : "Another"}
             </button>
           </>
         )}
@@ -458,12 +514,16 @@ function Detail( {
             {slot.skipped ? "Propose again" : "Skip"}
           </button>
         )}
-        {p && !p.reel && (
+        {p && !p.reel && beat?.kind !== "words" && (
           <button type="button" className={ `${ BUTTON } border-transparent text-foreground/60` } onClick={ () => onSheet( p.sketchKey ) }>
             Its posts
           </button>
         )}
       </div>
+
+      {p && campaign && ( beat
+        ? <BeatDetail slot={ slot } tag={ beat } ctx={ campaign } />
+        : !p.reel && !slot.held && <CampaignMaker key={ slot.slot } slot={ slot } ctx={ campaign } /> )}
     </div>
   );
 }
@@ -508,8 +568,12 @@ const everyThreeSeconds = ( tell: () => void ) => {
  * nothing above it.
  */
 export default function PlanView( {
-  conn, posts, posted, known, now, onOpen, onSheet, onRhythm, search = "", sketchFilter = "", onSketches
+  conn, posts, posted, known, now, onOpen, onSheet, onRhythm, search = "", sketchFilter = "", onSketches, entries = NO_ENTRIES, signalFor
 }: {
+  /** The gallery's pieces: a campaign's variations are the accepted ones among them. */
+  entries?: readonly GalleryEntry[];
+  /** What measured results may move in the plan (`PlanSignal`); absent, the plan is drawn from the calendar alone. */
+  signalFor?: ( catalogue: readonly PlanSketch[] ) => PlanSignal | undefined;
   /** The kept Postiz; null without one (the default rhythm is drawn, nothing can be approved). */
   conn: PostizConnection | null;
   /** Every post Postiz lists (any app's); null until read or without a Postiz. */
@@ -579,19 +643,68 @@ export default function PlanView( {
     ]
   );
 
-  const slots = useMemo(
-    () => !known || !catalogue ? null : planSlots( {
-      catalogue,
-      slots: planFreeSlots(
-        active,
-        posts ?? [],
-        new Date( now )
-      ),
-      posted,
-      choices,
-      now,
-      timeZone: tz
-    } ),
+  const campaigns = useSyncExternalStore(
+    subscribeCampaigns,
+    getCampaigns,
+    noCampaigns
+  );
+
+  // The plan and its campaigns (lab 9): the beats are laid first, each one a
+  // line wearing its tag; with no campaign this is `planSlots` itself.
+  const reading = useMemo(
+    () => {
+      if ( !known || !catalogue ) {
+        return null;
+      }
+
+      const plan = {
+        catalogue,
+        slots: planFreeSlots(
+          active,
+          posts ?? [],
+          new Date( now )
+        ),
+        posted,
+        choices,
+        now,
+        timeZone: tz,
+        signal: signalFor?.( catalogue )
+      };
+      const lay = {
+        slots: planFreeSlots(
+          active,
+          posts ?? [],
+          new Date( now ),
+          CAMPAIGN_WEEKS
+        ),
+        posted,
+        catalogue,
+        accepted: acceptedCounts( entries ),
+        now,
+        timeZone: tz
+      };
+      const out = planWithCampaigns(
+        {
+          ...plan,
+          farSlots: lay.slots,
+          accepted: lay.accepted
+        },
+        campaigns
+      );
+      const context: CampaignContext = {
+        plan,
+        lay,
+        campaigns,
+        laid: out.campaigns,
+        entries,
+        tz
+      };
+
+      return {
+        slots: out.slots,
+        context
+      };
+    },
     [
       known,
       catalogue,
@@ -599,10 +712,15 @@ export default function PlanView( {
       posts,
       posted,
       choices,
+      campaigns,
+      entries,
       now,
-      tz
+      tz,
+      signalFor
     ]
   );
+  const slots = reading?.slots ?? null;
+  const context = reading?.context ?? null;
 
   const wall = useMemo(
     () => Date.now(),
@@ -690,7 +808,7 @@ export default function PlanView( {
     const post = linePosts.get( s.slot );
     const status = statusOf( s );
 
-    return Boolean( s.proposal && post && !post.plan.blocked && post.plan.routes.length && ( status === "proposed" || status === "pinned" || status === "reworded" ) );
+    return Boolean( s.proposal && post && !beatBlock( s ) && !post.plan.blocked && post.plan.routes.length && ( status === "proposed" || status === "pinned" || status === "reworded" ) );
   };
   /** «Approve»: the words as they are shown now, on this slot. */
   const approve = ( s: PlanSlot ) => {
@@ -714,7 +832,14 @@ export default function PlanView( {
       {
         proposal: p,
         postKey: post.postKey,
-        stamp: post.stamp
+        stamp: post.stamp,
+        ...( beatOf( p ) ? {
+          beat: {
+            id: beatOf( p )!.id,
+            beat: beatOf( p )!.beat,
+            trial: beatOf( p )!.trial
+          }
+        } : {} )
       }
     );
   };
@@ -819,7 +944,8 @@ export default function PlanView( {
         pillar,
         word
       ] ) => [
-        proposed.filter( ( s ) => s.proposal!.pillar === pillar ).length,
+        // A campaign's beats are counted once, as the campaign's.
+        proposed.filter( ( s ) => s.proposal!.pillar === pillar && !beatOf( s.proposal ) ).length,
         word
       ] as const ).filter( ( [
         count
@@ -828,6 +954,9 @@ export default function PlanView( {
           count,
           word
         ] ) => `${ count } ${ word }` ),
+      ...( proposed.some( ( s ) => beatOf( s.proposal ) ) ? [
+        `${ proposed.filter( ( s ) => beatOf( s.proposal ) ).length } of a campaign`
+      ] : [] ),
       ...( shown && shown.length !== slots.length ? [
         `${ shown.length } shown`
       ] : [] )
@@ -1016,6 +1145,15 @@ export default function PlanView( {
                           </span>
                           <span className="flex min-w-0 items-center gap-2">
                             <PillarChip slot={ s } />
+                            {s.proposal?.heard && (
+                              <span
+                                data-plan-heard
+                                title={ `Moved by your results: ${ s.proposal.heard }` }
+                                className="shrink-0 rounded border border-dashed border-foreground/50 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.06em] text-foreground/70"
+                              >
+                                Results
+                              </span>
+                            )}
                             <span className="truncate font-mono text-[11px] text-foreground/50" data-plan-line-words>{firstLine ?? s.proposal?.why ?? ""}</span>
                           </span>
                         </span>
@@ -1033,6 +1171,7 @@ export default function PlanView( {
                           onApprove={ approve }
                           onOpen={ onOpen }
                           onSheet={ onSheet }
+                          campaign={ context }
                           className="border-t border-border bg-hover/30 p-3 lg:hidden"
                         />
                       )}
@@ -1128,6 +1267,7 @@ export default function PlanView( {
                 onApprove={ approve }
                 onOpen={ onOpen }
                 onSheet={ onSheet }
+                campaign={ context }
               />
             )
             : <p className="text-xs text-foreground/50">{slots === null ? "" : "Nothing to propose."}</p>}

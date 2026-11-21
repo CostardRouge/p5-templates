@@ -48,6 +48,10 @@ import {
 import {
   activePostKey, mountReel
 } from "@/lib/postiz/postKey";
+import {
+  takeStage, withBreakdown
+} from "@/lib/planner/beatStage";
+import makeDefaultItem from "./components/ContentItems/components/AddItemControls/utils/makeDefaultItem";
 import TransportBar from "./components/TransportBar";
 import UndoRedo from "./components/UndoRedo";
 import InteractivePanel from "./components/InteractivePanel/InteractivePanel";
@@ -350,11 +354,39 @@ export default function SketchOptions( {
         setCaptureOpen( true );
       }
 
+      // A campaign's «How it's made» (lab 9): the sketch plays with its
+      // breakdown — every parameter group settling in turn. Asked of THIS
+      // page because only it holds the sketch's defaults; added through the
+      // form like a layer picked in the rail, and only when none plays yet.
+      if ( takeStage( sketchKey )?.kind === "process" ) {
+        const content = withBreakdown(
+          getValues( "content" ),
+          ( seed ) => makeDefaultItem(
+            "breakdown",
+            seed
+          ) as unknown as Record<string, unknown>
+        );
+
+        if ( content ) {
+          setValue(
+            "content",
+            content as SketchOption[ "content" ],
+            {
+              shouldDirty: true,
+              shouldTouch: true,
+              shouldValidate: true
+            }
+          );
+        }
+      }
+
       return leaveReel;
     },
     [
       engineId,
-      name
+      name,
+      getValues,
+      setValue
     ]
   );
 
