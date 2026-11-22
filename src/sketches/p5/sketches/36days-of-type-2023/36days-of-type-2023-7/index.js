@@ -44,16 +44,23 @@ sketch.setup( async( {
 } ) => {
   const p = getP5();
 
-  _loadedP5Class = await loadP5Class();
-
-  sketchState.shape.graphics = p.createGraphics(
+  // Everything that is THIS run's — its surface, its state — is taken before
+  // the first await. Run as a layer (a scene of a reel), the surface and the
+  // per-instance state point at the layer only for the synchronous head of
+  // setup (`nestedSketch.js`): after an await they are the host page's again,
+  // and the buffer made there landed in the page's state — the layer's own
+  // stayed null and its draw threw, a black scene.
+  const graphics = p.createGraphics(
     p.width,
     p.height,
     "webgl"
   );
 
+  sketchState.shape.graphics = graphics;
   paintBackground( getBackgroundColor() );
-  await addScreenPositionFunction( sketchState.shape.graphics );
+
+  _loadedP5Class = await loadP5Class();
+  await addScreenPositionFunction( graphics );
 } );
 
 // Multi-layer boolean mask delegated to the shared gridMask utility. Each font

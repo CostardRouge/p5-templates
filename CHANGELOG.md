@@ -74,6 +74,11 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
 - The gallery's search and its sketch filter now narrow the Plan too; on the Plan the filter lists the plan's own
   sketches.
 
+### Fixed
+
+- Scenes of a reel no longer come out black: a sketch cut into a series, a recap or a reel you build now plays
+  with its own default settings instead of none. One sketch (36 Days of Type · 7) also failed as a scene for a
+  reason of its own, fixed too.
 
 ## [1.4.0] - 2026-11-20 — Quadratrix
 

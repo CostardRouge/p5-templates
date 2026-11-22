@@ -70,6 +70,9 @@ import {
   pushOptionsOverride, popOptionsOverride
 } from "./options.js";
 import {
+  isPlain, withDefaults
+} from "./layerDefaults.js";
+import {
   getSketchFns, hasSketchFns, rememberSketchFns
 } from "./sketchFnCache.js";
 import {
@@ -97,6 +100,108 @@ let lastSweepFrame = -1;
 /** Sketch paths whose module import is in flight or has failed. */
 const loading = new Set();
 const failed = new Map();
+
+/* ------------------------------------------------------------------ */
+/*  The layer's own defaults                                           */
+/* ------------------------------------------------------------------ */
+
+// A sketch reads `options.sketch.<group>.<key>` and trusts its own form to
+// have filled it: on its page the form always has. A LAYER only carries what
+// its item's `settings` hold — whole when it was picked in the inspector
+// (which copies the sketch's form values in), but EMPTY when a document was
+// written by a program: a reel of sketches (`planner/reel.ts`) lists its
+// scenes with `settings: {}`. Such a scene threw on its first read
+// (`options.sketch.shape.stroke`) or painted with every colour missing, and
+// showed as a black frame in the reel, with one warning nobody saw.
+//
+// So a layer runs on the sketch's own defaults UNDER its settings: the same
+// form values the inspector would have copied, fetched once per sketch from
+// the route the inspector uses (a static JSON file in the static export).
+// Whatever the item sets still wins, key by key.
+
+/** sketchPath → the sketch's form values (`{}` when they could not be read). */
+const defaults = new Map();
+/** sketchPath → the fetch in flight. */
+const defaultsLoading = new Map();
+
+function ensureDefaults( sketchPath ) {
+  if ( defaults.has( sketchPath ) ) {
+    return Promise.resolve();
+  }
+
+  let pending = defaultsLoading.get( sketchPath );
+
+  if ( !pending ) {
+    const name = sketchPath.split( "/" ).pop();
+
+    pending = Promise.resolve()
+      .then( () => fetch( `/api/sketches/form/p5/${ encodeURIComponent( name ) }.json` ) )
+      .then( ( response ) => {
+        if ( !response.ok ) {
+          throw new Error( `${ response.status }` );
+        }
+
+        return response.json();
+      } )
+      .then( ( body ) => body?.formValues ?? {} )
+      .catch( ( error ) => {
+        // No defaults is what every layer had before: it runs on its settings alone.
+        console.warn(
+          `[nested-sketch] no defaults for "${ sketchPath }" — the layer runs on its own settings`,
+          error
+        );
+
+        return {};
+      } )
+      .then( ( values ) => {
+        defaults.set(
+          sketchPath,
+          values && typeof values === "object" ? values : {}
+        );
+        defaultsLoading.delete( sketchPath );
+      } );
+    defaultsLoading.set(
+      sketchPath,
+      pending
+    );
+  }
+
+  return pending;
+}
+
+/** settings object → what the layer reads; rebuilt only when the settings change. */
+const merged = new WeakMap();
+
+function layerSettings(
+  sketchPath, settings
+) {
+  const base = defaults.get( sketchPath );
+
+  if ( !base || !Object.keys( base ).length ) {
+    return settings ?? {};
+  }
+  if ( !isPlain( settings ) ) {
+    return base;
+  }
+
+  let known = merged.get( settings );
+
+  if ( !known || known.base !== base ) {
+    known = {
+      base,
+      value: withDefaults(
+        base,
+        settings
+      )
+    };
+    merged.set(
+      settings,
+      known
+    );
+  }
+
+  return known.value;
+}
 
 /* ------------------------------------------------------------------ */
 /*  Module loading                                                     */
@@ -219,7 +324,13 @@ export function preloadSketches( sketchPaths ) {
     ensureSketchLoaded( sketchPath );
   }
 
-  return loadQueue;
+  // …and their defaults, which a scene written by a program does not carry.
+  return Promise.all( [
+    loadQueue,
+    ...[
+      ...sketchPaths
+    ].map( ensureDefaults )
+  ] );
 }
 
 /* ------------------------------------------------------------------ */
@@ -511,7 +622,10 @@ function runEmbedded(
   ) );
   const previousSurface = pushSurfaceOverride( instance.proxy );
   const previousOptions = pushOptionsOverride( {
-    sketch: item.settings ?? {},
+    sketch: layerSettings(
+      instance.sketchPath,
+      item.settings
+    ),
     size: {
       width: instance.width,
       height: instance.height
@@ -738,6 +852,12 @@ export function renderNestedSketchLayer(
 
   if ( !hasSketchFns( sketchPath ) ) {
     ensureSketchLoaded( sketchPath );
+    void ensureDefaults( sketchPath );
+    return null;
+  }
+  // Its defaults first: a layer set up without them lays itself out on nothing.
+  if ( !defaults.has( sketchPath ) ) {
+    void ensureDefaults( sketchPath );
     return null;
   }
 
