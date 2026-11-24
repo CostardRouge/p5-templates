@@ -8,8 +8,18 @@ import {
 } from "next/navigation";
 import clsx from "clsx";
 import {
-  Star
+  Pencil, Star
 } from "lucide-react";
+
+import RhythmDialog, {
+  RhythmWeekDots
+} from "@/components/RhythmDialog";
+import {
+  seedAccounts
+} from "@/lib/postiz/accountRhythm";
+import {
+  providerOf
+} from "@/lib/postiz/client";
 
 import {
   weekLabel
@@ -620,6 +630,25 @@ export default function PlanView( {
   ] = useState<Lines | null>( null );
   const active = rhythm ?? DEFAULT_RHYTHM;
   const tz = active.timeZone;
+  const [
+    rhythmOpen,
+    setRhythmOpen
+  ] = useState( false );
+  // The week the Rhythm button draws: each account's slots, or the old one-for-all rhythm spread over them.
+  const rhythmAccounts = useMemo(
+    () => conn ? seedAccounts(
+      conn.rhythm,
+      conn.channels.filter( ( c ) => !c.disabled ).map( ( c ) => ( {
+        id: c.id,
+        provider: providerOf( c.identifier )
+      } ) ),
+      conn.defaultChannelIds,
+      conn.usual
+    ) : null,
+    [
+      conn
+    ]
+  );
 
   useEffect(
     () => {
@@ -1056,14 +1085,32 @@ export default function PlanView( {
               {GAP_WEEKS.map( ( w ) => <option key={ w } value={ w }>{w} weeks</option> )}
             </select>
           </label>
-          <button
-            type="button"
-            onClick={ onRhythm }
-            title={ rhythm ? "Your rhythm — change it in Publishing" : "The default rhythm — connect your Postiz in Publishing to use yours" }
-            className="min-w-0 truncate text-left font-mono text-[11px] text-foreground/55 underline-offset-2 hover:text-foreground hover:underline"
-          >
-            {active.slots.map( slotHead ).join( " · " )}{rhythm ? "" : " · default rhythm"}
-          </button>
+          {conn ? (
+            <button
+              type="button"
+              onClick={ () => setRhythmOpen( true ) }
+              title="Your rhythm, account by account — open it to change slots and formats"
+              data-plan-rhythm
+              className="inline-flex h-9 min-w-0 shrink items-center gap-2.5 rounded-lg border border-border bg-background pl-2 pr-2.5 text-left transition-colors hover:bg-hover"
+            >
+              <RhythmWeekDots accounts={ rhythmAccounts } />
+              <span className="shrink-0 text-xs font-medium text-foreground">Rhythm</span>
+              <span className="min-w-0 truncate font-mono text-[11px] text-foreground/55">
+                {active.slots.length} send{active.slots.length === 1 ? "" : "s"} a week · {Object.values( rhythmAccounts ?? {} ).filter( ( a ) => a.slots.length ).length} accounts
+              </span>
+              <Pencil className="h-3.5 w-3.5 shrink-0 text-foreground/55" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={ onRhythm }
+              title="The default rhythm — connect your Postiz in Publishing to use yours"
+              className="min-w-0 truncate text-left font-mono text-[11px] text-foreground/55 underline-offset-2 hover:text-foreground hover:underline"
+            >
+              {active.slots.map( slotHead ).join( " · " )} · default rhythm
+            </button>
+          )}
+          <RhythmDialog open={ rhythmOpen } onClose={ () => setRhythmOpen( false ) } />
           {touched && (
             <button type="button" className={ `${ BUTTON } ml-auto shrink-0` } disabled={ running } onClick={ () => resetPlan() } title="Forget what was passed over, skipped, pinned and approved — what is already in Postiz stays">
               Reset

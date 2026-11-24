@@ -10,6 +10,9 @@
  */
 
 import {
+  withAccounts
+} from "./accountRhythm";
+import {
   readChannels, type PostizChannel
 } from "./client";
 import {
@@ -142,11 +145,31 @@ export function readConnection( raw: unknown ): PostizConnection | null {
       r.usual,
       channels
     ),
-    rhythm: readRhythm( r.rhythm ),
+    rhythm: ownAccounts(
+      readRhythm( r.rhythm ),
+      channels
+    ),
     phrases: readPhrases( r.phrases ),
     dayStart: typeof r.dayStart === "string" && /^\d{4}-\d{2}-\d{2}$/.test( r.dayStart ) ? r.dayStart : null,
     connectedAt: typeof r.connectedAt === "number" ? r.connectedAt : 0
   };
+}
+
+/** The rhythm with only the accounts this Postiz still lists: a removed account's slots stop making sends. */
+function ownAccounts(
+  rhythm: Rhythm, channels: readonly PostizChannel[]
+): Rhythm {
+  if ( !rhythm.accounts ) {
+    return rhythm;
+  }
+  const kept = Object.fromEntries( Object.entries( rhythm.accounts ).filter( ( [
+    id
+  ] ) => channels.some( ( c ) => c.id === id ) ) );
+
+  return withAccounts(
+    rhythm,
+    kept
+  );
 }
 
 /** `@studio.loops ` → `studio.loops`; what Instagram's usernames allow, nothing else. Pure. */

@@ -5,7 +5,7 @@ import {
 } from "@headlessui/react";
 import clsx from "clsx";
 import {
-  Check, ChevronDown, Copy, Plus, Send, X
+  Check, ChevronDown, Copy, Send, X
 } from "lucide-react";
 import type React from "react";
 import {
@@ -17,18 +17,24 @@ import {
   OTHER_PROVIDER, PostizClient, findApi, providerOf
 } from "@/lib/postiz/client";
 import {
-  DEFAULT_RHYTHM, rhythmSlotLabel, type Rhythm, type RhythmSlot
+  DEFAULT_RHYTHM
 } from "@/lib/postiz/rhythm";
 import {
   DEFAULT_PHRASES, type Phrase
 } from "@/lib/postiz/pills";
 import {
-  cleanHandle, forgetPostiz, initialDefaults, putPostiz, updatePostiz
+  cleanHandle, forgetPostiz, initialDefaults, putPostiz, updatePostiz, type PostizConnection
 } from "@/lib/postiz/store";
 import {
   usePostiz
 } from "@/lib/postiz/usePostiz";
 import ResultsSettings from "@/components/Stats/ResultsSettings";
+import RhythmDialog, {
+  RhythmWeekDots
+} from "@/components/RhythmDialog";
+import {
+  seedAccounts
+} from "@/lib/postiz/accountRhythm";
 
 /**
  * Menu › Publishing: the person's own Postiz — its address and the API key
@@ -45,22 +51,6 @@ import ResultsSettings from "@/components/Stats/ResultsSettings";
 type Health = "off" | "asking" | "ok" | "refused" | "down";
 
 const OFFICIAL_ORIGIN = "https://p5.steeve.website";
-const DAYS = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday"
-];
-const ZONES = [
-  "Europe/Paris",
-  "Europe/London",
-  "America/New_York",
-  "America/Los_Angeles",
-  "Australia/Sydney"
-];
 
 const INPUT = "w-full rounded-lg border border-theme bg-background px-3 py-2 text-base text-foreground focus:border-foreground focus:outline-hidden sm:text-xs";
 const GHOST = "inline-flex items-center gap-1.5 rounded-lg border border-theme bg-background px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-hover disabled:opacity-40";
@@ -121,17 +111,45 @@ function Faq( {
   );
 }
 
-function rhythmSummary( rhythm: Rhythm ): string {
-  const order = [
-    ...rhythm.slots
-  ].sort( (
-    a, b
-  ) => ( a.day + 6 ) % 7 - ( b.day + 6 ) % 7 || a.time.localeCompare( b.time ) );
+/**
+ * The rhythm in one line (lab 10): it is set account by account in its own
+ * dialog, opened from here or from the gallery's Plan — Publishing no longer
+ * holds an editor, which kept this step short.
+ */
+function RhythmRow( {
+  conn
+}: {
+  conn: PostizConnection;
+} ) {
+  const [
+    open,
+    setOpen
+  ] = useState( false );
+  const accounts = seedAccounts(
+    conn.rhythm,
+    conn.channels.filter( ( c ) => !c.disabled ).map( ( c ) => ( {
+      id: c.id,
+      provider: providerOf( c.identifier )
+    } ) ),
+    conn.defaultChannelIds,
+    conn.usual
+  );
+  const sends = conn.rhythm.slots.length;
+  const busy = Object.values( accounts ).filter( ( a ) => a.slots.length ).length;
 
-  return `${ order.map( ( s ) => `${ DAYS[ s.day ].slice(
-    0,
-    3
-  ) } ${ s.time }` ).join( " · " ) } · ${ rhythm.perWeek } a week · ${ rhythm.timeZone }`;
+  return (
+    <div className="flex items-center gap-3 border-b border-theme pb-3">
+      <RhythmWeekDots accounts={ accounts } />
+      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span className={ LEGEND }>Your rhythm</span>
+        <span className="truncate font-mono text-[11px] text-label">
+          {sends} send{sends === 1 ? "" : "s"} a week on {busy} account{busy === 1 ? "" : "s"} · {conn.rhythm.timeZone}
+        </span>
+      </span>
+      <button type="button" className={ GHOST } onClick={ () => setOpen( true ) }>Edit</button>
+      <RhythmDialog open={ open } onClose={ () => setOpen( false ) } />
+    </div>
+  );
 }
 
 /**
@@ -244,148 +262,6 @@ function PhrasesEditor( {
             className={ control }
           />
         </label>
-      </div>
-    </details>
-  );
-}
-
-function RhythmEditor( {
-  rhythm, onChange
-}: {
-  rhythm: Rhythm;
-  onChange: ( next: Rhythm ) => void;
-} ) {
-  const set = ( slots: RhythmSlot[] ) => onChange( {
-    ...rhythm,
-    slots
-  } );
-  const zones = [
-    ...new Set( [
-      rhythm.timeZone,
-      ...ZONES,
-      Intl.DateTimeFormat().resolvedOptions().timeZone
-    ] )
-  ];
-  const control = "rounded-lg border border-theme bg-background px-2 py-1.5 text-base text-foreground focus:border-foreground focus:outline-hidden sm:text-xs";
-
-  return (
-    <details className="group border-b border-theme pb-3">
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-3">
-        <span className="flex min-w-0 flex-col gap-0.5">
-          <span className={ LEGEND }>Your rhythm</span>
-          <span className="truncate font-mono text-[11px] text-label">{rhythmSummary( rhythm )}</span>
-        </span>
-        <ChevronDown className="h-4 w-4 shrink-0 text-label transition-transform group-open:rotate-180" />
-      </summary>
-      <div className="mt-3 flex flex-col gap-2">
-        <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
-          {rhythm.slots.map( (
-            slot, i
-          ) => (
-            <li key={ i } className="flex flex-wrap items-center gap-2">
-              <select
-                className={ control }
-                value={ slot.day }
-                aria-label={ `Slot ${ i + 1 }: day` }
-                onChange={ ( event ) => set( rhythm.slots.map( (
-                  x, k
-                ) => k === i ? {
-                  ...x,
-                  day: Number( event.target.value )
-                } : x ) ) }
-              >
-                {DAYS.map( (
-                  day, k
-                ) => <option key={ day } value={ k }>{day}</option> )}
-              </select>
-              <input
-                type="time"
-                className={ control }
-                value={ slot.time }
-                aria-label={ `Slot ${ i + 1 }: time` }
-                onChange={ ( event ) => event.target.value && set( rhythm.slots.map( (
-                  x, k
-                ) => k === i ? {
-                  ...x,
-                  time: event.target.value
-                } : x ) ) }
-              />
-              <button
-                type="button"
-                className={ GHOST }
-                disabled={ rhythm.slots.length < 2 }
-                onClick={ () => set( rhythm.slots.filter( (
-                  _, k
-                ) => k !== i ) ) }
-                aria-label={ `Remove ${ rhythmSlotLabel( slot ) }` }
-              >
-                Remove
-              </button>
-            </li>
-          ) )}
-        </ul>
-        <div className="flex flex-wrap items-center gap-2 text-xs text-label">
-          <button
-            type="button"
-            className={ GHOST }
-            disabled={ rhythm.slots.length >= 14 }
-            onClick={ () => set( [
-              ...rhythm.slots,
-              {
-                day: 3,
-                time: "12:00"
-              }
-            ] ) }
-          >
-            <Plus className="h-3.5 w-3.5" />
-            A slot
-          </button>
-          <label className="inline-flex items-center gap-2">
-            At most
-            <input
-              type="number"
-              min={ 1 }
-              max={ 21 }
-              className={ clsx(
-                control,
-                "w-16"
-              ) }
-              value={ rhythm.perWeek }
-              aria-label="Posts a week at most"
-              onChange={ ( event ) => {
-                const n = Number( event.target.value );
-
-                if ( Number.isInteger( n ) && n >= 1 && n <= 21 ) {
-                  onChange( {
-                    ...rhythm,
-                    perWeek: n
-                  } );
-                }
-              } }
-            />
-            a week
-          </label>
-          <select
-            className={ control }
-            value={ rhythm.timeZone }
-            aria-label="Time zone of the slots"
-            onChange={ ( event ) => onChange( {
-              ...rhythm,
-              timeZone: event.target.value
-            } ) }
-          >
-            {zones.map( ( zone ) => <option key={ zone } value={ zone }>{zone}</option> )}
-          </select>
-          <button
-            type="button"
-            className={ GHOST }
-            title="Tuesday 9:00, Friday 19:00, Sunday 10:00 in Paris — three a week"
-            onClick={ () => onChange( DEFAULT_RHYTHM ) }
-          >
-            Reset
-          </button>
-        </div>
-        <Hint>Export proposes the next free slot. Two posts the same day, or more than the week’s ceiling, it says so — it never stops you.</Hint>
       </div>
     </details>
   );
@@ -799,12 +675,7 @@ export default function PublishingDialog( {
                         spellCheck={ false }
                       />
                     </label>
-                    <RhythmEditor
-                      rhythm={ conn.rhythm }
-                      onChange={ ( rhythm ) => updatePostiz( {
-                        rhythm
-                      } ) }
-                    />
+                    <RhythmRow conn={ conn } />
                     <PhrasesEditor
                       phrases={ conn.phrases }
                       dayStart={ conn.dayStart }
