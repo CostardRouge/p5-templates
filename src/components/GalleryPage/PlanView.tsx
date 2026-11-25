@@ -8,8 +8,17 @@ import {
 } from "next/navigation";
 import clsx from "clsx";
 import {
-  Star
+  Pencil, Star
 } from "lucide-react";
+
+import RhythmDialog from "@/components/RhythmDialog";
+import {
+  RhythmWeekDots
+} from "@/components/RhythmDots";
+import SlotAsks from "@/components/SlotAsks";
+import {
+  connAccounts, sendAt
+} from "@/lib/postiz/slotAsks";
 
 import {
   weekLabel
@@ -392,6 +401,16 @@ function Detail( {
       <dl className="grid grid-cols-[4.5rem_minmax(0,1fr)] gap-x-3 gap-y-1.5 text-xs">
         <dt className={ EYEBROW }>When</dt>
         <dd className="text-foreground">{when.day} · {when.time} <span className="text-foreground/50">{tz}</span></dd>
+        {conn && sendAt(
+          connAccounts( conn ),
+          slot.at,
+          tz
+        ) && (
+          <>
+            <dt className={ EYEBROW }>Asks</dt>
+            <dd><SlotAsks conn={ conn } at={ slot.at } variant="list" /></dd>
+          </>
+        )}
         {p && (
           <>
             <dt className={ EYEBROW }>Why</dt>
@@ -620,6 +639,17 @@ export default function PlanView( {
   ] = useState<Lines | null>( null );
   const active = rhythm ?? DEFAULT_RHYTHM;
   const tz = active.timeZone;
+  const [
+    rhythmOpen,
+    setRhythmOpen
+  ] = useState( false );
+  // The week the Rhythm button draws: each account's slots, or the old one-for-all rhythm spread over them.
+  const rhythmAccounts = useMemo(
+    () => conn ? connAccounts( conn ) : null,
+    [
+      conn
+    ]
+  );
 
   useEffect(
     () => {
@@ -1056,14 +1086,32 @@ export default function PlanView( {
               {GAP_WEEKS.map( ( w ) => <option key={ w } value={ w }>{w} weeks</option> )}
             </select>
           </label>
-          <button
-            type="button"
-            onClick={ onRhythm }
-            title={ rhythm ? "Your rhythm — change it in Publishing" : "The default rhythm — connect your Postiz in Publishing to use yours" }
-            className="min-w-0 truncate text-left font-mono text-[11px] text-foreground/55 underline-offset-2 hover:text-foreground hover:underline"
-          >
-            {active.slots.map( slotHead ).join( " · " )}{rhythm ? "" : " · default rhythm"}
-          </button>
+          {conn ? (
+            <button
+              type="button"
+              onClick={ () => setRhythmOpen( true ) }
+              title="Your rhythm, account by account — open it to change slots and formats"
+              data-plan-rhythm
+              className="inline-flex h-9 min-w-0 shrink items-center gap-2.5 rounded-lg border border-border bg-background pl-2 pr-2.5 text-left transition-colors hover:bg-hover"
+            >
+              <RhythmWeekDots accounts={ rhythmAccounts } />
+              <span className="shrink-0 text-xs font-medium text-foreground">Rhythm</span>
+              <span className="min-w-0 truncate font-mono text-[11px] text-foreground/55">
+                {active.slots.length} send{active.slots.length === 1 ? "" : "s"} a week · {Object.values( rhythmAccounts ?? {} ).filter( ( a ) => a.slots.length ).length} accounts
+              </span>
+              <Pencil className="h-3.5 w-3.5 shrink-0 text-foreground/55" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={ onRhythm }
+              title="The default rhythm — connect your Postiz in Publishing to use yours"
+              className="min-w-0 truncate text-left font-mono text-[11px] text-foreground/55 underline-offset-2 hover:text-foreground hover:underline"
+            >
+              {active.slots.map( slotHead ).join( " · " )} · default rhythm
+            </button>
+          )}
+          <RhythmDialog open={ rhythmOpen } onClose={ () => setRhythmOpen( false ) } />
           {touched && (
             <button type="button" className={ `${ BUTTON } ml-auto shrink-0` } disabled={ running } onClick={ () => resetPlan() } title="Forget what was passed over, skipped, pinned and approved — what is already in Postiz stays">
               Reset
@@ -1130,6 +1178,7 @@ export default function PlanView( {
                         onClick={ () => setPicked( s.slot ) }
                         className={ clsx(
                           "grid h-16 w-full grid-cols-[4.75rem_2.5rem_minmax(0,1fr)] items-center gap-3 px-3 text-left transition-colors sm:grid-cols-[5.5rem_2.5rem_minmax(0,1fr)_auto]",
+                          conn && "xl:grid-cols-[5.5rem_2.5rem_minmax(0,1fr)_14rem_auto]",
                           on ? "bg-hover" : "hover:bg-hover/50"
                         ) }
                       >
@@ -1157,6 +1206,7 @@ export default function PlanView( {
                             <span className="truncate font-mono text-[11px] text-foreground/50" data-plan-line-words>{firstLine ?? s.proposal?.why ?? ""}</span>
                           </span>
                         </span>
+                        {conn && <SlotAsks conn={ conn } at={ s.at } className="max-xl:hidden" />}
                         <span className="max-sm:hidden"><StateWord slot={ s } status={ status } /></span>
                       </button>
                       {on && (

@@ -5,6 +5,12 @@ import React, {
 } from "react";
 import clsx from "clsx";
 import {
+  FormatDot
+} from "@/components/RhythmDots";
+import {
+  isRider, type AccountRhythms
+} from "@/lib/postiz/accountRhythm";
+import {
   rhythmGrid, slotHead, slotLabel, type Rhythm
 } from "@/lib/postiz/rhythm";
 import type {
@@ -37,9 +43,13 @@ const BUTTON = "inline-flex items-center justify-center rounded-lg border px-2.5
  * A broken rhythm is a line in the card, never a refusal.
  */
 export default function WhenCard( {
-  rhythm, taken, when, at, free, warnings, onChoose
+  rhythm, accounts = null, taken, when, at, free, warnings, onChoose, children
 }: {
   rhythm: Rhythm;
+  /** Each account's week (lab 10): a column then shows its formats as dots. */
+  accounts?: AccountRhythms | null;
+  /** Under the answer: what the chosen slot asks for (lab 10's canvas ⑥). */
+  children?: React.ReactNode;
   /** Postiz's planned posts. */
   taken: readonly Date[];
   when: When;
@@ -110,6 +120,8 @@ export default function WhenCard( {
         </button>
       </div>
 
+      {children}
+
       {warnings.length > 0 && (
         <div role="status" className="flex flex-col gap-0.5 border-t border-theme px-3 py-1.5 text-[11px] text-amber-500">
           {warnings.map( ( w ) => <span key={ w }>{w} Still yours to send.</span> )}
@@ -121,8 +133,24 @@ export default function WhenCard( {
           <div className="grid items-end gap-1" style={ columns } aria-hidden="true">
             <span />
             {grid.slots.map( ( s ) => (
-              <span key={ `${ s.day }-${ s.time }` } className="text-center font-mono text-[10px] text-label">
+              <span key={ `${ s.day }-${ s.time }` } className="flex flex-col items-center gap-0.5 text-center font-mono text-[10px] text-label">
                 {slotHead( s )}
+                {accounts && (
+                  <span className="flex flex-wrap justify-center gap-0.5">
+                    {Object.values( accounts ).flatMap( ( a ) => a.slots.filter( ( x ) => x.day === s.day && x.time === s.time ).map( ( x ) => ( {
+                      x,
+                      rider: isRider(
+                        a.slots,
+                        x
+                      )
+                    } ) ) )
+                      .map( (
+                        {
+                          x, rider
+                        }, i
+                      ) => <FormatDot key={ i } format={ x.format } rider={ rider } /> )}
+                  </span>
+                )}
               </span>
             ) )}
           </div>

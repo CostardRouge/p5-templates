@@ -9,6 +9,7 @@ import {
   BookOpen,
   Bot,
   BellOff,
+  CalendarDays,
   Check,
   ExternalLink,
   FileUp,
@@ -32,6 +33,12 @@ import {
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import PublishingPeek from "@/components/PublishingPeek";
+import {
+  RhythmWeekDots
+} from "@/components/RhythmDots";
+import {
+  connAccounts
+} from "@/lib/postiz/slotAsks";
 import {
   usePathname, useSearchParams
 } from "next/navigation";
@@ -77,6 +84,8 @@ import sleep from "@/utils/sleep";
 const AgentGuideDialog = dynamic( () => import( "@/components/AgentGuideDialog" ) );
 // Same for Publishing (the person's own Postiz), opened here or from Export.
 const PublishingDialog = dynamic( () => import( "@/components/PublishingDialog" ) );
+// The rhythm account by account (lab 10's canvas ⑤): its week under Publishing, its matrix on a click.
+const RhythmDialog = dynamic( () => import( "@/components/RhythmDialog" ) );
 
 type MenuBarProps = {
   hasMissingThumbnails?: boolean;
@@ -235,6 +244,10 @@ function MenuBar( {
   const [
     publishingOpen,
     setPublishingOpen
+  ] = useState( false );
+  const [
+    rhythmOpen,
+    setRhythmOpen
   ] = useState( false );
   const postiz = usePostiz();
   const menuCovered = useMenuCovered();
@@ -869,6 +882,27 @@ function MenuBar( {
         </MenuItem>
         {/* What goes out next, and a failure if there is one — to the gallery (lab 3 Q2). */}
         {mounted && postiz && <PublishingPeek postiz={ postiz } />}
+        {mounted && postiz && (
+          <MenuItem>
+            {( {
+              focus
+            } ) => (
+              <button
+                type="button"
+                onClick={ () => setRhythmOpen( true ) }
+                data-menu-rhythm
+                className={ clsx(
+                  itemClass,
+                  focus && "bg-hover"
+                ) }
+              >
+                <CalendarDays className="h-4 w-4 text-foreground/70" />
+                <span className="flex-1 text-left">Rhythm</span>
+                <RhythmWeekDots accounts={ connAccounts( postiz ) } className="[&>span]:h-5" />
+              </button>
+            )}
+          </MenuItem>
+        )}
 
         {/* The studio's dev affordances — the pending badge, the Debug section,
             the inspector's save-defaults / thumbnail / preview trio and the
@@ -971,6 +1005,12 @@ function MenuBar( {
         <PublishingDialog
           open
           onClose={ () => setPublishingOpen( false ) }
+        />
+      )}
+      {rhythmOpen && (
+        <RhythmDialog
+          open
+          onClose={ () => setRhythmOpen( false ) }
         />
       )}
     </>

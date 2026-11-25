@@ -34,6 +34,11 @@ import type {
 import {
   openPublishing
 } from "@/lib/postiz/usePostiz";
+import RhythmDialog from "@/components/RhythmDialog";
+import SlotAsks from "@/components/SlotAsks";
+import {
+  connAccounts, sendAt
+} from "@/lib/postiz/slotAsks";
 import WhenCard from "./WhenCard";
 import PillEditor, {
   type PillEditorHandle
@@ -226,6 +231,16 @@ export default function PostBand( {
   onRemember: ( accountId: string, format: string ) => void;
 } ) {
   const rootRef = useRef<HTMLElement | null>( null );
+  const [
+    rhythmOpen,
+    setRhythmOpen
+  ] = useState( false );
+  const rhythmAccounts = useMemo(
+    () => connAccounts( conn ),
+    [
+      conn
+    ]
+  );
   const [
     narrow,
     setNarrow
@@ -427,13 +442,31 @@ export default function PostBand( {
           <span className={ LEGEND }>When</span>
           <WhenCard
             rhythm={ conn.rhythm }
+            accounts={ rhythmAccounts }
             taken={ taken }
             when={ when }
             at={ plan.at }
             free={ plan.free }
             warnings={ plan.warnings }
             onChoose={ onWhen }
-          />
+          >
+            {plan.at instanceof Date && sendAt(
+              rhythmAccounts,
+              plan.at,
+              conn.rhythm.timeZone
+            ) && (
+              <div className="flex flex-col gap-1.5 border-t border-theme px-3 py-2" data-when-asks>
+                <span className="flex items-center justify-between gap-2">
+                  <span className={ LEGEND }>This slot asks for</span>
+                  <button type="button" className="text-[11px] text-label underline underline-offset-2 hover:text-foreground" onClick={ () => setRhythmOpen( true ) }>
+                    Edit rhythm
+                  </button>
+                </span>
+                <SlotAsks conn={ conn } at={ plan.at } variant="list" />
+              </div>
+            )}
+          </WhenCard>
+          <RhythmDialog open={ rhythmOpen } onClose={ () => setRhythmOpen( false ) } />
         </div>
 
         <div className="flex min-w-0 flex-col gap-2">

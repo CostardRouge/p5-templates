@@ -18,6 +18,16 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
 
 ### Added
 
+- **Your rhythm, account by account.** *Rhythm* in the gallery's Plan (or *Edit* in Menu › Publishing) opens one
+  table: a row per account, a column per day. Each slot says what it posts — a Reel, a carousel, a picture, a story or
+  a video, only what that network takes. Tick other accounts on a slot and
+  they share the send, each in its own format; a story at the same time as a Reel rides on it. The side of the table
+  says what each week gives and what breaks the rhythm. Your current rhythm opens spread over the accounts Export
+  proposes, each in its usual format, and nothing changes until you edit it.
+- **Every slot says what it asks for.** Each line of the Plan and its sheet, and the *When* card of Export › Publish,
+  show which accounts that slot posts to and in which format (*Reel + Story → Instagram · Picture → X, Threads*); the
+  When card's grid marks each slot's formats, and *Edit rhythm* opens the table without leaving the sketch. Menu ›
+  Connections has a *Rhythm* line with your week at a glance.
 - **A campaign per sketch.** On a line of the Plan, *Create its campaign* shows the posts that sketch would get
   over the coming weeks — its release, variations three days later, how it is made a week later, a comeback eight
   weeks later (a favourite and the last sketch of a series have their own lists) — each on a free slot of your

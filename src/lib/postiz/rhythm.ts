@@ -10,8 +10,16 @@
  * through `Intl` — no library; a slot keeps its 9:00 across a change of
  * daylight saving.
  *
+ * Since lab 10 a rhythm may carry `accounts` — each account's own slots,
+ * formats and ceiling (`accountRhythm.ts`); `slots` and `perWeek` are then
+ * derived from them on every read, so what follows reads them unchanged.
+ *
  * Pure and DOM-free.
  */
+
+import {
+  readAccountRhythms, withAccounts, type AccountRhythms
+} from "./accountRhythm";
 
 export interface RhythmSlot {
   /** 0 = Sunday … 6 = Saturday. */
@@ -25,6 +33,8 @@ export interface Rhythm {
   slots: RhythmSlot[];
   /** The most posts a week (Monday to Sunday). */
   perWeek: number;
+  /** Each account's own week (lab 10); when present, `slots` and `perWeek` are derived from it. */
+  accounts?: AccountRhythms;
 }
 
 export const DEFAULT_RHYTHM: Rhythm = {
@@ -80,9 +90,22 @@ export function readRhythm( raw: unknown ): Rhythm {
     } )
     : null;
   const perWeek = typeof r.perWeek === "number" && Number.isInteger( r.perWeek ) && r.perWeek >= 1 && r.perWeek <= 21 ? r.perWeek : DEFAULT_RHYTHM.perWeek;
+  const timeZone = validZone( r.timeZone ) ? r.timeZone : DEFAULT_RHYTHM.timeZone;
+  const accounts = readAccountRhythms( r.accounts );
+
+  if ( accounts ) {
+    return withAccounts(
+      {
+        timeZone,
+        slots: [],
+        perWeek
+      },
+      accounts
+    );
+  }
 
   return {
-    timeZone: validZone( r.timeZone ) ? r.timeZone : DEFAULT_RHYTHM.timeZone,
+    timeZone,
     slots: slots && slots.length ? slots.slice(
       0,
       14
