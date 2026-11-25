@@ -5,7 +5,7 @@ import {
 } from "@headlessui/react";
 import clsx from "clsx";
 import {
-  CalendarDays, Minus, Plus, X
+  CalendarDays, X
 } from "lucide-react";
 import {
   useMemo, useState
@@ -290,7 +290,6 @@ function RhythmMatrix( {
     ] ) => [
       id,
       {
-        perWeek: a.perWeek,
         slots: a.slots.map( ( s ) => ( {
           ...s
         } ) )
@@ -480,18 +479,6 @@ function RhythmMatrix( {
     } );
   };
 
-  const setCeiling = (
-    id: string, delta: number
-  ) => change( ( d ) => {
-    d[ id ].perWeek = Math.min(
-      21,
-      Math.max(
-        1,
-        d[ id ].perWeek + delta
-      )
-    );
-  } );
-
   const reset = () => {
     setPicked( null );
     save( seedFor( DEFAULT_RHYTHM ) );
@@ -562,7 +549,6 @@ function RhythmMatrix( {
                   } ) => {
                     const a = accounts[ channel.id ];
                     const counted = a ? countedSlots( a ).length : 0;
-                    const over = a ? counted > a.perWeek : false;
 
                     return (
                       <tr key={ channel.id } className="border-t border-theme" data-rhythm-account={ channel.id }>
@@ -571,28 +557,8 @@ function RhythmMatrix( {
                             <span aria-hidden="true" className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-hover font-mono text-[9px] font-semibold">{PROVIDER_GLYPH[ provider ]}</span>
                             <span className="min-w-0 truncate text-xs font-medium text-foreground" title={ `${ PROVIDER_LABEL[ provider ] } · ${ channel.name }` }>{channel.name}</span>
                           </span>
-                          <span className={ clsx(
-                            "mt-1 flex items-center gap-1 whitespace-nowrap pl-8 font-mono text-[10px] max-sm:pl-0",
-                            over ? "text-red-600 dark:text-red-400" : "text-label"
-                          ) }
-                          >
-                            {counted} /
-                            <button type="button" className="grid h-5 w-5 place-items-center rounded border border-theme bg-background text-foreground hover:bg-hover disabled:opacity-40" aria-label={ `One less a week on ${ channel.name }` } disabled={ !a || a.perWeek <= 1 } onClick={ () => setCeiling(
-                              channel.id,
-                              -1
-                            ) }
-                            >
-                              <Minus className="h-3 w-3" />
-                            </button>
-                            {a?.perWeek ?? 0}
-                            <button type="button" className="grid h-5 w-5 place-items-center rounded border border-theme bg-background text-foreground hover:bg-hover disabled:opacity-40" aria-label={ `One more a week on ${ channel.name }` } disabled={ !a || a.perWeek >= 21 } onClick={ () => setCeiling(
-                              channel.id,
-                              1
-                            ) }
-                            >
-                              <Plus className="h-3 w-3" />
-                            </button>
-                            <span className="max-sm:hidden">a week</span>
+                          <span className="mt-0.5 block pl-8 font-mono text-[10px] text-label max-sm:pl-0">
+                            {counted ? `${ counted } a week` : "nothing yet"}
                           </span>
                         </th>
                         {MONDAY_FIRST.map( ( day ) => {
@@ -717,7 +683,7 @@ function RhythmMatrix( {
           <ul className="m-0 mt-auto flex list-none flex-col gap-1 border-t border-theme p-0 pt-2.5 text-xs" data-rhythm-warnings>
             {warnings.length
               ? warnings.map( ( w ) => <li key={ w } className="text-red-600 dark:text-red-400">{w}</li> )
-              : <li className="text-label">Every account keeps its ceiling, one post a day at most.</li>}
+              : <li className="text-label">One post a day at most on every account.</li>}
           </ul>
         </aside>
       </div>

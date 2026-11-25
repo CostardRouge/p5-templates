@@ -1,7 +1,9 @@
 /**
  * The rhythm ACCOUNT BY ACCOUNT (lab 10, his choice the matrix): each account
  * its own week of slots, each slot the FORMAT it takes (a Reel, a carousel, a
- * picture, a story, a video) and each account its own ceiling. The slots of
+ * picture, a story, a video). Its slots ARE its week: there is no separate
+ * ceiling to set (a stepper was built and dropped 2026-11-25 — it only fed a
+ * warning, and he read it as a control that did nothing). The slots of
  * every account at one instant are ONE send, each account in its own format —
  * the routes `planPost` already makes.
  *
@@ -45,8 +47,6 @@ export interface AccountSlot extends RhythmSlot {
 }
 
 export interface AccountRhythm {
-  /** The most posts a week on this account; a story riding on a Reel does not count. */
-  perWeek: number;
   slots: AccountSlot[];
 }
 
@@ -169,13 +169,9 @@ export function readAccountRhythms( raw: unknown ): AccountRhythms | null {
         MAX_ACCOUNT_SLOTS
       )
       .sort( bySlot );
-    const perWeek = typeof v.perWeek === "number" && Number.isInteger( v.perWeek ) && v.perWeek >= 1 && v.perWeek <= 21 ? v.perWeek : Math.max(
-      1,
-      slots.length
-    );
 
+    // A stored `perWeek` (the dropped stepper's) is ignored.
     out[ id ] = {
-      perWeek,
       slots
     };
   }
@@ -209,8 +205,7 @@ export function sendsOf( accounts: AccountRhythms ): RhythmSlot[] {
 
 /**
  * The rhythm carrying these accounts, its `slots` and `perWeek` derived from
- * them: every send is a slot, and the week holds them all — each account's
- * own ceiling is what the matrix says.
+ * them: every send is a slot, and the week holds them all.
  */
 export function withAccounts(
   rhythm: Rhythm, accounts: AccountRhythms
@@ -246,12 +241,8 @@ export function seedAccounts(
     for ( const c of live ) {
       const a = rhythm.accounts[ c.id ];
 
-      out[ c.id ] = a ? {
-        perWeek: a.perWeek,
-        slots: a.slots.filter( ( s ) => formatsFor( c.provider ).includes( s.format ) )
-      } : {
-        perWeek: 3,
-        slots: []
+      out[ c.id ] = {
+        slots: a ? a.slots.filter( ( s ) => formatsFor( c.provider ).includes( s.format ) ) : []
       };
     }
 
@@ -266,7 +257,6 @@ export function seedAccounts(
     );
 
     out[ c.id ] = {
-      perWeek: rhythm.perWeek,
       slots: ticked.has( c.id ) && format ? rhythm.slots.map( ( s ) => ( {
         day: s.day,
         time: s.time,
@@ -360,9 +350,6 @@ export function accountWarnings(
   ] of Object.entries( accounts ) ) {
     const counted = countedSlots( a );
 
-    if ( counted.length > a.perWeek ) {
-      out.push( `${ nameOf( id ) }: ${ counted.length } posts a week, its ceiling says ${ a.perWeek }.` );
-    }
     for ( let day = 0; day < 7; day++ ) {
       const n = counted.filter( ( s ) => s.day === day ).length;
 

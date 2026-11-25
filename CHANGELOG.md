@@ -20,7 +20,7 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
 
 - **Your rhythm, account by account.** *Rhythm* in the gallery's Plan (or *Edit* in Menu › Publishing) opens one
   table: a row per account, a column per day. Each slot says what it posts — a Reel, a carousel, a picture, a story or
-  a video, only what that network takes — and each account has its own ceiling. Tick other accounts on a slot and
+  a video, only what that network takes. Tick other accounts on a slot and
   they share the send, each in its own format; a story at the same time as a Reel rides on it. The side of the table
   says what each week gives and what breaks the rhythm. Your current rhythm opens spread over the accounts Export
   proposes, each in its usual format, and nothing changes until you edit it.

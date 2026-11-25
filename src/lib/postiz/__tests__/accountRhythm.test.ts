@@ -7,7 +7,6 @@ import {
 
 const accounts: AccountRhythms = {
   ig: {
-    perWeek: 3,
     slots: [
       {
         day: 2,
@@ -27,7 +26,6 @@ const accounts: AccountRhythms = {
     ]
   },
   x: {
-    perWeek: 3,
     slots: [
       {
         day: 2,
@@ -90,7 +88,6 @@ describe(
         expect( readAccountRhythms( undefined ) ).toBeNull();
         expect( readAccountRhythms( {
           ig: {
-            perWeek: 99,
             slots: [
               {
                 day: 5,
@@ -126,7 +123,6 @@ describe(
           }
         } ) ).toEqual( {
           ig: {
-            perWeek: 2,
             slots: [
               {
                 day: 2,
@@ -193,7 +189,6 @@ describe(
         ) ).toBe( true );
         expect( countedSlots( ig ) ).toHaveLength( 2 );
         expect( countedSlots( {
-          perWeek: 1,
           slots: [
             {
               day: 1,
@@ -285,7 +280,6 @@ describe(
         // Spread, it gives the same sends the old rhythm had.
         expect( sendsOf( seeded ) ).toEqual( sendsOf( {
           a: {
-            perWeek: 3,
             slots: DEFAULT_RHYTHM.slots.map( ( s ) => ( {
               ...s,
               format: "reel" as const
@@ -314,7 +308,6 @@ describe(
 
         expect( kept.ig ).toEqual( accounts.ig );
         expect( kept.new ).toEqual( {
-          perWeek: 3,
           slots: []
         } );
       }
@@ -330,7 +323,6 @@ describe(
         expect( accountWarnings(
           {
             ig: {
-              perWeek: 1,
               slots: [
                 {
                   day: 2,
@@ -347,7 +339,6 @@ describe(
           },
           ( id ) => id.toUpperCase()
         ) ).toEqual( [
-          "IG: 2 posts a week, its ceiling says 1.",
           "IG: 2 posts on Tuesday.",
           "2 sends on Tuesday: Export and the Plan take one post a day, so the 18:00 one stays empty."
         ] );
