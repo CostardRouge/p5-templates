@@ -29,12 +29,13 @@ import {
   usePostiz
 } from "@/lib/postiz/usePostiz";
 import ResultsSettings from "@/components/Stats/ResultsSettings";
-import RhythmDialog, {
-  RhythmWeekDots
-} from "@/components/RhythmDialog";
+import RhythmDialog from "@/components/RhythmDialog";
 import {
-  seedAccounts
-} from "@/lib/postiz/accountRhythm";
+  RhythmWeekDots
+} from "@/components/RhythmDots";
+import {
+  connAccounts
+} from "@/lib/postiz/slotAsks";
 
 /**
  * Menu › Publishing: the person's own Postiz — its address and the API key
@@ -125,15 +126,7 @@ function RhythmRow( {
     open,
     setOpen
   ] = useState( false );
-  const accounts = seedAccounts(
-    conn.rhythm,
-    conn.channels.filter( ( c ) => !c.disabled ).map( ( c ) => ( {
-      id: c.id,
-      provider: providerOf( c.identifier )
-    } ) ),
-    conn.defaultChannelIds,
-    conn.usual
-  );
+  const accounts = connAccounts( conn );
   const sends = conn.rhythm.slots.length;
   const busy = Object.values( accounts ).filter( ( a ) => a.slots.length ).length;
 

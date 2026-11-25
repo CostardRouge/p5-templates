@@ -11,15 +11,14 @@ import {
   Pencil, Star
 } from "lucide-react";
 
-import RhythmDialog, {
+import RhythmDialog from "@/components/RhythmDialog";
+import {
   RhythmWeekDots
-} from "@/components/RhythmDialog";
+} from "@/components/RhythmDots";
+import SlotAsks from "@/components/SlotAsks";
 import {
-  seedAccounts
-} from "@/lib/postiz/accountRhythm";
-import {
-  providerOf
-} from "@/lib/postiz/client";
+  connAccounts, sendAt
+} from "@/lib/postiz/slotAsks";
 
 import {
   weekLabel
@@ -402,6 +401,16 @@ function Detail( {
       <dl className="grid grid-cols-[4.5rem_minmax(0,1fr)] gap-x-3 gap-y-1.5 text-xs">
         <dt className={ EYEBROW }>When</dt>
         <dd className="text-foreground">{when.day} · {when.time} <span className="text-foreground/50">{tz}</span></dd>
+        {conn && sendAt(
+          connAccounts( conn ),
+          slot.at,
+          tz
+        ) && (
+          <>
+            <dt className={ EYEBROW }>Asks</dt>
+            <dd><SlotAsks conn={ conn } at={ slot.at } variant="list" /></dd>
+          </>
+        )}
         {p && (
           <>
             <dt className={ EYEBROW }>Why</dt>
@@ -636,15 +645,7 @@ export default function PlanView( {
   ] = useState( false );
   // The week the Rhythm button draws: each account's slots, or the old one-for-all rhythm spread over them.
   const rhythmAccounts = useMemo(
-    () => conn ? seedAccounts(
-      conn.rhythm,
-      conn.channels.filter( ( c ) => !c.disabled ).map( ( c ) => ( {
-        id: c.id,
-        provider: providerOf( c.identifier )
-      } ) ),
-      conn.defaultChannelIds,
-      conn.usual
-    ) : null,
+    () => conn ? connAccounts( conn ) : null,
     [
       conn
     ]
@@ -1177,6 +1178,7 @@ export default function PlanView( {
                         onClick={ () => setPicked( s.slot ) }
                         className={ clsx(
                           "grid h-16 w-full grid-cols-[4.75rem_2.5rem_minmax(0,1fr)] items-center gap-3 px-3 text-left transition-colors sm:grid-cols-[5.5rem_2.5rem_minmax(0,1fr)_auto]",
+                          conn && "xl:grid-cols-[5.5rem_2.5rem_minmax(0,1fr)_14rem_auto]",
                           on ? "bg-hover" : "hover:bg-hover/50"
                         ) }
                       >
@@ -1204,6 +1206,7 @@ export default function PlanView( {
                             <span className="truncate font-mono text-[11px] text-foreground/50" data-plan-line-words>{firstLine ?? s.proposal?.why ?? ""}</span>
                           </span>
                         </span>
+                        {conn && <SlotAsks conn={ conn } at={ s.at } className="max-xl:hidden" />}
                         <span className="max-sm:hidden"><StateWord slot={ s } status={ status } /></span>
                       </button>
                       {on && (
