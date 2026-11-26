@@ -16,8 +16,8 @@ import {
 
 const TITLE = "Legal notice and privacy";
 const DESCRIPTION =
-  "Who publishes and hosts Sketchbook, what stays in your browser, what a recording handed to the server sends, and what the audience measurement counts.";
-const UPDATED = "10 November 2026";
+  "Who publishes and hosts Sketchbook, what stays in your browser, what the cloud keeps once you sign in, what a recording handed to the server sends, and what the audience measurement counts.";
+const UPDATED = "26 November 2026";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -247,8 +247,20 @@ export default function LegalPage() {
             only. Opening the app also stores some of its files and thumbnails
             in the browser’s cache so pages load faster. None of this is sent
             anywhere, except what you hand over yourself: a recording
-            to the server, or a post to your own Postiz (the next two sections). To erase
+            to the server, a post to your own Postiz, or a sync to the cloud once you sign in (the next sections). To erase
             it, clear this site’s data in your browser’s settings.
+          </p>
+        </Section>
+
+        <Section id="cloud" title="The cloud, when you sign in">
+          <p className={ P_CLASS }>
+            Signing in with Sésame (Menu › Cloud), the publisher’s own sign-in, copies what this browser keeps to
+            the publisher’s storage, so you find it on your other devices: the gallery’s pieces (their settings and
+            thumbnail), the Plan, each sketch’s caption, sends and export settings, your campaigns and post results,
+            and your Postiz accounts and phrases — never the Postiz API key, which stays in each browser. It is kept
+            per person and per app on Cloudflare (D1 and R2), and synced when a page opens, after a change, and
+            every few minutes. Signing out stops the sync on this device; what was copied stays in the storage.
+            Without signing in, nothing is sent.
           </p>
         </Section>
 

@@ -32,6 +32,10 @@ import {
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import PublishingPeek from "@/components/PublishingPeek";
+import StockageMenuItems from "@/components/StockageMenuItems";
+import {
+  useStockageSync
+} from "@/lib/stockage/useStockage";
 import {
   usePathname, useSearchParams
 } from "next/navigation";
@@ -238,6 +242,10 @@ function MenuBar( {
   ] = useState( false );
   const postiz = usePostiz();
   const menuCovered = useMenuCovered();
+
+  // The cloud sync runs from here, mounted on every page — not from its menu
+  // lines, which exist only while the menu is open.
+  useStockageSync();
 
   // Export's "accounts" link (and anything else) opens Publishing through here.
   useEffect(
@@ -869,6 +877,9 @@ function MenuBar( {
         </MenuItem>
         {/* What goes out next, and a failure if there is one — to the gallery (lab 3 Q2). */}
         {mounted && postiz && <PublishingPeek postiz={ postiz } />}
+        {/* The person's shared storage, through Sésame: the gallery, the Plan
+            and the settings found again on another device — src/lib/stockage/. */}
+        <StockageMenuItems itemClass={ itemClass } mounted={ mounted } />
 
         {/* The studio's dev affordances — the pending badge, the Debug section,
             the inspector's save-defaults / thumbnail / preview trio and the
