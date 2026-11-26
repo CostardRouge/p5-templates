@@ -18,6 +18,11 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
 
 ### Added
 
+- **Your work on every device.** Sign in with Sésame (Menu › Cloud) and the gallery's pieces, the Plan, your
+  posts and sends, campaigns, results and export settings follow you to your iPhone, iPad or another computer:
+  they sync when a page opens, after a change and every few minutes, and a piece deleted on one device goes on
+  the others. Your Postiz API key never leaves the browser it was pasted in — the accounts and phrases arrive,
+  and Publishing asks for the key once per device.
 - **Move your studio to another device.** The gallery's *Export archive* now also carries the Plan, every
   sketch's posts and sends, campaigns, post results, export lists and your Postiz accounts, handles, rhythm and
   phrases — never the Postiz API key. *Import archive* on another device (an iPhone or iPad through AirDrop or

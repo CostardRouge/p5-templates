@@ -101,7 +101,7 @@ function isRecord( value: unknown ): value is Record<string, unknown> {
 }
 
 /** One archived entry back into a store entry; throws naming what is wrong. */
-function readEntry(
+export function readEntry(
   raw: unknown, index: number
 ): GalleryEntry {
   if ( !isRecord( raw ) ) {

@@ -312,6 +312,80 @@ export function applyCarried(
   };
 }
 
+/**
+ * Write a MERGED set of carried stores (the cloud sync's three-way merge,
+ * `src/lib/stockage/plan.ts`) into `storage`, as they are: unlike
+ * `applyCarried`, nothing here keeps this browser's value — the merge already
+ * decided. The Postiz connection keeps this browser's key; with no connection
+ * here, it waits under `PENDING_POSTIZ_KEY` as an import does.
+ */
+export function writeCarried(
+  storage: Storage, merged: Carried
+): CarryOutcome {
+  const written: string[] = [];
+  let postizPending = false;
+  const put = (
+    key: string, value: unknown
+  ) => {
+    const text = JSON.stringify( value );
+
+    if ( storage.getItem( key ) !== text ) {
+      storage.setItem(
+        key,
+        text
+      );
+      written.push( key );
+    }
+  };
+
+  for ( const [
+    key,
+    value
+  ] of Object.entries( readCarried( merged ) ) ) {
+    if ( value === undefined ) {
+      continue;
+    }
+    if ( key === POSTIZ_KEY ) {
+      const theirs = withoutKey( value );
+      const mine = readConnection( parse( storage.getItem( POSTIZ_KEY ) ) );
+
+      if ( !theirs ) {
+        continue;
+      }
+      if ( mine ) {
+        const next = readConnection( {
+          ...theirs,
+          apiKey: mine.apiKey
+        } );
+
+        // Another Postiz's settings never land on this browser's key.
+        if ( next && theirs.apiBase === mine.apiBase && JSON.stringify( withoutKey( mine ) ) !== JSON.stringify( theirs ) ) {
+          put(
+            POSTIZ_KEY,
+            next
+          );
+        }
+      } else {
+        put(
+          PENDING_POSTIZ_KEY,
+          theirs
+        );
+        postizPending = true;
+      }
+      continue;
+    }
+    put(
+      key,
+      value
+    );
+  }
+
+  return {
+    written,
+    postizPending
+  };
+}
+
 /** The carried Postiz settings waiting for a key, or null. */
 export function pendingPostiz( storage: Storage | null ): CarriedPostiz | null {
   try {
