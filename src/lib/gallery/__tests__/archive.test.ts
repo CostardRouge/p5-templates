@@ -1,5 +1,5 @@
 import {
-  exportGallery, galleryArchiveFileName, importGallery, parseGalleryArchive, serializeGallery
+  exportGallery, galleryArchiveFileName, importGallery, parseArchiveLocal, parseGalleryArchive, serializeGallery
 } from "../archive";
 import {
   memoryBackend
@@ -54,7 +54,7 @@ describe(
 
         expect( parsed ).toMatchObject( {
           format: "sketchbook-gallery",
-          version: 1
+          version: 2
         } );
         expect( parsed.entries ).toHaveLength( 2 );
         expect( parsed.entries[ 1 ].thumbnail ).toEqual( {
@@ -142,9 +142,9 @@ describe(
         expect( () => parseGalleryArchive( "{\"name\":\"voronoi\"}" ) ).toThrow( "not a Sketchbook gallery archive" );
         expect( () => parseGalleryArchive( JSON.stringify( {
           format: "sketchbook-gallery",
-          version: 2,
+          version: 3,
           entries: []
-        } ) ) ).toThrow( "version 2" );
+        } ) ) ).toThrow( "version 3" );
         expect( () => parseGalleryArchive( JSON.stringify( {
           format: "sketchbook-gallery",
           version: 1,
@@ -167,6 +167,31 @@ describe(
           ]
         } ) ) ).toThrow( "thumbnail" );
         expect( galleryArchiveFileName( new Date( "2026-10-11T12:00:00Z" ) ) ).toBe( "sketchbook-gallery-2026-10-11.json" );
+      }
+    );
+
+    it(
+      "carries this browser's settings beside the pieces, and still reads a version 1 file",
+      async() => {
+        const text = await serializeGallery(
+          [],
+          {
+            "sketchbook.plan.v1": {
+              mix: "balanced"
+            }
+          }
+        );
+
+        expect( parseArchiveLocal( text ) ).toEqual( {
+          "sketchbook.plan.v1": {
+            mix: "balanced"
+          }
+        } );
+        expect( parseArchiveLocal( JSON.stringify( {
+          format: "sketchbook-gallery",
+          version: 1,
+          entries: []
+        } ) ) ).toEqual( {} );
       }
     );
   }
