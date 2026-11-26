@@ -22,7 +22,7 @@ import {
   triggerDownload
 } from "@/lib/export/download";
 import {
-  exportGallery, galleryArchiveFileName, importGallery
+  exportGallery, galleryArchiveFileName, importGallery, parseArchiveLocal
 } from "@/lib/gallery/archive";
 import {
   AHEAD_WEEKS, addDays, BACK_WEEKS, freeSlots, mondayOf, monthOf, monthsBetween, shiftMonth, type Month
@@ -72,6 +72,9 @@ import {
 import {
   writePendingImport
 } from "@/lib/pendingImportOptions";
+import {
+  applyCarried, collectCarried
+} from "@/lib/workspace/carry";
 import {
   localDay
 } from "@/lib/postiz/rhythm";
@@ -628,7 +631,10 @@ export default function GalleryPage( {
     setArchiving( true );
     try {
       triggerDownload(
-        await exportGallery( getGalleryStore() ),
+        await exportGallery(
+          getGalleryStore(),
+          collectCarried( window.localStorage )
+        ),
         galleryArchiveFileName()
       );
     } catch( caught ) {
@@ -650,15 +656,31 @@ export default function GalleryPage( {
     }
     setArchiving( true );
     try {
+      const text = await file.text();
       const outcome = await importGallery(
         getGalleryStore(),
-        await file.text()
+        text
       );
+      // The settings after the pieces: a refused file has thrown by now.
+      const carried = applyCarried(
+        window.localStorage,
+        parseArchiveLocal( text )
+      );
+      const settings = carried.written.length
+        ? ` Settings restored${ carried.postizPending ? " — paste your Postiz key in menu › Publishing to finish" : "" }; reloading…`
+        : "";
 
       setToast( {
-        message: `${ outcome.added } ${ outcome.added === 1 ? "piece" : "pieces" } added${ outcome.skipped ? `, ${ outcome.skipped } already here` : "" }${ outcome.pruned ? `, ${ outcome.pruned } oldest pruned` : "" }.`,
+        message: `${ outcome.added } ${ outcome.added === 1 ? "piece" : "pieces" } added${ outcome.skipped ? `, ${ outcome.skipped } already here` : "" }${ outcome.pruned ? `, ${ outcome.pruned } oldest pruned` : "" }.${ settings }`,
         type: "success"
       } );
+      // Every store keeps a copy in memory: a reload is what makes them all read what was written.
+      if ( carried.written.length ) {
+        window.setTimeout(
+          () => window.location.reload(),
+          2500
+        );
+      }
     } catch( caught ) {
       setToast( {
         message: `Nothing imported — ${ caught instanceof Error ? caught.message : String( caught ) }`,
@@ -731,14 +753,14 @@ export default function GalleryPage( {
             </select>
 
             {/* The backup: the whole gallery as one JSON file, thumbnails
-              inline, and back — merged, never duplicated. The gallery lives
-              in this browser's storage only, and a cleared site data takes
-              it with it. */}
+              inline, with this browser's settings beside it (`carry.ts`),
+              and back — merged, never duplicated. It is how a studio moves
+              to another machine until the shared store exists. */}
             <button
               type="button"
               onClick={ () => void handleExportArchive() }
-              disabled={ archiving || total === 0 }
-              title="Download every piece — options and thumbnails — as one JSON file"
+              disabled={ archiving }
+              title="Download every piece (options and thumbnails) and this browser's settings (the Plan, posts, campaigns, export lists, the Postiz accounts but never its key) as one JSON file"
               className={ ARCHIVE_BUTTON }
             >
               <Download className="h-3.5 w-3.5" />
@@ -756,7 +778,7 @@ export default function GalleryPage( {
               type="button"
               onClick={ () => importInputRef.current?.click() }
               disabled={ archiving }
-              title="Merge an exported gallery archive into this one"
+              title="Merge an exported archive into this browser: pieces and posts are added, settings this browser already has are kept"
               className={ ARCHIVE_BUTTON }
             >
               <Upload className="h-3.5 w-3.5" />

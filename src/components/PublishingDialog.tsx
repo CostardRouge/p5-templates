@@ -14,7 +14,7 @@ import {
 
 import ChannelChip from "@/components/ChannelChip";
 import {
-  OTHER_PROVIDER, PostizClient, findApi, providerOf
+  OTHER_PROVIDER, PostizClient, findApi, postizHome, providerOf
 } from "@/lib/postiz/client";
 import {
   DEFAULT_RHYTHM, rhythmSlotLabel, type Rhythm, type RhythmSlot
@@ -29,6 +29,9 @@ import {
   usePostiz
 } from "@/lib/postiz/usePostiz";
 import ResultsSettings from "@/components/Stats/ResultsSettings";
+import {
+  clearPendingPostiz, pendingPostiz
+} from "@/lib/workspace/carry";
 
 /**
  * Menu › Publishing: the person's own Postiz — its address and the API key
@@ -406,10 +409,14 @@ export default function PublishingDialog( {
     message,
     setMessage
   ] = useState<string | null>( null );
+  // Settings carried from another browser (the gallery archive) wait for a key here.
+  const [
+    pending
+  ] = useState( () => conn ? null : pendingPostiz( typeof localStorage === "undefined" ? null : localStorage ) );
   const [
     address,
     setAddress
-  ] = useState( "" );
+  ] = useState( () => pending ? postizHome( pending.apiBase ) : "" );
   const [
     key,
     setKey
@@ -505,24 +512,28 @@ export default function PublishingDialog( {
       const channels = await client.channels();
 
       // A new key for the same Postiz keeps what was chosen; another Postiz starts over.
-      const same = conn && conn.apiBase === client.apiBase;
+      // Settings carried from another browser count as chosen here.
+      const before = conn ?? pending;
+      const same = before && before.apiBase === client.apiBase ? before : null;
+      const live = new Set( channels.map( ( c ) => c.id ) );
 
       putPostiz( {
         apiBase: client.apiBase,
         apiKey: key.trim(),
         channels,
-        defaultChannelIds: same ? conn.defaultChannelIds : initialDefaults( channels ),
-        collaborator: same ? conn.collaborator : "",
-        handles: same ? conn.handles : {},
-        usual: same ? conn.usual : {},
-        rhythm: same ? conn.rhythm : DEFAULT_RHYTHM,
+        defaultChannelIds: same ? same.defaultChannelIds.filter( ( id ) => live.has( id ) ) : initialDefaults( channels ),
+        collaborator: same ? same.collaborator : "",
+        handles: same ? same.handles : {},
+        usual: same ? same.usual : {},
+        rhythm: same ? same.rhythm : DEFAULT_RHYTHM,
         // His phrases are his words, whatever Postiz they go through.
-        phrases: conn?.phrases ?? DEFAULT_PHRASES.map( ( p ) => ( {
+        phrases: before?.phrases ?? DEFAULT_PHRASES.map( ( p ) => ( {
           ...p
         } ) ),
-        dayStart: conn?.dayStart ?? null,
+        dayStart: before?.dayStart ?? null,
         connectedAt: Date.now()
       } );
+      clearPendingPostiz( typeof localStorage === "undefined" ? null : localStorage );
       setKey( "" );
       setHealth( "ok" );
     } catch( error ) {
@@ -685,6 +696,9 @@ export default function PublishingDialog( {
                   </Hint>
                 ) : (
                   <>
+                    {pending && !conn && (
+                      <Hint>Your accounts, handles, rhythm and phrases came from another browser: paste the API key and they apply here.</Hint>
+                    )}
                     <input
                       id="postiz-address"
                       type="url"

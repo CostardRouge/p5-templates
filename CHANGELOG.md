@@ -18,6 +18,11 @@ to the history's turning points; until 0.8.0 the project was called p5 templates
 
 ### Added
 
+- **Move your studio to another device.** The gallery's *Export archive* now also carries the Plan, every
+  sketch's posts and sends, campaigns, post results, export lists and your Postiz accounts, handles, rhythm and
+  phrases — never the Postiz API key. *Import archive* on another device (an iPhone or iPad through AirDrop or
+  Files) adds the pieces and posts it lacks, keeps the settings it already has, and reloads; paste the API key in
+  *Publishing* and your accounts and phrases are back.
 - **A campaign per sketch.** On a line of the Plan, *Create its campaign* shows the posts that sketch would get
   over the coming weeks — its release, variations three days later, how it is made a week later, a comeback eight
   weeks later (a favourite and the last sketch of a series have their own lists) — each on a free slot of your

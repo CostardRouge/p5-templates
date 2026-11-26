@@ -14,7 +14,12 @@ import {
  * ~20 MB text file, which every browser builds and parses without blinking.
  */
 export const GALLERY_ARCHIVE_FORMAT = "sketchbook-gallery";
-export const GALLERY_ARCHIVE_VERSION = 1;
+/**
+ * 2 (2026-11-26) adds `local`: this browser's settings besides the gallery
+ * (`src/lib/workspace/carry.ts`), never the Postiz key. A version 1 file still
+ * reads; a version 2 file read by an older app is refused by its version check.
+ */
+export const GALLERY_ARCHIVE_VERSION = 2;
 
 export interface GalleryArchiveEntry extends Omit<GalleryEntry, "thumbnail"> {
   thumbnail: {
@@ -28,6 +33,8 @@ export interface GalleryArchive {
   version: typeof GALLERY_ARCHIVE_VERSION;
   exportedAt: string;
   entries: GalleryArchiveEntry[];
+  /** Carried settings by storage key (`carry.ts`); absent in version 1. */
+  local?: Record<string, unknown>;
 }
 
 async function blobToBase64( blob: Blob ): Promise<string> {
@@ -65,11 +72,18 @@ function base64ToBlob(
   );
 }
 
-export async function serializeGallery( entries: GalleryEntry[] ): Promise<string> {
+export async function serializeGallery(
+  entries: GalleryEntry[], local?: Record<string, unknown>
+): Promise<string> {
   const archive: GalleryArchive = {
     format: GALLERY_ARCHIVE_FORMAT,
     version: GALLERY_ARCHIVE_VERSION,
     exportedAt: new Date().toISOString(),
+    ...( local
+      ? {
+        local
+      }
+      : {} ),
     entries: await Promise.all( entries.map( async( entry ) => ( {
       ...entry,
       thumbnail: entry.thumbnail ? {
@@ -148,6 +162,18 @@ function readEntry(
 
 /** The entries of an archive file, or a thrown Error saying why it is not one. */
 export function parseGalleryArchive( text: string ): GalleryEntry[] {
+  return readArchive( text ).entries.map( readEntry );
+}
+
+/** An archive's carried settings (version 2), `{}` when it has none; throws as `parseGalleryArchive` does. */
+export function parseArchiveLocal( text: string ): Record<string, unknown> {
+  const local = readArchive( text ).local;
+
+  return isRecord( local ) ? local : {};
+}
+
+function readArchive( text: string ): { entries: unknown[];
+  local: unknown } {
   let parsed: unknown;
 
   try {
@@ -166,7 +192,10 @@ export function parseGalleryArchive( text: string ): GalleryEntry[] {
     throw new Error( "the archive has no entries list" );
   }
 
-  return parsed.entries.map( readEntry );
+  return {
+    entries: parsed.entries,
+    local: parsed.local
+  };
 }
 
 export interface ImportOutcome {
@@ -211,10 +240,15 @@ export async function importGallery(
   };
 }
 
-export async function exportGallery( store: GalleryStore ): Promise<Blob> {
+export async function exportGallery(
+  store: GalleryStore, local?: Record<string, unknown>
+): Promise<Blob> {
   return new Blob(
     [
-      await serializeGallery( await store.entries() )
+      await serializeGallery(
+        await store.entries(),
+        local
+      )
     ],
     {
       type: "application/json"
